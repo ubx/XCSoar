@@ -150,6 +150,20 @@ IsEmbedded()
 }
 
 /**
+ * Returns whether the application is running on a Linux system.
+ */
+constexpr
+static inline bool
+IsLinux()
+{
+#ifdef TARGET_IS_LINUX
+  return true;
+#else
+  return false;
+#endif
+}
+
+/**
  * Does this device have little main memory?  On those, some expensive
  * features are disabled.
  */
