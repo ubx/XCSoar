@@ -82,6 +82,7 @@ static constexpr struct {
      selection UI */
   { DeviceConfig::PortType::TCP_LISTENER, N_("TCP Port") },
   { DeviceConfig::PortType::UDP_LISTENER, N_("UDP Port") },
+  { DeviceConfig::PortType::CAN, N_("CAN Port") },
 
   { DeviceConfig::PortType::SERIAL, NULL } /* sentinel */
 };
@@ -315,6 +316,7 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config)
   case DeviceConfig::PortType::TCP_CLIENT:
   case DeviceConfig::PortType::TCP_LISTENER:
   case DeviceConfig::PortType::UDP_LISTENER:
+  case DeviceConfig::PortType::CAN: // todo -- ???
   case DeviceConfig::PortType::PTY:
   case DeviceConfig::PortType::RFCOMM_SERVER:
   case DeviceConfig::PortType::GLIDER_LINK:
@@ -699,6 +701,7 @@ FinishPortField(DeviceConfig &config, const DataFieldEnum &df)
   case DeviceConfig::PortType::TCP_CLIENT:
   case DeviceConfig::PortType::TCP_LISTENER:
   case DeviceConfig::PortType::UDP_LISTENER:
+  case DeviceConfig::PortType::CAN:  // todo -- ???
   case DeviceConfig::PortType::RFCOMM_SERVER:
   case DeviceConfig::PortType::GLIDER_LINK:
     if (new_type == config.port_type)
