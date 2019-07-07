@@ -96,6 +96,11 @@ struct DeviceConfig {
     UDP_LISTENER,
 
     /**
+     * CAN port, , i.e. canx / vcamx
+     */
+    CAN,
+
+    /**
      * A master pseudo-terminal.  The "path" attribute specifies the
      * path of a symlink pointing to the slave pseudo-terminal.  Only
      * for debugging.
@@ -198,6 +203,12 @@ struct DeviceConfig {
    * because there's no #udp_port attribute).
    */
   unsigned tcp_port;
+
+  /*
+   *  TODO -- ?
+   */
+  unsigned can_port;
+
 
   /**
    * Is this device currently enabled?  This flag can be used to
