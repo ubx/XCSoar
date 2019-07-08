@@ -67,8 +67,10 @@ DeviceConfig::IsAvailable() const
 
   case PortType::TCP_LISTENER:
   case PortType::UDP_LISTENER:
-  case PortType::CAN: // todo -- ???
     return true;
+
+  case PortType::CAN: 
+    return IsLinux();
 
   case PortType::PTY:
 #if defined(HAVE_POSIX) && !defined(ANDROID)
