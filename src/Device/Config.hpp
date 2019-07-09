@@ -124,6 +124,11 @@ struct DeviceConfig {
   unsigned baud_rate;
 
   /**
+   * The baud rate of the CAN device.
+   */
+  unsigned can_baud_rate;
+
+  /**
    * The baud rate of the device for bulk transfer (e.g. task
    * declaration, flight download).  Not used by all drivers, see
    * Driver::SupportsBulkBaudRate().
@@ -156,6 +161,11 @@ struct DeviceConfig {
    * In these cases i2c_addr is not used. */
   unsigned i2c_bus;
   unsigned i2c_addr;
+
+  /**
+   * The name of the serial port, e.g. "can0:".
+   */
+  StaticString<32> can_port_num;
 
   /**
    * What is the purpose of this pressure sensor.
@@ -248,6 +258,13 @@ struct DeviceConfig {
       port_type == PortType::IOIOUART;
   }
 
+  /**
+   * Does this port type use a can baud rate?
+   */
+  static bool UsesCanSpeed(PortType port_type) {
+    return port_type == PortType::CAN;
+  }
+
   bool IsDisabled() const {
     return !enabled || port_type == PortType::DISABLED;
   }
@@ -285,6 +302,10 @@ struct DeviceConfig {
       (MaybeBluetooth() && k6bt);
   }
 
+  bool UsesCanSpeed() const {
+    return UsesCanSpeed(port_type);
+  }
+
   /**
    * Does this port type use a driver?
    */
@@ -294,7 +315,8 @@ struct DeviceConfig {
       port_type == PortType::AUTO || port_type == PortType::TCP_LISTENER ||
       port_type == PortType::TCP_CLIENT ||
       port_type == PortType::IOIOUART || port_type == PortType::PTY ||
-      port_type == PortType::UDP_LISTENER;
+      port_type == PortType::UDP_LISTENER ||
+      port_type == PortType::CAN;
   }
 
   bool UsesDriver() const {
@@ -324,6 +346,18 @@ struct DeviceConfig {
   bool UsesTCPPort() const {
     return UsesTCPPort(port_type);
   }
+
+  /**
+   * Does this port type use a can port?
+   */
+  static bool UsesCANPort(PortType port_type) {
+    return port_type == PortType::CAN;
+  }
+
+  bool UsesCANPort() const {
+    return UsesCANPort(port_type);
+  }
+
 
   bool IsDriver(const TCHAR *name) const {
     return UsesDriver() && driver_name.equals(name);
