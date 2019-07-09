@@ -49,7 +49,7 @@
 #endif
 
 enum ControlIndex {
-  Port, BaudRate, BulkBaudRate, 
+  Port, BaudRate, BulkBaudRate,
   IP_ADDRESS,
   TCPPort,
   I2CBus, I2CAddr, PressureUsage, Driver, UseSecondDriver, SecondDriver,
@@ -586,9 +586,6 @@ DeviceEditWidget::UpdateVisibilities()
                 DeviceConfig::UsesDriver(type) &&
                 SupportsBulkBaudRate(GetDataField(Driver)));
 
-  SetRowAvailable(CANPortNum, DeviceConfig::UsesCANPort(type)); 
-  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCANPort(type)); 
-
   SetRowAvailable(IP_ADDRESS, DeviceConfig::UsesIPAddress(type));
   SetRowAvailable(TCPPort, DeviceConfig::UsesTCPPort(type));
   SetRowAvailable(I2CBus, DeviceConfig::UsesI2C(type));
@@ -608,6 +605,12 @@ DeviceEditWidget::UpdateVisibilities()
   SetRowVisible(SyncToDevice, DeviceConfig::UsesDriver(type) &&
                 CanSendSettings(GetDataField(Driver)));
   SetRowAvailable(K6Bt, maybe_bluetooth);
+
+  SetRowAvailable(CANPortNum, DeviceConfig::UsesCANPort(type));
+  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCANPort(type));
+  SetRowVisible(CANPortNum, DeviceConfig::UsesCANPort(type));
+  SetRowVisible(CANBaudRate, DeviceConfig::UsesCANPort(type));
+
 }
 
 void
@@ -624,16 +627,6 @@ DeviceEditWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
   FillBaudRates(*baud_rate_df);
   baud_rate_df->Set(config.baud_rate);
   Add(_("Baud rate"), NULL, baud_rate_df);
-
-  DataFieldEnum *can_port_nums_df = new DataFieldEnum(this);
-  FillCanPortNums(*can_port_nums_df);
-  can_port_nums_df->Set(config.can_port);
-  Add(_("CAN Port"), NULL, can_port_nums_df);
-
-  DataFieldEnum *can_baud_rate_df = new DataFieldEnum(this);
-  FillCanBaudRates(*can_baud_rate_df);
-  can_baud_rate_df->Set(config.can_baud_rate);
-  Add(_("CAN Baud rate"), NULL, can_baud_rate_df);
 
   DataFieldEnum *bulk_baud_rate_df = new DataFieldEnum(this);
   bulk_baud_rate_df->addEnumText(_T("Default"), 0u);
@@ -716,6 +709,16 @@ DeviceEditWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
              _("Enable this if you use a K6Bt to connect the device."),
              config.k6bt, this);
   SetExpertRow(K6Bt);
+
+  DataFieldEnum *can_port_nums_df = new DataFieldEnum(this);
+  FillCanPortNums(*can_port_nums_df);
+  can_port_nums_df->Set(config.can_port);
+  Add(_("CAN Port"), NULL, can_port_nums_df);
+
+  DataFieldEnum *can_baud_rate_df = new DataFieldEnum(this);
+  FillCanBaudRates(*can_baud_rate_df);
+  can_baud_rate_df->Set(config.can_baud_rate);
+  Add(_("CAN Baud rate"), NULL, can_baud_rate_df);
 
   UpdateVisibilities();
 }
@@ -813,8 +816,7 @@ DeviceEditWidget::Save(bool &_changed)
     changed |= SaveValue(TCPPort, config.tcp_port);
 
   if (config.UsesCANPort())
-    changed |= SaveValue(CANPortNum
-, config.can_port_num);
+    changed |= SaveValue(CANPortNum, config.can_port_num);
 
   if (config.UsesCanSpeed()) {
     changed |= SaveValue(CANBaudRate, config.baud_rate);
