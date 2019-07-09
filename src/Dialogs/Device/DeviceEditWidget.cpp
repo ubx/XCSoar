@@ -49,12 +49,13 @@
 #endif
 
 enum ControlIndex {
-  Port, BaudRate, BulkBaudRate,
+  Port, BaudRate, BulkBaudRate, 
   IP_ADDRESS,
   TCPPort,
   I2CBus, I2CAddr, PressureUsage, Driver, UseSecondDriver, SecondDriver,
   SyncFromDevice, SyncToDevice,
   K6Bt,
+  CANPortNum, CANBaudRate,
 };
 
 static constexpr struct {
@@ -274,6 +275,20 @@ FillTCPPorts(DataFieldEnum &dfe)
 }
 
 static void
+FillCanPortNums(DataFieldEnum &dfe)
+{
+  dfe.addEnumText(_T("0"), 0u);
+  dfe.addEnumText(_T("1"), 1u);
+}
+
+static void
+FillCanBaudRates(DataFieldEnum &dfe)  // todo -- possible values ?
+{
+  dfe.addEnumText(_T("100000"), 10000);
+  dfe.addEnumText(_T("50000"), 50000);
+}
+
+static void
 FillI2CBus(DataFieldEnum &dfe)
 {
   dfe.addEnumText(_T("0"), 0u);
@@ -316,7 +331,6 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config)
   case DeviceConfig::PortType::TCP_CLIENT:
   case DeviceConfig::PortType::TCP_LISTENER:
   case DeviceConfig::PortType::UDP_LISTENER:
-  case DeviceConfig::PortType::CAN: // todo -- ???
   case DeviceConfig::PortType::PTY:
   case DeviceConfig::PortType::RFCOMM_SERVER:
   case DeviceConfig::PortType::GLIDER_LINK:
@@ -324,6 +338,10 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config)
 
   case DeviceConfig::PortType::SERIAL:
     SetPort(df, config.port_type, config.path);
+    return;
+
+  case DeviceConfig::PortType::CAN:
+    SetPort(df, config.port_type, config.can_port_num);
     return;
 
   case DeviceConfig::PortType::RFCOMM:
@@ -404,6 +422,17 @@ DeviceEditWidget::SetConfig(const DeviceConfig &_config)
   DataFieldEnum &baud_df = *(DataFieldEnum *)baud_control.GetDataField();
   baud_df.Set(config.baud_rate);
   baud_control.RefreshDisplay();
+
+  WndProperty &can_port_num_control = GetControl(CANPortNum);
+  DataFieldEnum &can_port_df = *(DataFieldEnum *)
+  can_port_num_control.GetDataField();
+  can_port_df.Set(config.can_port);
+  can_port_num_control.RefreshDisplay();
+
+  WndProperty &can_baud_control = GetControl(CANBaudRate);
+  DataFieldEnum &can_baud_df = *(DataFieldEnum *)can_baud_control.GetDataField();
+  can_baud_df.Set(config.can_baud_rate);
+  can_baud_control.RefreshDisplay();
 
   WndProperty &bulk_baud_control = GetControl(BulkBaudRate);
   DataFieldEnum &bulk_baud_df = *(DataFieldEnum *)
@@ -556,6 +585,10 @@ DeviceEditWidget::UpdateVisibilities()
   SetRowVisible(BulkBaudRate, uses_speed &&
                 DeviceConfig::UsesDriver(type) &&
                 SupportsBulkBaudRate(GetDataField(Driver)));
+
+  SetRowAvailable(CANPortNum, DeviceConfig::UsesCANPort(type)); 
+  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCANPort(type)); 
+
   SetRowAvailable(IP_ADDRESS, DeviceConfig::UsesIPAddress(type));
   SetRowAvailable(TCPPort, DeviceConfig::UsesTCPPort(type));
   SetRowAvailable(I2CBus, DeviceConfig::UsesI2C(type));
@@ -591,6 +624,16 @@ DeviceEditWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
   FillBaudRates(*baud_rate_df);
   baud_rate_df->Set(config.baud_rate);
   Add(_("Baud rate"), NULL, baud_rate_df);
+
+  DataFieldEnum *can_port_nums_df = new DataFieldEnum(this);
+  FillCanPortNums(*can_port_nums_df);
+  can_port_nums_df->Set(config.can_port);
+  Add(_("CAN Port"), NULL, can_port_nums_df);
+
+  DataFieldEnum *can_baud_rate_df = new DataFieldEnum(this);
+  FillCanBaudRates(*can_baud_rate_df);
+  can_baud_rate_df->Set(config.can_baud_rate);
+  Add(_("CAN Baud rate"), NULL, can_baud_rate_df);
 
   DataFieldEnum *bulk_baud_rate_df = new DataFieldEnum(this);
   bulk_baud_rate_df->addEnumText(_T("Default"), 0u);
@@ -759,6 +802,7 @@ DeviceEditWidget::Save(bool &_changed)
 
   if (config.UsesSpeed()) {
     changed |= SaveValue(BaudRate, config.baud_rate);
+    changed |= SaveValue(CANBaudRate, config.baud_rate);
     changed |= SaveValue(BulkBaudRate, config.bulk_baud_rate);
   }
 
@@ -767,6 +811,14 @@ DeviceEditWidget::Save(bool &_changed)
 
   if (config.UsesTCPPort())
     changed |= SaveValue(TCPPort, config.tcp_port);
+
+  if (config.UsesCANPort())
+    changed |= SaveValue(CANPortNum
+, config.can_port_num);
+
+  if (config.UsesCanSpeed()) {
+    changed |= SaveValue(CANBaudRate, config.baud_rate);
+  }
 
   if (config.UsesI2C()) {
     changed |= SaveValue(I2CBus, config.i2c_bus);
