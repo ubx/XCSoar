@@ -167,9 +167,15 @@ OpenPortInternal(boost::asio::io_context &io_context,
   case DeviceConfig::PortType::UDP_LISTENER:
     return new UDPPort(io_context, config.tcp_port, listener, handler);
 
-  case DeviceConfig::PortType::CAN:
-    return new CANPort(io_context, config.can_port, listener, handler);
+  case DeviceConfig::PortType::CAN: {
+    CANPort *port = new CANPort(io_context, listener, handler);
 
+    if (!port->Open(config.can_port, config.baud_rate)) {
+      delete port;
+      return nullptr;
+    }
+    return port;
+  }
   case DeviceConfig::PortType::PTY: {
 #if defined(HAVE_POSIX) && !defined(ANDROID)
     if (config.path.empty())
