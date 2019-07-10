@@ -28,12 +28,8 @@ Copyright_License {
 #include "IO/Async/AsioUtil.hpp"
 #include "LogFile.hpp"    // TODO: Used for debugging (LogFormat), maybe remove again
 
-#include <boost/asio/ip/icmp.hpp>
-
 #include <linux/can.h>
 #include <linux/can/raw.h>
-
-#include <boost/asio/detail/push_options.hpp>
 
 
 
