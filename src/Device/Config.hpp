@@ -96,11 +96,6 @@ struct DeviceConfig {
     UDP_LISTENER,
 
     /**
-     * CAN port, , i.e. canx / vcamx
-     */
-    CAN,
-
-    /**
      * A master pseudo-terminal.  The "path" attribute specifies the
      * path of a symlink pointing to the slave pseudo-terminal.  Only
      * for debugging.
@@ -111,6 +106,11 @@ struct DeviceConfig {
      * A GliderLink broadcast receiver. Available on Android only
      */
     GLIDER_LINK,
+
+    /**
+     * CAN port, , i.e. canx / vcanx
+     */
+    CAN,
   };
 
   /**
@@ -357,7 +357,6 @@ struct DeviceConfig {
   bool UsesCANPort() const {
     return UsesCANPort(port_type);
   }
-
 
   bool IsDriver(const TCHAR *name) const {
     return UsesDriver() && driver_name.equals(name);
