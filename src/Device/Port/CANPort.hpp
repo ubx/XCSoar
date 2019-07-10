@@ -25,6 +25,8 @@ Copyright_License {
 #define XCSOAR_DEVICE_CAN_PORT_HPP
 
 #include "BufferedPort.hpp"
+#include "IO/Async/AsioUtil.hpp"
+#include "LogFile.hpp"    // TODO: Used for debugging (LogFormat), maybe remove again
 
 #include <boost/asio/ip/icmp.hpp>
 
@@ -33,91 +35,6 @@ Copyright_License {
 
 #include <boost/asio/detail/push_options.hpp>
 
-namespace boost {
-namespace asio {
-
-class Can
-{
-public:
-    /// The type of a CAN endpoint.
-    typedef boost::asio::ip::basic_endpoint<Can> endpoint;
-
-    /// The type of a resolver query.
-    typedef boost::asio::ip::basic_resolver_query<Can> resolver_query;
-
-    /// The type of a resolver iterator.
-    typedef boost::asio::ip::basic_resolver_iterator<Can>
-        resolver_iterator;
-
-    /// Construct to represent the socket CAN protocol.
-    Can()
-        : protocol_(CAN_RAW), family_(PF_CAN)
-    {
-    }
-
-    static Can v4()
-    {
-        return Can();
-    }
-
-    static Can v6()
-    {
-        return Can();
-    }
-
-    /// Obtain an identifier for the type of the protocol.
-    int type() const
-    {
-        return SOCK_RAW;
-    }
-
-    /// Obtain an identifier for the protocol.
-    int protocol() const
-    {
-        return protocol_;
-    }
-
-    /// Obtain an identifier for the protocol family.
-    int family() const
-    {
-        return family_;
-    }
-
-    /// The CAN socket type.
-    typedef boost::asio::basic_raw_socket<Can> socket;
-
-    /// The CAN resolver type.
-    typedef boost::asio::ip::basic_resolver<Can> resolver;
-
-    /// Compare two protocols for equality.
-    friend bool operator==(const Can &p1, const Can &p2)
-    {
-        return p1.protocol_ == p2.protocol_ && p1.family_ ==
-                                                   p2.family_;
-    }
-
-    /// Compare two protocols for inequality.
-    friend bool operator!=(const Can &p1, const Can &p2)
-    {
-        return p1.protocol_ != p2.protocol_ || p1.family_ !=
-                                                   p2.family_;
-    }
-
-private:
-  // Construct with a specific family.
-  explicit Can(int protocol_id, int protocol_family)
-    : protocol_(protocol_id),
-      family_(protocol_family)
-  {
-  }
-
-  int protocol_;
-  int family_;
-};
-
-} // namespace asio
-} // namespace boost
-
 
 
 /**
@@ -125,7 +42,7 @@ private:
  */
 class CANPort final : public BufferedPort
 {
-  boost::asio::Can::socket socket;
+  boost::asio::posix::stream_descriptor socket_;
 
 
   char input[4096];
@@ -138,9 +55,7 @@ public:
    * port
    */
   CANPort(boost::asio::io_context &io_context,
-          unsigned port,
           PortListener *_listener, DataHandler &_handler);
-
   /**
    * Closes the serial port (Destructor)
    */
@@ -148,6 +63,8 @@ public:
 
   /* virtual methods from class Port */
   PortState GetState() const override;
+
+  bool Open(unsigned port, unsigned baud_rate);
 
   bool Drain() override {
     /* writes are synchronous */
@@ -166,7 +83,7 @@ public:
 
 protected:
   void AsyncRead() {
-    socket.async_receive(boost::asio::buffer(input, sizeof(input)),
+    socket_.async_read_some(boost::asio::buffer(input, sizeof(input)),
                          std::bind(&CANPort::OnRead, this,
                                    std::placeholders::_1,
                                    std::placeholders::_2));
