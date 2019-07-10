@@ -22,31 +22,77 @@ Copyright_License {
 */
 
 #include "CANPort.hpp"
-#include "IO/Async/AsioUtil.hpp"
+#include "OS/Error.hxx"
 
 CANPort::CANPort(boost::asio::io_context &io_context,
-                 unsigned port,
                  PortListener *_listener, DataHandler &_handler)
   :BufferedPort(_listener, _handler),
-    socket(io_context, boost::asio::Can()) // toodo -- ???
+    socket_(io_context) // toodo -- ???
 {
-  AsyncRead();
 }
 
 CANPort::~CANPort()
 {
   BufferedPort::BeginClose();
 
-  if (socket.is_open())
-    CancelWait(socket);
+  if (socket_.is_open())
+    CancelWait(socket_);
 
   BufferedPort::EndClose();
+}
+
+bool
+CANPort::Open(unsigned port, unsigned baud_rate) {
+
+
+  int sc = socket( PF_CAN, SOCK_RAW, CAN_RAW );
+
+  struct ifreq ifr;
+  strcpy(ifr.ifr_name, "vcan0");
+  int ret = ioctl(sc, SIOCGIFINDEX, &ifr);
+
+  if(ret != 0){
+    throw FormatErrno("Can not connect to %s", ifr.ifr_name);
+    return false;
+  }
+
+  /* CAN Fram filter options  */
+  //struct can_filter rfilter[2];
+  //rfilter[0].can_id   = 0x123;
+  //rfilter[0].can_mask = CAN_SFF_MASK;
+  //rfilter[1].can_id   = 0x200;
+  //rfilter[1].can_mask = 0x700;
+
+  //ret = setsockopt(sc, SOL_CAN_RAW, CAN_RAW_ERR_FILTER,
+  //   &rfilter, sizeof(rfilter));
+
+  //if(ret != 0){
+  //    boost::system::error_code(ret,boost::system::system_category());
+  //    close(sc);
+  //    return false;
+  //}
+
+  struct sockaddr_can addr = {0};
+  addr.can_family = AF_CAN;
+  addr.can_ifindex = ifr.ifr_ifindex;
+  ret = bind( sc, (struct sockaddr*)&addr, sizeof(addr) );
+
+  if(ret != 0){
+    throw FormatErrno("Failed binding socket %s", ifr.ifr_name );
+    return false;
+  }
+
+  socket_.assign(sc);
+
+  AsyncRead();
+  
+  return true;
 }
 
 PortState
 CANPort::GetState() const
 {
-  if (socket.is_open())
+  if (socket_.is_open())
     return PortState::READY;
   else
     return PortState::FAILED;
@@ -55,15 +101,15 @@ CANPort::GetState() const
 size_t
 CANPort::Write(const void *data, size_t length)
 {
-  if (!socket.is_open())
+  if (!socket_.is_open())
     return 0;
 
-  boost::system::error_code ec;
-  size_t nbytes = socket.send(boost::asio::buffer(data, length), 0, ec);
-  if (ec)
-    nbytes = 0;
+  //boost::system::error_code ec;
+  //size_t nbytes = socket_.async_write_some(boost::asio::buffer(data, length), 0, ec);
+  //if (ec)
+  //  nbytes = 0;
 
-  return nbytes;
+  return 0;
 }
 
 void
@@ -75,7 +121,7 @@ CANPort::OnRead(const boost::system::error_code &ec, size_t nbytes)
     return;
 
   if (ec) {
-    socket.close();
+    socket_.close();
     StateChanged();
     Error(ec.message().c_str());
     return;
