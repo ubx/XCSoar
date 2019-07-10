@@ -78,12 +78,7 @@ public:
   size_t Write(const void *data, size_t length) override;
 
 protected:
-  void AsyncRead() {
-    socket_.async_read_some(boost::asio::buffer(input, sizeof(input)),
-                         std::bind(&CANPort::OnRead, this,
-                                   std::placeholders::_1,
-                                   std::placeholders::_2));
-  }
+  void AsyncRead();
 
   void OnRead(const boost::system::error_code &ec, size_t nbytes);
 };
