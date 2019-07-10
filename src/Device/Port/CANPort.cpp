@@ -85,7 +85,7 @@ CANPort::Open(unsigned port, unsigned baud_rate) {
   socket_.assign(sc);
 
   AsyncRead();
-  
+  StateChanged();
   return true;
 }
 
@@ -104,12 +104,12 @@ CANPort::Write(const void *data, size_t length)
   if (!socket_.is_open())
     return 0;
 
-  //boost::system::error_code ec;
-  //size_t nbytes = socket_.async_write_some(boost::asio::buffer(data, length), 0, ec);
-  //if (ec)
-  //  nbytes = 0;
+  boost::system::error_code ec;
+  size_t nbytes = socket_.write_some(boost::asio::buffer(data, length));
+  if (ec)
+    nbytes = 0;
 
-  return 0;
+  return nbytes;
 }
 
 void
@@ -131,3 +131,12 @@ CANPort::OnRead(const boost::system::error_code &ec, size_t nbytes)
 
   AsyncRead();
 }
+
+void
+CANPort::AsyncRead() 
+  {
+    socket_.async_read_some(boost::asio::buffer(input, sizeof(input)),
+                         std::bind(&CANPort::OnRead, this,
+                                   std::placeholders::_1,
+                                   std::placeholders::_2));
+  }
