@@ -156,7 +156,7 @@ constexpr
 static inline bool
 IsLinux()
 {
-#ifdef TARGET_IS_LINUX
+#if defined(HAVE_POSIX) && !defined(ANDROID)
   return true;
 #else
   return false;
