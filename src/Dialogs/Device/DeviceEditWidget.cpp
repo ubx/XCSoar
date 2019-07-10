@@ -608,9 +608,6 @@ DeviceEditWidget::UpdateVisibilities()
 
   SetRowAvailable(CANPortNum, DeviceConfig::UsesCANPort(type));
   SetRowAvailable(CANBaudRate, DeviceConfig::UsesCANPort(type));
-  SetRowVisible(CANPortNum, DeviceConfig::UsesCANPort(type));
-  SetRowVisible(CANBaudRate, DeviceConfig::UsesCANPort(type));
-
 }
 
 void
@@ -819,7 +816,7 @@ DeviceEditWidget::Save(bool &_changed)
     changed |= SaveValue(CANPortNum, config.can_port_num);
 
   if (config.UsesCanSpeed()) {
-    changed |= SaveValue(CANBaudRate, config.baud_rate);
+    changed |= SaveValue(CANBaudRate, config.can_baud_rate);
   }
 
   if (config.UsesI2C()) {
