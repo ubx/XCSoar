@@ -625,16 +625,6 @@ DeviceEditWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
   baud_rate_df->Set(config.baud_rate);
   Add(_("Baud rate"), NULL, baud_rate_df);
 
-  DataFieldEnum *can_port_nums_df = new DataFieldEnum(this);
-  FillCanPortNums(*can_port_nums_df);
-  can_port_nums_df->Set(config.can_port);
-  Add(_("CAN Port"), NULL, can_port_nums_df);
-
-  DataFieldEnum *can_baud_rate_df = new DataFieldEnum(this);
-  FillCanBaudRates(*can_baud_rate_df);
-  can_baud_rate_df->Set(config.can_baud_rate);
-  Add(_("CAN Baud rate"), NULL, can_baud_rate_df);
-
   DataFieldEnum *bulk_baud_rate_df = new DataFieldEnum(this);
   bulk_baud_rate_df->addEnumText(_T("Default"), 0u);
   FillBaudRates(*bulk_baud_rate_df);
@@ -716,6 +706,16 @@ DeviceEditWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
              _("Enable this if you use a K6Bt to connect the device."),
              config.k6bt, this);
   SetExpertRow(K6Bt);
+
+  DataFieldEnum *can_port_nums_df = new DataFieldEnum(this);
+  FillCanPortNums(*can_port_nums_df);
+  can_port_nums_df->Set(config.can_port);
+  Add(_("CAN Port"), NULL, can_port_nums_df);
+
+  DataFieldEnum *can_baud_rate_df = new DataFieldEnum(this);
+  FillCanBaudRates(*can_baud_rate_df);
+  can_baud_rate_df->Set(config.can_baud_rate);
+  Add(_("CAN Baud rate"), NULL, can_baud_rate_df);
 
   UpdateVisibilities();
 }
