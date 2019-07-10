@@ -49,7 +49,7 @@
 #endif
 
 enum ControlIndex {
-  Port, BaudRate, BulkBaudRate, 
+  Port, BaudRate, BulkBaudRate,
   IP_ADDRESS,
   TCPPort,
   I2CBus, I2CAddr, PressureUsage, Driver, UseSecondDriver, SecondDriver,
@@ -586,9 +586,6 @@ DeviceEditWidget::UpdateVisibilities()
                 DeviceConfig::UsesDriver(type) &&
                 SupportsBulkBaudRate(GetDataField(Driver)));
 
-  SetRowAvailable(CANPortNum, DeviceConfig::UsesCANPort(type)); 
-  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCANPort(type)); 
-
   SetRowAvailable(IP_ADDRESS, DeviceConfig::UsesIPAddress(type));
   SetRowAvailable(TCPPort, DeviceConfig::UsesTCPPort(type));
   SetRowAvailable(I2CBus, DeviceConfig::UsesI2C(type));
@@ -608,6 +605,12 @@ DeviceEditWidget::UpdateVisibilities()
   SetRowVisible(SyncToDevice, DeviceConfig::UsesDriver(type) &&
                 CanSendSettings(GetDataField(Driver)));
   SetRowAvailable(K6Bt, maybe_bluetooth);
+
+  SetRowAvailable(CANPortNum, DeviceConfig::UsesCANPort(type));
+  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCANPort(type));
+  SetRowVisible(CANPortNum, DeviceConfig::UsesCANPort(type));
+  SetRowVisible(CANBaudRate, DeviceConfig::UsesCANPort(type));
+
 }
 
 void
@@ -813,8 +816,7 @@ DeviceEditWidget::Save(bool &_changed)
     changed |= SaveValue(TCPPort, config.tcp_port);
 
   if (config.UsesCANPort())
-    changed |= SaveValue(CANPortNum
-, config.can_port_num);
+    changed |= SaveValue(CANPortNum, config.can_port_num);
 
   if (config.UsesCanSpeed()) {
     changed |= SaveValue(CANBaudRate, config.baud_rate);
