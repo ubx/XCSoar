@@ -21,6 +21,9 @@ Copyright_License {
 }
 */
 
+#include "LogFile.hpp"
+#include "OS/Error.hxx"
+
 #ifndef XCSOAR_DEVICE_DRIVER_VEGACAN_HPP
 #define XCSOAR_DEVICE_DRIVER_VEGACAN_HPP
 

@@ -28,11 +28,19 @@ Copyright_License {
 #include "NMEA/InputLine.hpp"
 #include "NMEA/Checksum.hpp"
 
+#include <linux/can.h>
+#include <linux/can/raw.h>
+
+#include <iostream> // TODO: Remove this, its just for debugging
+
+
 class VegaCANDevice : public AbstractDevice {
   Port &port;
 
   public:
     VegaCANDevice(Port &_port):port(_port) {}
+
+    bool DataReceived(const void *data, size_t length, NMEAInfo &info) override;
 };
 
 static Device *
@@ -41,9 +49,21 @@ VegaCANCreateOnPort(const DeviceConfig &config, Port &com_port)
   return new VegaCANDevice(com_port);
 }
 
+bool
+VegaCANDevice::DataReceived(const void *data, size_t length,
+                           NMEAInfo &info)
+{
+  const can_frame* data_ = (const can_frame*) data;   // Cast the adress to a can frame
+  std::cout << "CAN ID: " <<  data_->can_id << std::endl;
+
+  // I guess the parsing part should go here:
+
+  return true;
+}
+
 const struct DeviceRegister vega_can_driver = {
   _T("VegaCAN"),
   _T("VegaCAN"),
-  DeviceRegister::RECEIVE_SETTINGS | DeviceRegister::SEND_SETTINGS,
+  DeviceRegister::NO_TIMEOUT | DeviceRegister::RAW_GPS_DATA, // TODO: Put the right flags
   VegaCANCreateOnPort,
 };
