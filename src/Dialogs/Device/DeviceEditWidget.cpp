@@ -55,7 +55,7 @@ enum ControlIndex {
   I2CBus, I2CAddr, PressureUsage, Driver, UseSecondDriver, SecondDriver,
   SyncFromDevice, SyncToDevice,
   K6Bt,
-  CANPortNum, CANBaudRate,
+  CANBaudRate,
 };
 
 static constexpr struct {
@@ -83,7 +83,6 @@ static constexpr struct {
      selection UI */
   { DeviceConfig::PortType::TCP_LISTENER, N_("TCP Port") },
   { DeviceConfig::PortType::UDP_LISTENER, N_("UDP Port") },
-  { DeviceConfig::PortType::CAN, N_("CAN Port") },
 
   { DeviceConfig::PortType::SERIAL, NULL } /* sentinel */
 };
@@ -132,6 +131,15 @@ DetectSerialPorts(DataFieldEnum &df)
   return found;
 }
 
+/** all can port on the system, including virtuals -- todo -- ??*/
+static bool
+DetectCanPorts(DataFieldEnum &df)
+{
+  AddPort(df, DeviceConfig::PortType::CAN, "can0", "can0");
+  AddPort(df, DeviceConfig::PortType::CAN, "vcan0", "vcan0");
+  return true;
+}
+
 #endif
 
 #if defined(_WIN32) && !defined(HAVE_POSIX)
@@ -173,6 +181,7 @@ static void
 FillSerialPorts(DataFieldEnum &df, const DeviceConfig &config)
 {
 #if defined(HAVE_POSIX)
+  DetectCanPorts(df);
   DetectSerialPorts(df);
 #elif defined(_WIN32)
   FillDefaultSerialPorts(df);
@@ -275,17 +284,12 @@ FillTCPPorts(DataFieldEnum &dfe)
 }
 
 static void
-FillCanPortNums(DataFieldEnum &dfe)
+FillCanBaudRates(DataFieldEnum &dfe)
 {
-  dfe.addEnumText(_T("0"), 0u);
-  dfe.addEnumText(_T("1"), 1u);
-}
-
-static void
-FillCanBaudRates(DataFieldEnum &dfe)  // todo -- possible values ?
-{
-  dfe.addEnumText(_T("100000"), 10000);
-  dfe.addEnumText(_T("50000"), 50000);
+  dfe.addEnumText(_T("125000"), 125000);
+  dfe.addEnumText(_T("250000"), 250000);
+  dfe.addEnumText(_T("500000"), 500000);
+  dfe.addEnumText(_T("1000000"), 1000000);
 }
 
 static void
@@ -422,12 +426,6 @@ DeviceEditWidget::SetConfig(const DeviceConfig &_config)
   DataFieldEnum &baud_df = *(DataFieldEnum *)baud_control.GetDataField();
   baud_df.Set(config.baud_rate);
   baud_control.RefreshDisplay();
-
-  WndProperty &can_port_num_control = GetControl(CANPortNum);
-  DataFieldEnum &can_port_df = *(DataFieldEnum *)
-  can_port_num_control.GetDataField();
-  can_port_df.Set(config.can_port);
-  can_port_num_control.RefreshDisplay();
 
   WndProperty &can_baud_control = GetControl(CANBaudRate);
   DataFieldEnum &can_baud_df = *(DataFieldEnum *)can_baud_control.GetDataField();
@@ -606,8 +604,7 @@ DeviceEditWidget::UpdateVisibilities()
                 CanSendSettings(GetDataField(Driver)));
   SetRowAvailable(K6Bt, maybe_bluetooth);
 
-  SetRowAvailable(CANPortNum, DeviceConfig::UsesCANPort(type));
-  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCANPort(type));
+  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCanSpeed(type));
 }
 
 void
@@ -707,11 +704,6 @@ DeviceEditWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
              config.k6bt, this);
   SetExpertRow(K6Bt);
 
-  DataFieldEnum *can_port_nums_df = new DataFieldEnum(this);
-  FillCanPortNums(*can_port_nums_df);
-  can_port_nums_df->Set(config.can_port);
-  Add(_("CAN Port"), NULL, can_port_nums_df);
-
   DataFieldEnum *can_baud_rate_df = new DataFieldEnum(this);
   FillCanBaudRates(*can_baud_rate_df);
   can_baud_rate_df->Set(config.can_baud_rate);
@@ -744,7 +736,7 @@ FinishPortField(DeviceConfig &config, const DataFieldEnum &df)
   case DeviceConfig::PortType::TCP_CLIENT:
   case DeviceConfig::PortType::TCP_LISTENER:
   case DeviceConfig::PortType::UDP_LISTENER:
-  case DeviceConfig::PortType::CAN:  // todo -- ???
+  case DeviceConfig::PortType::CAN:
   case DeviceConfig::PortType::RFCOMM_SERVER:
   case DeviceConfig::PortType::GLIDER_LINK:
     if (new_type == config.port_type)
@@ -811,9 +803,6 @@ DeviceEditWidget::Save(bool &_changed)
 
   if (config.UsesTCPPort())
     changed |= SaveValue(TCPPort, config.tcp_port);
-
-  if (config.UsesCANPort())
-    changed |= SaveValue(CANPortNum, config.can_port_num);
 
   if (config.UsesCanSpeed()) {
     changed |= SaveValue(CANBaudRate, config.can_baud_rate);

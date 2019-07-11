@@ -60,7 +60,7 @@ public:
   /* virtual methods from class Port */
   PortState GetState() const override;
 
-  bool Open(unsigned port, unsigned baud_rate);
+  bool Open(const char *port_name, unsigned baud_rate);
 
   bool Drain() override {
     /* writes are synchronous */
