@@ -214,7 +214,7 @@ struct DeviceConfig {
    */
   StaticString<6> can_port_name;
 
-  /**
+   /**
    * Is this device currently enabled?  This flag can be used to
    * maintain a stock of devices, and not all of them are enabled at a
    * time.  For example, you can disable the logger connection while
@@ -294,11 +294,6 @@ struct DeviceConfig {
   bool UsesSpeed() const {
     return UsesSpeed(port_type) ||
       (MaybeBluetooth() && k6bt);
-  }
-
-  bool UsesCanSpeed() const {
-    return UsesCanSpeed(port_type) & 
-      can_port_name.equals("can0");
   }
 
   /**

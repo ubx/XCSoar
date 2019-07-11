@@ -576,7 +576,6 @@ DeviceEditWidget::UpdateVisibilities()
     DeviceConfig::MaybeBluetooth(type, GetDataField(Port).GetAsString());
   const bool k6bt = maybe_bluetooth && GetValueBoolean(K6Bt);
   const bool uses_speed = DeviceConfig::UsesSpeed(type) || k6bt;
-  const bool uses_can_speed = DeviceConfig::UsesCanSpeed(type);
 
   SetRowAvailable(BaudRate, uses_speed);
   SetRowAvailable(BulkBaudRate, uses_speed &&
@@ -605,7 +604,7 @@ DeviceEditWidget::UpdateVisibilities()
                 CanSendSettings(GetDataField(Driver)));
   SetRowAvailable(K6Bt, maybe_bluetooth);
 
-  SetRowAvailable(CANBaudRate, uses_can_speed);
+  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCanSpeed(type));
 }
 
 void
@@ -813,10 +812,6 @@ DeviceEditWidget::Save(bool &_changed)
 
   if (config.UsesTCPPort())
     changed |= SaveValue(TCPPort, config.tcp_port);
-
-  if (config.UsesCanSpeed()) {
-    changed |= SaveValue(CANBaudRate, config.can_baud_rate);
-  }
 
   if (config.UsesI2C()) {
     changed |= SaveValue(I2CBus, config.i2c_bus);
