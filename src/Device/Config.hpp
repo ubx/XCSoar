@@ -163,11 +163,6 @@ struct DeviceConfig {
   unsigned i2c_addr;
 
   /**
-   * The name of the serial port, e.g. "can0:".
-   */
-  StaticString<32> can_port_num;
-
-  /**
    * What is the purpose of this pressure sensor.
    */
   enum class PressureUse : unsigned {
@@ -215,10 +210,9 @@ struct DeviceConfig {
   unsigned tcp_port;
 
   /*
-   *  TODO -- ?
+   * The CAN port name like "can0" or "vcan0" for a virtual port.
    */
-  StaticString<5> can_port_name;
-
+  StaticString<6> can_port_name;
 
   /**
    * Is this device currently enabled?  This flag can be used to
@@ -262,8 +256,7 @@ struct DeviceConfig {
    * Does this port type use a can baud rate?
    */
   static bool UsesCanSpeed(PortType port_type) {
-    return port_type == PortType::CAN; 
-       //&& can_port_name.c_str().starts_with("can"); -- todo fix "a nonstatic member reference must be relative to a specific object"
+    return port_type == PortType::CAN;
   }
 
   bool IsDisabled() const {
@@ -304,7 +297,8 @@ struct DeviceConfig {
   }
 
   bool UsesCanSpeed() const {
-    return UsesCanSpeed(port_type);
+    return UsesCanSpeed(port_type) & 
+      can_port_name.equals("can0");
   }
 
   /**

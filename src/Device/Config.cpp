@@ -113,7 +113,7 @@ DeviceConfig::ShouldReopenOnTimeout() const
 
   case PortType::TCP_LISTENER:
   case PortType::UDP_LISTENER:
-  case PortType::CAN: // todo -- ???
+  case PortType::CAN:
     /* this is a server, and if no data gets received, this can just
        mean that nobody connected to it, but reopening it periodically
        doesn't help */
@@ -266,7 +266,7 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const
     return buffer;
 
   case PortType::CAN:
-    StringFormat(buffer, max_size, _T("CAN port %s"), can_port_name);
+    StringFormat(buffer, max_size, _T("CAN port %s"), can_port_name.c_str());
     return buffer;
 
   case PortType::PTY:

@@ -345,7 +345,7 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config)
     return;
 
   case DeviceConfig::PortType::CAN:
-    SetPort(df, config.port_type, config.can_port_num);
+    SetPort(df, config.port_type, config.can_port_name);
     return;
 
   case DeviceConfig::PortType::RFCOMM:
@@ -576,6 +576,7 @@ DeviceEditWidget::UpdateVisibilities()
     DeviceConfig::MaybeBluetooth(type, GetDataField(Port).GetAsString());
   const bool k6bt = maybe_bluetooth && GetValueBoolean(K6Bt);
   const bool uses_speed = DeviceConfig::UsesSpeed(type) || k6bt;
+  const bool uses_can_speed = DeviceConfig::UsesCanSpeed(type);
 
   SetRowAvailable(BaudRate, uses_speed);
   SetRowAvailable(BulkBaudRate, uses_speed &&
@@ -604,7 +605,7 @@ DeviceEditWidget::UpdateVisibilities()
                 CanSendSettings(GetDataField(Driver)));
   SetRowAvailable(K6Bt, maybe_bluetooth);
 
-  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCanSpeed(type));
+  SetRowAvailable(CANBaudRate, uses_can_speed);
 }
 
 void
@@ -736,7 +737,6 @@ FinishPortField(DeviceConfig &config, const DataFieldEnum &df)
   case DeviceConfig::PortType::TCP_CLIENT:
   case DeviceConfig::PortType::TCP_LISTENER:
   case DeviceConfig::PortType::UDP_LISTENER:
-  case DeviceConfig::PortType::CAN:
   case DeviceConfig::PortType::RFCOMM_SERVER:
   case DeviceConfig::PortType::GLIDER_LINK:
     if (new_type == config.port_type)
@@ -775,6 +775,16 @@ FinishPortField(DeviceConfig &config, const DataFieldEnum &df)
     config.port_type = new_type;
     config.ioio_uart_id = (unsigned)ParseUnsigned(df.GetAsString());
     return true;
+
+  case DeviceConfig::PortType::CAN:
+    if (new_type == config.port_type &&
+        StringIsEqual(config.can_port_name, df.GetAsString()))
+      return false;
+
+    config.port_type = new_type;
+    config.can_port_name = df.GetAsString();
+    return true;
+
   }
 
   gcc_unreachable();

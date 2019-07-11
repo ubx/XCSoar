@@ -169,8 +169,8 @@ OpenPortInternal(boost::asio::io_context &io_context,
 
   case DeviceConfig::PortType::CAN: {
     CANPort *port = new CANPort(io_context, listener, handler);
-
-    if (!port->Open(config.can_port_name, config.baud_rate)) {
+    
+    if (!port->Open(config.can_port_name, config.can_baud_rate)) {
       delete port;
       return nullptr;
     }
