@@ -217,7 +217,7 @@ struct DeviceConfig {
   /*
    *  TODO -- ?
    */
-  unsigned can_port;
+  StaticString<5> can_port_name;
 
 
   /**
@@ -262,7 +262,8 @@ struct DeviceConfig {
    * Does this port type use a can baud rate?
    */
   static bool UsesCanSpeed(PortType port_type) {
-    return port_type == PortType::CAN;
+    return port_type == PortType::CAN; 
+       //&& can_port_name.c_str().starts_with("can"); -- todo fix "a nonstatic member reference must be relative to a specific object"
   }
 
   bool IsDisabled() const {

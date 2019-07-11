@@ -266,7 +266,7 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const
     return buffer;
 
   case PortType::CAN:
-    StringFormat(buffer, max_size, _T("CAN port %d"), can_port);
+    StringFormat(buffer, max_size, _T("CAN port %s"), can_port_name);
     return buffer;
 
   case PortType::PTY:

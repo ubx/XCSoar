@@ -91,7 +91,7 @@ DeviceConfigOverlaps(const DeviceConfig &a, const DeviceConfig &b)
     return a.tcp_port == b.tcp_port;
 
   case DeviceConfig::PortType::CAN:
-    return a.can_port == b.can_port;
+    return a.path.equals(b.path);
   }
 
   gcc_unreachable();
