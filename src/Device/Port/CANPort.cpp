@@ -126,8 +126,7 @@ CANPort::OnRead(const boost::system::error_code &ec, size_t nbytes)
     Error(ec.message().c_str());
     return;
   }
-
-  DataReceived(input, nbytes);
+  DataReceived(&input, nbytes);
 
   AsyncRead();
 }
@@ -135,7 +134,7 @@ CANPort::OnRead(const boost::system::error_code &ec, size_t nbytes)
 void
 CANPort::AsyncRead() 
   {
-    socket_.async_read_some(boost::asio::buffer(input, sizeof(input)),
+    socket_.async_read_some(boost::asio::buffer(&input, sizeof(input)),
                          std::bind(&CANPort::OnRead, this,
                                    std::placeholders::_1,
                                    std::placeholders::_2));

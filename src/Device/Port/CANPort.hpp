@@ -40,8 +40,7 @@ class CANPort final : public BufferedPort
 {
   boost::asio::posix::stream_descriptor socket_;
 
-
-  char input[4096];
+  can_frame input;
 
 public:
   /**
