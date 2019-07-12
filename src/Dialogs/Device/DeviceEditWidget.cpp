@@ -135,8 +135,8 @@ DetectSerialPorts(DataFieldEnum &df)
 static bool
 DetectCanPorts(DataFieldEnum &df)
 {
-  AddPort(df, DeviceConfig::PortType::CAN, "can0", "can0");
-  AddPort(df, DeviceConfig::PortType::CAN, "vcan0", "vcan0");
+  AddPort(df, DeviceConfig::PortType::CAN, "can0", "CAN Port can0");
+  AddPort(df, DeviceConfig::PortType::CAN, "vcan0", "CAN Port vcan0");
   return true;
 }
 
