@@ -53,6 +53,9 @@ bool
 VegaCANDevice::DataReceived(const void *data, size_t length,
                            NMEAInfo &info)
 {
+  assert(data != nullptr);
+  assert(length > 0);
+
   const can_frame* data_ = (const can_frame*) data;   // Cast the adress to a can frame
   std::cout << "CAN ID: " <<  data_->can_id << std::endl;
 
