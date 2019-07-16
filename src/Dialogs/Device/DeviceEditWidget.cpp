@@ -344,6 +344,10 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config)
     SetPort(df, config.port_type, config.path);
     return;
 
+  case DeviceConfig::PortType::CAN:
+    SetPort(df, config.port_type, config.can_port_name);
+    return;
+
   case DeviceConfig::PortType::RFCOMM:
     SetPort(df, config.port_type, config.bluetooth_mac);
     return;
@@ -352,10 +356,6 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config)
     StaticString<16> buffer;
     buffer.UnsafeFormat(_T("%d"), config.ioio_uart_id);
     df.Set(buffer);
-    return;
-
-  case DeviceConfig::PortType::CAN:
-    SetPort(df, config.port_type, config.can_port_name);
     return;
   }
 
