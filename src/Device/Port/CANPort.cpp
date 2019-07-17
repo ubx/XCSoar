@@ -57,14 +57,15 @@ CANPort::Open(const char *port_name, unsigned baud_rate) {
   }
 
   /* CAN Fram filter options  */
-  //struct can_filter rfilter[2];
-  //rfilter[0].can_id   = 0x123;
-  //rfilter[0].can_mask = CAN_SFF_MASK;
-  //rfilter[1].can_id   = 0x200;
-  //rfilter[1].can_mask = 0x700;
+  struct can_filter rfilter[3];
+  rfilter[0].can_id   = 0x40C;
+  rfilter[0].can_mask = CAN_SFF_MASK;
+  rfilter[1].can_id   = 0x40D;
+  rfilter[1].can_mask = CAN_SFF_MASK;
+  rfilter[2].can_id   = 0x40E ;
+  rfilter[2].can_mask = CAN_SFF_MASK;
 
-  //ret = setsockopt(sc, SOL_CAN_RAW, CAN_RAW_ERR_FILTER,
-  //   &rfilter, sizeof(rfilter));
+  ret = setsockopt(sc, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
 
   //if(ret != 0){
   //    boost::system::error_code(ret,boost::system::system_category());
