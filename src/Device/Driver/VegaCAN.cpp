@@ -43,6 +43,24 @@ class VegaCANDevice : public AbstractDevice {
     bool DataReceived(const void *data, size_t length, NMEAInfo &info) override;
 };
 
+static signed int 
+ByteToInt(const can_frame* frame)
+{
+     signed int i = frame->data[3] | (frame->data[2] << 8) | (frame->data[1] << 16) | (frame->data[0] << 24);
+     return i;
+}
+
+static void 
+PrintData(const can_frame* frame) {
+
+
+  for (int i=0;i<frame->can_dlc && i < 8; ++i){
+    std::cout << "data[" << i << "]: "  << static_cast<unsigned int>(frame->data[i]) << std::endl;
+  }
+}
+
+
+
 static Device *
 VegaCANCreateOnPort(const DeviceConfig &config, Port &com_port)
 {
@@ -55,12 +73,31 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
 {
   assert(data != nullptr);
   assert(length > 0);
+  
 
   const can_frame* data_ = (const can_frame*) data;   // Cast the adress to a can frame
   std::cout << "CAN ID: " <<  data_->can_id << std::endl;
 
   // I guess the parsing part should go here:
+  GeoPoint location;
 
+  switch (data_->can_id) {
+    case 1036: 
+      PrintData(data_);
+      ByteToInt(data_);
+      info.location = location;
+      info.location_available.Update(info.clock);
+      return true;
+
+    case 1037: PrintData(data_); return true; // Lon
+    case 1038: 
+      PrintData(data_);
+      info.gps_altitude = ByteToInt(data_);
+      info.gps_altitude_available.Update(info.clock);
+      info.alive.Update(info.clock);
+      return true; // Height
+  }
+  
   return true;
 }
 
