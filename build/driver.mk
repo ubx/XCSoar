@@ -125,7 +125,11 @@ DRIVER_SOURCES = \
 	$(DRIVER_SRC_DIR)/Vaulter.cpp \
 	$(DRIVER_SRC_DIR)/KRT2.cpp \
 	$(DRIVER_SRC_DIR)/AirControlDisplay.cpp \
-	$(DRIVER_SRC_DIR)/ATR833.cpp \
+	$(DRIVER_SRC_DIR)/ATR833.cpp
+
+ifeq ($(HAVE_POSIX),y)
+DRIVER_SOURCES += \
 	$(DRIVER_SRC_DIR)/VegaCAN.cpp
+endif
 
 $(eval $(call link-library,driver,DRIVER))
