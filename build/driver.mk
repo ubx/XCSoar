@@ -87,6 +87,10 @@ XCTRACER_SOURCES = \
 
 THERMALEXPRESS_SOURCES = \
 	$(DRIVER_SRC_DIR)/ThermalExpress/Driver.cpp
+
+VEGACAN_SOURCES = \
+    $(DRIVER_SRC_DIR)/VegaCAN/marshal.c
+
  
 DRIVER_SOURCES = \
 	$(SRC)/Device/Driver.cpp \
@@ -129,7 +133,8 @@ DRIVER_SOURCES = \
 
 ifeq ($(HAVE_POSIX),y)
 DRIVER_SOURCES += \
-	$(DRIVER_SRC_DIR)/VegaCAN.cpp
+	$(DRIVER_SRC_DIR)/VegaCAN.cpp \
+	$(VEGACAN_SOURCES)
 endif
 
 $(eval $(call link-library,driver,DRIVER))
