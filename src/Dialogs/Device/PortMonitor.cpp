@@ -51,10 +51,13 @@ class PortTerminalBridge : public DataHandler, private DelayedNotify {
   TerminalWindow &terminal;
   Mutex mutex;
   StaticFifoBuffer<char, 1024> buffer;
+  bool hexOutput;
 
 public:
-  PortTerminalBridge(TerminalWindow &_terminal)
-    :DelayedNotify(std::chrono::milliseconds(100)), terminal(_terminal) {}
+  PortTerminalBridge(TerminalWindow &_terminal, DeviceDescriptor &_device)
+    :DelayedNotify(std::chrono::milliseconds(100)), terminal(_terminal) {
+      hexOutput = _device.GetConfig().port_type == DeviceConfig::PortType::CAN;
+  }
   virtual ~PortTerminalBridge() {}
 
   virtual void DataReceived(const void *data, size_t length) {
@@ -64,7 +67,14 @@ public:
       auto range = buffer.Write();
       if (range.size < length)
         length = range.size;
-      memcpy(range.data, data, length);
+      if (hexOutput) {
+          char *hex;
+          hex = bin2hex(static_cast<const unsigned char *>(data), &length);
+          memcpy(range.data, hex, length);
+          free(hex);
+      } else {
+          memcpy(range.data, data, length);
+      }
       buffer.Append(length);
     }
 
@@ -91,6 +101,23 @@ private:
       terminal.Write(data, length);
     }
   }
+
+  char *bin2hex(const unsigned char *bin, size_t *len) {
+      char *out;
+      size_t i;
+      if (bin == NULL || len == 0)
+          return NULL;
+      out = static_cast<char *>(malloc((*len * 2) + 2));
+      for (i = 0; i < *len; i++) {
+          out[i * 2] = "0123456789ABCDEF"[bin[i] >> 4];
+          out[(i * 2) + 1] = "0123456789ABCDEF"[bin[i] & 0x0F];
+      }
+      out[*len * 2] = '\r';
+      out[(*len * 2) + 1] = '\n';
+      *len = (*len * 2) + 2;
+      return out;
+  }
+
 };
 
 class PortMonitorWidget final : public WindowWidget, public ActionListener {
