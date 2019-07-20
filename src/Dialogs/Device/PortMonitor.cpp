@@ -103,14 +103,15 @@ private:
   }
 
   char *bin2hex(const unsigned char *bin, size_t *len) {
+      static const char *const tohex = "0123456789ABCDEF";
       char *out;
       size_t i;
       if (bin == NULL || len == 0)
           return NULL;
       out = static_cast<char *>(malloc((*len * 2) + 2));
       for (i = 0; i < *len; i++) {
-          out[i * 2] = "0123456789ABCDEF"[bin[i] >> 4];
-          out[(i * 2) + 1] = "0123456789ABCDEF"[bin[i] & 0x0F];
+          out[i * 2] = tohex[bin[i] >> 4];
+          out[(i * 2) + 1] = tohex[bin[i] & 0x0F];
       }
       out[*len * 2] = '\r';
       out[(*len * 2) + 1] = '\n';
