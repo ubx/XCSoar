@@ -72,16 +72,16 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
     switch (canFrame->can_id) {
         case 1036: // Latitude
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
-                last_fix.latitude = Angle::Native((double) phost->container.LONG / 1E7);
+                last_fix.latitude = Angle::Degrees(phost->container.LONG  / 1E7);
             }
             return false;
 
         case 1037:  // Longitude
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
-                last_fix.longitude = Angle::Native((double) phost->container.LONG / 1E7);
+                last_fix.longitude = Angle::Degrees(phost->container.LONG  / 1E7 );
                 if (last_fix.IsValid()) {
                     info.location = last_fix;
-                    info.location_available.Update(info.clock); //todo -- investigate "src/Engine/Contest/Solvers/Retrospective.cpp:78: bool Retrospective::UpdateSample(const GeoPoint&): Assertion `aircraft_location.IsValid()' failed"
+                    info.location_available.Update(info.clock);
                     info.alive.Update(info.clock);
                     return true;
                 }
