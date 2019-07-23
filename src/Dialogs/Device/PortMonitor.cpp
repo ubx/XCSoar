@@ -54,6 +54,9 @@ class PortTerminalBridge : public DataHandler, private DelayedNotify {
   bool hexOutput;
 
 public:
+  PortTerminalBridge(TerminalWindow &_terminal)
+    :DelayedNotify(std::chrono::milliseconds(100)), terminal(_terminal) {}
+
   PortTerminalBridge(TerminalWindow &_terminal, DeviceDescriptor &_device)
     :DelayedNotify(std::chrono::milliseconds(100)), terminal(_terminal) {
       hexOutput = _device.GetConfig().port_type == DeviceConfig::PortType::CAN;
