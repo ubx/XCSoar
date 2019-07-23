@@ -23,16 +23,12 @@ Copyright_License {
 
 #include "Device/Driver/VegaCAN.hpp"
 #include "Device/Driver.hpp"
-#include "Device/Util/NMEAWriter.hpp"
 #include "NMEA/Info.hpp"
-#include "NMEA/InputLine.hpp"
-#include "NMEA/Checksum.hpp"
 
 #include <linux/can.h>
-#include <linux/can/raw.h>
 
 #include <iostream> // TODO: Remove this, its just for debugging
-
+#include <Device/Driver/VegaCAN/marshal.h>
 
 class VegaCANDevice : public AbstractDevice {
   Port &port;
@@ -43,23 +39,14 @@ class VegaCANDevice : public AbstractDevice {
     bool DataReceived(const void *data, size_t length, NMEAInfo &info) override;
 };
 
-static signed int 
-ByteToInt(const can_frame* frame)
-{
-     signed int i = frame->data[3] | (frame->data[2] << 8) | (frame->data[1] << 16) | (frame->data[0] << 24);
-     return i;
-}
+Angle last_lat = Angle::Zero();
 
 static void 
 PrintData(const can_frame* frame) {
-
-
   for (int i=0;i<frame->can_dlc && i < 8; ++i){
     std::cout << "data[" << i << "]: "  << static_cast<unsigned int>(frame->data[i]) << std::endl;
   }
 }
-
-
 
 static Device *
 VegaCANCreateOnPort(const DeviceConfig &config, Port &com_port)
@@ -69,36 +56,42 @@ VegaCANCreateOnPort(const DeviceConfig &config, Port &com_port)
 
 bool
 VegaCANDevice::DataReceived(const void *data, size_t length,
-                           NMEAInfo &info)
-{
-  assert(data != nullptr);
-  assert(length > 0);
-  
+                           NMEAInfo &info) {
+    assert(data != nullptr);
+    assert(length > 0);
 
-  const can_frame* data_ = (const can_frame*) data;   // Cast the adress to a can frame
-  std::cout << "CAN ID: " <<  data_->can_id << std::endl;
 
-  // I guess the parsing part should go here:
-  GeoPoint location;
+    const can_frame *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
+    std::cout << "CAN ID: " << canFrame->can_id << std::endl;
 
-  switch (data_->can_id) {
-    case 1036: 
-      PrintData(data_);
-      ByteToInt(data_);
-      info.location = location;
-      info.location_available.Update(info.clock);
-      return true;
+    PrintData(canFrame);
+    CanasMessageData *phost = new(CanasMessageData);
 
-    case 1037: PrintData(data_); return true; // Lon
-    case 1038: 
-      PrintData(data_);
-      info.gps_altitude = ByteToInt(data_);
-      info.gps_altitude_available.Update(info.clock);
-      info.alive.Update(info.clock);
-      return true; // Height
-  }
-  
-  return true;
+    switch (canFrame->can_id) {
+        case 1036: // Latitude
+            if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
+                last_lat = Angle::Native((double) phost->container.LONG / 1E7);
+            }
+            return false;
+
+        case 1037:  // Longitude
+            if (last_lat.Native() != double(0) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
+                Angle lon = Angle::Native((double) phost->container.LONG / 1E7);
+                info.location = GeoPoint(lon, last_lat);
+                //info.location_available.Update(info.clock); // todo -- investigate "src/Engine/Contest/Solvers/Retrospective.cpp:78: bool Retrospective::UpdateSample(const GeoPoint&): Assertion `aircraft_location.IsValid()' failed"
+                return true;
+            }
+            return false;
+
+        case 1038: // Height
+            if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) { // todo -- explain the "+4" !!
+                info.gps_altitude = phost->container.FLOAT;
+                info.gps_altitude_available.Update(info.clock);
+                info.alive.Update(info.clock);
+                return true;
+            }
+    }
+    return false;
 }
 
 const struct DeviceRegister vega_can_driver = {
