@@ -57,13 +57,15 @@ CANPort::Open(const char *port_name, unsigned baud_rate) {
   }
 
   /* CAN Fram filter options  */
-  struct can_filter rfilter[3];
+  struct can_filter rfilter[4];
   rfilter[0].can_id   = 0x40C;
   rfilter[0].can_mask = CAN_SFF_MASK;
   rfilter[1].can_id   = 0x40D;
   rfilter[1].can_mask = CAN_SFF_MASK;
   rfilter[2].can_id   = 0x40E ;
   rfilter[2].can_mask = CAN_SFF_MASK;
+  rfilter[3].can_id   = 0x4B0 ;
+  rfilter[3].can_mask = CAN_SFF_MASK;
 
   ret = setsockopt(sc, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
 

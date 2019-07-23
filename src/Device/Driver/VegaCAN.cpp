@@ -28,6 +28,7 @@ Copyright_License {
 #include <linux/can.h>
 
 #include <iostream> // TODO: Remove this, its just for debugging
+#include <iomanip> // TODO: Remove this, its just for debugging
 #include <Device/Driver/VegaCAN/marshal.h>
 
 class VegaCANDevice : public AbstractDevice {
@@ -90,10 +91,31 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
 
         case 1038: // Height
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) { // todo -- explain the "+4" !!
+                // todo: because data[0]: node-id (!= message id)
+                // todo:         data[1]: data type
+                //               data[2]: service code
+                //               data[3]: message code
+                //             data[4-7]: message data
                 info.gps_altitude = phost->container.FLOAT;
                 info.gps_altitude_available.Update(info.clock);
                 info.alive.Update(info.clock);
                 return true;
+            }
+        case 1200: //utc time
+                   // TODO: This does not work!
+            if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_CHAR4) > 0) {
+
+                unsigned int hour = phost->container.CHAR4[0];
+                unsigned int min = phost->container.CHAR4[1];
+                unsigned int sec = phost->container.CHAR4[2];
+
+                std::cout << "TIME " << hour << ":"<< min << ':'<< sec  << std::endl;
+                info.date_time_utc.hour = hour;
+                info.date_time_utc.minute = min;
+                info.date_time_utc.second = sec;
+
+                info.alive.Update(info.clock);
+
             }
     }
     return false;
