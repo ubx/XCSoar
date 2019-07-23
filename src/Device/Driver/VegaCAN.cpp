@@ -37,9 +37,11 @@ class VegaCANDevice : public AbstractDevice {
     VegaCANDevice(Port &_port):port(_port) {}
 
     bool DataReceived(const void *data, size_t length, NMEAInfo &info) override;
+
+    GeoPoint last_fix = GeoPoint::Invalid();
+
 };
 
-Angle last_lat = Angle::Zero();
 
 static void 
 PrintData(const can_frame* frame) {
@@ -70,16 +72,19 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
     switch (canFrame->can_id) {
         case 1036: // Latitude
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
-                last_lat = Angle::Native((double) phost->container.LONG / 1E7);
+                last_fix.latitude = Angle::Native((double) phost->container.LONG / 1E7);
             }
             return false;
 
         case 1037:  // Longitude
-            if (last_lat.Native() != double(0) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
-                Angle lon = Angle::Native((double) phost->container.LONG / 1E7);
-                info.location = GeoPoint(lon, last_lat);
-                //info.location_available.Update(info.clock); // todo -- investigate "src/Engine/Contest/Solvers/Retrospective.cpp:78: bool Retrospective::UpdateSample(const GeoPoint&): Assertion `aircraft_location.IsValid()' failed"
-                return true;
+            if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
+                last_fix.longitude = Angle::Native((double) phost->container.LONG / 1E7);
+                if (last_fix.IsValid()) {
+                    info.location = last_fix;
+                    info.location_available.Update(info.clock); //todo -- investigate "src/Engine/Contest/Solvers/Retrospective.cpp:78: bool Retrospective::UpdateSample(const GeoPoint&): Assertion `aircraft_location.IsValid()' failed"
+                    info.alive.Update(info.clock);
+                    return true;
+                }
             }
             return false;
 
