@@ -30,6 +30,7 @@ Copyright_License {
 #include <iostream> // TODO: Remove this, its just for debugging
 #include <iomanip> // TODO: Remove this, its just for debugging
 #include <Device/Driver/VegaCAN/marshal.h>
+#include <map>
 
 class VegaCANDevice : public AbstractDevice {
   Port &port;
@@ -42,13 +43,23 @@ class VegaCANDevice : public AbstractDevice {
 };
 
 GeoPoint last_fix = GeoPoint::Invalid();
+std::map<int, double > canId2clock;
 
-static void 
-PrintData(const can_frame* frame) {
-  for (int i=0;i<frame->can_dlc && i < 8; ++i){
-    std::cout << "data[" << i << "]: "  << static_cast<unsigned int>(frame->data[i]) << std::endl;
-  }
+static bool
+SouldSend(int can_id, double clock) {
+    if (canId2clock[can_id] + 1.0 <= clock)  {
+        canId2clock[can_id] = clock;
+        return true;
+    }
+    return false;
 }
+
+//static void
+//PrintData(const can_frame* frame) {
+//  for (int i=0;i<frame->can_dlc && i < 8; ++i){
+//    std::cout << "data[" << i << "]: "  << static_cast<unsigned int>(frame->data[i]) << std::endl;
+//  }
+//}
 
 static Device *
 VegaCANCreateOnPort(const DeviceConfig &config, Port &com_port)
@@ -62,27 +73,20 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
     assert(data != nullptr);
     assert(length > 0);
 
-
     const can_frame *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
-    std::cout << "CAN ID: " << canFrame->can_id << std::endl;
 
-    PrintData(canFrame);
+    //PrintData(canFrame);
     CanasMessageData *phost = new(CanasMessageData);
 
-//    info.alive.Update(info.clock+1);
-//    if (!info.alive.Expire(info.clock, std::chrono::seconds(1))) {
-//        return true;
-//    }
-
     switch (canFrame->can_id) {
-        case 1036: // Latitude
+        case GPS_AIRCRAFT_LATITUDE:
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
                 last_fix.latitude = Angle::Degrees(phost->container.LONG  / 1E7);
             }
             break;
 
-        case 1037:  // Longitude
-            if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
+        case GPS_AIRCRAFT_LONGITUDE:
+            if (SouldSend(GPS_AIRCRAFT_LONGITUDE, info.clock) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
                 last_fix.longitude = Angle::Degrees(phost->container.LONG  / 1E7 );
                 if (last_fix.IsValid()) {
                     info.location = last_fix;
@@ -93,8 +97,8 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-        case 1038: // Height
-            if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) { // todo -- explain the "+4" !!
+        case GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID:
+            if (SouldSend(GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID,info.clock) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 // todo: because data[0]: node-id (!= message id)
                 // todo:         data[1]: data type
                 //               data[2]: service code
@@ -107,7 +111,7 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-        case 1200: //utc time
+        case UTC:
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_CHAR4) > 0) {
                 info.date_time_utc.hour = phost->container.CHAR4[0];
                 info.date_time_utc.minute = phost->container.CHAR4[1];
@@ -117,6 +121,25 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
                 return true;
             }
             break;
+
+        case HEADING_ANGLE:
+            if (SouldSend(HEADING_ANGLE,info.clock) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.heading = Angle::Native(phost->container.FLOAT);
+                info.heading_available.Update(info.clock);
+                info.alive.Update(info.clock);
+                return true;
+            }
+            break;
+
+        case INDICATED_AIRSPEED:
+            if (SouldSend(INDICATED_AIRSPEED,info.clock) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.indicated_airspeed = phost->container.FLOAT;
+                info.airspeed_available.Update(info.clock);
+                info.alive.Update(info.clock);
+                return true;
+            }
+            break;
+
     }
     return false;
 }
