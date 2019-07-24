@@ -27,16 +27,6 @@ Copyright_License {
 #ifndef XCSOAR_DEVICE_DRIVER_VEGACAN_HPP
 #define XCSOAR_DEVICE_DRIVER_VEGACAN_HPP
 
-typedef enum
-{
-    INDICATED_AIRSPEED = 315,
-    HEADING_ANGLE = 321,
-    GPS_AIRCRAFT_LATITUDE = 1036,
-    GPS_AIRCRAFT_LONGITUDE = 1037,
-    GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID = 1038,
-    UTC = 1200,
-} CanIDs;
-
 extern const struct DeviceRegister vega_can_driver;
 
 #endif
