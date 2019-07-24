@@ -39,10 +39,9 @@ class VegaCANDevice : public AbstractDevice {
 
     bool DataReceived(const void *data, size_t length, NMEAInfo &info) override;
 
-    GeoPoint last_fix = GeoPoint::Invalid();
-
 };
 
+GeoPoint last_fix = GeoPoint::Invalid();
 
 static void 
 PrintData(const can_frame* frame) {
@@ -70,12 +69,17 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
     PrintData(canFrame);
     CanasMessageData *phost = new(CanasMessageData);
 
+//    info.alive.Update(info.clock+1);
+//    if (!info.alive.Expire(info.clock, std::chrono::seconds(1))) {
+//        return true;
+//    }
+
     switch (canFrame->can_id) {
         case 1036: // Latitude
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
                 last_fix.latitude = Angle::Degrees(phost->container.LONG  / 1E7);
             }
-            return false;
+            break;
 
         case 1037:  // Longitude
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
@@ -87,7 +91,7 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
                     return true;
                 }
             }
-            return false;
+            break;
 
         case 1038: // Height
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) { // todo -- explain the "+4" !!
@@ -101,22 +105,18 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
                 info.alive.Update(info.clock);
                 return true;
             }
+            break;
+
         case 1200: //utc time
-                   // TODO: This does not work!
             if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_CHAR4) > 0) {
-
-                unsigned int hour = phost->container.CHAR4[0];
-                unsigned int min = phost->container.CHAR4[1];
-                unsigned int sec = phost->container.CHAR4[2];
-
-                std::cout << "TIME " << hour << ":"<< min << ':'<< sec  << std::endl;
-                info.date_time_utc.hour = hour;
-                info.date_time_utc.minute = min;
-                info.date_time_utc.second = sec;
-
+                info.date_time_utc.hour = phost->container.CHAR4[0];
+                info.date_time_utc.minute = phost->container.CHAR4[1];
+                info.date_time_utc.second = phost->container.CHAR4[2];
+                info.time_available.Update(info.clock);
                 info.alive.Update(info.clock);
-
+                return true;
             }
+            break;
     }
     return false;
 }
