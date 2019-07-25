@@ -72,6 +72,11 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
     assert(length > 0);
     assert(canData != nullptr);
 
+    info.alive.Update(info.clock);
+    if (!SouldSend(canFrame->can_id, info.clock) && canFrame->can_id != GPS_AIRCRAFT_LATITUDE) {
+        return false;
+    }
+
     switch (canFrame->can_id) {
         case GPS_AIRCRAFT_LATITUDE:
             if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
@@ -80,22 +85,20 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             break;
 
         case GPS_AIRCRAFT_LONGITUDE:
-            if (SouldSend(canFrame->can_id, info.clock) && canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
                 last_fix.longitude = Angle::Degrees(phost->container.LONG  / 1E7 );
                 if (last_fix.IsValid()) {
                     info.location = last_fix;
                     info.location_available.Update(info.clock);
-                    info.alive.Update(info.clock);
                     return true;
                 }
             }
             break;
 
         case GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID:
-            if (SouldSend(canFrame->can_id, info.clock) && canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 info.gps_altitude = phost->container.FLOAT;
                 info.gps_altitude_available.Update(info.clock);
-                info.alive.Update(info.clock);
                 return true;
             }
             break;
@@ -106,28 +109,68 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
                 info.date_time_utc.minute = phost->container.CHAR4[1];
                 info.date_time_utc.second = phost->container.CHAR4[2];
                 info.time_available.Update(info.clock);
-                info.alive.Update(info.clock);
                 return true;
             }
             break;
 
         case HEADING_ANGLE:
-            if (SouldSend(canFrame->can_id, info.clock) && canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 info.heading = Angle::Native(phost->container.FLOAT);
                 info.heading_available.Update(info.clock);
-                info.alive.Update(info.clock);
                 return true;
             }
             break;
 
         case INDICATED_AIRSPEED:
-            if (SouldSend(INDICATED_AIRSPEED,info.clock) && canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 info.indicated_airspeed = phost->container.FLOAT;
                 info.airspeed_available.Update(info.clock);
-                info.alive.Update(info.clock);
+                info.airspeed_real = true;
                 return true;
             }
             break;
+
+        case TRUE_AIRSPEED:
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.true_airspeed = phost->container.FLOAT;
+                info.airspeed_available.Update(info.clock);
+                info.airspeed_real = true;
+                return true;
+            }
+            break;
+
+        case GPS_GROUND_SPEED:
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.ground_speed = phost->container.FLOAT;
+                info.ground_speed_available.Update(info.clock);
+                return true;
+            }
+            break;
+
+        case AIRMASS_SPEED_VERTICAL:  // todo -- ???
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.netto_vario = phost->container.FLOAT;
+                info.netto_vario_available.Update(info.clock);
+                return true;
+            }
+            break;
+
+        case STATIC_PRESSURE:
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.static_pressure = AtmosphericPressure::HectoPascal(phost->container.FLOAT);
+                info.static_pressure_available.Update(info.clock);
+                return true;
+            }
+            break;
+
+        case STANDARD_ALTITUDE:
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.baro_altitude = phost->container.FLOAT;
+                info.baro_altitude_available.Update(info.clock);
+                return true;
+            }
+            break;
+
 
         default:
             std::cout << "not implemented can_id: "  << canFrame->can_id  << std::endl;
