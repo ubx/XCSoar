@@ -31,6 +31,8 @@ Copyright_License {
 #include <iomanip> // TODO: Remove this, its just for debugging
 #include <Device/Driver/VegaCAN/marshal.h>
 #include <map>
+#include <Time/RoughTime.hpp>
+#include <Time/LocalTime.hpp>
 
 class VegaCANDevice : public AbstractDevice {
   Port &port;
@@ -42,8 +44,8 @@ class VegaCANDevice : public AbstractDevice {
 
 };
 
-GeoPoint last_fix = GeoPoint::Invalid();
 std::map<int, double > canId2clock;
+auto last_fix = GeoPoint::Invalid();
 
 static bool
 SouldSend(int can_id, double clock) {
@@ -108,6 +110,7 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
                 info.date_time_utc.hour = phost->container.CHAR4[0];
                 info.date_time_utc.minute = phost->container.CHAR4[1];
                 info.date_time_utc.second = phost->container.CHAR4[2];
+                info.time = TimeLocal(info.date_time_utc.GetSecondOfDay(), RoughTimeDelta()); // todo -- verify !!
                 info.time_available.Update(info.clock);
                 return true;
             }
