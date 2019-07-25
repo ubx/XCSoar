@@ -54,13 +54,6 @@ SouldSend(int can_id, double clock) {
     return false;
 }
 
-//static void
-//PrintData(const can_frame* frame) {
-//  for (int i=0;i<frame->can_dlc && i < 8; ++i){
-//    std::cout << "data[" << i << "]: "  << static_cast<unsigned int>(frame->data[i]) << std::endl;
-//  }
-//}
-
 static Device *
 VegaCANCreateOnPort(const DeviceConfig &config, Port &com_port)
 {
@@ -70,23 +63,24 @@ VegaCANCreateOnPort(const DeviceConfig &config, Port &com_port)
 bool
 VegaCANDevice::DataReceived(const void *data, size_t length,
                            NMEAInfo &info) {
-    assert(data != nullptr);
-    assert(length > 0);
 
     const can_frame *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
+    const auto *canData = canFrame->data + 4;
+    auto *phost = new(CanasMessageData);
 
-    //PrintData(canFrame);
-    CanasMessageData *phost = new(CanasMessageData);
+    assert(data != nullptr);
+    assert(length > 0);
+    assert(canData != nullptr);
 
     switch (canFrame->can_id) {
         case GPS_AIRCRAFT_LATITUDE:
-            if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
                 last_fix.latitude = Angle::Degrees(phost->container.LONG  / 1E7);
             }
             break;
 
         case GPS_AIRCRAFT_LONGITUDE:
-            if (SouldSend(GPS_AIRCRAFT_LONGITUDE, info.clock) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_LONG) > 0) {
+            if (SouldSend(canFrame->can_id, info.clock) && canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
                 last_fix.longitude = Angle::Degrees(phost->container.LONG  / 1E7 );
                 if (last_fix.IsValid()) {
                     info.location = last_fix;
@@ -98,12 +92,7 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             break;
 
         case GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID:
-            if (SouldSend(GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID,info.clock) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                // todo: because data[0]: node-id (!= message id)
-                // todo:         data[1]: data type
-                //               data[2]: service code
-                //               data[3]: message code
-                //             data[4-7]: message data
+            if (SouldSend(canFrame->can_id, info.clock) && canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 info.gps_altitude = phost->container.FLOAT;
                 info.gps_altitude_available.Update(info.clock);
                 info.alive.Update(info.clock);
@@ -112,7 +101,7 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             break;
 
         case UTC:
-            if (canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_CHAR4) > 0) {
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
                 info.date_time_utc.hour = phost->container.CHAR4[0];
                 info.date_time_utc.minute = phost->container.CHAR4[1];
                 info.date_time_utc.second = phost->container.CHAR4[2];
@@ -123,7 +112,7 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             break;
 
         case HEADING_ANGLE:
-            if (SouldSend(HEADING_ANGLE,info.clock) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) {
+            if (SouldSend(canFrame->can_id, info.clock) && canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 info.heading = Angle::Native(phost->container.FLOAT);
                 info.heading_available.Update(info.clock);
                 info.alive.Update(info.clock);
@@ -132,7 +121,7 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             break;
 
         case INDICATED_AIRSPEED:
-            if (SouldSend(INDICATED_AIRSPEED,info.clock) && canasNetworkToHost(phost, canFrame->data + 4, 4, CANAS_DATATYPE_FLOAT) > 0) {
+            if (SouldSend(INDICATED_AIRSPEED,info.clock) && canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 info.indicated_airspeed = phost->container.FLOAT;
                 info.airspeed_available.Update(info.clock);
                 info.alive.Update(info.clock);
@@ -140,6 +129,9 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
+        default:
+            std::cout << "not implemented can_id: "  << canFrame->can_id  << std::endl;
+            break;
     }
     return false;
 }
