@@ -24,7 +24,6 @@ Copyright_License {
 #include "ConfiguredPort.hpp"
 #include "UDPPort.hpp"
 #include "TCPPort.hpp"
-#include "CANPort.hpp"
 #include "K6BtPort.hpp"
 #include "Device/Config.hpp"
 #include "LogFile.hpp"
@@ -44,6 +43,10 @@ Copyright_License {
 
 #ifndef NDEBUG
 #include "DumpPort.hpp"
+#endif
+
+#if defined(HAVE_CAN)
+#include "CANPort.hpp"
 #endif
 
 #include <stdexcept>
@@ -168,6 +171,7 @@ OpenPortInternal(boost::asio::io_context &io_context,
     return new UDPPort(io_context, config.tcp_port, listener, handler);
 
   case DeviceConfig::PortType::CAN: {
+#if defined(HAVE_CAN)
     CANPort *port = new CANPort(io_context, listener, handler);
     
     if (!port->Open(config.can_port_name, config.can_baud_rate)) {
@@ -175,7 +179,9 @@ OpenPortInternal(boost::asio::io_context &io_context,
       return nullptr;
     }
     return port;
+#endif
   }
+
   case DeviceConfig::PortType::PTY: {
 #if defined(HAVE_POSIX) && !defined(ANDROID)
     if (config.path.empty())

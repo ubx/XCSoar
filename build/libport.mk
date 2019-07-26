@@ -12,11 +12,16 @@ PORT_SOURCES = \
 ifeq ($(HAVE_POSIX),y)
 PORT_SOURCES += \
 	$(SRC)/Device/Port/TTYEnumerator.cpp \
-	$(SRC)/Device/Port/TTYPort.cpp \
-	$(SRC)/Device/Port/CANPort.cpp
+	$(SRC)/Device/Port/TTYPort.cpp
 else
 PORT_SOURCES += $(SRC)/Device/Port/SerialPort.cpp
 endif
+
+ifeq ($(HAVE_CAN),y)
+PORT_SOURCES += \
+	$(SRC)/Device/Port/CANPort.cpp
+endif
+
 
 PORT_SOURCES += $(SRC)/Device/Port/TCPClientPort.cpp
 

@@ -50,6 +50,7 @@ TARGET_IS_KOBO := n
 HAVE_POSIX := n
 HAVE_WIN32 := y
 HAVE_MSVCRT := y
+HAVE_CAN := n
 
 USE_CROSSTOOL_NG := n
 
@@ -274,6 +275,7 @@ ifeq ($(TARGET),UNIX)
   HAVE_WIN32 := n
   HAVE_MSVCRT := n
   HAVE_VASPRINTF := y
+  HAVE_CAN := y
 
   ifeq ($(ARMV6),y)
     TARGET_ARCH += -march=armv6
@@ -481,6 +483,7 @@ ifeq ($(HOST_IS_ARM)$(TARGET_HAS_MALI),ny)
 endif
 
 ifeq ($(TARGET_IS_KOBO),y)
+  HAVE_CAN := n
   TARGET_CPPFLAGS += -DKOBO
 
   # Use Thumb instructions (which is the default in Debian's arm-linux-gnueabihf

@@ -131,7 +131,7 @@ DRIVER_SOURCES = \
 	$(DRIVER_SRC_DIR)/AirControlDisplay.cpp \
 	$(DRIVER_SRC_DIR)/ATR833.cpp
 
-ifeq ($(HAVE_POSIX),y)
+ifeq ($(HAVE_CAN),y)
 DRIVER_SOURCES += \
 	$(DRIVER_SRC_DIR)/VegaCAN.cpp \
 	$(VEGACAN_SOURCES)
