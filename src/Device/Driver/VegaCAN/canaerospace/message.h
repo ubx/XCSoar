@@ -54,7 +54,7 @@ typedef enum
     GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID = 1038,
     GPS_GROUND_SPEED = 1039,
     UTC = 1200,
-} CanIDs;
+} CanIDsForXCSoar;
 
 
 typedef enum
