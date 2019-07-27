@@ -45,7 +45,7 @@ Copyright_License {
 #include "DumpPort.hpp"
 #endif
 
-#if defined(HAVE_CAN)
+#ifdef HAVE_CAN
 #include "CANPort.hpp"
 #endif
 
@@ -171,7 +171,7 @@ OpenPortInternal(boost::asio::io_context &io_context,
     return new UDPPort(io_context, config.tcp_port, listener, handler);
 
   case DeviceConfig::PortType::CAN: {
-#if defined(HAVE_CAN)
+#ifdef HAVE_CAN
     CANPort *port = new CANPort(io_context, listener, handler);
     
     if (!port->Open(config.can_port_name, config.can_baud_rate)) {
