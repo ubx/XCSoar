@@ -160,7 +160,7 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
 
         case STATIC_PRESSURE:
             if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideStaticPressure(AtmosphericPressure::HectoPascal(phost->container.FLOAT);
+                info.ProvideStaticPressure(AtmosphericPressure::HectoPascal(phost->container.FLOAT));
                 return true;
             }
             break;
