@@ -102,7 +102,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &xctracer_driver,
   &thermalexpress_driver,
   &acd_driver,
-#if defined(HAVE_CAN)
+#ifdef HAVE_CAN
   &vega_can_driver,
 #endif
   nullptr
