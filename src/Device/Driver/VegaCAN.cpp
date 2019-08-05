@@ -89,7 +89,7 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
         case GPS_AIRCRAFT_LONGITUDE:
             if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
                 last_fix.longitude = Angle::Degrees(phost->container.LONG  / 1E7 );
-                if (last_fix.IsValid()) {
+                if (last_fix.Check()) {
                     info.location = last_fix;
                     info.location_available.Update(info.clock);
                     return true;
