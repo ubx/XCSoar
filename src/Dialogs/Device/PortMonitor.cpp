@@ -68,19 +68,19 @@ public:
       const std::lock_guard<Mutex> lock(mutex);
       buffer.Shift();
       auto range = buffer.Write();
-      if (range.size < length)
-        length = range.size;
       if (hexOutput) {
-          char *hex;
-          hex = bin2hex(static_cast<const unsigned char *>(data), &length);
+          char *hex = bin2hex(static_cast<const unsigned char *>(data), &length);
+          if (range.size < length)
+              length = range.size;
           memcpy(range.data, hex, length);
           free(hex);
       } else {
+          if (range.size < length)
+              length = range.size;
           memcpy(range.data, data, length);
       }
       buffer.Append(length);
     }
-
     SendNotification();
   }
 
