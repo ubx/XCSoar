@@ -124,6 +124,14 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
+        case GPS_TRUE_TRACK:
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.track = Angle::Native(phost->container.FLOAT);
+                info.track_available.Update(info.clock);
+                return true;
+            }
+            break;
+
         case INDICATED_AIRSPEED:
             if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 info.indicated_airspeed = phost->container.FLOAT;
