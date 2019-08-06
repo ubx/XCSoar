@@ -150,10 +150,9 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-        case AIRMASS_SPEED_VERTICAL:  // todo -- ???
+        case AIRMASS_SPEED_VERTICAL:
             if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.netto_vario = phost->container.FLOAT;
-                info.netto_vario_available.Update(info.clock);
+                info.ProvideNettoVario(phost->container.FLOAT);
                 return true;
             }
             break;
