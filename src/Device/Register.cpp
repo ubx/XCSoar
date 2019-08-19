@@ -58,7 +58,7 @@ Copyright_License {
 #include "Device/Driver/ATR833.hpp"
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/KRT2.hpp"
-#include "Device/Driver/VegaCAN.hpp"
+#include "Device/Driver/CANaerospace.hpp"
 #include "Util/Macros.hpp"
 #include "Util/StringAPI.hxx"
 
@@ -103,7 +103,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &thermalexpress_driver,
   &acd_driver,
 #ifdef HAVE_CAN
-  &vega_can_driver,
+  &can_aerospace_driver,
 #endif
   nullptr
 };

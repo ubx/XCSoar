@@ -88,8 +88,8 @@ XCTRACER_SOURCES = \
 THERMALEXPRESS_SOURCES = \
 	$(DRIVER_SRC_DIR)/ThermalExpress/Driver.cpp
 
-VEGACAN_SOURCES = \
-    $(DRIVER_SRC_DIR)/VegaCAN/marshal.c
+CANAEROSPACE_SOURCES = \
+    $(DRIVER_SRC_DIR)/CANaerospace/marshal.c
 
  
 DRIVER_SOURCES = \
@@ -133,8 +133,8 @@ DRIVER_SOURCES = \
 
 ifeq ($(HAVE_CAN),y)
 DRIVER_SOURCES += \
-	$(DRIVER_SRC_DIR)/VegaCAN.cpp \
-	$(VEGACAN_SOURCES)
+	$(DRIVER_SRC_DIR)/CANaerospace.cpp \
+	$(CANAEROSPACE_SOURCES)
 endif
 
 $(eval $(call link-library,driver,DRIVER))
