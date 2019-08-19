@@ -21,7 +21,7 @@ Copyright_License {
 }
 */
 
-#include "Device/Driver/VegaCAN.hpp"
+#include "Device/Driver/CANaerospace.hpp"
 #include "Device/Driver.hpp"
 #include "NMEA/Info.hpp"
 
@@ -29,16 +29,16 @@ Copyright_License {
 
 #include <iostream> // TODO: Remove this, its just for debugging
 #include <iomanip> // TODO: Remove this, its just for debugging
-#include <Device/Driver/VegaCAN/marshal.h>
+#include <Device/Driver/CANaerospace/marshal.h>
 #include <map>
 #include <Time/RoughTime.hpp>
 #include <Time/LocalTime.hpp>
 
-class VegaCANDevice : public AbstractDevice {
+class CANaerospaceDevice : public AbstractDevice {
   Port &port;
 
   public:
-    VegaCANDevice(Port &_port):port(_port) {}
+    CANaerospaceDevice(Port &_port): port(_port) {}
 
     bool DataReceived(const void *data, size_t length, NMEAInfo &info) override;
 
@@ -57,14 +57,14 @@ SouldSend(int can_id, double clock) {
 }
 
 static Device *
-VegaCANCreateOnPort(const DeviceConfig &config, Port &com_port)
+CANaerospaceCreateOnPort(const DeviceConfig &config, Port &com_port)
 {
-  return new VegaCANDevice(com_port);
+  return new CANaerospaceDevice(com_port);
 }
 
 bool
-VegaCANDevice::DataReceived(const void *data, size_t length,
-                           NMEAInfo &info) {
+CANaerospaceDevice::DataReceived(const void *data, size_t length,
+                                 NMEAInfo &info) {
 
     const can_frame *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
     const auto *canData = canFrame->data + 4;
@@ -188,8 +188,8 @@ VegaCANDevice::DataReceived(const void *data, size_t length,
 }
 
 const struct DeviceRegister vega_can_driver = {
-  _T("VegaCAN"),
-  _T("VegaCAN"),
+        _T("CANaerospace"),
+        _T("CANaerospace"),
   DeviceRegister::NO_TIMEOUT | DeviceRegister::RAW_GPS_DATA, // TODO: Put the right flags
-  VegaCANCreateOnPort,
+  CANaerospaceCreateOnPort,
 };
