@@ -42,6 +42,8 @@ class CANPort final : public BufferedPort
 
   can_frame input;
 
+  int sc;
+
 public:
   /**
    * Creates a new CANPort object, but does not open it yet.
@@ -73,6 +75,8 @@ public:
   unsigned GetBaudrate() const override {
     return 0;
   }
+
+  int SetFilter(const std::vector<uint32_t>& can_ids);
 
   size_t Write(const void *data, size_t length) override;
 

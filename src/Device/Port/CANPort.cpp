@@ -24,6 +24,8 @@ Copyright_License {
 #include "CANPort.hpp"
 #include "OS/Error.hxx"
 
+int sc;
+
 CANPort::CANPort(boost::asio::io_context &io_context,
                  PortListener *_listener, DataHandler &_handler)
   :BufferedPort(_listener, _handler),
@@ -45,7 +47,7 @@ bool
 CANPort::Open(const char *port_name, unsigned baud_rate) {
 
 
-  int sc = socket( PF_CAN, SOCK_RAW, CAN_RAW );
+  sc = socket( PF_CAN, SOCK_RAW, CAN_RAW );
 
   struct ifreq ifr;
   strcpy(ifr.ifr_name, port_name);
@@ -146,3 +148,15 @@ CANPort::AsyncRead()
                                    std::placeholders::_1,
                                    std::placeholders::_2));
   }
+
+int
+CANPort::SetFilter(const std::vector<uint32_t>& can_ids) {
+    can_filter rfilter[can_ids.size()];
+    for (size_t i = 0; i < can_ids.size(); i++) {
+        rfilter[i].can_id   = can_ids[i];
+        rfilter[i].can_mask = CAN_SFF_MASK;
+    }
+    int ret = setsockopt(sc, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
+    return ret;
+}
+
