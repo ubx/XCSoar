@@ -21,17 +21,14 @@ Copyright_License {
 }
 */
 
+#include <Device/Driver/CANaerospace/canaerospace/message.h> // todo -- temporary, to be removed !
 #include "CANPort.hpp"
 #include "OS/Error.hxx"
-
-int sc;
 
 CANPort::CANPort(boost::asio::io_context &io_context,
                  PortListener *_listener, DataHandler &_handler)
   :BufferedPort(_listener, _handler),
-    socket_(io_context) // toodo -- ???
-{
-}
+    socket_(io_context) {}
 
 CANPort::~CANPort()
 {
@@ -46,7 +43,6 @@ CANPort::~CANPort()
 bool
 CANPort::Open(const char *port_name, unsigned baud_rate) {
 
-
   sc = socket( PF_CAN, SOCK_RAW, CAN_RAW );
 
   struct ifreq ifr;
@@ -55,31 +51,27 @@ CANPort::Open(const char *port_name, unsigned baud_rate) {
 
   if(ret != 0){
     throw FormatErrno("Can not connect to %s", ifr.ifr_name);
-    return false;
   }
 
-  /* CAN Fram filter options  */
-//  struct can_filter rfilter[6];
-//    rfilter[0].can_id   = 0x40C;
-//    rfilter[0].can_mask = CAN_SFF_MASK;
-//    rfilter[1].can_id   = 0x40D;
-//    rfilter[1].can_mask = CAN_SFF_MASK;
-//    rfilter[2].can_id   = 0x40E ;
-//    rfilter[2].can_mask = CAN_SFF_MASK;
-//    rfilter[3].can_id   = 0x4B0 ;
-//    rfilter[3].can_mask = CAN_SFF_MASK;
-//    rfilter[4].can_id   = 0x141 ;
-//    rfilter[4].can_mask = CAN_SFF_MASK;
-//    rfilter[5].can_id   = 0x13B ;
-//    rfilter[5].can_mask = CAN_SFF_MASK;
-//
-//  ret = setsockopt(sc, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
-
-  //if(ret != 0){
-  //    boost::system::error_code(ret,boost::system::system_category());
-  //    close(sc);
-  //    return false;
-  //}
+   // todo -- temporary, to be moved to CANaerospace.cpp!
+  const std::vector<uint32_t> can_ids{
+            INDICATED_AIRSPEED, TRUE_AIRSPEED,
+            HEADING_ANGLE,
+            STANDARD_ALTITUDE,
+            STATIC_PRESSURE,
+            AIRMASS_SPEED_VERTICAL,
+            GPS_AIRCRAFT_LATITUDE,
+            GPS_AIRCRAFT_LONGITUDE,
+            GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID,
+            GPS_GROUND_SPEED,
+            GPS_TRUE_TRACK,
+            UTC};
+  ret = SetFilter(can_ids);
+  if(ret != 0){
+      boost::system::error_code(ret,boost::system::system_category());
+      close(sc);
+      return false;
+  }
 
   struct sockaddr_can addr = {0};
   addr.can_family = AF_CAN;
@@ -88,11 +80,9 @@ CANPort::Open(const char *port_name, unsigned baud_rate) {
 
   if(ret != 0){
     throw FormatErrno("Failed binding socket %s", ifr.ifr_name );
-    return false;
   }
 
   socket_.assign(sc);
-
   AsyncRead();
   StateChanged();
   return true;
@@ -150,13 +140,12 @@ CANPort::AsyncRead()
   }
 
 int
-CANPort::SetFilter(const std::vector<uint32_t>& can_ids) {
+CANPort::SetFilter(const std::vector<uint32_t>& can_ids)
+  {
     can_filter rfilter[can_ids.size()];
     for (size_t i = 0; i < can_ids.size(); i++) {
         rfilter[i].can_id   = can_ids[i];
         rfilter[i].can_mask = CAN_SFF_MASK;
     }
-    int ret = setsockopt(sc, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
-    return ret;
-}
-
+    return setsockopt(sc, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
+  }
