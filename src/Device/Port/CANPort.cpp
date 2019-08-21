@@ -41,17 +41,20 @@ CANPort::~CANPort()
 }
 
 bool
-CANPort::Open(const char *port_name, unsigned baud_rate) {
+CANPort::Open(const char *_port_name, unsigned _baud_rate) {
 
-  sc = socket( PF_CAN, SOCK_RAW, CAN_RAW );
+    port_name = _port_name;
+    sc = socket( PF_CAN, SOCK_RAW, CAN_RAW );
 
   struct ifreq ifr;
-  strcpy(ifr.ifr_name, port_name);
+  strcpy(ifr.ifr_name, _port_name);
   int ret = ioctl(sc, SIOCGIFINDEX, &ifr);
 
   if(ret != 0){
     throw FormatErrno("Can not connect to %s", ifr.ifr_name);
   }
+
+  SetBaudrate(_baud_rate);
 
    // todo -- temporary, to be moved to CANaerospace.cpp!
   const std::vector<uint32_t> can_ids{
