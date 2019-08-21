@@ -665,6 +665,10 @@ ifeq ($(TARGET),ANDROID)
   TARGET_LDLIBS += -lgcc
 endif
 
+ifeq ($(HAVE_CAN),y)
+  TARGET_LDLIBS += -lsocketcan
+endif
+
 ######## output files
 
 TARGET_EXEEXT = .exe

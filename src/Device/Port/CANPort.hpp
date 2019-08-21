@@ -31,6 +31,7 @@ Copyright_License {
 #include <linux/can.h>
 #include <linux/can/raw.h>
 
+#include <libsocketcan.h>
 
 
 /**
@@ -43,6 +44,8 @@ class CANPort final : public BufferedPort
   can_frame input;
 
   int sc;
+
+  const char *port_name;
 
 public:
   /**
@@ -69,7 +72,8 @@ public:
   }
 
   bool SetBaudrate(unsigned baud_rate) override {
-    return true;
+      int ret = can_set_bitrate(port_name, baud_rate);
+    return ret == 0;
   }
 
   unsigned GetBaudrate() const override {
