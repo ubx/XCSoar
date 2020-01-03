@@ -133,7 +133,11 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
         case HEADING_ANGLE:
             if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.heading = Angle::Native(phost->container.FLOAT);
+                float value = phost->container.FLOAT;
+                if (value < 0.0) {
+                    value += 360.0;
+                }
+                info.heading = Angle::Degrees(value);
                 info.heading_available.Update(info.clock);
                 return true;
             }
@@ -141,7 +145,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
         case GPS_TRUE_TRACK:
             if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.track = Angle::Native(phost->container.FLOAT);
+                info.track = Angle::Degrees(phost->container.FLOAT);
                 info.track_available.Update(info.clock);
                 return true;
             }
