@@ -63,11 +63,12 @@ auto last_fix = GeoPoint::Invalid();
 
 static bool
 SouldSend(int can_id, double clock) {
-    if (canId2clock[can_id] + 1.0 <= clock)  {
-        canId2clock[can_id] = clock;
-        return true;
-    }
-    return false;
+//    if (canId2clock[can_id] + 1.0 <= clock)  {
+//        canId2clock[can_id] = clock;
+//        return true;
+//    }
+//    return false;
+   return true;
 }
 
 static Device *
