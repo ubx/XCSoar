@@ -97,10 +97,10 @@ StringStartsWithIgnoreCase(const char *haystack, StringView needle) noexcept
  */
 gcc_pure gcc_nonnull_all
 static inline const char *
-StringAfterPrefixCI(const char *string, StringView needle) noexcept
+StringAfterPrefixIgnoreCase(const char *haystack, StringView needle) noexcept
 {
-	return StringIsEqualIgnoreCase(string, needle.data, needle.size)
-		? string + needle.size
+	return StringStartsWithIgnoreCase(haystack, needle)
+		? haystack + needle.size
 		: nullptr;
 }
 

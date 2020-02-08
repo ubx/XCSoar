@@ -25,7 +25,7 @@ Copyright_License {
 #define XCSOAR_INFO_BOX_SETTINGS_HPP
 
 #include "Util/StaticString.hxx"
-#include "Compiler.h"
+#include "Util/Compiler.h"
 #include "InfoBoxes/Content/Type.hpp"
 
 #include <stdint.h>
@@ -114,6 +114,13 @@ struct InfoBoxSettings {
     /** 16 infoboxes along right side (2x8) */
     RIGHT_16 = 19,
     LEFT_12_RIGHT_3_VARIO = 20,
+
+    /** 10 infoboxes along top or left */
+    TOP_LEFT_10 = 21,
+    /** 10 infoboxes along bottom or right side */
+    BOTTOM_RIGHT_10 = 22,
+    /** 10 infoboxes split bottom/top or left/right */
+    SPLIT_10 = 23,
 
   } geometry;
 

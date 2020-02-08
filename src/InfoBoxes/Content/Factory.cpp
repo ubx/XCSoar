@@ -41,6 +41,7 @@ Copyright_License {
 #include "InfoBoxes/Content/Trace.hpp"
 #include "InfoBoxes/Content/Weather.hpp"
 #include "InfoBoxes/Content/Airspace.hpp"
+#include "InfoBoxes/Content/Radio.hpp"
 
 #include "Util/Macros.hpp"
 #include "Language/Language.hpp"
@@ -771,7 +772,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Flight level"),
     N_("FL"),
-    N_("Pressure Altitude given as Flight Level. Only available if barometric altitude available and correct QNH set."),
+    N_("Pressure Altitude given as Flight Level. If barometric altitude is not available, FL is calculated from GPS altitude, given that the correct QNH is set. In case the FL is calculated from the GPS altitude, the FL label is coloured red."),
     UpdateInfoBoxAltitudeFlightLevel,
     altitude_infobox_panels,
   },
@@ -1065,6 +1066,21 @@ static constexpr MetaData meta_data[] = {
     N_("Satellites"),
     N_("The number of actually used (seen) satellites by GPS module. If this information is unavailable, the displayed value is '---'."),
     UpdateInfoBoxNbrSat,
+  },
+
+  // Radio
+  {
+    N_("Active Radio Frequency"),
+    N_("Act Freq"),
+    N_("The currently active Radio Frequency"),
+    IBFHelper<InfoBoxContentActiveRadioFrequency>::Create,
+  },
+
+  {
+    N_("Standby Radio Frequency"),
+    N_("Stby Freq"),
+    N_("The currently standby Radio Frequency"),
+    IBFHelper<InfoBoxContentStandbyRadioFrequency>::Create,
   },
 
 };

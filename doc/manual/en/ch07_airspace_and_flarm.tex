@@ -97,8 +97,8 @@ The sequence of events when entering an airspace results typically
 in two warnings: when near (level 1), and when inside (level 2).
 
 Whenever the warning level increases (above level 0) for any airspace,
-the airspace warning dialogue appears, accompanied by a system beep
-from.  When there are no more airspace regions at warning levels above
+the airspace warning dialogue appears, accompanied by a system beep.
+When there are no more airspace regions at warning levels above
 0, the dialogue disappears automatically.
 
 
@@ -110,22 +110,22 @@ inside, and yellow if near.  If the warning is acknowledged, the
 text is greyed out.
 
 Each list item occupies two rows, and includes the following details:\\
-\verb+<NAME and Class>               <TOP>   <Position>+
+\verb+<NAME and Class>               <TOP>   <Position>+\\
 \verb+<Time and distance if outside> <BASE>+
 
 The values in the list are continuously updated. 
 An example follows:\\
-\verb+Bern TMA Class D                FL100     +\colorbox{AirspaceYellow}{near}
+\verb+Bern TMA Class D                FL100     +\colorbox{AirspaceYellow}{near}\\
 \verb+35 sec horizontal dist 1300     1750m+
 
-This means that the aircraft is 1300m horizontally separated from the Class D airspace
-`Bern TMA', with a base of 1750m and ceiling at FL100.
+This means that the aircraft is 1300~m horizontally separated from the Class D airspace
+`Bern TMA', with a base of 1750~m and ceiling at FL100.
 Another example:\\
-\verb+Bern CTRgld Class C             1350m     +\colorbox{AirspaceRed}{inside}
+\verb+Bern CTRgld Class C             1350m     +\colorbox{AirspaceRed}{inside}\\
 \verb+                                SFC+
 
 This means that the aircraft is inside the Class C airspace `Bern
-CTRgld', with base of terrain surface and ceiling at 1350m.
+CTRgld', with base of terrain surface and ceiling at 1350~m.
 
 If there are airspace warnings any time the airspace warning dialogue is shown 
 you get the details to an airspace by touching it.
@@ -146,8 +146,8 @@ The meanings of the acknowledgement buttons are as follows:
 \item[ACK Warn]  Acknowledge the current warning level.  A new warning will appear
 only if the warning level increases.
 \item[ACK Space]  Acknowledge all current and future warning levels from this 
-particular airspace region while the aircraft is within 2.5km horizontal separation
-and 500m vertical separation.
+particular airspace region while the aircraft is within 2.5~km horizontal separation
+and 500~m vertical separation.
 \item[ACK Day]  Acknowledge all current and future warning levels from this particular
 airspace region for the rest of the flight (specifically, until XCSoar
 is restarted).
@@ -205,7 +205,7 @@ estimated future track) penetrates multiple airspace regions.
 For touchscreen/mouse devices, when an airspace region is visible on
 the map area, it may be queried by touching the region on the map.  
 The map item list will appear and give you an overview of the waypoints, 
-airspaces, etc. below your finger tip, or mouse pointer.  SUAs are listed with 
+airspaces, etc.\ below your finger tip, or mouse pointer.  SUAs are listed with
 similar details as provided when an actual warning is raised.  
 The query returns all airspace regions when overlapping airspace is visible at 
 the query location.
@@ -215,7 +215,7 @@ displays all airspace details.
 
 %% To put at another place
 %Through the button menus is the same map query available.
-%The `What's here?' query brings up a map element list including the the nearest 
+%The `What's here?' query brings up a map element list including the nearest
 %airspace region. 
 %\begin{quote}
 %\bmenu{Info}\blink\bmenu{What's here?}
@@ -235,7 +235,7 @@ or disabled for each class of airspace.
 This may be accessed several ways:
 \begin{itemize}
 \item From the main menu \bmenug{Config 3}\blink\bmenug{Airspace}.
-\item Or at the system configuration page for airspacees, press the \button{Filter} button.
+\item Or at the system configuration page for airspaces, press the \button{Filter} button.
 \end{itemize}
 
 \sketch{figures/airspacefilter.png}
@@ -249,7 +249,7 @@ This functions similarly to the waypoint lookup dialogue, and allows
 search based on name, distance, direction, and type (class).  
 \sketch{figures/airspacelookup.png}
 
-Once an airspace item has been located, you have the chance to acknowledged it 
+Once an airspace item has been located, you have the chance to acknowledge it
 for the day.  From the
 airspace management dialogue it is possible to re-enable it again.
 
@@ -261,7 +261,7 @@ airspace.
 \menulabel{\bmenug{Info 1}\blink\bmenug{Analysis}}
 
 The display shows along the horizontal direction, the
-distance from the glider out to 50 km in the direction of the glider's
+distance from the glider out to 50~km in the direction of the glider's
 track; along the vertical direction is altitude.  The altitude of the
 glider is indicated by a white arrow.  This page is useful to help
 visualise complex layering of airspace.
@@ -304,7 +304,7 @@ absolute track bearing of the target.
 Display on the map FLARM of aircraft registration or pilot name is
 made possible via a look-up of the ICAO aircraft ID of FLARM traffic
 in a file.  See Section~\ref{sec:flarm-ident-file} for details on this
-file format.  Aircrafts with the FLARM privacy flag set will not have
+file format.  Aircraft with the FLARM privacy flag set will not have
 any identification displayed.
 
 
@@ -319,9 +319,9 @@ for the small radar view can be configured\config{flarmradar-place}.
 
 This FLARM display is oriented track-up and a small glider icon
 clearly shows that the display is oriented as such.  The scale of the
-display is linear up to maximum distance of 2000 meters.  On the
-background there are two rings; the first is a 1000 meters radius and the second 
-is 2000 meters.  Traffic further away than 2000 meters is drawn at the 2000 meter ring.
+display is linear up to maximum distance of 2000~m.  On the
+background there are two rings; the first is a 1000~m radius and the second
+is 2000~m.  Traffic further away than 2000~m is drawn at the 2000~m ring.
 \sketch{figures/flarmrose.png}
 
 All the FLARM displays shows FLARM traffic in colours according to
@@ -339,7 +339,7 @@ the threat level, or team and dialogue status.  The traffic is coloured:
 For every target above threat level 1 the rough relative hight is shown. The
 supplied figure is the absolute hight difference rounded by 100.  A small
 triangle indicates that the target is higher or lower than you.  The example
-radar shows a target approximately 100 meter (for metric altitude) higher.
+radar shows a target approximately 100~m (for metric altitude) higher.
 
 The FLARM radar-like display, when enabled, can be suppressed when
 visible by pressing the enter button.  If the
@@ -357,7 +357,7 @@ enlarge the view to fullscreen size.
 The fullscreen FLARM display offers all available information
 \menulabel{\bmenug{Info 1}\blink\bmenut{FLARM}{Radar}}
 about the FLARM traffic and depending on the setup it closes by itself, when all
-traffic has been gone.
+traffic has gone.
 
 \begin{center}
 \includegraphics[angle=0,width=0.5\linewidth,keepaspectratio='true']{figures/dialog-flarm1.png}
@@ -374,8 +374,8 @@ zoomed manually. The Up-Down gesture activates the automatic zoom.
 vario and altitude displayed next to the target.
 \item[Details]  \gesture{Down - Right} Through the button a separate dialogue with
 all details to the selected target is accessed. 
-\item[+/-]  \gesture{Up/Down} Manually change the zoom from 500 meter to
-10000 meter radar range. The zoom gestures also apply here.
+\item[+/-]  \gesture{Up/Down} Manually change the zoom from 500~m to
+10~km radar range. The zoom gestures also apply here.
 \item[$\triangleleft$/$\triangleright$]  \gesture{Left/Right} Select the
 previous or next target on the radar, gestures work in the same manner.
 \end{description}
@@ -387,25 +387,25 @@ previous or next target on the radar, gestures work in the same manner.
 \end{tabular}
 \end{center}
 The three screenshots are taken in a sequence and demonstrate a typical near
-pass of e.g. two FLARM equipped gliders. The extra information is colour-coded
+pass of e.g.\ two FLARM equipped gliders. The extra information is colour-coded
 in the already mentioned way. In the four corners of the radar screen is
 additional info to the selected target displayed:
 
 \begin{description}
-\item[Top left]  If available the FLARM Id of the selected target. 
+\item[Top left]  If available the FLARM ID of the selected target.
 \item[Top right]  Vario of the target, derived from the consecutive altitude
 messages.
 \item[Bottom left]  The distance to the target.
-\item[Bottom right]  The relative hight of the target. 
+\item[Bottom right]  The relative height of the target.
 \end{description}
 
-From the first to the second FLARM snapshot were passed about 15 seconds. The
-selected blue target was climbing with 3.4 m/s and had a not as threat
-recognised course relation.  Then in the mean time the `DC' has turned more to
-the left, became an alerting threat and gets now displayed red.  The FLARM
-radar switched the zoom from 1000 meter to 500 meter. In snapshot three the
-continuously climbing target becomes classified to threat level 1, gets yellow 
-coloured and seams to no longer a threat.
+From the first to the second FLARM snapshot about 15~seconds elapsed. The
+selected blue target was climbing at 3.4~m/s and did not have a relative course
+recognised as a threat.  Then in the mean time the `DC' has turned more to
+the left, became an alerting threat and is now displayed red.  The FLARM
+radar switched the zoom from 1000~m to 500~m. In snapshot three the
+continuously climbing target becomes classified to threat level~1, gets
+coloured yellow and seams to no longer be a threat.
 
 
 \section{Team flying}\label{sec:team-flying}
@@ -435,18 +435,18 @@ After entering the mate's code, the relative distance and
 bearing to the mate is calculated and updated in the dialogue.
 
 
-\subsection*{FLARM Id lookup}
+\subsection*{FLARM ID lookup}
 
 XCSoar also supports the encrypted team codes from the FlarmNet initiative.
-The \button{Flarm Lock} button allows you to accesses the FlarmNet database as well 
-as XCSoar's database for flarm to find a team mate. A simple 
+The \button{Flarm Lock} button allows you to access the FlarmNet database as well
+as XCSoar's database for FLARM to find a team mate. A simple
 lookup for a competition ID delivers potentially the desired 
 FLARM identity. Selecting the desired data base entry from the found items allows you 
-to `lock' your buddy from the far. See Section~\ref{sec:flarm-ident-file} 
-where to find the FlarmNet database etc. explained in detail.
+to `lock' your buddy from afar. See Section~\ref{sec:flarm-ident-file} for
+where to find the FlarmNet database etc.\ explained in detail.
 
 \menulabel{\bmenug{Info 2}\blink\bmenut{FLARM}{Details}}
-Just a similar functionality provides the flarm details diologue. It also let 
+Similar functionality provides the FLARM details dialogue. It also lets
 you search through the competition ID's in the data base and shows the details on it.  
 
 \begin{center}
@@ -454,11 +454,9 @@ you search through the competition ID's in the data base and shows the details o
 \end{center}
 
 
-\subsection*{Klick your buddy}
+\subsection*{Click your buddy}
 Even if XCSoar can `lock' only one team mate by reference waypoint, 
-it handles any number of `friends' with a known FLARM Id. Chances are high your buddy is not 
+it handles any number of `friends' with a known FLARM ID. Chances are high your buddy is not
 registered in any database. But in any case you get closer to 
-your flying college, just pick the the details from the FLARM radar screen, choose 
-a colour and identify this FLARM response in the future as your buddy.
-
-
+your flying colleague, just pick the details from the FLARM radar screen, choose
+a colour and XCSoar will identify this FLARM response in the future as your buddy.

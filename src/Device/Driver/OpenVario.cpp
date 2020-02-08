@@ -23,18 +23,89 @@ Copyright_License {
 
 #include "Device/Driver/OpenVario.hpp"
 #include "Device/Driver.hpp"
+#include "Device/Util/NMEAWriter.hpp"
 #include "NMEA/Checksum.hpp"
 #include "NMEA/Info.hpp"
+#include "NMEA/Derived.hpp"
 #include "NMEA/InputLine.hpp"
 #include "Units/System.hpp"
+#include "Operation/Operation.hpp"
+#include "LogFile.hpp"
 
 class OpenVarioDevice : public AbstractDevice {
+  Port &port;
+
 public:
+  OpenVarioDevice(Port &_port):port(_port) {}
+
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, NMEAInfo &info) override;
-
+  bool PutMacCready(double mc, OperationEnvironment &env) override;
+  bool PutBallast(double fraction, double overload,
+                  OperationEnvironment &env) override;
+  bool PutBugs(double bugs, OperationEnvironment &env) override;
+  void OnCalculatedUpdate(const MoreData &basic,
+                  const DerivedInfo &calculated) override;
   static bool POV(NMEAInputLine &line, NMEAInfo &info);
 };
+
+void
+OpenVarioDevice::OnCalculatedUpdate(const MoreData &basic, 
+    const DerivedInfo &calculated)
+{
+  PolarCoefficients polar_ideal;
+  PolarCoefficients polar_real;
+  NullOperationEnvironment env;
+  
+  // Get polar
+  polar_ideal = calculated.glide_polar_safety.GetCoefficients();
+  polar_real = calculated.glide_polar_safety.GetRealCoefficients();
+  
+  char buffer[50];
+  
+  // Compose Real Polar String
+  sprintf(buffer,"POV,C,RPO,%f,%f,%f", polar_real.a, polar_real.b, polar_real.c);
+  PortWriteNMEA(port, buffer, env);
+
+  // Compose ideal polar String
+  sprintf(buffer,"POV,C,IPO,%f,%f,%f", polar_ideal.a, polar_ideal.b, polar_ideal.c);
+  PortWriteNMEA(port, buffer, env);
+}
+
+bool
+OpenVarioDevice::PutMacCready(double mc, OperationEnvironment &env)
+{
+  if (!EnableNMEA(env))
+    return false;
+  
+  char buffer[30];
+  sprintf(buffer,"POV,C,MC,%0.2f", (double)mc);
+  return PortWriteNMEA(port, buffer, env);
+}
+
+bool
+OpenVarioDevice::PutBallast(double fraction, double overload, OperationEnvironment &env)
+{
+  if (!EnableNMEA(env))
+    return false;
+  
+  char buffer[15];
+  sprintf(buffer,"POV,C,WL,%3.0f", overload);
+  return PortWriteNMEA(port, buffer, env);
+}
+
+bool
+OpenVarioDevice::PutBugs(double bugs, OperationEnvironment &env)
+{
+  if (!EnableNMEA(env))
+    return false;
+ 
+  double _bugs = (double)(bugs);
+
+  char buffer[32];
+  sprintf(buffer, "POV,C,BU,%0.2f\r", _bugs);
+  return PortWriteNMEA(port, buffer, env);
+}
 
 bool
 OpenVarioDevice::ParseNMEA(const char *_line, NMEAInfo &info)
@@ -108,6 +179,11 @@ OpenVarioDevice::POV(NMEAInputLine &line, NMEAInfo &info)
         info.temperature_available = true;
         break;
       }
+      case 'V': {
+        info.voltage = value;
+        info.voltage_available.Update(info.clock);
+        break;
+      }
     }
   }
 
@@ -117,12 +193,12 @@ OpenVarioDevice::POV(NMEAInputLine &line, NMEAInfo &info)
 static Device *
 OpenVarioCreateOnPort(const DeviceConfig &config, Port &com_port)
 {
-  return new OpenVarioDevice();
+  return new OpenVarioDevice(com_port);
 }
 
 const struct DeviceRegister open_vario_driver = {
   _T("OpenVario"),
   _T("OpenVario"),
-  0,
+  DeviceRegister::SEND_SETTINGS,
   OpenVarioCreateOnPort,
 };

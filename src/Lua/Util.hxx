@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2015-2019 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,7 +31,8 @@
 #define LUA_UTIL_HXX
 
 #include "Assert.hxx"
-#include "Compiler.h"
+#include "Util/StringView.hxx"
+#include "Util/Compiler.h"
 
 extern "C" {
 #include <lua.h>
@@ -95,6 +96,13 @@ static inline void
 Push(lua_State *L, const char *value)
 {
 	lua_pushstring(L, value);
+}
+
+gcc_nonnull_all
+static inline void
+Push(lua_State *L, StringView value)
+{
+	lua_pushlstring(L, value.data, value.size);
 }
 
 gcc_nonnull_all

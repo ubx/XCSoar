@@ -2,6 +2,7 @@ Version 7.0 - not yet released
 * LUA scripting
 * user interface
   - screen layout with 12 infoboxes on the left, vario+3 infoboxes on right
+  - new translation: Traditional Chinese
 * data files
   - optimise the terrain loader
   - support runway width in CUP files
@@ -16,6 +17,7 @@ Version 7.0 - not yet released
       environmental sensors (temperature, humidity)
   - combine traffic from all FLARM devices (support both FLARM and OGN devices on board)
   - GliderLink: new driver
+  - AirControlDisplay: read radio frequencies from PAAVS,COM sentence
 * weather
   - merge all weather data in one dialog
   - allow showing both terrain and RASP
@@ -51,6 +53,7 @@ Version 7.0 - not yet released
       climbing cruise (green), circling non-climb (orange)
   - improved auto-scaling of vario-like graphical infoboxes
   - new infobox: "Number Of Satellites"
+  - new infoboxes for radio frequencies, including setting the frequencies
 * Windows
   - drop support for Windows CE
   - require Windows Vista or later
@@ -62,8 +65,14 @@ Version 7.0 - not yet released
   - drop support for ARMv6 and MIPS CPUs
 * Kobo
   - support Kobo Glo HD
+* Raspberry Pi
+  - resizable mouse cursor
 
 Version 6.8.13 - not yet released
+* devices
+  - LX: fix buffer overflow
+* Kobo
+  - fix build failure with GCC 9
 
 Version 6.8.12 - 2019/04/30
 * weather
