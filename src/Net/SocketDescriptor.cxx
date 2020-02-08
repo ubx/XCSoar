@@ -286,6 +286,13 @@ SocketDescriptor::SetTcpDeferAccept(const int &seconds) noexcept
 }
 
 bool
+SocketDescriptor::SetTcpUserTimeout(const unsigned &milliseconds) noexcept
+{
+	return SetOption(IPPROTO_TCP, TCP_USER_TIMEOUT,
+			 &milliseconds, sizeof(milliseconds));
+}
+
+bool
 SocketDescriptor::SetV6Only(bool value) noexcept
 {
 	return SetBoolOption(IPPROTO_IPV6, IPV6_V6ONLY, value);
@@ -379,7 +386,7 @@ SocketDescriptor::GetLocalAddress() const noexcept
 
 	StaticSocketAddress result;
 	result.size = result.GetCapacity();
-	if (getsockname(fd, result.GetAddress(), &result.size) < 0)
+	if (getsockname(fd, result, &result.size) < 0)
 		result.Clear();
 
 	return result;
@@ -392,7 +399,7 @@ SocketDescriptor::GetPeerAddress() const noexcept
 
 	StaticSocketAddress result;
 	result.size = result.GetCapacity();
-	if (getpeername(fd, result.GetAddress(), &result.size) < 0)
+	if (getpeername(fd, result, &result.size) < 0)
 		result.Clear();
 
 	return result;
@@ -473,7 +480,7 @@ SocketDescriptor::Read(void *buffer, size_t length,
 
 	socklen_t addrlen = address.GetCapacity();
 	ssize_t nbytes = ::recvfrom(Get(), (char *)buffer, length, flags,
-				    address.GetAddress(), &addrlen);
+				    address, &addrlen);
 	if (nbytes > 0)
 		address.SetSize(addrlen);
 

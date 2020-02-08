@@ -42,7 +42,7 @@ The following is needed for all targets:
 \begin{itemize}
 \item GNU make
 \item GNU compiler collection (\texttt{gcc}), version 5 or later
-  or clang/LLVM 3.8 (with "make CLANG=y")
+  or clang/LLVM 3.8 (with ``make CLANG=y'')
 \item GNU gettext
 \item \href{http://librsvg.sourceforge.net/)}{rsvg}
 \item \href{http://www.imagemagick.org/}{ImageMagick 6.4}
@@ -74,6 +74,7 @@ similar operating systems:
 \item \href{http://www.zlib.net/}{zlib}
 \item \href{http://curl.haxx.se/}{CURL}
 \item \href{http://www.lua.org/}{Lua}
+\item \href{https://www.freedesktop.org/wiki/Software/libinput/}{libinput} (not required when using Wayland or on the KOBO)
 \item \href{http://www.libsdl.org/}{SDL}
 \item \href{http://www.libsdl.org/projects/SDL\_ttf/}{SDL\_ttf}
 \item \href{http://www.libpng.org/}{libpng}
@@ -101,6 +102,7 @@ sudo apt-get install make g++ \
   librsvg2-bin xsltproc \
   imagemagick gettext \
   mesa-common-dev libgl1-mesa-dev libegl1-mesa-dev \
+  libinput-dev \
   fonts-dejavu
 \end{verbatim*}
 
@@ -130,7 +132,7 @@ For Android, you need:
 
 \begin{itemize}
 \item \href{http://developer.android.com/sdk/}{Android SDK level 22}
-\item \href{http://developer.android.com/sdk/ndk/}{Android NDK r20-beta3}
+\item \href{http://developer.android.com/sdk/ndk/}{Android NDK r20b}
 \item \href{http://www.vorbis.com/}{Ogg Vorbis}
 \item {Java JDK 
 \begin{verbatim*}
@@ -154,7 +156,7 @@ tools/bin/sdkmanager \
 
 The \texttt{Makefile} assumes that the Android SDK is installed in
 \verb|~/opt/android-sdk-linux| and the NDK is installed in
-\verb|~/opt/android-ndk-r20-beta3|.  You can use the options
+\verb|~/opt/android-ndk-r20b|.  You can use the options
 \verb|ANDROID_SDK| and \verb|ANDROID_NDK| to override these paths.
 
 Load/update the IOIO source code:
@@ -186,7 +188,7 @@ extension \\
 
 \texttt{ANDROIDMIPS} & for MIPS CPUs \\
 
-\texttt{ANDROIDFAT} & "fat" package for all supported CPUs \\
+\texttt{ANDROIDFAT} & ``fat'' package for all supported CPUs \\
 
 \end{tabularx}
 
@@ -317,9 +319,9 @@ repository:
 git clone git://git.xcsoar.org/xcsoar/max/linux.git
 \end{verbatim*}
 
-Check out the correct branch. For the Kobo Mini, this is the "kobo" branch,
-for the Kobo Glo HD, the branch is called "kobo-glohd", and for the Kobo Aura 2,
-use the branch "kobo-aura2".
+Check out the correct branch. For the Kobo Mini, this is the ``kobo'' branch,
+for the Kobo Glo HD, the branch is called ``kobo-glohd'', and for the Kobo Aura 2,
+use the branch ``kobo-aura2''.
 
 \begin{verbatim*}
 git checkout kobo
@@ -399,7 +401,7 @@ TeX files is done by typing:
 make manual
 \end{verbatim*}
 
-A lot of warnings are generated... this is normal. Check for the presence of PDF files 
+A lot of warnings are generated...\ this is normal. Check for the presence of PDF files
 to ensure that the generation process was successful.
 \section{Options}
 
@@ -458,7 +460,7 @@ make TARGET=UNIX USE_CCACHE=y
 
 \section{Using a build VM with Vagrant}\label{sec:vagrant}
 An easy way to install a virtual machine with all build dependencies required
-for various targets (e. g. Linux, Windows, Android and Kobo), is using Vagrant.
+for various targets (e.g.\ Linux, Windows, Android and Kobo), is using Vagrant.
 
 The following is needed to install the VM with Vagrant:
 
@@ -482,8 +484,8 @@ not recommended to compile directly in this folder. A git clone of this
 directory is automatically created in the home directory
 (\texttt{~/xcsoar-src}), which should be used instead. In this git clone, the
 XSoar source directory on the host is preconfigured as a git remote named
-"host", and the XCSoar master directory is preconfigured as a remote named
-"master".
+``host'', and the XCSoar master directory is preconfigured as a remote named
+``master''.
 
 To shutdown the VM, type:
 

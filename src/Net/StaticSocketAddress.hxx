@@ -31,7 +31,8 @@
 #define STATIC_SOCKET_ADDRESS_HXX
 
 #include "SocketAddress.hxx"
-#include "Compiler.h"
+#include "Features.hxx"
+#include "Util/Compiler.h"
 
 #include <assert.h>
 
@@ -63,14 +64,6 @@ public:
 	}
 
 	operator const struct sockaddr *() const noexcept {
-		return reinterpret_cast<const struct sockaddr *>(&address);
-	}
-
-	struct sockaddr *GetAddress() noexcept {
-		return reinterpret_cast<struct sockaddr *>(&address);
-	}
-
-	const struct sockaddr *GetAddress() const noexcept {
 		return reinterpret_cast<const struct sockaddr *>(&address);
 	}
 

@@ -57,32 +57,38 @@ public:
 		WakeAllConditionVariable(&cond);
 	}
 
-private:
-	bool wait_for(CriticalSection &mutex, DWORD timeout_ms) noexcept {
-		return SleepConditionVariableCS(&cond, &mutex.critical_section,
+	void wait(std::unique_lock<CriticalSection> &lock) noexcept {
+		SleepConditionVariableCS(&cond,
+					 &lock.mutex()->critical_section,
+					 INFINITE);
+	}
+
+	template<typename M, typename P>
+	void wait(std::unique_lock<M> &lock,
+		  P &&predicate) noexcept {
+		while (!predicate())
+			wait(lock);
+	}
+
+	bool wait_for(std::unique_lock<CriticalSection> &lock,
+		      std::chrono::steady_clock::duration timeout) noexcept {
+		auto timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
+		return SleepConditionVariableCS(&cond,
+						&lock.mutex()->critical_section,
 						timeout_ms);
 	}
 
-public:
-	bool wait_for(CriticalSection &mutex,
-		      std::chrono::steady_clock::duration timeout) noexcept {
-		auto timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(timeout).count();
-		return wait_for(mutex, timeout_ms);
-	}
-
-	template<typename M>
+	template<typename M, typename P>
 	bool wait_for(std::unique_lock<M> &lock,
-		      std::chrono::steady_clock::duration timeout) noexcept {
-		return wait_for(*lock.mutex(), timeout);
-	}
+		      std::chrono::steady_clock::duration timeout,
+		      P &&predicate) noexcept {
+		while (!predicate()) {
+			// TODO: without wait_until(), this multiplies the timeout
+			if (!wait_for(lock, timeout))
+				return predicate();
+		}
 
-	void wait(CriticalSection &mutex) noexcept {
-		wait_for(mutex, INFINITE);
-	}
-
-	template<typename M>
-	void wait(std::unique_lock<M> &lock) noexcept {
-		wait(*lock.mutex());
+		return true;
 	}
 };
 

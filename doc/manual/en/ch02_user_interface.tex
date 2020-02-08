@@ -41,17 +41,15 @@ map display. Various symbols relating to glide computer information are overlaid
 the map area. Icons and text may appear along the lower edge of the screen
 to indicate status of connected devices, flight modes etc.
 Following the development process of XCSoar there is an increasing number of 
-items that may be chosen for display in the main area, which are gauges 
-Flarm Radar, Thermal Assistant, and Horizon (as is with Version 6.7.2, 
-Dec. 2013).
+items that may be chosen for display in the main area, which are gauges,
+FLARM Radar, Thermal Assistant and Horizon.
 \item[InfoBoxes] A grid of data values is displayed usually either along
-the top and bottom of the screen (portrait display) or to the right of the
+the top and bottom of the screen (portrait display) or to the left and right of the
 screen (landscape display).  These so-called InfoBoxes display data from the
 GPS and other input devices as well as data calculated by XCSoar. Further, 
-Infoboxes can display even gauges and certain graphs.
-\item[Bottom area] At the screen's bottom, XCSoar is able to draw a cross 
-section of terrain and airspaces in direction of your heading. (There might be 
-more to come after Dec. 2013)
+InfoBoxes can even display gauges and certain graphs.
+\item[Bottom area] At the bottom of the screen, XCSoar is able to draw a cross-
+section of terrain and airspaces in the direction of your heading.
 \end{description}
 
 \subsection*{Overlays}
@@ -60,9 +58,9 @@ more to come after Dec. 2013)
 and some may only have meaningful information displayed when XCSoar is
 connected to a supported instrument.
 A gauge overlay is either permanently drawn or is invoked by several 
-conditions.  E.g. the thermal assistant is shown, when XCSoar enters circling 
-mode. The Flarm radar is invoked, whenever a probable collision is detected. 
-Permanently overlayed gauges are the final glide bar as well as the vario bar 
+conditions.  E.g.\ the thermal assistant is shown, when XCSoar enters circling
+mode. The FLARM radar is invoked, whenever a probable collision is detected.
+Permanently overlaid gauges are the final glide bar as well as the vario bar
 amongst others.
 \item[Button labels and menus] Hardware buttons on the device running XCSoar
 can be used to bring up and navigate smaller on-screen menus that are
@@ -93,7 +91,7 @@ There are several ways to interact with XCSoar:
 \begin{itemize}
 \item Touching certain map elements
 \item Touching InfoBoxes and on-screen menu buttons
-\item `Gesturing', by e.g. drawing a dash from the left to the right
+\item `Gesturing', by e.g.\ drawing a dash from the left to the right
   on the screen (see Section \ref{sec:gestures} below).
 \item `Dragging' the screen (touching the screen and moving before releasing).
 \item Pressing application buttons on the device.
@@ -252,7 +250,7 @@ see
  & \bmenut{Logger}{Start}
  & \bmenus{Raw Logger}
  & \bmenus{Airspace}
- & \bmenus{Vega} \\
+ & \bmenus{Vega}
  & \bmenus{Profiles} \\
 see
  & \ref{sec:logger}
@@ -313,7 +311,7 @@ see
 
 The information menu is always a good address, when not only a clue on 
 how to set MacCready is requested, but rather more elaborate help on a 
-larger scope tactical decision on your flight is requested.
+larger scope tactical decision on your flight is requested. %TODO rewrite
 
 
 \subsection*{The Vega variometer sub-menu of the configuration menu}
@@ -357,7 +355,7 @@ see
 \end{tabularx}}
 
 This sub-menu unfortunately overlays the full-screen map view of the pan mode.
- It's functions are quite evident, although the menu could be replaced by multi-touch
+ Its functions are quite evident, although the menu could be replaced by multi-touch
  technology or knobs. Besides the essential `exit pan mode'
  function the `What's here?' button offers brilliant access to the variety of
  information of the map.
@@ -429,7 +427,7 @@ screen orientation and the device's display size.
 
 For a 320x240 display
 Pocket PC in portrait mode, there are four InfoBoxes above and four
-InfoBoxes below the map display.  
+InfoBoxes below the map display.  %TODO Update the example by considering something else than a Pocket PC
 \sketch{figures/infoboxes.png}
 
 A typical landscape layout has 9 InfoBoxes and the variometer gauge 
@@ -453,18 +451,18 @@ Further, you can use screen pages to change InfoBox content manually, by
 assigning different Infobox sets to different pages (see following section).
 
 To gain access to automatic switching InfoBoxes dependent on the flight mode, 
-just let XCSoar run with it's pre-configured setup from installation. To set up 
+just let XCSoar run with its pre-configured setup from installation. To set up 
 your personal version of Infoboxes go through the following procedure.
 \begin{description}
 \item[InfoBox geometry] Choose a basic Infobox geometry or layout.  This basic 
 layout is maintained through any changes in-flight, affecting InfoBox content 
 only.\config{interface-appearance}
-\item[Choose Infobox set "Auto"] Configure at least one screen page with the 
-choice of Infoboxes "Auto". As can be seen on the corresponding configuration 
+\item[Choose Infobox set ``Auto''] Configure at least one screen page with the
+choice of Infoboxes ``Auto''. As can be seen on the corresponding configuration
 screen, there are more screen pages pre-defined. \config{screenpages}  These 
 others are not needed to gain automatic switches by flight mode. They are for \emph{manually} turning through the screens defined by pages. 
 \item[Define InfoBox sets] Put together the Infobox content you want to be 
-displayed in three Infobox sets called "Circling", "Cruise", and "FinalGlide" 
+displayed in three Infobox sets called ``Circling'', ``Cruise'', and ``FinalGlide''
 respectively.\config{infobox_sets}
 \end{description}  
 
@@ -472,9 +470,9 @@ respectively.\config{infobox_sets}
 \subsection*{Screen pages with different InfoBox sets}\label{sec:screenpages}
 
 XCSoar allows the pilot to define various sets of InfoBoxes that are 
-appropriate for "normal" states of flight.  Assuming circling, 
+appropriate for ``normal'' states of flight.  Assuming circling,
 cruising, or final glide as normal, XCSoar can switch corresponding Infobox 
-sets automatically. Perfectly done.
+sets automatically.
 
 As you might imagine, there are countless cases, you wished you had another 
 ensemble of information displayed at once.  For all of these more or less 
@@ -484,20 +482,20 @@ introduced by the concept of screen pages, a few use cases are given.
 \label{par:use_case}
 \begin{description}
 \item[Familiarisation] Especially if you are a beginner, you might study 
-computed values in-flight in advance of placing them in your "normal" InfoBox 
+computed values in-flight in advance of placing them in your ``normal'' InfoBox
 ensemble - just to get familiar with the reading. To do so, create a new 
-Infobox named "test" to be placed on a additional screen page brought in. In 
-any case you can go back to the screen you know by "turning a page".
+Infobox named ``test'' to be placed on an additional screen page brought in. In
+any case you can go back to the screen you know by ``turning a page''
 \item[Competition] If you are a pilot scratching the edge, you might want to 
 gain benefit of XCSoar's numerous task- and competition-related computations. 
 In order to get them related to the competition's phases, you might like the 
 idea of defining two special use cases with pages for the phase before start, 
-another one for whilst racing.  If you are in search for a specific value to 
-be displayed, give it a try in chapter \ref{cha:infobox} "Infobox reference". 
+another one for whilst racing.  If you are in search of a specific value to
+be displayed, give it a try in chapter \ref{cha:infobox} ``\nameref{cha:infobox}''.
 There is a big chance you will find it.
 \item[On the ground] As a manager on duty you might use a screen page, showing 
-the "Flarm Radar" solely.  This might happen on a PC screen running XCSoar 
-being connected to a Flarm receiver.
+the ``FLARM Radar'' solely.  This might happen on a PC screen running XCSoar
+being connected to a FLARM receiver.
 \end{description}
 
 Whatever you would like to display, take into account the use case and screen 
@@ -514,18 +512,18 @@ To go through the various screen pages, use gesture left/right (touch-screen), o
 
 (This section applies only when a touch-screen or mouse is present.)
 
-Some InfoBox values can be changed by the user by selecting (i.e. long-pressing) the
+Some InfoBox values can be changed by the user by selecting (i.e.\ long-pressing) the
 InfoBox with the touch-screen or mouse.  This brings up a small tabular dialogue:
 
 \begin{description}
 \item[\bmenuw{Edit}]  
-  Allows the pilot to adjust the InfoBox setting (e.g. raise or lower the 
+  Allows the pilot to adjust the InfoBox setting (e.g.\ raise or lower the
   MacCready setting)
 
 \item[\bmenuw{Setup}]
   Allows you to change the behaviour of the setting related to the InfoBox 
   (for example, changing from auto to manual MacCready mode); or 
-  to change the InfoBox itself by pressing `{\it Switch InfoBox}', then 
+  to change the InfoBox itself by pressing `\emph{Switch InfoBox}', then 
   choosing from a list of all available InfoBoxes.
 
 \end{description}
@@ -536,8 +534,8 @@ be adjusted include MacCready setting, wind speed, and altitude (QNH).
 
 \subsection*{Changing InfoBox sets}
 
-An entire set of InfoBox can be composed by the `{\it Setup System}' configuration 
-dialogues on the `{\it Look / InfoBox Modes}' and `{\it Look / InfoBox Pages}' 
+An entire set of InfoBox can be composed by the `\emph{Setup System}' configuration 
+dialogues on the `\emph{Look / InfoBox Modes}' and `\emph{Look / InfoBox Pages}' 
 \ref{sec:infobox_sets} setup page. 
 The dialogues give a wide variety to set up the look and feel of the XCSoar pages.  
 
@@ -623,7 +621,7 @@ configured
 of each airspace class
 \item[Team code] Allows transfer of coordinates between FLARM team mates via a 
   code
-\item[Devices]  Selection of various external devices (e.g. smart variometers, 
+\item[Devices]  Selection of various external devices (e.g.\ smart variometers,
   FLARM, etc.).
 \item[Setup Plane]  Easy reconfiguration of the plane-dependent settings (e.g. 
   polar, competition ID, etc.) by choosing from a list of previously-created 
@@ -664,12 +662,12 @@ character under the cursor (underlined character). Clicking the \button{$<$}
 and \button{$>$} buttons move the cursor left/right.  
 
 To enter text with the touch screen keyboard, press the letters of choice 
-one after the other. In some dialogues (e.g. waypoint editing) only the next 
+one after the other. In some dialogues (e.g.\ waypoint editing) only the next
 \sketch{figures/textentry_keyboard.png}
 letters matching to an entry in the database will be shown. For deleting the 
 last letter use the \button{$<-$} button. The \button{Clear} button deletes all input.
 
-Press \button{Ok} to take over, or \button{Cancel} to exit.
+Press \button{Ok} to validate, or \button{Cancel} to exit.
 
 
 \section{Acoustic alert and sound feedback}
@@ -716,7 +714,7 @@ a certain function is activated. \sketch{figures/gesture1.png}
 A specific gesture is defined by movements of the finger or the 
 cursor in the four directions Up, Down, Left and Right. This means if 
 you drag your finger down and afterwards to the right over the screen, 
-\gesture{dr} the gesture "DR" is detected, which stands for "Down-Right". 
+\gesture{dr} the gesture ``DR'' is detected, which stands for ``Down-Right''.
 It will bring up the waypoint list. The manual indicates an available 
 gesture as shown here on the left side of the text body. Both the blue hand 
 and pictogram of the movement are used to indicate a specific gesture, in this 

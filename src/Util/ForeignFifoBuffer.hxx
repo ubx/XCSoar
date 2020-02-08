@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2017 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2003-2019 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -51,10 +51,10 @@
 template<typename T>
 class ForeignFifoBuffer {
 public:
-	typedef size_t size_type;
-	typedef WritableBuffer<T> Range;
-	typedef typename Range::pointer_type pointer_type;
-	typedef typename Range::const_pointer_type const_pointer_type;
+	using size_type = std::size_t;
+	using Range = WritableBuffer<T>;
+	using pointer = typename Range::pointer;
+	using const_pointer = typename Range::const_pointer;
 
 protected:
 	size_type head = 0, tail = 0, capacity;
@@ -82,11 +82,16 @@ public:
 		return *this;
 	}
 
-	void Swap(ForeignFifoBuffer<T> &other) noexcept {
-		std::swap(head, other.head);
-		std::swap(tail, other.tail);
-		std::swap(capacity, other.capacity);
-		std::swap(data, other.data);
+	void swap(ForeignFifoBuffer<T> &other) noexcept {
+		using std::swap;
+		swap(head, other.head);
+		swap(tail, other.tail);
+		swap(capacity, other.capacity);
+		swap(data, other.data);
+	}
+
+	friend void swap(ForeignFifoBuffer<T> &a, ForeignFifoBuffer<T> &b) noexcept {
+		a.swap(b);
 	}
 
 	constexpr bool IsNull() const noexcept {
@@ -206,7 +211,7 @@ public:
 		head += n;
 	}
 
-	size_type Read(pointer_type p, size_type n) noexcept {
+	size_type Read(pointer p, size_type n) noexcept {
 		auto range = Read();
 		if (n > range.size)
 			n = range.size;

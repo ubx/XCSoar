@@ -388,6 +388,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/InfoBoxes/Content/Trace.cpp \
 	$(SRC)/InfoBoxes/Content/Weather.cpp \
 	$(SRC)/InfoBoxes/Content/Airspace.cpp \
+	$(SRC)/InfoBoxes/Content/Radio.cpp \
 	$(SRC)/InfoBoxes/Data.cpp \
 	$(SRC)/InfoBoxes/Format.cpp \
 	$(SRC)/InfoBoxes/Units.cpp \
@@ -402,6 +403,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/InfoBoxes/Panel/MacCreadySetup.cpp \
 	$(SRC)/InfoBoxes/Panel/WindEdit.cpp \
 	$(SRC)/InfoBoxes/Panel/ATCReference.cpp \
+	$(SRC)/InfoBoxes/Panel/RadioEdit.cpp \
 	$(SRC)/Pan.cpp \
 	$(SRC)/Input/InputConfig.cpp \
 	$(SRC)/Input/InputDefaults.cpp \

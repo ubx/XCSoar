@@ -44,12 +44,9 @@ public:
 	UniqueFileDescriptor() noexcept
 		:FileDescriptor(FileDescriptor::Undefined()) {}
 
-protected:
-	explicit UniqueFileDescriptor(int _fd) noexcept:FileDescriptor(_fd) {
-		assert(IsDefined());
-	}
+	explicit UniqueFileDescriptor(int _fd) noexcept
+		:FileDescriptor(_fd) {}
 
-public:
 	explicit UniqueFileDescriptor(FileDescriptor _fd) noexcept
 		:FileDescriptor(_fd) {}
 
@@ -63,7 +60,8 @@ public:
 	}
 
 	UniqueFileDescriptor &operator=(UniqueFileDescriptor &&other) noexcept {
-		std::swap(fd, other.fd);
+		using std::swap;
+		swap(fd, other.fd);
 		return *this;
 	}
 
