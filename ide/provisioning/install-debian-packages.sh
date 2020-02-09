@@ -46,6 +46,10 @@ apt-get install $APTOPTS make g++ \
   xz-utils
 echo
 
+echo Installing dependencies for compiling targets which need SocketCan...
+apt-get install $APTOPTS libsocketcan-dev
+echo
+
 echo Installing dependencies for compiling with LLVM / Clang...
 apt-get install $APTOPTS llvm clang libc++-dev
 echo

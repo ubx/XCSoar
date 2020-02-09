@@ -271,11 +271,14 @@ ifeq ($(TARGET),UNIX)
     TARGET_IS_LINUX := y
   endif
 
+  ifeq ($(TARGET_IS_KOBO),n)
+    HAVE_CAN := y
+  endif
+
   HAVE_POSIX := y
   HAVE_WIN32 := n
   HAVE_MSVCRT := n
   HAVE_VASPRINTF := y
-  HAVE_CAN := y
 
   ifeq ($(ARMV6),y)
     TARGET_ARCH += -march=armv6
