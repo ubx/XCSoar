@@ -36,24 +36,10 @@ Copyright_License {
 #include <Device/Port/CANPort.hpp>
 
 class CANaerospaceDevice : public AbstractDevice {
-  Port &port;
+//  Port &port;
 
   public:
-    CANaerospaceDevice(Port &_port) : port(_port) {
-//        CANPort &canport = static_cast<CANPort &>(port);
-//        const std::vector<uint32_t> can_ids {
-//                INDICATED_AIRSPEED, TRUE_AIRSPEED,
-//                HEADING_ANGLE,
-//                STANDARD_ALTITUDE,
-//                STATIC_PRESSURE,
-//                AIRMASS_SPEED_VERTICAL,
-//                GPS_AIRCRAFT_LATITUDE,
-//                GPS_AIRCRAFT_LONGITUDE,
-//                GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID,
-//                GPS_GROUND_SPEED,
-//                GPS_TRUE_TRACK,
-//                UTC};
-//        canport.SetFilter(can_ids);
+    CANaerospaceDevice(Port &_port)  {
     }
     bool DataReceived(const void *data, size_t length, NMEAInfo &info) override;
 };
