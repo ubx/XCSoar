@@ -172,6 +172,7 @@ InfoBoxLayout::Calculate(PixelRect rc, InfoBoxSettings::Geometry geometry)
     right = layout.vario.left;
 
     /* fall through */
+    gcc_fallthrough;
 
   case InfoBoxSettings::Geometry::BOTTOM_RIGHT_8:
   case InfoBoxSettings::Geometry::OBSOLETE_BOTTOM_RIGHT_8:
@@ -198,6 +199,7 @@ InfoBoxLayout::Calculate(PixelRect rc, InfoBoxSettings::Geometry geometry)
     right = layout.vario.left;
 
     /* fall through */
+    gcc_fallthrough;
 
   case InfoBoxSettings::Geometry::TOP_LEFT_8:
   case InfoBoxSettings::Geometry::OBSOLETE_TOP_LEFT_8:
@@ -405,11 +407,8 @@ InfoBoxLayout::ValidateGeometry(InfoBoxSettings::Geometry geometry,
     case InfoBoxSettings::Geometry::TOP_8_VARIO:
       return InfoBoxSettings::Geometry::LEFT_6_RIGHT_3_VARIO;
     }
-  } else if (screen_size.cx == screen_size.cy) {
-    /* square */
-    geometry = InfoBoxSettings::Geometry::RIGHT_5;
   } else {
-    /* portrait */
+    /* portrait and square */
 
     switch (geometry) {
     case InfoBoxSettings::Geometry::SPLIT_8:
