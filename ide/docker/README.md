@@ -35,3 +35,11 @@ docker run \
     --mount type=bind,source="$(pwd)",target=/opt/xcsoar \
     -it xcsoar/xcsoar-build:latest xcsoar-compile ANDROID
 ```
+
+To run the PI build:
+```
+docker run \
+    --mount type=bind,source="$(pwd)",target=/opt/xcsoar \
+    --mount type=bind,source=/media/andreas/rootfs,target=/opt/pi/root \
+    -it xcsoar/xcsoar-build:latest xcsoar-compile PI
+```

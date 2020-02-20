@@ -16,6 +16,15 @@ case "${1}" in
         make TARGET="${1}" -j"${CPUS}"
         make TARGET="${1}" -j"${CPUS}" output/KOBO/KoboRoot.tgz
       ;;
+      "PI")
+        make TARGET="${1}" -j"${CPUS}" everything
+      ;;
+      "PI2")
+        make TARGET="${1}" -j"${CPUS}" CLANG=y everything
+      ;;
+      "COLIBRI")
+        make TARGET="${1}" -j"${CPUS}" everything
+      ;;
       "UNIX")
         make TARGET="${1}" -j"${CPUS}" everything
       ;;

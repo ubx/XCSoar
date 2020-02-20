@@ -1,7 +1,7 @@
 TARGETS = PC WIN64 \
 	UNIX UNIX32 UNIX64 OPT \
 	WAYLAND \
-	PI PI2 CUBIE KOBO NEON \
+	PI PI2 CUBIE KOBO NEON COLIBRI \
 	ANDROID ANDROID7 ANDROID7NEON ANDROID86 \
 	ANDROIDAARCH64 ANDROIDX64 \
 	ANDROIDFAT \
@@ -47,6 +47,7 @@ TARGET_IS_LINUX := n
 TARGET_IS_ANDROID := n
 TARGET_IS_PI := n
 TARGET_IS_KOBO := n
+TARGET_IS_COLIBRI := n
 HAVE_POSIX := n
 HAVE_WIN32 := y
 HAVE_MSVCRT := y
@@ -202,6 +203,12 @@ ifeq ($(TARGET),KOBO)
   # Experimental target for Kobo Mini
   override TARGET = NEON
   TARGET_IS_KOBO = y
+endif
+
+ifeq ($(TARGET),COLIBRI)
+  # cross-crompiling for Colibri T30
+  override TARGET = NEON
+  TARGET_IS_COLIBRI = y
 endif
 
 ifeq ($(TARGET),NEON)
@@ -463,6 +470,9 @@ endif
 
 ifeq ($(TARGET_IS_PI),y)
   ifneq ($(PI),)
+#    TARGET_CPPFLAGS += --sysroot=$(PI) -isystem $(PI)/usr/include/arm-linux-gnueabihf -isystem $(PI)/usr/include -Wno-error
+#    TARGET_INCLUDES += -I$(PI)/usr/include/c++/6
+#    TARGET_INCLUDES += -I$(PI)/usr/include
     TARGET_CPPFLAGS += --sysroot=$(PI) -isystem $(PI)/usr/include/arm-linux-gnueabihf -isystem $(PI)/usr/include
   endif
 endif
