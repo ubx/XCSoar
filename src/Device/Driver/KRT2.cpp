@@ -406,7 +406,12 @@ KRT2Device::GetStationName(char *station_name, const TCHAR *name)
 void
 KRT2Device::HandleSTXCommand(const struct stx_msg * msg, struct NMEAInfo & info)
 {
-  if(msg->command != 'U' && msg->command != 'R') {
+  if(msg->command != 'U' && msg->command != 'R' && msg->command != 'C') {
+    return;
+  }
+
+  if(msg->command == 'C') {
+    info.settings.swap_frequencies.Update(info.clock);
     return;
   }
 
@@ -420,10 +425,12 @@ KRT2Device::HandleSTXCommand(const struct stx_msg * msg, struct NMEAInfo & info)
   freq_name.SetASCII(&(msg->station[0]), &(msg->station[MAX_NAME_LENGTH - 1]));
 
   if(msg->command == 'U') {
+    info.settings.has_active_frequency.Update(info.clock);
     info.settings.active_frequency = freq;
     info.settings.active_freq_name = freq_name;
   }
   else if(msg->command == 'R') {
+    info.settings.has_standby_frequency.Update(info.clock);
     info.settings.standby_frequency = freq;
     info.settings.standby_freq_name = freq_name;
   }
