@@ -37,7 +37,7 @@ Copyright_License {
 #include <algorithm>
 #include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
+#include <cassert>
 
 #ifdef MORE_USAGE
 extern void PrintMoreUsage();
@@ -129,7 +129,7 @@ public:
 
   Args &operator=(const Args &other) = delete;
 
-  gcc_noreturn
+  [[noreturn]]
   void UsageError() {
     fprintf(stderr, "Usage: %s %s\n", name, usage);
 #ifdef MORE_USAGE

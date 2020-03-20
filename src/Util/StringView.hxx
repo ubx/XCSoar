@@ -32,14 +32,20 @@
 
 #include "ConstBuffer.hxx"
 #include "StringAPI.hxx"
+#include "Compiler.h"
 
 #include <utility>
 
+#if __cplusplus >= 201703L && !GCC_OLDER_THAN(7,0)
+#include <string_view>
+#endif
+
 template<typename T>
 struct BasicStringView : ConstBuffer<T> {
-	typedef typename ConstBuffer<T>::size_type size_type;
-	typedef typename ConstBuffer<T>::value_type value_type;
-	typedef typename ConstBuffer<T>::pointer pointer;
+	using typename ConstBuffer<T>::size_type;
+	using typename ConstBuffer<T>::value_type;
+	using typename ConstBuffer<T>::pointer;
+	using typename ConstBuffer<T>::const_pointer;
 
 	using ConstBuffer<T>::data;
 	using ConstBuffer<T>::size;
@@ -55,8 +61,7 @@ struct BasicStringView : ConstBuffer<T> {
 	constexpr BasicStringView(pointer _data, size_type _size) noexcept
 		:ConstBuffer<T>(_data, _size) {}
 
-	constexpr BasicStringView(pointer _begin,
-				  pointer _end) noexcept
+	constexpr BasicStringView(pointer _begin, pointer _end) noexcept
 		:ConstBuffer<T>(_begin, _end - _begin) {}
 
 	BasicStringView(pointer _data) noexcept
@@ -66,6 +71,15 @@ struct BasicStringView : ConstBuffer<T> {
 	constexpr BasicStringView(std::nullptr_t n) noexcept
 		:ConstBuffer<T>(n) {}
 
+#if __cplusplus >= 201703L && !GCC_OLDER_THAN(7,0)
+	constexpr BasicStringView(std::basic_string_view<T> src) noexcept
+		:ConstBuffer<T>(src.data(), src.size()) {}
+
+	constexpr operator std::basic_string_view<T>() const noexcept {
+		return {data, size};
+	}
+#endif
+
 	using ConstBuffer<T>::empty;
 	using ConstBuffer<T>::begin;
 	using ConstBuffer<T>::end;
@@ -74,6 +88,19 @@ struct BasicStringView : ConstBuffer<T> {
 	using ConstBuffer<T>::pop_front;
 	using ConstBuffer<T>::pop_back;
 	using ConstBuffer<T>::skip_front;
+
+	constexpr BasicStringView<T> substr(size_type pos,
+					    size_type count) const noexcept {
+		return {data + pos, count};
+	}
+
+	constexpr BasicStringView<T> substr(size_type pos) const noexcept {
+		return {data + pos, size - pos};
+	}
+
+	constexpr BasicStringView<T> substr(const_pointer start) const noexcept {
+		return {start, size_t(data + size - start)};
+	}
 
 	gcc_pure
 	pointer Find(value_type ch) const noexcept {

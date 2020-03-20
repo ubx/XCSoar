@@ -25,7 +25,7 @@ Copyright_License {
 #include "Screen/ContainerWindow.hpp"
 #include "Input/InputEvents.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 gcc_pure
 static PixelRect
@@ -36,7 +36,7 @@ GetButtonPosition(unsigned i, PixelRect rc)
   if (hheight > hwidth) {
     // portrait
 
-    hheight /= 6;
+    hheight /= menubar_height_scale_factor;
 
     if (i == 0) {
       rc.left = rc.right;

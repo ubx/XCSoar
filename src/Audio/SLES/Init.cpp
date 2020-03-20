@@ -23,8 +23,8 @@ Copyright_License {
 
 #include "Init.hpp"
 
-#include <assert.h>
-#include <stddef.h>
+#include <cassert>
+#include <cstddef>
 #include <dlfcn.h>
 
 typedef SLresult (*T_slCreateEngine)(SLObjectItf *pEngine,

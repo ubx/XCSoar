@@ -26,8 +26,8 @@ Copyright_License {
 #include "Atmosphere/Temperature.hpp"
 #include "Util/Macros.hpp"
 
-#include <assert.h>
-#include <stddef.h>
+#include <cassert>
+#include <cstddef>
 
 //SI to Local Units
 
