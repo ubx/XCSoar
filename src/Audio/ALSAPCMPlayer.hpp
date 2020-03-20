@@ -28,8 +28,8 @@ Copyright_License {
 
 #include "Util/Compiler.h"
 
-#include <assert.h>
-#include <stddef.h>
+#include <cassert>
+#include <cstddef>
 #include <stdint.h>
 
 #include <list>

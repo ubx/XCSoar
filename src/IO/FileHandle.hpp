@@ -28,8 +28,8 @@ Copyright_License {
 
 #include <algorithm>
 
-#include <assert.h>
-#include <stddef.h>
+#include <cassert>
+#include <cstddef>
 #include <stdio.h>
 
 #include <tchar.h>

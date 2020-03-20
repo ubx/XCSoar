@@ -30,8 +30,8 @@ Copyright_License {
 #include <algorithm>
 #include <type_traits>
 
-#include <assert.h>
-#include <stddef.h>
+#include <cassert>
+#include <cstddef>
 #include <stdint.h>
 
 /* Algorithms for processing audio data */

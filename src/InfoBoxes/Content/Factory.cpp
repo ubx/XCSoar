@@ -46,8 +46,8 @@ Copyright_License {
 #include "Util/Macros.hpp"
 #include "Language/Language.hpp"
 
-#include <stddef.h>
-#include <assert.h>
+#include <cstddef>
+#include <cassert>
 
 /**
  * An #InfoBoxContent implementation that invokes a callback.  This is

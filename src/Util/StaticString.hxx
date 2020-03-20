@@ -37,8 +37,8 @@
 #include "UTF8.hpp"
 #include "ASCII.hxx"
 
-#include <assert.h>
-#include <stddef.h>
+#include <cassert>
+#include <cstddef>
 
 #ifdef _UNICODE
 #include <wchar.h>

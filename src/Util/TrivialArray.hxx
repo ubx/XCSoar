@@ -34,8 +34,8 @@
 #include <initializer_list>
 #include <algorithm>
 
-#include <assert.h>
-#include <stddef.h>
+#include <cassert>
+#include <cstddef>
 
 /**
  * An array with a maximum size known at compile time.  It keeps track
