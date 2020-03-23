@@ -32,6 +32,8 @@
 #include "IPv6Address.hxx"
 #include "Util/StringView.hxx"
 
+#include <cassert>
+
 #include <string.h>
 
 #ifdef HAVE_UN
@@ -94,13 +96,21 @@ SocketAddress::GetLocalPath() const noexcept
 bool
 SocketAddress::IsV6Any() const noexcept
 {
-	return GetFamily() == AF_INET6 && IPv6Address(*this).IsAny();
+	return GetFamily() == AF_INET6 && IPv6Address::Cast(*this).IsAny();
 }
 
 bool
 SocketAddress::IsV4Mapped() const noexcept
 {
-	return GetFamily() == AF_INET6 && IPv6Address(*this).IsV4Mapped();
+	return GetFamily() == AF_INET6 && IPv6Address::Cast(*this).IsV4Mapped();
+}
+
+IPv4Address
+SocketAddress::UnmapV4() const noexcept
+{
+	assert(IsV4Mapped());
+
+	return IPv6Address::Cast(*this).UnmapV4();
 }
 
 unsigned
@@ -111,10 +121,10 @@ SocketAddress::GetPort() const noexcept
 
 	switch (GetFamily()) {
 	case AF_INET:
-		return IPv4Address(*this).GetPort();
+		return IPv4Address::Cast(*this).GetPort();
 
 	case AF_INET6:
-		return IPv6Address(*this).GetPort();
+		return IPv6Address::Cast(*this).GetPort();
 
 	default:
 		return 0;

@@ -93,18 +93,18 @@ StringAfterPrefix(const char *haystack, StringView needle) noexcept
 }
 
 gcc_pure gcc_nonnull_all
-inline char *
-StringAfterPrefix(char *haystack, StringView needle) noexcept
-{
-	return const_cast<char *>(StringAfterPrefix((const char *)haystack,
-						    needle));
-}
-
-gcc_pure gcc_nonnull_all
 static inline bool
 StringStartsWithIgnoreCase(const char *haystack, StringView needle) noexcept
 {
 	return StringIsEqualIgnoreCase(haystack, needle.data, needle.size);
+}
+
+gcc_pure
+static inline bool
+StringStartsWithIgnoreCase(StringView haystack, StringView needle) noexcept
+{
+	return haystack.size >= needle.size &&
+		StringIsEqualIgnoreCase(haystack.data, needle.data, needle.size);
 }
 
 /**
@@ -119,6 +119,16 @@ StringAfterPrefixIgnoreCase(const char *haystack, StringView needle) noexcept
 {
 	return StringStartsWithIgnoreCase(haystack, needle)
 		? haystack + needle.size
+		: nullptr;
+}
+
+gcc_pure
+static inline StringView
+StringAfterPrefixIgnoreCase(StringView haystack,
+			    StringView needle) noexcept
+{
+	return StringStartsWithIgnoreCase(haystack, needle)
+		? haystack.substr(needle.size)
 		: nullptr;
 }
 
