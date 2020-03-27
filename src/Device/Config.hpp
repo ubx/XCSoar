@@ -253,13 +253,6 @@ struct DeviceConfig {
       port_type == PortType::IOIOUART;
   }
 
-  /**
-   * Does this port type use a can baud rate?
-   */
-  static bool UsesCanSpeed(PortType port_type) {
-    return port_type == PortType::CAN;
-  }
-
   bool IsDisabled() const {
     return !enabled || port_type == PortType::DISABLED;
   }

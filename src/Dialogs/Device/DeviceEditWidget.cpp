@@ -55,7 +55,6 @@ enum ControlIndex {
   I2CBus, I2CAddr, PressureUsage, Driver, UseSecondDriver, SecondDriver,
   SyncFromDevice, SyncToDevice,
   K6Bt,
-  CANBaudRate,
 };
 
 static constexpr struct {
@@ -284,15 +283,6 @@ FillTCPPorts(DataFieldEnum &dfe)
 }
 
 static void
-FillCanBaudRates(DataFieldEnum &dfe)
-{
-  dfe.addEnumText(_T("125000"), 125000);
-  dfe.addEnumText(_T("250000"), 250000);
-  dfe.addEnumText(_T("500000"), 500000);
-  dfe.addEnumText(_T("1000000"), 1000000);
-}
-
-static void
 FillI2CBus(DataFieldEnum &dfe)
 {
   dfe.addEnumText(_T("0"), 0u);
@@ -426,11 +416,6 @@ DeviceEditWidget::SetConfig(const DeviceConfig &_config)
   DataFieldEnum &baud_df = *(DataFieldEnum *)baud_control.GetDataField();
   baud_df.Set(config.baud_rate);
   baud_control.RefreshDisplay();
-
-  WndProperty &can_baud_control = GetControl(CANBaudRate);
-  DataFieldEnum &can_baud_df = *(DataFieldEnum *)can_baud_control.GetDataField();
-  can_baud_df.Set(config.can_baud_rate);
-  can_baud_control.RefreshDisplay();
 
   WndProperty &bulk_baud_control = GetControl(BulkBaudRate);
   DataFieldEnum &bulk_baud_df = *(DataFieldEnum *)
@@ -603,8 +588,6 @@ DeviceEditWidget::UpdateVisibilities()
   SetRowVisible(SyncToDevice, DeviceConfig::UsesDriver(type) &&
                 CanSendSettings(GetDataField(Driver)));
   SetRowAvailable(K6Bt, maybe_bluetooth);
-
-  SetRowAvailable(CANBaudRate, DeviceConfig::UsesCanSpeed(type));
 }
 
 void
@@ -704,11 +687,6 @@ DeviceEditWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
              config.k6bt, this);
   SetExpertRow(K6Bt);
 
-  DataFieldEnum *can_baud_rate_df = new DataFieldEnum(this);
-  FillCanBaudRates(*can_baud_rate_df);
-  can_baud_rate_df->Set(config.can_baud_rate);
-  Add(_("CAN Baud rate"), NULL, can_baud_rate_df);
-
   UpdateVisibilities();
 }
 
@@ -803,7 +781,6 @@ DeviceEditWidget::Save(bool &_changed)
 
   if (config.UsesSpeed()) {
     changed |= SaveValue(BaudRate, config.baud_rate);
-    changed |= SaveValue(CANBaudRate, config.baud_rate);
     changed |= SaveValue(BulkBaudRate, config.bulk_baud_rate);
   }
 
