@@ -184,6 +184,10 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
+        case FLARM_STATE_ID:
+            // todo -- implement
+            break;
+
 
         default:
             std::cout << "not implemented can_id: "  << canFrame->can_id  << std::endl;
