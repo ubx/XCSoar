@@ -95,12 +95,9 @@ WndProperty::WndProperty(ContainerWindow &parent, const DialogLook &_look,
                          const TCHAR *Caption,
                          const PixelRect &rc,
                          int CaptionWidth,
-                         const WindowStyle style)
+                         const WindowStyle style) noexcept
   :look(_look),
-   data_field(nullptr),
-   edit_callback(EditDataFieldDialog),
-   read_only(false),
-   dragging(false), pressed(false)
+   edit_callback(EditDataFieldDialog)
 {
   Create(parent, rc, Caption, CaptionWidth, style);
 
@@ -109,12 +106,9 @@ WndProperty::WndProperty(ContainerWindow &parent, const DialogLook &_look,
 #endif
 }
 
-WndProperty::WndProperty(const DialogLook &_look)
+WndProperty::WndProperty(const DialogLook &_look) noexcept
   :look(_look),
-   data_field(nullptr),
-   edit_callback(EditDataFieldDialog),
-   read_only(false),
-   dragging(false), pressed(false)
+   edit_callback(EditDataFieldDialog)
 {
 }
 
@@ -122,7 +116,7 @@ void
 WndProperty::Create(ContainerWindow &parent, const PixelRect &rc,
                     const TCHAR *_caption,
                     unsigned _caption_width,
-                    const WindowStyle style=WindowStyle())
+                    const WindowStyle style=WindowStyle()) noexcept
 {
   caption = _caption;
   caption_width = _caption_width;
@@ -130,19 +124,19 @@ WndProperty::Create(ContainerWindow &parent, const PixelRect &rc,
   WindowControl::Create(parent, rc, style);
 }
 
-WndProperty::~WndProperty()
+WndProperty::~WndProperty() noexcept
 {
   delete data_field;
 }
 
 unsigned
-WndProperty::GetRecommendedCaptionWidth() const
+WndProperty::GetRecommendedCaptionWidth() const noexcept
 {
   return look.text_font.TextSize(caption).cx + Layout::GetTextPadding();
 }
 
 void
-WndProperty::SetCaptionWidth(int _caption_width)
+WndProperty::SetCaptionWidth(int _caption_width) noexcept
 {
   if (caption_width == _caption_width)
     return;
@@ -152,7 +146,7 @@ WndProperty::SetCaptionWidth(int _caption_width)
 }
 
 bool
-WndProperty::BeginEditing()
+WndProperty::BeginEditing() noexcept
 {
   if (IsReadOnly() || data_field == nullptr || edit_callback == nullptr) {
     OnHelp();
@@ -167,7 +161,7 @@ WndProperty::BeginEditing()
 }
 
 void
-WndProperty::UpdateLayout()
+WndProperty::UpdateLayout() noexcept
 {
   edit_rc = GetClientRect();
 
@@ -260,7 +254,7 @@ WndProperty::OnCancelMode()
 }
 
 int
-WndProperty::IncValue()
+WndProperty::IncValue() noexcept
 {
   if (data_field != nullptr) {
     data_field->Inc();
@@ -270,7 +264,7 @@ WndProperty::IncValue()
 }
 
 int
-WndProperty::DecValue()
+WndProperty::DecValue() noexcept
 {
   if (data_field != nullptr) {
     data_field->Dec();
@@ -361,7 +355,7 @@ WndProperty::OnPaint(Canvas &canvas)
 }
 
 void
-WndProperty::SetText(const TCHAR *_value)
+WndProperty::SetText(const TCHAR *_value) noexcept
 {
   assert(_value != nullptr);
 
@@ -373,7 +367,7 @@ WndProperty::SetText(const TCHAR *_value)
 }
 
 void
-WndProperty::RefreshDisplay()
+WndProperty::RefreshDisplay() noexcept
 {
   if (!data_field)
     return;
@@ -382,7 +376,7 @@ WndProperty::RefreshDisplay()
 }
 
 void
-WndProperty::SetDataField(DataField *Value)
+WndProperty::SetDataField(DataField *Value) noexcept
 {
   assert(data_field == nullptr || data_field != Value);
 

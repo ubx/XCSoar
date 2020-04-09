@@ -45,7 +45,7 @@ class GunzipReader final : public Reader {
 
 	z_stream z;
 
-	StaticFifoBuffer<Bytef, 4096> buffer;
+	StaticFifoBuffer<Bytef, 65536> buffer;
 
 public:
 	/**
@@ -53,9 +53,9 @@ public:
 	 *
 	 * Throws on error.
 	 */
-	GunzipReader(Reader &_next);
+	explicit GunzipReader(Reader &_next);
 
-	~GunzipReader() {
+	~GunzipReader() noexcept {
 		inflateEnd(&z);
 	}
 
