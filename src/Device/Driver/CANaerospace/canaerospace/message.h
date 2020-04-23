@@ -12,13 +12,11 @@
 extern "C" {
 #endif
 
-typedef enum
-{
+typedef enum {
     CANAS_PARAM_DISTRIBUTION_DEFAULT = 0
 } CanasParamIdDistributionMode;
 
-typedef enum
-{
+typedef enum {
     CANAS_MSGTYPE_EMERGENCY_EVENT_MIN = 0,
     CANAS_MSGTYPE_EMERGENCY_EVENT_MAX = 127,
 
@@ -41,8 +39,7 @@ typedef enum
     CANAS_MSGTYPE_NODE_SERVICE_LOW_MAX = 2031
 } CanasMessageTypeID;
 
-typedef enum
-{
+typedef enum {
     INDICATED_AIRSPEED = 315,
     TRUE_AIRSPEED = 316,
     HEADING_ANGLE = 321,
@@ -67,8 +64,7 @@ typedef enum
 } CanIDsForXCSoar;
 
 
-typedef enum
-{
+typedef enum {
     CANAS_SERVICE_CHANNEL_HIGH_MIN = 0,
     CANAS_SERVICE_CHANNEL_HIGH_MAX = 35,
 
@@ -76,8 +72,7 @@ typedef enum
     CANAS_SERVICE_CHANNEL_LOW_MAX = 115
 } CanasServiceChannelID;
 
-typedef enum
-{
+typedef enum {
     CANAS_DATATYPE_NODATA,
     CANAS_DATATYPE_ERROR,
 
@@ -123,41 +118,40 @@ typedef enum
     CANAS_DATATYPE_DOUBLEL,
 
     CANAS_DATATYPE_RESVD_BEGIN_,
-    CANAS_DATATYPE_RESVD_END_  = 99,
+    CANAS_DATATYPE_RESVD_END_ = 99,
 
     CANAS_DATATYPE_UDEF_BEGIN_ = 100,
-    CANAS_DATATYPE_UDEF_END_   = 255,
+    CANAS_DATATYPE_UDEF_END_ = 255,
 
-    CANAS_DATATYPE_ALL_END_    = 255
+    CANAS_DATATYPE_ALL_END_ = 255
 } CanasStandardDataTypeID;
 
-typedef union
-{
+typedef union {
     uint32_t ERROR;
 
     float FLOAT;
 
-    int32_t  LONG;
+    int32_t LONG;
     uint32_t ULONG;
     uint32_t BLONG;
 
-    int16_t  SHORT;
+    int16_t SHORT;
     uint16_t USHORT;
     uint16_t BSHORT;
 
-    int8_t  CHAR;
+    int8_t CHAR;
     uint8_t UCHAR;
     uint8_t BCHAR;
 
-    int16_t  SHORT2[2];
+    int16_t SHORT2[2];
     uint16_t USHORT2[2];
     uint16_t BSHORT2[2];
 
-    int8_t  CHAR4[4];
+    int8_t CHAR4[4];
     uint8_t UCHAR4[4];
     uint8_t BCHAR4[4];
 
-    int8_t  CHAR2[2];
+    int8_t CHAR2[2];
     uint8_t UCHAR2[2];
     uint8_t BCHAR2[2];
 
@@ -168,7 +162,7 @@ typedef union
     uint8_t ACHAR2[2];
     uint8_t ACHAR4[4];
 
-    int8_t  CHAR3[3];
+    int8_t CHAR3[3];
     uint8_t UCHAR3[3];
     uint8_t BCHAR3[3];
     uint8_t ACHAR3[3];
@@ -177,20 +171,68 @@ typedef union
     uint32_t DOUBLEL;
 } CanasDataContainer;
 
-typedef struct
-{
+typedef struct {
     uint8_t type;                 ///< @ref CanasStandardDataTypeID or custom
     uint8_t length;               ///< Ignored with standard datatypes; required otherwise. Leave zero if unused.
     CanasDataContainer container;
 } CanasMessageData;
 
-typedef struct
-{
+typedef struct {
     CanasMessageData data;
     uint8_t node_id;
     uint8_t service_code;
     uint8_t message_code;
 } CanasMessage;
+
+// TODO -- should we move this to another file ?
+typedef struct {
+    uint32_t TmLastReceive;
+    unsigned flarmId;
+    int16_t GpsAltitude;
+    uint8_t RxDevicesCount;
+    uint8_t TxState;
+    uint8_t GpsState;
+    uint8_t PowerState;
+    uint8_t State;
+    uint8_t ErrorCode;
+} FlarmState;
+
+// TODO -- should we move this to another file ?
+typedef struct {
+    int8_t AlarmLevel;
+    int8_t AlarmType;
+    int8_t TargetVectorValid: 1;
+    int16_t RelVertical;
+    int16_t RelHorizontal;
+    int16_t RelBearing;
+    uint32_t ID;
+} FlarmMostImportantObjectData;
+
+// TODO -- should we move this to another file ?
+struct FlarmObjectData {
+    int8_t AlarmLevel;
+    int8_t newAlarmLevel;
+    int8_t IdType;
+    int8_t MessageAckLevel;
+    uint8_t Type;
+    int16_t RelNorth;
+    int16_t RelEast;
+    int16_t RelVertical;
+    int16_t RelHorizontal;
+    int16_t RelBearing;
+    uint32_t ID;
+    int16_t Track;
+    int8_t TurnRate;
+    int8_t GroundSpeed;
+    int8_t ClimbRate;      // in cm/s!!!!!!!!!
+    int8_t TimeOutCnt;
+    struct {
+        unsigned track: 1;
+        unsigned turnRate: 1;
+        unsigned groundSpeed: 1;
+        unsigned climbRate: 1;
+    } valid;
+};
 
 #ifdef __cplusplus
 }
