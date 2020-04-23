@@ -34,17 +34,19 @@ Copyright_License {
 #include <Time/RoughTime.hpp>
 #include <Time/LocalTime.hpp>
 #include <Device/Port/CANPort.hpp>
+#include <Device/Driver/FLARM/flarmPropagated.hpp>
 
 class CANaerospaceDevice : public AbstractDevice {
 //  Port &port;
 
-  public:
-    CANaerospaceDevice(Port &_port)  {
+public:
+    CANaerospaceDevice(Port &_port) {
     }
+
     bool DataReceived(const void *data, size_t length, NMEAInfo &info) override;
 };
 
-std::map<int, double > canId2clock;
+std::map<int, double> canId2clock;
 auto last_fix = GeoPoint::Invalid();
 
 static bool
@@ -54,12 +56,11 @@ SouldSend(int can_id, double clock) {
 //        return true;
 //    }
 //    return false;
-   return true;
+    return true;
 }
 
 static Device *
-CANaerospaceCreateOnPort(const DeviceConfig &config, Port &com_port)
-{
+CANaerospaceCreateOnPort(const DeviceConfig &config, Port &com_port) {
     return new CANaerospaceDevice(com_port);
 }
 
@@ -69,7 +70,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
     const can_frame *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
     const auto *canData = canFrame->data + 4;
-    auto *phost = new(CanasMessageData);
+    CanasMessageData *phost = new(CanasMessageData);
 
     assert(data != nullptr);
     assert(length > 0);
@@ -83,13 +84,13 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
     switch (canFrame->can_id) {
         case GPS_AIRCRAFT_LATITUDE:
             if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
-                last_fix.latitude = Angle::Degrees(phost->container.LONG  / 1E7);
+                last_fix.latitude = Angle::Degrees(phost->container.LONG / 1E7);
             }
             break;
 
         case GPS_AIRCRAFT_LONGITUDE:
             if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
-                last_fix.longitude = Angle::Degrees(phost->container.LONG  / 1E7 );
+                last_fix.longitude = Angle::Degrees(phost->container.LONG / 1E7);
                 if (last_fix.Check()) {
                     info.location = last_fix;
                     info.location_available.Update(info.clock);
@@ -184,21 +185,58 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-        case FLARM_STATE_ID:
-            // todo -- implement
+        case FLARM_STATE_ID:  // Flarm messages: PFLAU
+            // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
+
+                static FlarmState S;
+                static FlarmMostImportantObjectData O;
+
+                if (canasFlarmStatePropagated(phost, info.gps_altitude, &O, &S)) {
+                    info.flarm.status.available.Update(info.clock);
+                    //info.flarm.status.alarm_level = (FlarmTraffic::AlarmType) O.AlarmLevel; // TODO -- correct ???
+                    info.flarm.status.gps = (FlarmStatus::GPSStatus) S.GpsState;
+                    info.flarm.status.rx = S.RxDevicesCount;
+                    info.flarm.status.tx = S.TxState;
+
+                    info.flarm.status.alarm_level = (FlarmTraffic::AlarmType) O.AlarmLevel; // TODO -- correct ???
+                    info.flarm.status.gps = (FlarmStatus::GPSStatus) O.AlarmType; // TODO -- correct ???
+                }
+            }
+            break;
+
+        case FLARM_OBJECT_AL3_ID: // Flarm messages: PFLAA
+        case FLARM_OBJECT_AL2_ID:
+        case FLARM_OBJECT_AL1_ID:
+        case FLARM_OBJECT_AL0_ID:
+            // PFLAA,<AlarmLevel>,<RelativeNorth>,<RelativeEast>,<RelativeVertical>,<ID-Type>,<ID>,<Track>,<TurnRate>,<GroundSpeed>,<ClimbRate>,<Type>
+            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
+
+                static FlarmObjectData E;
+
+                if (canasFlarmObjectPropagated(phost, info.heading.Degrees(), canFrame->can_id, &E)) {
+                    FlarmTraffic traffic;
+                    traffic.alarm_level = (FlarmTraffic::AlarmType) E.AlarmLevel;
+                    traffic.relative_north = E.RelNorth;
+                    traffic.relative_east = E.RelEast;
+                    traffic.relative_altitude = E.RelHorizontal;
+                    info.flarm.status.available.Update(info.clock);
+                }
+            }
             break;
 
 
         default:
-            std::cout << "not implemented can_id: "  << canFrame->can_id  << std::endl;
+            std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;
             break;
     }
+
     return false;
 }
 
 const struct DeviceRegister can_aerospace_driver = {
         _T("CANaerospace"),
         _T("CANaerospace"),
-  DeviceRegister::NO_TIMEOUT | DeviceRegister::RAW_GPS_DATA, // TODO: Put the right flags
-  CANaerospaceCreateOnPort,
+        DeviceRegister::NO_TIMEOUT | DeviceRegister::RAW_GPS_DATA, // TODO: Put the right flags
+        CANaerospaceCreateOnPort,
 };

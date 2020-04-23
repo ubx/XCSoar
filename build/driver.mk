@@ -134,6 +134,7 @@ DRIVER_SOURCES = \
 ifeq ($(HAVE_CAN),y)
 DRIVER_SOURCES += \
 	$(DRIVER_SRC_DIR)/CANaerospace.cpp \
+	$(DRIVER_SRC_DIR)/FLARM/flarmPropagated.c \
 	$(CANAEROSPACE_SOURCES)
 endif
 

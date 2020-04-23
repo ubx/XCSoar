@@ -27,37 +27,36 @@ Copyright_License {
 
 CANPort::CANPort(boost::asio::io_context &io_context,
                  PortListener *_listener, DataHandler &_handler)
-  :BufferedPort(_listener, _handler),
-    socket_(io_context) {}
+        : BufferedPort(_listener, _handler),
+          socket_(io_context) {}
 
-CANPort::~CANPort()
-{
-  BufferedPort::BeginClose();
+CANPort::~CANPort() {
+    BufferedPort::BeginClose();
 
-  if (socket_.is_open())
-    CancelWait(socket_);
+    if (socket_.is_open())
+        CancelWait(socket_);
 
-  BufferedPort::EndClose();
+    BufferedPort::EndClose();
 }
 
 bool
 CANPort::Open(const char *_port_name, unsigned _baud_rate) {
 
     port_name = _port_name;
-    sc = socket( PF_CAN, SOCK_RAW, CAN_RAW );
+    sc = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
-  struct ifreq ifr;
-  strcpy(ifr.ifr_name, _port_name);
-  int ret = ioctl(sc, SIOCGIFINDEX, &ifr);
+    struct ifreq ifr;
+    strcpy(ifr.ifr_name, _port_name);
+    int ret = ioctl(sc, SIOCGIFINDEX, &ifr);
 
-  if(ret != 0){
-    throw FormatErrno("Can not connect to %s", ifr.ifr_name);
-  }
+    if (ret != 0) {
+        throw FormatErrno("Can not connect to %s", ifr.ifr_name);
+    }
 
-  SetBaudrate(_baud_rate);
+    SetBaudrate(_baud_rate);
 
-   // todo -- temporary, to be moved to CANaerospace.cpp!
-  const std::vector<uint32_t> can_ids{
+    // todo -- temporary, to be moved to CANaerospace.cpp!
+    const std::vector<uint32_t> can_ids{
             INDICATED_AIRSPEED, TRUE_AIRSPEED,
             HEADING_ANGLE,
             STANDARD_ALTITUDE,
@@ -68,87 +67,88 @@ CANPort::Open(const char *_port_name, unsigned _baud_rate) {
             GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID,
             GPS_GROUND_SPEED,
             GPS_TRUE_TRACK,
-            UTC};
-  ret = SetFilter(can_ids);
-  if(ret != 0){
-      boost::system::error_code(ret,boost::system::system_category());
-      close(sc);
-      return false;
-  }
+            UTC,
+            FLARM_STATE_ID,
+            FLARM_OBJECT_AL3_ID,
+            FLARM_OBJECT_AL2_ID,
+            FLARM_OBJECT_AL1_ID,
+            FLARM_OBJECT_AL0_ID
+    };
+    ret = SetFilter(can_ids);
+    if (ret != 0) {
+        boost::system::error_code(ret, boost::system::system_category());
+        close(sc);
+        return false;
+    }
 
-  struct sockaddr_can addr = {0};
-  addr.can_family = AF_CAN;
-  addr.can_ifindex = ifr.ifr_ifindex;
-  ret = bind( sc, (struct sockaddr*)&addr, sizeof(addr) );
+    struct sockaddr_can addr = {0};
+    addr.can_family = AF_CAN;
+    addr.can_ifindex = ifr.ifr_ifindex;
+    ret = bind(sc, (struct sockaddr *) &addr, sizeof(addr));
 
-  if(ret != 0){
-    throw FormatErrno("Failed binding socket %s", ifr.ifr_name );
-  }
+    if (ret != 0) {
+        throw FormatErrno("Failed binding socket %s", ifr.ifr_name);
+    }
 
-  socket_.assign(sc);
-  AsyncRead();
-  StateChanged();
-  return true;
+    socket_.assign(sc);
+    AsyncRead();
+    StateChanged();
+    return true;
 }
 
 PortState
-CANPort::GetState() const
-{
-  if (socket_.is_open())
-    return PortState::READY;
-  else
-    return PortState::FAILED;
+CANPort::GetState() const {
+    if (socket_.is_open())
+        return PortState::READY;
+    else
+        return PortState::FAILED;
 }
 
 size_t
-CANPort::Write(const void *data, size_t length)
-{
-  if (!socket_.is_open())
-    return 0;
+CANPort::Write(const void *data, size_t length) {
+    if (!socket_.is_open())
+        return 0;
 
-  boost::system::error_code ec;
-  size_t nbytes = socket_.write_some(boost::asio::buffer(data, length));
-  if (ec)
-    nbytes = 0;
+    boost::system::error_code ec;
+    size_t nbytes = socket_.write_some(boost::asio::buffer(data, length));
+    if (ec)
+        nbytes = 0;
 
-  return nbytes;
+    return nbytes;
 }
 
 void
-CANPort::OnRead(const boost::system::error_code &ec, size_t nbytes)
-{
-  if (ec == boost::asio::error::operation_aborted)
-    /* this object has already been deleted; bail out quickly without
-       touching anything */
-    return;
+CANPort::OnRead(const boost::system::error_code &ec, size_t nbytes) {
+    if (ec == boost::asio::error::operation_aborted)
+        /* this object has already been deleted; bail out quickly without
+           touching anything */
+        return;
 
-  if (ec) {
-    socket_.close();
-    StateChanged();
-    Error(ec.message().c_str());
-    return;
-  }
-  DataReceived(&input, nbytes);
+    if (ec) {
+        socket_.close();
+        StateChanged();
+        Error(ec.message().c_str());
+        return;
+    }
+    DataReceived(&input, nbytes);
 
-  AsyncRead();
+    AsyncRead();
 }
 
 void
-CANPort::AsyncRead() 
-  {
+CANPort::AsyncRead() {
     socket_.async_read_some(boost::asio::buffer(&input, sizeof(input)),
-                         std::bind(&CANPort::OnRead, this,
-                                   std::placeholders::_1,
-                                   std::placeholders::_2));
-  }
+                            std::bind(&CANPort::OnRead, this,
+                                      std::placeholders::_1,
+                                      std::placeholders::_2));
+}
 
 int
-CANPort::SetFilter(const std::vector<uint32_t>& can_ids)
-  {
+CANPort::SetFilter(const std::vector<uint32_t> &can_ids) {
     can_filter rfilter[can_ids.size()];
     for (size_t i = 0; i < can_ids.size(); i++) {
-        rfilter[i].can_id   = can_ids[i];
+        rfilter[i].can_id = can_ids[i];
         rfilter[i].can_mask = CAN_SFF_MASK;
     }
     return setsockopt(sc, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
-  }
+}
