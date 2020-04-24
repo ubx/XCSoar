@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2010-2013 triadis engineering GmbH all rights reserved.
  *
- * flarmPropagated.h
+ * flarmPropagated.hpp
  *
  * 
  *
@@ -12,20 +12,20 @@
 #ifndef FLARMPROPAGATED_H
 #define FLARMPROPAGATED_H
 
-// #include "can_as.h"
-//#include "flarm_datatypes.h"
-
-#include <jmorecfg.h>
 #include <Device/Driver/CANaerospace/marshal.h>
+
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+#define FLATOBSTACLEALARM 3
+
 bool
 canasFlarmStatePropagated(const CanasMessageData *phost, int altitude, FlarmMostImportantObjectData *O, FlarmState *S);
 bool canasFlarmObjectPropagated(const CanasMessageData *phost, int heading, int canid, FlarmObjectData *E);
+
 
 #ifdef __cplusplus
 }

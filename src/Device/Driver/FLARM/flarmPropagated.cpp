@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2010-2013 triadis engineering GmbH all rights reserved.
  *
- * flarmPropagated.c
+ * flarmPropagated.cpp
  *
  * 
  *
@@ -9,13 +9,10 @@
  *     Author: sam
  */
 
-#include <stdlib.h>
 #include <math.h>
 
-// #include "driver/timer.h"
 #include <Device/Driver/FLARM/flarmPropagated.hpp>
-// #include "util/imath.h"
-//#include "calc/calc.h"
+
 
 static int16_t calcBearing(int RelEast, int RelNorth);
 
@@ -37,23 +34,22 @@ bool canasFlarmStatePropagated(const CanasMessageData *phost, int altitude, Flar
             O->TargetVectorValid = phost->container.CHAR4[0] >> 4 & 0x01;
 
             //S->TmLastReceive = getTicker();
-            S->RxDevicesCount = phost->container.CHAR4[1];
-            S->TxState = phost->container.CHAR4[0] & 0x01;
-            S->GpsState = phost->container.CHAR4[0] >> 1 & 0x03;
-            S->PowerState = phost->container.CHAR4[0] >> 3 & 0x01;
-            S->State = phost->container.CHAR4[2];
-            S->ErrorCode = phost->container.CHAR4[3];
-            S->GpsAltitude = altitude;  // GPS altitude from flarm
-            // TODO isu hat genauere GPS alt
-            if (!(phost->container.CHAR4[0] >> 4 & 0x01)) {
-                O->AlarmLevel = -1;
+            S->RxDevicesCount = phost->container.UCHAR4[1];
+            S->TxState = phost->container.UCHAR4[0] & 0x01;
+            S->GpsState = phost->container.UCHAR4[0] >> 1 & 0x03;
+            S->PowerState = phost->container.UCHAR4[0] >> 3 & 0x01;
+            S->State = phost->container.UCHAR4[2];
+            S->ErrorCode = phost->container.UCHAR4[3];
+            S->GpsAltitude = altitude;  // GPS altitude from flarm. TODO isu hat genauere GPS alt
+            if (!(phost->container.UCHAR4[0] >> 4 & 0x01)) {
+                O->AlarmLevel = 3;
                 return true;
             }
             break;
         }
 
         case 1: {
-            O->AlarmLevel = phost->container.CHAR4[0] & 0x7;
+            O->AlarmLevel = phost->container.UCHAR4[0] & 0x7;
             O->AlarmType = phost->container.CHAR4[0] >> 3 & 0x07;
             O->ID = phost->container.UCHAR3[0]; // TODO -- correct ???
             break;
@@ -66,9 +62,8 @@ bool canasFlarmStatePropagated(const CanasMessageData *phost, int altitude, Flar
         }
 
         case 3: {
-            static int8_t flAtObstacleAlarm = 0; // todo -- ?
             O->RelBearing = phost->container.SHORT;
-            if (O->AlarmType == flAtObstacleAlarm) {
+            if (O->AlarmType == FLATOBSTACLEALARM) {
                 O->RelBearing = 0;
                 O->RelVertical = 0;
                 O->ID = 0;
