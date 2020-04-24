@@ -194,13 +194,20 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
                 if (canasFlarmStatePropagated(phost, info.gps_altitude, &O, &S)) {
                     info.flarm.status.available.Update(info.clock);
-                    //info.flarm.status.alarm_level = (FlarmTraffic::AlarmType) O.AlarmLevel; // TODO -- correct ???
                     info.flarm.status.gps = (FlarmStatus::GPSStatus) S.GpsState;
                     info.flarm.status.rx = S.RxDevicesCount;
                     info.flarm.status.tx = S.TxState;
-
                     info.flarm.status.alarm_level = (FlarmTraffic::AlarmType) O.AlarmLevel; // TODO -- correct ???
-                    info.flarm.status.gps = (FlarmStatus::GPSStatus) O.AlarmType; // TODO -- correct ???
+
+                    // todo -- test test
+//                    info.flarm.status.available.Update(info.clock);
+//                    info.flarm.status.gps = (FlarmStatus::GPSStatus) 2;
+//                    info.flarm.status.rx = 1;
+//                    info.flarm.status.tx = true;
+//                    info.flarm.status.alarm_level = (FlarmTraffic::AlarmType)3;
+//                    info.alive.Update(info.clock);
+
+                    return true;
                 }
             }
             break;
@@ -221,6 +228,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                     traffic.relative_east = E.RelEast;
                     traffic.relative_altitude = E.RelHorizontal;
                     info.flarm.status.available.Update(info.clock);
+                    return true;
                 }
             }
             break;
