@@ -224,7 +224,26 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                     traffic.relative_north = E.RelNorth;
                     traffic.relative_east = E.RelEast;
                     traffic.relative_altitude = E.RelHorizontal;
-                    info.flarm.status.available.Update(info.clock);
+                    traffic.id.Set(E.ID);
+                    info.flarm.traffic.FindTraffic(traffic.id);
+
+                    FlarmTraffic *flarm_slot = info.flarm.traffic.FindTraffic(traffic.id);
+                    if (flarm_slot == nullptr) {
+                        flarm_slot = info.flarm.traffic.AllocateTraffic();
+                        if (flarm_slot == nullptr) {
+                            // no more slots available
+                            return false;
+                        }
+
+                        flarm_slot->Clear();
+                        flarm_slot->id = traffic.id;
+
+                        info.flarm.traffic.new_traffic.Update(info.clock);
+                    }
+                    // set time of fix to current time
+                    flarm_slot->valid.Update(info.clock);
+                    flarm_slot->Update(traffic);
+                    assert(traffic.id.IsDefined());
                     return true;
                 }
             }

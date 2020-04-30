@@ -14,7 +14,7 @@
 #include <Device/Driver/FLARM/flarmPropagated.hpp>
 
 
-static int16_t calcBearing(int RelEast, int RelNorth);
+//static int16_t calcBearing(int RelEast, int RelNorth);
 
 /*
  * restauriert flarm FLAU daten auf einer sequenz von CANas messages
@@ -135,29 +135,29 @@ bool canasFlarmObjectPropagated(const CanasMessage *canasMessage, int heading, i
     return false;
 }
 
-static int16_t calcBearing(int RelEast, int RelNorth) {
-    int16_t a = 0;
-
-    if (RelNorth == 0 && RelEast == 0) {
-        return (0);
-    } else if (RelNorth == 0) {
-        if (RelEast > 0)
-            return (90);
-        else
-            return (-90);
-    } else if (RelEast == 0) {
-        return (0);
-    } else {
-        float x;
-        x = (float) RelEast / (float) RelNorth;
-        a = (int16_t) (atan(x) * (float) (360.0 / (2 * 3.14159)));
-    }
-
-    if (RelNorth < 0)
-        a = (a + (int16_t) 180);
-    else if (RelEast < 0)
-        a = (a + (int16_t) 360);
-
-    return (a);
-
-}
+//static int16_t calcBearing(int RelEast, int RelNorth) {
+//    int16_t a = 0;
+//
+//    if (RelNorth == 0 && RelEast == 0) {
+//        return (0);
+//    } else if (RelNorth == 0) {
+//        if (RelEast > 0)
+//            return (90);
+//        else
+//            return (-90);
+//    } else if (RelEast == 0) {
+//        return (0);
+//    } else {
+//        float x;
+//        x = (float) RelEast / (float) RelNorth;
+//        a = (int16_t) (atan(x) * (float) (360.0 / (2 * 3.14159)));
+//    }
+//
+//    if (RelNorth < 0)
+//        a = (a + (int16_t) 180);
+//    else if (RelEast < 0)
+//        a = (a + (int16_t) 360);
+//
+//    return (a);
+//
+//}
