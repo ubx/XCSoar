@@ -68,9 +68,15 @@ bool
 CANaerospaceDevice::DataReceived(const void *data, size_t length,
                                  NMEAInfo &info) {
 
-    const can_frame *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
-    const auto *canData = canFrame->data + 4;
-    CanasMessageData *phost = new(CanasMessageData);
+    const auto *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
+    auto *canData = canFrame->data + 4;
+    auto *canasMessage = new(CanasMessage);
+    auto canasData = &canasMessage->data;
+
+
+    const auto *canasMessage2 = (const CanasMessage *) canFrame->data;
+    canasMessage->message_code = canasMessage2->message_code;
+    canasMessage->service_code = canasMessage2->service_code;
 
     assert(data != nullptr);
     assert(length > 0);
@@ -83,14 +89,14 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
     switch (canFrame->can_id) {
         case GPS_AIRCRAFT_LATITUDE:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
-                last_fix.latitude = Angle::Degrees(phost->container.LONG / 1E7);
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_LONG) > 0) {
+                last_fix.latitude = Angle::Degrees(canasData->container.LONG / 1E7);
             }
             break;
 
         case GPS_AIRCRAFT_LONGITUDE:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_LONG) > 0) {
-                last_fix.longitude = Angle::Degrees(phost->container.LONG / 1E7);
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_LONG) > 0) {
+                last_fix.longitude = Angle::Degrees(canasData->container.LONG / 1E7);
                 if (last_fix.Check()) {
                     info.location = last_fix;
                     info.location_available.Update(info.clock);
@@ -100,18 +106,18 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.gps_altitude = phost->container.FLOAT;
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.gps_altitude = canasData->container.FLOAT;
                 info.gps_altitude_available.Update(info.clock);
                 return true;
             }
             break;
 
         case UTC:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
-                info.date_time_utc.hour = phost->container.CHAR4[0];
-                info.date_time_utc.minute = phost->container.CHAR4[1];
-                info.date_time_utc.second = phost->container.CHAR4[2];
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
+                info.date_time_utc.hour = canasData->container.CHAR4[0];
+                info.date_time_utc.minute = canasData->container.CHAR4[1];
+                info.date_time_utc.second = canasData->container.CHAR4[2];
                 info.time = TimeLocal(info.date_time_utc.GetSecondOfDay(), RoughTimeDelta()); // todo -- verify !!
                 info.time_available.Update(info.clock);
                 return true;
@@ -119,8 +125,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case HEADING_ANGLE:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                float value = phost->container.FLOAT;
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                float value = canasData->container.FLOAT;
                 if (value < 0.0) {
                     value += 360.0;
                 }
@@ -131,16 +137,16 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case GPS_TRUE_TRACK:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.track = Angle::Degrees(phost->container.FLOAT);
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.track = Angle::Degrees(canasData->container.FLOAT);
                 info.track_available.Update(info.clock);
                 return true;
             }
             break;
 
         case INDICATED_AIRSPEED:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.indicated_airspeed = phost->container.FLOAT;
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.indicated_airspeed = canasData->container.FLOAT;
                 info.airspeed_available.Update(info.clock);
                 info.airspeed_real = true;
                 return true;
@@ -148,8 +154,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case TRUE_AIRSPEED:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.true_airspeed = phost->container.FLOAT;
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.true_airspeed = canasData->container.FLOAT;
                 info.airspeed_available.Update(info.clock);
                 info.airspeed_real = true;
                 return true;
@@ -157,56 +163,47 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case GPS_GROUND_SPEED:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ground_speed = phost->container.FLOAT;
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.ground_speed = canasData->container.FLOAT;
                 info.ground_speed_available.Update(info.clock);
                 return true;
             }
             break;
 
         case AIRMASS_SPEED_VERTICAL:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideNettoVario(phost->container.FLOAT);
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.ProvideNettoVario(canasData->container.FLOAT);
                 return true;
             }
             break;
 
         case STATIC_PRESSURE:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideStaticPressure(AtmosphericPressure::HectoPascal(phost->container.FLOAT));
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.ProvideStaticPressure(AtmosphericPressure::HectoPascal(canasData->container.FLOAT));
                 return true;
             }
             break;
 
         case STANDARD_ALTITUDE:
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideBaroAltitudeTrue(phost->container.FLOAT);
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.ProvideBaroAltitudeTrue(canasData->container.FLOAT);
                 return true;
             }
             break;
 
         case FLARM_STATE_ID:  // Flarm messages: PFLAU
             // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
 
                 static FlarmState S;
                 static FlarmMostImportantObjectData O;
 
-                if (canasFlarmStatePropagated(phost, info.gps_altitude, &O, &S)) {
+                if (canasFlarmStatePropagated(canasMessage, info.gps_altitude, &O, &S)) {
                     info.flarm.status.available.Update(info.clock);
-                    info.flarm.status.gps = (FlarmStatus::GPSStatus) S.GpsState;
                     info.flarm.status.rx = S.RxDevicesCount;
                     info.flarm.status.tx = S.TxState;
+                    info.flarm.status.gps = (FlarmStatus::GPSStatus) S.GpsState;
                     info.flarm.status.alarm_level = (FlarmTraffic::AlarmType) O.AlarmLevel; // TODO -- correct ???
-
-                    // todo -- test test
-//                    info.flarm.status.available.Update(info.clock);
-//                    info.flarm.status.gps = (FlarmStatus::GPSStatus) 2;
-//                    info.flarm.status.rx = 1;
-//                    info.flarm.status.tx = true;
-//                    info.flarm.status.alarm_level = (FlarmTraffic::AlarmType)3;
-//                    info.alive.Update(info.clock);
-
                     return true;
                 }
             }
@@ -217,11 +214,11 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
         case FLARM_OBJECT_AL1_ID:
         case FLARM_OBJECT_AL0_ID:
             // PFLAA,<AlarmLevel>,<RelativeNorth>,<RelativeEast>,<RelativeVertical>,<ID-Type>,<ID>,<Track>,<TurnRate>,<GroundSpeed>,<ClimbRate>,<Type>
-            if (canasNetworkToHost(phost, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
+            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_UCHAR4) > 0) {
 
                 static FlarmObjectData E;
 
-                if (canasFlarmObjectPropagated(phost, info.heading.Degrees(), canFrame->can_id, &E)) {
+                if (canasFlarmObjectPropagated(canasMessage, info.heading.Degrees(), canFrame->can_id, &E)) {
                     FlarmTraffic traffic;
                     traffic.alarm_level = (FlarmTraffic::AlarmType) E.AlarmLevel;
                     traffic.relative_north = E.RelNorth;

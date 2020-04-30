@@ -178,10 +178,11 @@ typedef struct {
 } CanasMessageData;
 
 typedef struct {
-    CanasMessageData data;
     uint8_t node_id;
+    uint8_t data_type;
     uint8_t service_code;
     uint8_t message_code;
+    CanasMessageData data;
 } CanasMessage;
 
 // TODO -- should we move this to another file ?

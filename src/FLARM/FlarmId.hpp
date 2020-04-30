@@ -53,6 +53,10 @@ public:
     return value != UNDEFINED_VALUE;
   }
 
+  void Set(uint32_t _value) {
+      value = _value;
+  }
+
   void Clear() {
     value = UNDEFINED_VALUE;
   }
