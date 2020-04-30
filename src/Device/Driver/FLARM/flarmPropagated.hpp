@@ -23,8 +23,8 @@ extern "C"
 #define FLATOBSTACLEALARM 3
 
 bool
-canasFlarmStatePropagated(const CanasMessageData *phost, int altitude, FlarmMostImportantObjectData *O, FlarmState *S);
-bool canasFlarmObjectPropagated(const CanasMessageData *phost, int heading, int canid, FlarmObjectData *E);
+canasFlarmStatePropagated(const CanasMessage *phost, int altitude, FlarmMostImportantObjectData *O, FlarmState *S);
+bool canasFlarmObjectPropagated(const CanasMessage *phost, int heading, int canid, FlarmObjectData *E);
 
 
 #ifdef __cplusplus
