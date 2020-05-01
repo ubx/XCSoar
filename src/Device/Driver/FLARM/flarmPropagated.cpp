@@ -79,8 +79,8 @@ bool canasFlarmStatePropagated(const CanasMessage *canasMessage, int altitude, F
  */
 bool canasFlarmObjectPropagated(const CanasMessage *canasMessage, int canid, FlarmObjectData *flarmObjectData) {
 
-    uint8_t messageindex = canasMessage->service_code & 0x0f;
-    uint8_t validFlags = (canasMessage->service_code >> 4) & 0x0f;
+    auto messageindex = canasMessage->service_code & 0x0f;
+    auto validFlags = canasMessage->service_code >> 4 & 0x0f;
 
     switch (messageindex) {
         case 0: {
@@ -102,7 +102,7 @@ bool canasFlarmObjectPropagated(const CanasMessage *canasMessage, int canid, Fla
         case 2: {
             flarmObjectData->GroundSpeed = canasMessage->data.container.UCHAR4[0];
             flarmObjectData->Type = canasMessage->data.container.UCHAR4[1];
-            flarmObjectData->ClimbRate = canasMessage->data.container.UCHAR4[2];
+            flarmObjectData->ClimbRate = canasMessage->data.container.CHAR4[2];
             flarmObjectData->TurnRate = canasMessage->data.container.UCHAR4[3];
             flarmObjectData->valid.groundSpeed = (validFlags & 0x1f) != 0;
             flarmObjectData->valid.climbRate = (validFlags & 0x4f) != 0;
@@ -111,7 +111,6 @@ bool canasFlarmObjectPropagated(const CanasMessage *canasMessage, int canid, Fla
         }
 
         case 3: {
-
             flarmObjectData->IdType = canasMessage->data.container.UCHAR4[0];
             flarmObjectData->ID = (canasMessage->data.container.UCHAR4[3] & 0xFF) |
                                   (canasMessage->data.container.UCHAR4[2] & 0xFF) << 8 |
