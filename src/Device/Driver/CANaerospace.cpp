@@ -210,14 +210,20 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                     traffic.relative_altitude = flarmObjectData.RelHorizontal;
                     traffic.id.Set(flarmObjectData.ID);
                     //traffic.IdType = flarmObjectData.IdType; // todo -- does not exist yes !!
-                    traffic.track_received = true;
+                    traffic.track_received = flarmObjectData.valid.track;
                     traffic.track = Angle::Degrees(flarmObjectData.Track);
-                    traffic.turn_rate_received = true;
+                    traffic.turn_rate_received = flarmObjectData.valid.turnRate;
                     traffic.turn_rate = flarmObjectData.TurnRate;
-                    traffic.speed_received = true;
+                    traffic.speed_received = flarmObjectData.valid.groundSpeed;
                     traffic.speed = RoughSpeed(flarmObjectData.GroundSpeed);
-                    traffic.climb_rate_received = true;
-                    traffic.climb_rate = flarmObjectData.ClimbRate;
+                    if (!traffic.climb_rate_received) {
+                        // Field is empty in stealth mode
+                        //stealth = true;
+                        traffic.climb_rate = 0.0;
+                    } else {
+                        traffic.climb_rate = flarmObjectData.valid.climbRate;;
+                    }
+
                     traffic.stealth = false;
                     if (flarmObjectData.Type > 15 || flarmObjectData.Type == 14) {
                         traffic.type = FlarmTraffic::AircraftType::UNKNOWN;
