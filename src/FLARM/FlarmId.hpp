@@ -54,7 +54,7 @@ public:
   }
 
   void Set(uint32_t _value) {
-      value = _value;
+    value = _value;
   }
 
   void Clear() {

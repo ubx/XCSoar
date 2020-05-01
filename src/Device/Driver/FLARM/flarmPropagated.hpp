@@ -13,6 +13,7 @@
 #define FLARMPROPAGATED_H
 
 #include <Device/Driver/CANaerospace/marshal.h>
+#include <Device/Driver/CANaerospace/FlarmMessage.h>
 
 
 #ifdef __cplusplus
@@ -23,8 +24,8 @@ extern "C"
 #define FLATOBSTACLEALARM 3
 
 bool
-canasFlarmStatePropagated(const CanasMessage *phost, int altitude, FlarmMostImportantObjectData *O, FlarmState *S);
-bool canasFlarmObjectPropagated(const CanasMessage *phost, int heading, int canid, FlarmObjectData *E);
+canasFlarmStatePropagated(const CanasMessage *phost, int altitude, FlarmMostImportantObjectData *objectData, FlarmState *flarmState);
+bool canasFlarmObjectPropagated(const CanasMessage *phost, int canid, FlarmObjectData *flarmObjectData);
 
 
 #ifdef __cplusplus

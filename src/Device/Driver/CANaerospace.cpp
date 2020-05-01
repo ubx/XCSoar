@@ -49,15 +49,9 @@ public:
 std::map<int, double> canId2clock;
 auto last_fix = GeoPoint::Invalid();
 
-static bool
-SouldSend(int can_id, double clock) {
-//    if (canId2clock[can_id] + 1.0 <= clock)  {
-//        canId2clock[can_id] = clock;
-//        return true;
-//    }
-//    return false;
-    return true;
-}
+static FlarmState flarmState;
+static FlarmMostImportantObjectData objectData;
+static FlarmObjectData flarmObjectData;
 
 static Device *
 CANaerospaceCreateOnPort(const DeviceConfig &config, Port &com_port) {
@@ -70,9 +64,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
     const auto *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
     auto *canData = canFrame->data + 4;
-    auto *canasMessage = new(CanasMessage);
+    auto *canasMessage = new(CanasMessage); // FIXME -- replace with canasMessage2 !!
     auto canasData = &canasMessage->data;
-
 
     const auto *canasMessage2 = (const CanasMessage *) canFrame->data;
     canasMessage->message_code = canasMessage2->message_code;
@@ -83,9 +76,6 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
     assert(canData != nullptr);
 
     info.alive.Update(info.clock);
-    if (!SouldSend(canFrame->can_id, info.clock) && canFrame->can_id != GPS_AIRCRAFT_LATITUDE) {
-        return false;
-    }
 
     switch (canFrame->can_id) {
         case GPS_AIRCRAFT_LATITUDE:
@@ -194,16 +184,12 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
         case FLARM_STATE_ID:  // Flarm messages: PFLAU
             // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>
             if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
-
-                static FlarmState S;
-                static FlarmMostImportantObjectData O;
-
-                if (canasFlarmStatePropagated(canasMessage, info.gps_altitude, &O, &S)) {
+                if (canasFlarmStatePropagated(canasMessage, info.gps_altitude, &objectData, &flarmState)) {
                     info.flarm.status.available.Update(info.clock);
-                    info.flarm.status.rx = S.RxDevicesCount;
-                    info.flarm.status.tx = S.TxState;
-                    info.flarm.status.gps = (FlarmStatus::GPSStatus) S.GpsState;
-                    info.flarm.status.alarm_level = (FlarmTraffic::AlarmType) O.AlarmLevel; // TODO -- correct ???
+                    info.flarm.status.rx = flarmState.RxDevicesCount;
+                    info.flarm.status.tx = flarmState.TxState;
+                    info.flarm.status.gps = (FlarmStatus::GPSStatus) flarmState.GpsState;
+                    info.flarm.status.alarm_level = (FlarmTraffic::AlarmType) objectData.AlarmLevel; // TODO -- correct ???
                     return true;
                 }
             }
@@ -215,17 +201,29 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
         case FLARM_OBJECT_AL0_ID:
             // PFLAA,<AlarmLevel>,<RelativeNorth>,<RelativeEast>,<RelativeVertical>,<ID-Type>,<ID>,<Track>,<TurnRate>,<GroundSpeed>,<ClimbRate>,<Type>
             if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_UCHAR4) > 0) {
-
-                static FlarmObjectData E;
-
-                if (canasFlarmObjectPropagated(canasMessage, info.heading.Degrees(), canFrame->can_id, &E)) {
-                    FlarmTraffic traffic;
-                    traffic.alarm_level = (FlarmTraffic::AlarmType) E.AlarmLevel;
-                    traffic.relative_north = E.RelNorth;
-                    traffic.relative_east = E.RelEast;
-                    traffic.relative_altitude = E.RelHorizontal;
-                    traffic.id.Set(E.ID);
-                    info.flarm.traffic.FindTraffic(traffic.id);
+                if (canasFlarmObjectPropagated(canasMessage, canFrame->can_id, &flarmObjectData)) {
+                    info.flarm.traffic.modified.Update(info.clock);
+                    FlarmTraffic traffic{};
+                    traffic.alarm_level = (FlarmTraffic::AlarmType) flarmObjectData.AlarmLevel; // TODO --verify
+                    traffic.relative_north = flarmObjectData.RelNorth;
+                    traffic.relative_east = flarmObjectData.RelEast;
+                    traffic.relative_altitude = flarmObjectData.RelHorizontal;
+                    traffic.id.Set(flarmObjectData.ID);
+                    //traffic.IdType = flarmObjectData.IdType; // todo -- does not exist yes !!
+                    traffic.track_received = true;
+                    traffic.track = Angle::Degrees(flarmObjectData.Track);
+                    traffic.turn_rate_received = true;
+                    traffic.turn_rate = flarmObjectData.TurnRate;
+                    traffic.speed_received = true;
+                    traffic.speed = RoughSpeed(flarmObjectData.GroundSpeed);
+                    traffic.climb_rate_received = true;
+                    traffic.climb_rate = flarmObjectData.ClimbRate;
+                    traffic.stealth = false;
+                    if (flarmObjectData.Type > 15 || flarmObjectData.Type == 14) {
+                        traffic.type = FlarmTraffic::AircraftType::UNKNOWN;
+                    } else {
+                        traffic.type = (FlarmTraffic::AircraftType) flarmObjectData.Type;
+                    }
 
                     FlarmTraffic *flarm_slot = info.flarm.traffic.FindTraffic(traffic.id);
                     if (flarm_slot == nullptr) {
@@ -234,10 +232,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                             // no more slots available
                             return false;
                         }
-
                         flarm_slot->Clear();
                         flarm_slot->id = traffic.id;
-
                         info.flarm.traffic.new_traffic.Update(info.clock);
                     }
                     // set time of fix to current time
@@ -249,12 +245,10 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-
         default:
             std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;
             break;
     }
-
     return false;
 }
 
