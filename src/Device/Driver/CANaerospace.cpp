@@ -62,31 +62,29 @@ bool
 CANaerospaceDevice::DataReceived(const void *data, size_t length,
                                  NMEAInfo &info) {
 
-    const auto *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
-    auto *canData = canFrame->data + 4;
-    auto *canasMessage = new(CanasMessage); // FIXME -- replace with canasMessage2 !!
-    auto canasData = &canasMessage->data;
-
-    const auto *canasMessage2 = (const CanasMessage *) canFrame->data;
-    canasMessage->message_code = canasMessage2->message_code;
-    canasMessage->service_code = canasMessage2->service_code;
-
     assert(data != nullptr);
     assert(length > 0);
-    assert(canData != nullptr);
+
+    const can_frame *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
+    const auto *canData = canFrame->data + 4;
+    const CanasMessage *cm = (const CanasMessage *) canFrame->data;
+
+    static CanasMessage canasMessage;
+    canasMessage.message_code = cm->message_code;
+    canasMessage.service_code = cm->service_code;
 
     info.alive.Update(info.clock);
 
     switch (canFrame->can_id) {
         case GPS_AIRCRAFT_LATITUDE:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_LONG) > 0) {
-                last_fix.latitude = Angle::Degrees(canasData->container.LONG / 1E7);
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_LONG) > 0) {
+                last_fix.latitude = Angle::Degrees(canasMessage.data.container.LONG / 1E7);
             }
             break;
 
         case GPS_AIRCRAFT_LONGITUDE:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_LONG) > 0) {
-                last_fix.longitude = Angle::Degrees(canasData->container.LONG / 1E7);
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_LONG) > 0) {
+                last_fix.longitude = Angle::Degrees(canasMessage.data.container.LONG / 1E7);
                 if (last_fix.Check()) {
                     info.location = last_fix;
                     info.location_available.Update(info.clock);
@@ -96,18 +94,18 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.gps_altitude = canasData->container.FLOAT;
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.gps_altitude = canasMessage.data.container.FLOAT;
                 info.gps_altitude_available.Update(info.clock);
                 return true;
             }
             break;
 
         case UTC:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
-                info.date_time_utc.hour = canasData->container.CHAR4[0];
-                info.date_time_utc.minute = canasData->container.CHAR4[1];
-                info.date_time_utc.second = canasData->container.CHAR4[2];
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
+                info.date_time_utc.hour = canasMessage.data.container.CHAR4[0];
+                info.date_time_utc.minute = canasMessage.data.container.CHAR4[1];
+                info.date_time_utc.second = canasMessage.data.container.CHAR4[2];
                 info.time = TimeLocal(info.date_time_utc.GetSecondOfDay(), RoughTimeDelta()); // todo -- verify !!
                 info.time_available.Update(info.clock);
                 return true;
@@ -115,8 +113,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case HEADING_ANGLE:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                float value = canasData->container.FLOAT;
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                float value = canasMessage.data.container.FLOAT;
                 if (value < 0.0) {
                     value += 360.0;
                 }
@@ -127,16 +125,16 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case GPS_TRUE_TRACK:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.track = Angle::Degrees(canasData->container.FLOAT);
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.track = Angle::Degrees(canasMessage.data.container.FLOAT);
                 info.track_available.Update(info.clock);
                 return true;
             }
             break;
 
         case INDICATED_AIRSPEED:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.indicated_airspeed = canasData->container.FLOAT;
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.indicated_airspeed = canasMessage.data.container.FLOAT;
                 info.airspeed_available.Update(info.clock);
                 info.airspeed_real = true;
                 return true;
@@ -144,8 +142,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case TRUE_AIRSPEED:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.true_airspeed = canasData->container.FLOAT;
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.true_airspeed = canasMessage.data.container.FLOAT;
                 info.airspeed_available.Update(info.clock);
                 info.airspeed_real = true;
                 return true;
@@ -153,45 +151,53 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         case GPS_GROUND_SPEED:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ground_speed = canasData->container.FLOAT;
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.ground_speed = canasMessage.data.container.FLOAT;
                 info.ground_speed_available.Update(info.clock);
                 return true;
             }
             break;
 
         case AIRMASS_SPEED_VERTICAL:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideNettoVario(canasData->container.FLOAT);
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.ProvideNettoVario(canasMessage.data.container.FLOAT);
                 return true;
             }
             break;
 
         case STATIC_PRESSURE:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideStaticPressure(AtmosphericPressure::HectoPascal(canasData->container.FLOAT));
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.ProvideStaticPressure(AtmosphericPressure::HectoPascal(canasMessage.data.container.FLOAT));
                 return true;
             }
             break;
 
         case STANDARD_ALTITUDE:
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideBaroAltitudeTrue(canasData->container.FLOAT);
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.ProvideBaroAltitudeTrue(canasMessage.data.container.FLOAT);
                 return true;
             }
             break;
 
         case FLARM_STATE_ID:  // Flarm messages: PFLAU
             // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_CHAR4) > 0) {
-                if (canasFlarmStatePropagated(canasMessage, info.gps_altitude, &objectData, &flarmState)) {
-                    info.flarm.status.available.Update(info.clock);
-                    info.flarm.status.rx = flarmState.RxDevicesCount;
-                    info.flarm.status.tx = flarmState.TxState;
-                    info.flarm.status.gps = (FlarmStatus::GPSStatus) flarmState.GpsState;
-                    info.flarm.status.alarm_level = (FlarmTraffic::AlarmType) objectData.AlarmLevel; // TODO -- correct ???
-                    return true;
-                }
+            switch (canasMessage.service_code  & 0x0f) {
+                case 2:
+                    if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_SHORT2) == 0) return false;
+                    break;
+                case 3:
+                    if (canasNetworkToHost(&canasMessage.data, canData, 2, CANAS_DATATYPE_SHORT) == 0) return false;
+                    break;
+                default:
+                    if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_UCHAR4) == 0) return false;
+            }
+            if (canasFlarmStatePropagated(&canasMessage, info.gps_altitude, &objectData, &flarmState)) {
+                info.flarm.status.available.Update(info.clock);
+                info.flarm.status.rx = flarmState.RxDevicesCount;
+                info.flarm.status.tx = flarmState.TxState;
+                info.flarm.status.gps = (FlarmStatus::GPSStatus) flarmState.GpsState;
+                info.flarm.status.alarm_level = (FlarmTraffic::AlarmType) objectData.AlarmLevel; // TODO -- correct ???
+                return true;
             }
             break;
 
@@ -200,54 +206,60 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
         case FLARM_OBJECT_AL1_ID:
         case FLARM_OBJECT_AL0_ID:
             // PFLAA,<AlarmLevel>,<RelativeNorth>,<RelativeEast>,<RelativeVertical>,<ID-Type>,<ID>,<Track>,<TurnRate>,<GroundSpeed>,<ClimbRate>,<Type>
-            if (canasNetworkToHost(canasData, canData, 4, CANAS_DATATYPE_UCHAR4) > 0) {
-                if (canasFlarmObjectPropagated(canasMessage, canFrame->can_id, &flarmObjectData)) {
-                    info.flarm.traffic.modified.Update(info.clock);
-                    FlarmTraffic traffic{};
-                    traffic.alarm_level = (FlarmTraffic::AlarmType) flarmObjectData.AlarmLevel; // TODO --verify
-                    traffic.relative_north = flarmObjectData.RelNorth;
-                    traffic.relative_east = flarmObjectData.RelEast;
-                    traffic.relative_altitude = flarmObjectData.RelHorizontal;
-                    traffic.id.Set(flarmObjectData.ID);
-                    //traffic.IdType = flarmObjectData.IdType; // todo -- does not exist yes !!
-                    traffic.track_received = flarmObjectData.valid.track;
-                    traffic.track = Angle::Degrees(flarmObjectData.Track);
-                    traffic.turn_rate_received = flarmObjectData.valid.turnRate;
-                    traffic.turn_rate = flarmObjectData.TurnRate;
-                    traffic.speed_received = flarmObjectData.valid.groundSpeed;
-                    traffic.speed = RoughSpeed(flarmObjectData.GroundSpeed);
-                    if (!traffic.climb_rate_received) {
-                        // Field is empty in stealth mode
-                        //stealth = true;
-                        traffic.climb_rate = 0.0;
-                    } else {
-                        traffic.climb_rate = flarmObjectData.valid.climbRate;;
-                    }
-
-                    traffic.stealth = false;
-                    if (flarmObjectData.Type > 15 || flarmObjectData.Type == 14) {
-                        traffic.type = FlarmTraffic::AircraftType::UNKNOWN;
-                    } else {
-                        traffic.type = (FlarmTraffic::AircraftType) flarmObjectData.Type;
-                    }
-
-                    FlarmTraffic *flarm_slot = info.flarm.traffic.FindTraffic(traffic.id);
-                    if (flarm_slot == nullptr) {
-                        flarm_slot = info.flarm.traffic.AllocateTraffic();
-                        if (flarm_slot == nullptr) {
-                            // no more slots available
-                            return false;
-                        }
-                        flarm_slot->Clear();
-                        flarm_slot->id = traffic.id;
-                        info.flarm.traffic.new_traffic.Update(info.clock);
-                    }
-                    // set time of fix to current time
-                    flarm_slot->valid.Update(info.clock);
-                    flarm_slot->Update(traffic);
-                    assert(traffic.id.IsDefined());
-                    return true;
+            switch (canasMessage.service_code) {
+                case 0:
+                case 1:
+                    if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_SHORT2) == 0) return false;
+                    break;
+                default:
+                    if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_UCHAR4) == 0) return false;
+            }
+            if (canasFlarmObjectPropagated(&canasMessage, canFrame->can_id, &flarmObjectData)) {
+                info.flarm.traffic.modified.Update(info.clock);
+                FlarmTraffic traffic{};
+                traffic.alarm_level = (FlarmTraffic::AlarmType) flarmObjectData.AlarmLevel; // TODO --verify
+                traffic.relative_north = flarmObjectData.RelNorth;
+                traffic.relative_east = flarmObjectData.RelEast;
+                traffic.relative_altitude = flarmObjectData.RelHorizontal;
+                traffic.id.Set(flarmObjectData.ID);
+                //traffic.IdType = flarmObjectData.IdType; // todo -- does not exist yes !!
+                traffic.track_received = flarmObjectData.valid.track;
+                traffic.track = Angle::Degrees(flarmObjectData.Track);
+                traffic.turn_rate_received = flarmObjectData.valid.turnRate;
+                traffic.turn_rate = flarmObjectData.TurnRate;
+                traffic.speed_received = flarmObjectData.valid.groundSpeed;
+                traffic.speed = RoughSpeed(flarmObjectData.GroundSpeed);
+                if (!traffic.climb_rate_received) {
+                    // Field is empty in stealth mode
+                    //stealth = true;
+                    traffic.climb_rate = 0.0;
+                } else {
+                    traffic.climb_rate = flarmObjectData.valid.climbRate / 100.0;
                 }
+
+                traffic.stealth = false;
+                if (flarmObjectData.Type > 15 || flarmObjectData.Type == 14) {
+                    traffic.type = FlarmTraffic::AircraftType::UNKNOWN;
+                } else {
+                    traffic.type = (FlarmTraffic::AircraftType) flarmObjectData.Type;
+                }
+
+                FlarmTraffic *flarm_slot = info.flarm.traffic.FindTraffic(traffic.id);
+                if (flarm_slot == nullptr) {
+                    flarm_slot = info.flarm.traffic.AllocateTraffic();
+                    if (flarm_slot == nullptr) {
+                        // no more slots available
+                        return false;
+                    }
+                    flarm_slot->Clear();
+                    flarm_slot->id = traffic.id;
+                    info.flarm.traffic.new_traffic.Update(info.clock);
+                }
+                // set time of fix to current time
+                flarm_slot->valid.Update(info.clock);
+                flarm_slot->Update(traffic);
+                assert(traffic.id.IsDefined());
+                return true;
             }
             break;
 

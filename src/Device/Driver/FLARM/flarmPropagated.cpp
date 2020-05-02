@@ -16,6 +16,8 @@
 
 //static int16_t calcBearing(int RelEast, int RelNorth);
 
+uint32_t getFlarmId(const CanasMessage *canasMessage);
+
 /*
  * restauriert flarm FLAU daten auf einer sequenz von CANas messages
  * msg: die CAN message mit id FLARM_STATE_ID
@@ -46,8 +48,8 @@ bool canasFlarmStatePropagated(const CanasMessage *canasMessage, int altitude, F
 
         case 1: {
             objectData->AlarmLevel = canasMessage->data.container.UCHAR4[0] & 0x7;
-            objectData->AlarmType = canasMessage->data.container.CHAR4[0] >> 3 & 0x07;
-            objectData->ID = canasMessage->data.container.USHORT;
+            objectData->AlarmType = canasMessage->data.container.UCHAR4[0] >> 3 & 0x07;
+            objectData->ID = getFlarmId(canasMessage);
             break;
         }
 
@@ -68,6 +70,12 @@ bool canasFlarmStatePropagated(const CanasMessage *canasMessage, int altitude, F
         }
     }
     return false;
+}
+
+uint32_t getFlarmId(const CanasMessage *canasMessage) {
+    return (canasMessage->data.container.UCHAR4[3] & 0xFF) |
+           (canasMessage->data.container.UCHAR4[2] & 0xFF) << 8 |
+           (canasMessage->data.container.UCHAR4[1] & 0xFF) << 16;
 }
 
 /*
@@ -112,9 +120,7 @@ bool canasFlarmObjectPropagated(const CanasMessage *canasMessage, int canid, Fla
 
         case 3: {
             flarmObjectData->IdType = canasMessage->data.container.UCHAR4[0];
-            flarmObjectData->ID = (canasMessage->data.container.UCHAR4[3] & 0xFF) |
-                                  (canasMessage->data.container.UCHAR4[2] & 0xFF) << 8 |
-                                  (canasMessage->data.container.UCHAR4[1] & 0xFF) << 16;
+            flarmObjectData->ID = getFlarmId(canasMessage);
             return true;
         }
     }
