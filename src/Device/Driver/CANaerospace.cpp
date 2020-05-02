@@ -181,9 +181,9 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
         case FLARM_STATE_ID:  // Flarm messages: PFLAU
             // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>
-            switch (canasMessage.service_code  & 0x0f) {
+            switch (canasMessage.service_code) {
                 case 2:
-                    if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_SHORT2) == 0) return false;
+                    if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_USHORT2) == 0) return false;
                     break;
                 case 3:
                     if (canasNetworkToHost(&canasMessage.data, canData, 2, CANAS_DATATYPE_SHORT) == 0) return false;
@@ -206,10 +206,10 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
         case FLARM_OBJECT_AL1_ID:
         case FLARM_OBJECT_AL0_ID:
             // PFLAA,<AlarmLevel>,<RelativeNorth>,<RelativeEast>,<RelativeVertical>,<ID-Type>,<ID>,<Track>,<TurnRate>,<GroundSpeed>,<ClimbRate>,<Type>
-            switch (canasMessage.service_code) {
+            switch (canasMessage.service_code & 0x0f) {
                 case 0:
                 case 1:
-                    if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_SHORT2) == 0) return false;
+                    if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_USHORT2) == 0) return false;
                     break;
                 default:
                     if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_UCHAR4) == 0) return false;
@@ -220,15 +220,17 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                 traffic.alarm_level = (FlarmTraffic::AlarmType) flarmObjectData.AlarmLevel; // TODO --verify
                 traffic.relative_north = flarmObjectData.RelNorth;
                 traffic.relative_east = flarmObjectData.RelEast;
-                traffic.relative_altitude = flarmObjectData.RelHorizontal;
+                traffic.relative_altitude = RoughAltitude(flarmObjectData.RelVertical);
+                traffic.distance = RoughDistance(flarmObjectData.RelHorizontal);
                 traffic.id.Set(flarmObjectData.ID);
                 //traffic.IdType = flarmObjectData.IdType; // todo -- does not exist yes !!
                 traffic.track_received = flarmObjectData.valid.track;
-                traffic.track = Angle::Degrees(flarmObjectData.Track);
+                traffic.track = RoughAngle(Angle::Degrees(flarmObjectData.Track));
                 traffic.turn_rate_received = flarmObjectData.valid.turnRate;
                 traffic.turn_rate = flarmObjectData.TurnRate;
                 traffic.speed_received = flarmObjectData.valid.groundSpeed;
                 traffic.speed = RoughSpeed(flarmObjectData.GroundSpeed);
+                traffic.climb_rate_received = flarmObjectData.valid.climbRate;
                 if (!traffic.climb_rate_received) {
                     // Field is empty in stealth mode
                     //stealth = true;

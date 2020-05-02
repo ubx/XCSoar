@@ -54,8 +54,8 @@ bool canasFlarmStatePropagated(const CanasMessage *canasMessage, int altitude, F
         }
 
         case 2: {
-            objectData->RelVertical = canasMessage->data.container.SHORT2[0];
-            objectData->RelHorizontal = canasMessage->data.container.SHORT2[1];
+            objectData->RelVertical = canasMessage->data.container.USHORT2[0];
+            objectData->RelHorizontal = canasMessage->data.container.USHORT2[1];
             break;
         }
 
@@ -70,12 +70,6 @@ bool canasFlarmStatePropagated(const CanasMessage *canasMessage, int altitude, F
         }
     }
     return false;
-}
-
-uint32_t getFlarmId(const CanasMessage *canasMessage) {
-    return (canasMessage->data.container.UCHAR4[3] & 0xFF) |
-           (canasMessage->data.container.UCHAR4[2] & 0xFF) << 8 |
-           (canasMessage->data.container.UCHAR4[1] & 0xFF) << 16;
 }
 
 /*
@@ -93,16 +87,16 @@ bool canasFlarmObjectPropagated(const CanasMessage *canasMessage, int canid, Fla
     switch (messageindex) {
         case 0: {
             flarmObjectData->AlarmLevel = FLARM_OBJECT_AL0_ID - canid;
-            flarmObjectData->RelNorth = canasMessage->data.container.SHORT2[0];
-            flarmObjectData->RelEast = canasMessage->data.container.SHORT2[1];
+            flarmObjectData->RelNorth = canasMessage->data.container.USHORT2[0];
+            flarmObjectData->RelEast = canasMessage->data.container.USHORT2[1];
             flarmObjectData->RelHorizontal = sqrtl(flarmObjectData->RelNorth * flarmObjectData->RelNorth +
                                                    flarmObjectData->RelEast * flarmObjectData->RelEast);
             break;
         }
 
         case 1: {
-            flarmObjectData->RelVertical = canasMessage->data.container.SHORT2[0];
-            flarmObjectData->Track = canasMessage->data.container.SHORT2[1];
+            flarmObjectData->RelVertical = canasMessage->data.container.USHORT2[0];
+            flarmObjectData->Track = canasMessage->data.container.USHORT2[1];
             flarmObjectData->valid.track = (validFlags & 0x2f) != 0;
             break;
         }
@@ -125,4 +119,10 @@ bool canasFlarmObjectPropagated(const CanasMessage *canasMessage, int canid, Fla
         }
     }
     return false;
+}
+
+uint32_t getFlarmId(const CanasMessage *canasMessage) {
+    return (canasMessage->data.container.UCHAR4[3] & 0xFF) |
+           (canasMessage->data.container.UCHAR4[2] & 0xFF) << 8 |
+           (canasMessage->data.container.UCHAR4[1] & 0xFF) << 16;
 }
