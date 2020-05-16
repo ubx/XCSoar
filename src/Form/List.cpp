@@ -52,37 +52,16 @@ UsePixelPan() noexcept
 
 ListControl::ListControl(const DialogLook &_look) noexcept
   :look(_look),
-   scroll_bar(look.button),
-   length(0),
-   origin(0), pixel_pan(0),
-   cursor(0),
-   drag_mode(DragMode::NONE),
-   item_renderer(nullptr), cursor_handler(nullptr),
-   kinetic_timer(*this)
+   scroll_bar(look.button)
 {
 }
 
 ListControl::ListControl(ContainerWindow &parent, const DialogLook &_look,
                          PixelRect rc, const WindowStyle style,
                          unsigned _item_height) noexcept
-  :look(_look),
-   scroll_bar(look.button),
-   length(0),
-   origin(0), pixel_pan(0),
-   cursor(0),
-   drag_mode(DragMode::NONE),
-   item_renderer(nullptr), cursor_handler(nullptr),
-   kinetic_timer(*this)
+  :ListControl(_look)
 {
   Create(parent, rc, style, _item_height);
-}
-
-ListControl::~ListControl() noexcept
-{
-  /* we must override ~Window(), because in ~Window(), our own
-     OnDestroy() method won't be called (during object destruction,
-     this object loses its identity) */
-  Destroy();
 }
 
 void
@@ -657,21 +636,15 @@ ListControl::OnCancelMode()
   kinetic_timer.Cancel();
 }
 
-bool
-ListControl::OnTimer(WindowTimer &timer)
+void
+ListControl::OnKineticTimer() noexcept
 {
-  if (timer == kinetic_timer) {
-    assert(UsePixelPan());
+  assert(UsePixelPan());
 
-    if (kinetic.IsSteady()) {
-      kinetic_timer.Cancel();
-    } else
-      SetPixelOrigin(kinetic.GetPosition());
-
-    return true;
-  }
-
-  return PaintWindow::OnTimer(timer);
+  if (kinetic.IsSteady()) {
+    kinetic_timer.Cancel();
+  } else
+    SetPixelOrigin(kinetic.GetPosition());
 }
 
 void

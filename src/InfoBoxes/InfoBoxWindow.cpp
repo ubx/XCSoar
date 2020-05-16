@@ -44,22 +44,13 @@ InfoBoxWindow::InfoBoxWindow(ContainerWindow &parent, PixelRect rc,
                              const InfoBoxLook &_look,
                              unsigned _id,
                              WindowStyle style)
-  :content(NULL),
-   settings(_settings), look(_look),
+  :settings(_settings), look(_look),
    border_kind(border_flags),
-   id(_id),
-   dragging(false), pressed(false),
-   force_draw_selector(false),
-   focus_timer(*this), dialog_timer(*this)
+   id(_id)
 {
   data.Clear();
 
   Create(parent, rc, style);
-}
-
-InfoBoxWindow::~InfoBoxWindow() {
-  delete content;
-  Destroy();
 }
 
 void
@@ -196,7 +187,7 @@ InfoBoxWindow::Paint(Canvas &canvas)
   else
     canvas.Clear(background_color);
 
-  if (data.GetCustom() && content != NULL) {
+  if (data.GetCustom() && content) {
     /* if there's no comment, the content object may paint that area,
        too */
     const PixelRect &rc = data.comment.empty()
@@ -236,10 +227,9 @@ InfoBoxWindow::Paint(Canvas &canvas)
 }
 
 void
-InfoBoxWindow::SetContentProvider(InfoBoxContent *_content)
+InfoBoxWindow::SetContentProvider(std::unique_ptr<InfoBoxContent> _content)
 {
-  delete content;
-  content = _content;
+  content = std::move(_content);
 
   data.SetInvalid();
   Invalidate();
@@ -248,7 +238,7 @@ InfoBoxWindow::SetContentProvider(InfoBoxContent *_content)
 void
 InfoBoxWindow::UpdateContent()
 {
-  if (content == NULL)
+  if (!content)
     return;
 
   InfoBoxData old = data;
@@ -287,7 +277,7 @@ InfoBoxWindow::ShowDialog()
 bool
 InfoBoxWindow::HandleKey(InfoBoxContent::InfoBoxKeyCodes keycode)
 {
-  if (content != NULL && content->HandleKey(keycode)) {
+  if (content && content->HandleKey(keycode)) {
     UpdateContent();
     return true;
   }
@@ -297,7 +287,7 @@ InfoBoxWindow::HandleKey(InfoBoxContent::InfoBoxKeyCodes keycode)
 const InfoBoxPanel *
 InfoBoxWindow::GetDialogContent() const
 {
-  if (content != NULL)
+  if (content)
     return content->GetDialogContent();
 
   return NULL;
@@ -503,21 +493,12 @@ InfoBoxWindow::OnKillFocus()
   Invalidate();
 }
 
-bool
-InfoBoxWindow::OnTimer(WindowTimer &timer)
+void
+InfoBoxWindow::OnDialogTimer() noexcept
 {
-  if (timer == focus_timer) {
-    focus_timer.Cancel();
-    FocusParent();
-    return true;
-  } else if (timer == dialog_timer) {
-    dragging = pressed = false;
-    Invalidate();
-    ReleaseCapture();
+  dragging = pressed = false;
+  Invalidate();
+  ReleaseCapture();
 
-    dialog_timer.Cancel();
-    ShowDialog();
-    return true;
-  } else
-    return PaintWindow::OnTimer(timer);
+  ShowDialog();
 }

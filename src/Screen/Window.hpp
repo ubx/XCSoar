@@ -43,7 +43,6 @@ struct Event;
 class Font;
 class Canvas;
 class ContainerWindow;
-class WindowTimer;
 
 /**
  * A portable wrapper for describing a window's style settings on
@@ -879,9 +878,7 @@ public:
   }
 #endif
 
-#ifndef USE_WINUSER
-  void SendUser(unsigned id) noexcept;
-#else
+#ifdef USE_WINUSER
   void SendUser(unsigned id) noexcept {
     assert(IsDefined());
 
@@ -947,18 +944,9 @@ public:
   virtual void OnCancelMode();
   virtual void OnSetFocus();
   virtual void OnKillFocus();
-  virtual bool OnTimer(WindowTimer &timer);
-  virtual bool OnUser(unsigned id);
 
 #ifdef USE_WINUSER
-  /**
-   * Called by OnMessage() when the message was not handled by any
-   * virtual method.  Calls the default handler.  This function is
-   * virtual, because the Dialog class will have to override it -
-   * dialogs have slightly different semantics.
-   */
-  virtual LRESULT OnUnhandledMessage(HWND hWnd, UINT message,
-                                     WPARAM wParam, LPARAM lParam) noexcept;
+  virtual bool OnUser(unsigned id);
 
   virtual LRESULT OnMessage(HWND hWnd, UINT message,
                             WPARAM wParam, LPARAM lParam) noexcept;

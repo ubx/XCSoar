@@ -35,7 +35,7 @@ RateLimiter::RateLimiter(std::chrono::steady_clock::duration _period,
 void
 RateLimiter::Trigger()
 {
-  if (IsActive())
+  if (timer.IsPending())
     return;
 
   std::chrono::steady_clock::duration schedule = delay;
@@ -43,14 +43,12 @@ RateLimiter::Trigger()
   if (elapsed.count() >= 0 && elapsed < period)
     schedule += period - elapsed;
 
-  Schedule(schedule);
+  timer.Schedule(schedule);
 }
 
 void
 RateLimiter::OnTimer()
 {
-  Timer::Cancel();
-
   clock.Update();
   Run();
 }

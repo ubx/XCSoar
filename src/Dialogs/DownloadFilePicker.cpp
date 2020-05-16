@@ -41,6 +41,7 @@ Copyright_License {
 #include "Net/HTTP/Features.hpp"
 #include "Net/HTTP/DownloadManager.hpp"
 #include "Event/Notify.hpp"
+#include "Event/PeriodicTimer.hpp"
 #include "Thread/Mutex.hxx"
 #include "Operation/ThreadedOperationEnvironment.hpp"
 #include "Util/ConvertString.hpp"
@@ -52,10 +53,14 @@ Copyright_License {
 /**
  * This class tracks a download and updates a #ProgressDialog.
  */
-class DownloadProgress final : Timer, Net::DownloadListener, Notify {
+class DownloadProgress final : Net::DownloadListener {
   ProgressDialog &dialog;
   ThreadedOperationEnvironment env;
   const Path path_relative;
+
+  PeriodicTimer update_timer{[this]{ Net::DownloadManager::Enumerate(*this); }};
+
+  Notify download_complete_notify{[this]{ OnDownloadCompleteNotification(); }};
 
   bool got_size = false, complete = false, success;
 
@@ -63,21 +68,15 @@ public:
   DownloadProgress(ProgressDialog &_dialog,
                    const Path _path_relative)
     :dialog(_dialog), env(_dialog), path_relative(_path_relative) {
-    Timer::Schedule(std::chrono::seconds(1));
+    update_timer.Schedule(std::chrono::seconds(1));
     Net::DownloadManager::AddListener(*this);
   }
 
   ~DownloadProgress() {
     Net::DownloadManager::RemoveListener(*this);
-    Timer::Cancel();
   }
 
 private:
-  /* virtual methods from class Timer */
-  void OnTimer() override {
-    Net::DownloadManager::Enumerate(*this);
-  }
-
   /* virtual methods from class Net::DownloadListener */
   void OnDownloadAdded(Path _path_relative,
                        int64_t size, int64_t position) override {
@@ -97,12 +96,11 @@ private:
     if (!complete && path_relative == _path_relative) {
       complete = true;
       success = _success;
-      Notify::SendNotification();
+      download_complete_notify.SendNotification();
     }
   }
 
-  /* virtual methods from class Notify */
-  void OnNotification() override {
+  void OnDownloadCompleteNotification() noexcept {
     assert(complete);
     dialog.SetModalResult(success ? mrOK : mrCancel);
   }
@@ -138,13 +136,15 @@ DownloadFile(const char *uri, const char *_base)
 
 class DownloadFilePickerWidget final
   : public ListWidget,
-    Net::DownloadListener, Notify,
+    Net::DownloadListener,
     ActionListener {
   enum Buttons {
     DOWNLOAD,
   };
 
   WidgetDialog &dialog;
+
+  Notify download_complete_notify{[this]{ OnDownloadCompleteNotification(); }};
 
   const FileType file_type;
 
@@ -218,8 +218,7 @@ public:
                        int64_t size, int64_t position) override;
   void OnDownloadComplete(Path path_relative, bool success) override;
 
-  /* virtual methods from class Notify */
-  void OnNotification() override;
+  void OnDownloadCompleteNotification() noexcept;
 };
 
 void
@@ -245,7 +244,7 @@ DownloadFilePickerWidget::Unprepare()
 {
   Net::DownloadManager::RemoveListener(*this);
 
-  ClearNotification();
+  download_complete_notify.ClearNotification();
 
   DeleteWindow();
 }
@@ -346,11 +345,11 @@ DownloadFilePickerWidget::OnDownloadComplete(Path path_relative,
     }
   }
 
-  SendNotification();
+  download_complete_notify.SendNotification();
 }
 
 void
-DownloadFilePickerWidget::OnNotification()
+DownloadFilePickerWidget::OnDownloadCompleteNotification() noexcept
 {
   bool repository_modified2, repository_failed2;
 
@@ -379,12 +378,12 @@ DownloadFilePicker(FileType file_type)
     return nullptr;
   }
 
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(), _("Download"));
   DownloadFilePickerWidget widget(dialog, file_type);
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Download"), &widget);
   widget.CreateButtons();
   dialog.AddButton(_("Cancel"), mrCancel);
-
+  dialog.FinishPreliminary(&widget);
   dialog.ShowModal();
   dialog.StealWidget();
 

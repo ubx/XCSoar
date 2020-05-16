@@ -31,8 +31,13 @@ Copyright_License {
 #include "Renderer/ThermalBandRenderer.hpp"
 #include "Renderer/FinalGlideBarRenderer.hpp"
 #include "Renderer/VarioBarRenderer.hpp"
-#include "Screen/Timer.hpp"
+#include "Event/Timer.hpp"
+#include "Event/Notify.hpp"
 #include "Screen/Features.hpp"
+
+#ifdef ENABLE_OPENGL
+#include "Event/PeriodicTimer.hpp"
+#endif
 
 #include <array>
 
@@ -58,10 +63,6 @@ public:
 
 
 class GlueMapWindow : public MapWindow {
-  enum class Command {
-    INVALIDATE,
-  };
-
   TopographyThread *topography_thread = nullptr;
 
   TerrainThread *terrain_thread = nullptr;
@@ -91,7 +92,7 @@ class GlueMapWindow : public MapWindow {
 
 #ifdef ENABLE_OPENGL
   KineticManager kinetic_x = 700, kinetic_y = 700;
-  WindowTimer kinetic_timer;
+  PeriodicTimer kinetic_timer{[this]{ OnKineticTimer(); }};
 #endif
 
   /** flag to indicate if the MapItemList should be shown on mouse up */
@@ -140,7 +141,9 @@ class GlueMapWindow : public MapWindow {
 
   const GestureLook &gesture_look;
 
-  WindowTimer map_item_timer;
+  Timer map_item_timer{[this]{ OnMapItemTimer(); }};
+
+  Notify redraw_notify{[this]{ PartialRedraw(); }};
 
 public:
   GlueMapWindow(const Look &look);
@@ -174,6 +177,7 @@ public:
    * Trigger a full redraw of the map.
    */
   void FullRedraw();
+  void PartialRedraw() noexcept;
 
   void QuickRedraw();
 
@@ -210,8 +214,6 @@ protected:
   virtual void OnCancelMode() override;
   virtual void OnPaint(Canvas &canvas) override;
   virtual void OnPaintBuffer(Canvas& canvas) override;
-  virtual bool OnTimer(WindowTimer &timer) override;
-  bool OnUser(unsigned id) override;
 
   /**
    * This event handler gets called when a gesture has
@@ -284,6 +286,13 @@ protected:
   bool InCirclingMode() const {
     return GetUIState().display_mode == DisplayMode::CIRCLING;
   }
+
+private:
+  void OnMapItemTimer() noexcept;
+
+#ifdef ENABLE_OPENGL
+  void OnKineticTimer() noexcept;
+#endif
 };
 
 #endif

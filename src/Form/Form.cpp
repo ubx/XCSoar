@@ -76,6 +76,13 @@ WndForm::WndForm(SingleWindow &main_window, const DialogLook &_look,
   Create(main_window, rc, Caption, style);
 }
 
+WndForm::WndForm(SingleWindow &main_window, const DialogLook &_look,
+                 const TCHAR *caption,
+                 const WindowStyle style) noexcept
+  :WndForm(main_window, _look, main_window.GetClientRect(), caption, style)
+{
+}
+
 void
 WndForm::Create(SingleWindow &main_window, const PixelRect &rc,
                 const TCHAR *_caption, const WindowStyle style)
@@ -97,14 +104,6 @@ WndForm::Create(SingleWindow &main_window,
                 const TCHAR *_caption, const WindowStyle style)
 {
   Create(main_window, main_window.GetClientRect(), _caption, style);
-}
-
-WndForm::~WndForm()
-{
-  /* we must override the ~Window() reset call, because in ~Window(),
-     our own OnDestroy() method won't be called (during object
-     destruction, this object loses its identity) */
-  Destroy();
 }
 
 SingleWindow &

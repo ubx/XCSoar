@@ -26,8 +26,10 @@ Copyright_License {
 
 #include "InfoBoxes/Content/Base.hpp"
 #include "Screen/LazyPaintWindow.hpp"
-#include "Screen/Timer.hpp"
+#include "Event/Timer.hpp"
 #include "Data.hpp"
+
+#include <memory>
 
 struct InfoBoxSettings;
 struct InfoBoxLook;
@@ -35,8 +37,7 @@ class Color;
 
 class InfoBoxWindow : public LazyPaintWindow
 {
-private:
-  InfoBoxContent *content;
+  std::unique_ptr<InfoBoxContent> content;
 
   const InfoBoxSettings &settings;
   const InfoBoxLook &look;
@@ -47,27 +48,27 @@ private:
 
   InfoBoxData data;
 
-  bool dragging;
+  bool dragging = false;
 
   /**
    * Is the mouse currently pressed inside this InfoBox?
    */
-  bool pressed;
+  bool pressed = false;
 
   /**
    * draw the selector event if the InfoBox window is not the system focus
    */
-  bool force_draw_selector;
+  bool force_draw_selector = false;
 
   /** a timer which returns keyboard focus back to the map window after a while */
-  WindowTimer focus_timer;
+  Timer focus_timer{[this]{ FocusParent(); }};
 
   /**
    * This timer opens the dialog.  It is used to check for "long
    * click" and to delay the dialog a bit (for double click
    * detection).
    */
-  WindowTimer dialog_timer;
+  Timer dialog_timer{[this]{ OnDialogTimer(); }};
 
   PixelRect title_rect;
   PixelRect value_rect;
@@ -117,13 +118,11 @@ public:
                 unsigned id,
                 WindowStyle style=WindowStyle());
 
-  ~InfoBoxWindow();
-
   const InfoBoxLook &GetLook() const {
     return look;
   }
 
-  void SetContentProvider(InfoBoxContent *_content);
+  void SetContentProvider(std::unique_ptr<InfoBoxContent> _content);
   void UpdateContent();
 
 private:
@@ -151,13 +150,15 @@ public:
     return value_and_comment_rect;
   }
 
+private:
+  void OnDialogTimer() noexcept;
+
 protected:
   virtual void OnDestroy() override;
   virtual void OnResize(PixelSize new_size) override;
   virtual void OnSetFocus() override;
   virtual void OnKillFocus() override;
   virtual void OnCancelMode() override;
-  virtual bool OnTimer(WindowTimer &timer) override;
 
   virtual bool OnKeyDown(unsigned key_code) override;
 

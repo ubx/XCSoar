@@ -46,8 +46,40 @@ class GaugeVario : public AntiFlickerWindow
   static constexpr int gmax = GAUGEVARIOSWEEP + 2;
   static constexpr int gmin = -gmax;
 
+  struct BallastGeometry {
+    PixelRect label_rect, value_rect;
+    PixelPoint label_pos, value_pos;
+
+    BallastGeometry() = default;
+    BallastGeometry(const VarioLook &look, const PixelRect &rc) noexcept;
+  };
+
+  struct BugsGeometry {
+    PixelRect label_rect, value_rect;
+    PixelPoint label_pos, value_pos;
+
+    BugsGeometry() = default;
+    BugsGeometry(const VarioLook &look, const PixelRect &rc) noexcept;
+  };
+
+  struct Geometry {
+    unsigned nlength0, nlength1, nwidth, nline;
+
+    IntPoint2D offset;
+
+    PixelPoint top_position;
+    PixelPoint middle_position;
+    PixelPoint bottom_position;
+
+    BallastGeometry ballast;
+    BugsGeometry bugs;
+
+    Geometry() = default;
+    Geometry(const VarioLook &look, const PixelRect &rc) noexcept;
+  } geometry;
+
   struct DrawInfo {
-    bool initialised;
+    bool initialised = false;
     PixelRect rc;
     PixelPoint text_position;
     double last_value;
@@ -59,21 +91,10 @@ class GaugeVario : public AntiFlickerWindow
 
   const VarioLook &look;
 
-private:
-  const unsigned nlength0, nlength1, nwidth, nline;
+  bool dirty = true;
 
-  IntPoint2D offset;
-
-  bool dirty;
-
-  bool layout_initialised;
-  bool needle_initialised;
-  bool ballast_initialised;
-  bool bugs_initialised;
-
-  PixelPoint top_position;
-  PixelPoint middle_position;
-  PixelPoint bottom_position;
+  bool background_dirty = true;
+  bool needle_initialised = false;
 
   DrawInfo value_top;
   DrawInfo value_middle;
@@ -81,6 +102,17 @@ private:
   DrawInfo label_top;
   DrawInfo label_middle;
   DrawInfo label_bottom;
+
+  int ival_av_last = 0;
+  int vval_last = 0;
+  int sval_last = 0;
+  int ival_last = 0;
+
+  double last_v_diff = 0;
+
+  int last_ballast = -1;
+
+  int last_bugs = -1;
 
   BulkPixelPoint polys[(gmax * 2 + 1) * 3];
   BulkPixelPoint lines[gmax * 2 + 1];
@@ -120,7 +152,7 @@ protected:
 
 private:
   void RenderZero(Canvas &canvas);
-  void RenderValue(Canvas &canvas, int x, int y,
+  void RenderValue(Canvas &canvas, PixelPoint position,
                    DrawInfo *diValue, DrawInfo *diLabel,
                    double Value, const TCHAR *Label);
   void RenderSpeedToFly(Canvas &canvas, int x, int y);

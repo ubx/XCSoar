@@ -40,7 +40,7 @@ Copyright_License {
 #include "Form/Button.hpp"
 #include "Language/Language.hpp"
 #include "Operation/MessageOperationEnvironment.hpp"
-#include "Event/Timer.hpp"
+#include "Event/PeriodicTimer.hpp"
 
 #include <math.h>
 
@@ -59,8 +59,9 @@ enum Actions {
 
 class FlightSetupPanel final
   : public RowFormWidget, DataFieldListener,
-    private Timer,
     public ActionListener {
+  PeriodicTimer timer{[this]{ OnTimer(); }};
+
   Button *dump_button;
 
   PolarSettings &polar_settings;
@@ -108,7 +109,7 @@ public:
 
   virtual void Show(const PixelRect &rc) override {
     RowFormWidget::Show(rc);
-    Timer::Schedule(std::chrono::milliseconds(500));
+    timer.Schedule(std::chrono::milliseconds(500));
 
     OnTimer();
     SetButtons();
@@ -116,7 +117,7 @@ public:
   }
 
   virtual void Hide() override {
-    Timer::Cancel();
+    timer.Cancel();
     RowFormWidget::Hide();
   }
 
@@ -124,11 +125,10 @@ public:
   void OnAction(int id) noexcept override;
 
 private:
+  void OnTimer();
+
   /* virtual methods from DataFieldListener */
   virtual void OnModified(DataField &df) override;
-
-  /* virtual methods from Timer */
-  virtual void OnTimer() override;
 };
 
 void
@@ -362,8 +362,9 @@ dlgBasicSettingsShowModal()
   caption.append(_T(" - "));
   caption.append(plane.polar_name);
 
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), caption, instance);
+  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(),
+                      caption, instance);
   instance->SetDumpButton(dialog.AddButton(_("Dump"), *instance, DUMP));
   dialog.AddButton(_("OK"), mrOK);
 

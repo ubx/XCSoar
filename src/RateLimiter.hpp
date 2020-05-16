@@ -35,7 +35,9 @@ Copyright_License {
  * Due to its use of timers and the event queue, this class can only
  * be used in the main thread.
  */
-class RateLimiter : private Timer {
+class RateLimiter {
+  Timer timer{[this]{ OnTimer(); }};
+
   /**
    * Remember the last Run() invocation.
    */
@@ -54,23 +56,17 @@ public:
   RateLimiter(std::chrono::steady_clock::duration _period,
               std::chrono::steady_clock::duration _delay={}) noexcept;
 
-  /**
-   * Destructor.  Discards any pending events.
-   */
-  ~RateLimiter() {
-    Cancel();
-  }
-
   void Trigger();
 
-  using Timer::Cancel;
+  void Cancel() noexcept {
+    timer.Cancel();
+  }
 
 protected:
   virtual void Run() = 0;
 
 private:
-  /* virtual methods from class Timer */
-  virtual void OnTimer() override;
+  void OnTimer();
 };
 
 #endif

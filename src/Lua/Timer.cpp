@@ -29,13 +29,15 @@ Copyright_License {
 #include "Catch.hpp"
 #include "Class.hxx"
 #include "Persistent.hpp"
-#include "Event/Timer.hpp"
+#include "Event/PeriodicTimer.hpp"
 
 extern "C" {
 #include <lauxlib.h>
 }
 
-class LuaTimer final : public Timer {
+class LuaTimer final {
+  PeriodicTimer timer_event{[this]{ OnTimer(); }};
+
   Lua::Value callback;
 
   /**
@@ -49,10 +51,6 @@ public:
   explicit LuaTimer(lua_State *L, int callback_idx)
     :callback(L, Lua::StackIndex(callback_idx)), timer(L) {}
 
-  ~LuaTimer() {
-    Timer::Cancel();
-  }
-
   lua_State *GetLuaState() {
     return callback.GetState();
   }
@@ -63,19 +61,19 @@ public:
 
     Lua::AddPersistent(GetLuaState(), this);
     timer.Set(timer_index);
-    Timer::Schedule(d);
+    timer_event.Schedule(d);
   }
 
   void Cancel() {
     const Lua::ScopeCheckStack check_stack(GetLuaState());
 
-    Timer::Cancel();
+    timer_event.Cancel();
     timer.Set(nullptr);
     Lua::RemovePersistent(GetLuaState(), this);
   }
 
 protected:
-  void OnTimer() override {
+  void OnTimer() noexcept {
     const auto L = GetLuaState();
     const Lua::ScopeCheckStack check_stack(L);
 

@@ -34,14 +34,10 @@ Copyright_License {
 
 GlueMapWindow::GlueMapWindow(const Look &look)
   :MapWindow(look.map, look.traffic),
-#ifdef ENABLE_OPENGL
-   kinetic_timer(*this),
-#endif
    thermal_band_renderer(look.thermal_band, look.chart),
    final_glide_bar_renderer(look.final_glide_bar, look.map.task),
    vario_bar_renderer(look.vario_bar),
-   gesture_look(look.gesture),
-   map_item_timer(*this)
+   gesture_look(look.gesture)
 {
 }
 
@@ -65,7 +61,7 @@ GlueMapWindow::SetTopography(TopographyStore *_topography)
     topography_thread =
       new TopographyThread(*_topography,
                            [this](){
-                             SendUser(unsigned(Command::INVALIDATE));
+                             redraw_notify.SendNotification();
                            });
 }
 
@@ -84,7 +80,7 @@ GlueMapWindow::SetTerrain(RasterTerrain *_terrain)
     terrain_thread =
       new TerrainThread(*_terrain,
                         [this](){
-                          SendUser(unsigned(Command::INVALIDATE));
+                          redraw_notify.SendNotification();
                         });
 }
 
@@ -175,6 +171,13 @@ GlueMapWindow::FullRedraw()
   UpdateMapScale();
   UpdateScreenBounds();
 
+  PartialRedraw();
+}
+
+void
+GlueMapWindow::PartialRedraw() noexcept
+{
+
 #ifdef ENABLE_OPENGL
   Invalidate();
 #else
@@ -207,21 +210,4 @@ GlueMapWindow::QuickRedraw()
      trigger that now */
   draw_thread->TriggerRedraw();
 #endif
-}
-
-bool
-GlueMapWindow::OnUser(unsigned id)
-{
-  switch (Command(id)) {
-  case Command::INVALIDATE:
-#ifdef ENABLE_OPENGL
-    Invalidate();
-#else
-    draw_thread->TriggerRedraw();
-#endif
-    return true;
-
-  default:
-    return MapWindow::OnUser(id);
-  }
 }

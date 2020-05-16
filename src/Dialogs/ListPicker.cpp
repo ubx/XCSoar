@@ -29,15 +29,14 @@ Copyright_License {
 #include "Widget/TwoWidgets.hpp"
 #include "UIGlobals.hpp"
 #include "Language/Language.hpp"
-#include "Event/LambdaTimer.hpp"
 #include "Event/Timer.hpp"
+#include "Event/PeriodicTimer.hpp"
 
 #include <cassert>
 
 static constexpr int HELP = 100;
 
-class ListPickerWidget : public ListWidget, public ActionListener,
-                         private Timer {
+class ListPickerWidget : public ListWidget, public ActionListener {
   unsigned num_items;
   unsigned initial_value;
   unsigned row_height;
@@ -46,6 +45,16 @@ class ListPickerWidget : public ListWidget, public ActionListener,
 
   ListItemRenderer &item_renderer;
   ActionListener &action_listener;
+
+  /**
+   * This timer is used to postpone the initial UpdateHelp() call.
+   * This is necessary because the TwoWidgets instance is not fully
+   * initialised yet in Show(), and recursively calling into Widget
+   * methods is dangerous anyway.
+   */
+  Timer postpone_update_help{[this]{
+    UpdateHelp(GetList().GetCursorIndex());
+  }};
 
   const TCHAR *const caption, *const help_text;
   ItemHelpCallback_t item_help_callback;
@@ -102,12 +111,12 @@ public:
     ListWidget::Show(rc);
 
     visible = true;
-    Schedule({});
+    postpone_update_help.Schedule({});
   }
 
   virtual void Hide() override {
     visible = false;
-    Cancel();
+    postpone_update_help.Cancel();
     ListWidget::Hide();
   }
 
@@ -135,20 +144,6 @@ public:
   void OnAction(int id) noexcept override {
     HelpDialog(caption, help_text);
   }
-
-private:
-  /* virtual methods from class Timer */
-
-  /**
-   * This timer is used to postpone the initial UpdateHelp() call.
-   * This is necessary because the TwoWidgets instance is not fully
-   * initialised yet in Show(), and recursively calling into Widget
-   * methods is dangerous anyway.
-   */
-  virtual void OnTimer() override {
-    UpdateHelp(GetList().GetCursorIndex());
-    Timer::Cancel();
-  }
 };
 
 int
@@ -164,7 +159,8 @@ ListPicker(const TCHAR *caption,
   assert((num_items == 0 && initial_value == 0) || initial_value < num_items);
   assert(item_height > 0);
 
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(), caption);
 
   ListPickerWidget *const list_widget =
     new ListPickerWidget(num_items, initial_value, item_height,
@@ -181,8 +177,6 @@ ListPicker(const TCHAR *caption,
     list_widget->EnableItemHelp(_itemhelp_callback, text_widget, two_widgets);
   }
 
-  dialog.CreateFull(UIGlobals::GetMainWindow(), caption, widget);
-
   if (help_text != nullptr)
     dialog.AddButton(_("Help"), *list_widget, HELP);
 
@@ -196,11 +190,13 @@ ListPicker(const TCHAR *caption,
 
   dialog.EnableCursorSelection();
 
-  auto update_timer = MakeLambdaTimer([list_widget](){
-      list_widget->GetList().Invalidate();
-    });
+  PeriodicTimer update_timer([list_widget](){
+    list_widget->GetList().Invalidate();
+  });
   if (update)
     update_timer.Schedule(std::chrono::seconds(1));
+
+  dialog.FinishPreliminary(widget);
 
   int result = dialog.ShowModal();
   if (result == mrOK)
@@ -208,6 +204,5 @@ ListPicker(const TCHAR *caption,
   else if (result != -2)
     result = -1;
 
-  update_timer.Cancel();
   return result;
 }

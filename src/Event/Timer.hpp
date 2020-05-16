@@ -28,75 +28,50 @@ Copyright_License {
 #include <boost/asio/steady_timer.hpp>
 #endif
 
-#include <atomic>
 #include <chrono>
-
 #include <cassert>
+#include <functional>
 
 /**
- * A timer that, once initialized, periodically calls OnTimer() after
- * a specified amount of time, until Cancel() gets called.
+ * A timer that calls a given function after a specified amount of
+ * time.
  *
  * Initially, this class does not schedule a timer.
  *
  * This class is not thread safe; all of the methods must be called
  * from the main thread.
- *
- * The class #WindowTimer is cheaper on WIN32; use it instead of this
- * class if you are implementing a #Window.
  */
-class Timer {
-  std::atomic<bool> enabled, queued;
-  std::chrono::steady_clock::duration interval;
+class Timer final {
+  bool pending = false;
 
 #ifdef USE_POLL_EVENT
   boost::asio::steady_timer timer;
 #endif
+
+  using Callback = std::function<void()>;
+  const Callback callback;
 
 public:
   /**
    * Construct a Timer object that is not set initially.
    */
 #ifdef USE_POLL_EVENT
-  Timer();
+  explicit Timer(Callback _callback) noexcept;
 #else
-  Timer():enabled(false), queued(false) {}
+  explicit Timer(Callback &&_callback) noexcept:callback(std::move(_callback)) {}
 #endif
 
   Timer(const Timer &other) = delete;
 
-protected:
-  /**
-   * The move constructor may only be used on inactive timers.  This
-   * shall only be used by derived classes to pass inactive instances
-   * around.
-   */
-  Timer(Timer &&other)
-#ifdef USE_POLL_EVENT
-    :timer(std::move(other.timer))
-#endif
-  {
-    assert(!IsActive());
-    assert(!other.IsActive());
-  }
-
-public:
   ~Timer() {
-    /* timer must be cleaned up explicitly */
-    assert(!IsActive());
-
-#ifdef USE_POLL_EVENT
-    assert(!queued.load(std::memory_order_relaxed));
-    assert(!enabled.load(std::memory_order_relaxed));
-#endif
+    Cancel();
   }
 
   /**
-   * Is the timer active, i.e. is it waiting for the current period to
-   * end?
+   * Is the timer pending?
    */
-  bool IsActive() const {
-    return enabled.load(std::memory_order_relaxed);
+  bool IsPending() const noexcept {
+    return pending;
   }
 
   /**
@@ -117,19 +92,8 @@ public:
    */
   void Cancel();
 
-protected:
-  /**
-   * This method gets called after the configured time has elapsed.
-   * Implement it.
-   */
-  virtual void OnTimer() = 0;
-
 #ifdef USE_POLL_EVENT
 private:
-  void AsyncWait() {
-    timer.async_wait(std::bind(&Timer::Invoke, this, std::placeholders::_1));
-  }
-
   void Invoke(const boost::system::error_code &ec);
 
 #else

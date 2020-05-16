@@ -125,11 +125,10 @@ Window::OnCommand(unsigned id, unsigned code)
   return false;
 }
 
-LRESULT
-Window::OnUnhandledMessage(HWND hWnd, UINT message,
-                             WPARAM wParam, LPARAM lParam) noexcept
+bool
+Window::OnUser(unsigned id)
 {
-  return ::DefWindowProc(hWnd, message, wParam, lParam);
+  return false;
 }
 
 LRESULT
@@ -239,11 +238,6 @@ Window::OnMessage(HWND _hWnd, UINT message,
        it's not focused anymore */
     break;
 
-  case WM_TIMER:
-    if (OnTimer(*(WindowTimer *)wParam))
-      return 0;
-    break;
-
   case WM_GETDLGCODE:
     if (OnKeyCheck(wParam))
       return DLGC_WANTMESSAGE;
@@ -253,7 +247,7 @@ Window::OnMessage(HWND _hWnd, UINT message,
   if (message >= WM_USER && message <= 0x7FFF && OnUser(message - WM_USER))
     return 0;
 
-  return OnUnhandledMessage(_hWnd, message, wParam, lParam);
+  return ::DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 LRESULT CALLBACK

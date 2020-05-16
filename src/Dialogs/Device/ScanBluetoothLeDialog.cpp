@@ -43,7 +43,7 @@
 #include <set>
 
 class ScanBluetoothLeWidget final
-  : public ListWidget, public LeScanCallback, Notify {
+  : public ListWidget, public LeScanCallback {
 
   struct Item {
     std::string address;
@@ -54,6 +54,8 @@ class ScanBluetoothLeWidget final
   };
 
   WidgetDialog &dialog;
+
+  Notify le_scan_notify{[this]{ OnLeScanNotification(); }};
 
   std::vector<Item> items;
 
@@ -115,11 +117,10 @@ private:
       new_items.emplace_front(address, name);
     }
 
-    Notify::SendNotification();
+    le_scan_notify.SendNotification();
   };
 
-  /* virtual methods from class Notify */
-  void OnNotification() override {
+  void OnLeScanNotification() noexcept {
     const bool was_empty = items.empty();
 
     {
@@ -158,7 +159,7 @@ ScanBluetoothLeWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 void
 ScanBluetoothLeWidget::Unprepare()
 {
-  Notify::ClearNotification();
+  le_scan_notify.ClearNotification();
 
   DeleteWindow();
 }
@@ -181,7 +182,8 @@ ScanBluetoothLeWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
 std::string
 ScanBluetoothLeDialog() noexcept
 {
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      UIGlobals::GetDialogLook(), _("Bluetooth LE"));
   ScanBluetoothLeWidget widget(dialog);
 
   const auto env = Java::GetEnv();
@@ -193,9 +195,9 @@ ScanBluetoothLeDialog() noexcept
     return {};
   }
 
-  dialog.CreateFull(UIGlobals::GetMainWindow(), _("Bluetooth LE"), &widget);
   widget.CreateButtons();
   dialog.AddButton(_("Cancel"), mrCancel);
+  dialog.FinishPreliminary(&widget);
 
   int result = dialog.ShowModal();
   BluetoothHelper::StopLeScan(env, callback);

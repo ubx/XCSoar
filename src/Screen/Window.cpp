@@ -130,8 +130,6 @@ Window::OnDestroy()
     parent->RemoveChild(*this);
     parent = nullptr;
   }
-
-  event_queue->Purge(*this);
 #else /* USE_WINUSER */
   assert(hWnd != nullptr);
 
@@ -245,16 +243,4 @@ Window::OnKillFocus()
 
   focused = false;
 #endif /* USE_WINUSER */
-}
-
-bool
-Window::OnTimer(WindowTimer &timer)
-{
-  return false;
-}
-
-bool
-Window::OnUser(unsigned id)
-{
-  return false;
 }

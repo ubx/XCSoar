@@ -29,7 +29,7 @@ Copyright_License {
 #include "Formatter/UserUnits.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
-#include "Event/Timer.hpp"
+#include "Event/PeriodicTimer.hpp"
 #include "Airspace/AirspaceWarning.hpp"
 #include "Airspace/ProtectedAirspaceWarningManager.hpp"
 #include "Airspace/AirspaceWarningManager.hpp"
@@ -68,7 +68,7 @@ struct WarningItem
 };
 
 class AirspaceWarningListWidget final
-  : public ListWidget, private ActionListener, private Timer {
+  : public ListWidget, private ActionListener {
 
   enum Buttons {
     ACK,
@@ -77,6 +77,8 @@ class AirspaceWarningListWidget final
   };
 
   ProtectedAirspaceWarningManager &airspace_warnings;
+
+  PeriodicTimer update_list_timer{[this]{ UpdateList(); }};
 
   Button *ack_button;
   Button *ack_day_button;
@@ -145,9 +147,6 @@ public:
 private:
   /* virtual methods from class ActionListener */
   void OnAction(int id) noexcept override;
-
-  /* virtual methods from Timer */
-  virtual void OnTimer() override;
 };
 
 static WndForm *dialog = NULL;
@@ -221,13 +220,13 @@ AirspaceWarningListWidget::Show(const PixelRect &rc)
   sound_interval_counter = 0;
   ListWidget::Show(rc);
   UpdateList();
-  Timer::Schedule(std::chrono::milliseconds(500));
+  update_list_timer.Schedule(std::chrono::milliseconds(500));
 }
 
 void
 AirspaceWarningListWidget::Hide()
 {
-  Timer::Cancel();
+  update_list_timer.Cancel();
   ListWidget::Hide();
 }
 
@@ -523,12 +522,6 @@ AirspaceWarningListWidget::UpdateList()
   AutoHide();
 }
 
-void
-AirspaceWarningListWidget::OnTimer()
-{
-  UpdateList();
-}
-
 bool
 dlgAirspaceWarningVisible()
 {
@@ -546,8 +539,9 @@ dlgAirspaceWarningsShowModal(ProtectedAirspaceWarningManager &_warnings,
 
   list = new AirspaceWarningListWidget(_warnings);
 
-  WidgetDialog dialog2(UIGlobals::GetDialogLook());
-  dialog2.CreateFull(UIGlobals::GetMainWindow(), _("Airspace Warnings"), list);
+  WidgetDialog dialog2(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                       UIGlobals::GetDialogLook(),
+                       _("Airspace Warnings"), list);
   list->CreateButtons(dialog2);
   dialog2.AddButton(_("Close"), mrOK);
   dialog2.EnableCursorSelection();
