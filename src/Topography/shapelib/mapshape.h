@@ -35,6 +35,13 @@
 #endif /* SHAPELIB_DISABLED */
 
 #include "mapprimitive.h"
+#ifdef SHAPELIB_DISABLED
+#include "mapproject.h"
+#endif /* SHAPELIB_DISABLED */
+
+#ifdef SHAPELIB_DISABLED
+#include "cpl_vsi.h"
+#endif /* SHAPELIB_DISABLED */
 
 struct zzip_dir;
 
@@ -176,7 +183,6 @@ extern "C" {
     int lastshape;
 
     ms_bitarray status;
-    rectObj statusbounds; /* holds extent associated with the status vector */
 
     int isopen;
 #ifdef SWIG
@@ -190,6 +196,13 @@ extern "C" {
     shapefileObj *shpfile;
     shapefileObj *tileshpfile;
     int tilelayerindex;
+#ifdef SHAPELIB_DISABLED
+    projectionObj sTileProj;
+#endif /* SHAPELIB_DISABLED */
+    rectObj searchrect;
+#ifdef SHAPELIB_DISABLED
+    reprojectionObj* reprojectorFromTileProjToLayerProj;
+#endif /* SHAPELIB_DISABLED */
   } msTiledSHPLayerInfo;
 
   /* shapefileObj function prototypes  */

@@ -36,10 +36,16 @@
 #include <string.h>
 #include <ctype.h>
 
-
+#ifdef SHAPELIB_DISABLED
+#include "cpl_vsi.h"
+#endif /* SHAPELIB_DISABLED */
 
 /* try to use a large file version of fseek for files up to 4GB (#3514) */
 #define safe_fseek zzip_seek
+
+#ifdef SHAPELIB_DISABLED
+static inline void IGUR_sizet(size_t ignored) { (void)ignored; }  /* Ignore GCC Unused Result */
+#endif /* SHAPELIB_DISABLED */
 
 /************************************************************************/
 /*                             SfRealloc()                              */
@@ -94,9 +100,9 @@ static void writeHeader(DBFHandle psDBF)
   /*      Write the initial 32 byte file header, and all the field        */
   /*      descriptions.                                             */
   /* -------------------------------------------------------------------- */
-  fseek( psDBF->fp, 0, 0 );
-  fwrite( abyHeader, 32, 1, psDBF->fp );
-  fwrite( psDBF->pszHeader, 32, psDBF->nFields, psDBF->fp );
+  VSIFSeekL( psDBF->fp, 0, 0 );
+  VSIFWriteL( abyHeader, 32, 1, psDBF->fp );
+  VSIFWriteL( psDBF->pszHeader, 32, psDBF->nFields, psDBF->fp );
 
   /* -------------------------------------------------------------------- */
   /*      Write out the newline character if there is room for it.        */
@@ -105,7 +111,7 @@ static void writeHeader(DBFHandle psDBF)
     char  cNewline;
 
     cNewline = 0x0d;
-    fwrite( &cNewline, 1, 1, psDBF->fp );
+    VSIFWriteL( &cNewline, 1, 1, psDBF->fp );
   }
 }
 
@@ -125,8 +131,8 @@ static void flushRecord( DBFHandle psDBF )
     nRecordOffset = psDBF->nRecordLength * psDBF->nCurrentRecord
                     + psDBF->nHeaderLength;
 
-    safe_fseek( psDBF->fp, nRecordOffset, 0 );
-    fwrite( psDBF->pszCurrentRecord, psDBF->nRecordLength, 1, psDBF->fp );
+    VSIFSeekL( psDBF->fp, nRecordOffset, 0 );
+    VSIFWriteL( psDBF->pszCurrentRecord, psDBF->nRecordLength, 1, psDBF->fp );
   }
 }
 
@@ -203,7 +209,12 @@ DBFHandle msDBFOpen(struct zzip_dir *zdir,  const char * pszFilename, const char
   /*  Read Table Header info                                              */
   /* -------------------------------------------------------------------- */
   pabyBuf = (uchar *) msSmallMalloc(500);
-  zzip_fread( pabyBuf, 32, 1, psDBF->fp );
+  if( zzip_fread( pabyBuf, 32, 1, psDBF->fp ) != 1 )
+  {
+    msFree(psDBF);
+    msFree(pabyBuf);
+    return( NULL );
+  }
 
   psDBF->nRecords = nRecords =
                       pabyBuf[4] + pabyBuf[5]*256 + pabyBuf[6]*256*256 + pabyBuf[7]*256*256*256;
@@ -222,7 +233,13 @@ DBFHandle msDBFOpen(struct zzip_dir *zdir,  const char * pszFilename, const char
   psDBF->pszHeader = (char *) pabyBuf;
 
   zzip_seek( psDBF->fp, 32, 0 );
-  zzip_fread( pabyBuf, nHeadLen, 1, psDBF->fp );
+  if( zzip_fread( pabyBuf, nHeadLen - 32, 1, psDBF->fp ) != 1 )
+  {
+    msFree(psDBF->pszCurrentRecord);
+    msFree(psDBF);
+    msFree(pabyBuf);
+    return( NULL );
+  }
 
   psDBF->panFieldOffset = (int *) msSmallMalloc(sizeof(int) * nFields);
   psDBF->panFieldSize = (int *) msSmallMalloc(sizeof(int) * nFields);
@@ -275,8 +292,8 @@ void  msDBFClose(DBFHandle psDBF)
   if( psDBF->bUpdated ) {
     uchar   abyFileHeader[32];
 
-    fseek( psDBF->fp, 0, 0 );
-    fread( abyFileHeader, 32, 1, psDBF->fp );
+    VSIFSeekL( psDBF->fp, 0, 0 );
+    IGUR_sizet(VSIFReadL( abyFileHeader, 32, 1, psDBF->fp ));
 
     abyFileHeader[1] = 95;      /* YY */
     abyFileHeader[2] = 7;     /* MM */
@@ -287,8 +304,8 @@ void  msDBFClose(DBFHandle psDBF)
     abyFileHeader[6] = (psDBF->nRecords/(256*256)) % 256;
     abyFileHeader[7] = (psDBF->nRecords/(256*256*256)) % 256;
 
-    fseek( psDBF->fp, 0, 0 );
-    fwrite( abyFileHeader, 32, 1, psDBF->fp );
+    VSIFSeekL( psDBF->fp, 0, 0 );
+    VSIFWriteL( abyFileHeader, 32, 1, psDBF->fp );
   }
 #endif /* SHAPELIB_DISABLED */
 
@@ -323,19 +340,22 @@ DBFHandle msDBFCreate( const char * pszFilename )
 
 {
   DBFHandle psDBF;
-  FILE  *fp;
+  VSILFILE  *fp;
 
   /* -------------------------------------------------------------------- */
   /*      Create the file.                                                */
   /* -------------------------------------------------------------------- */
-  fp = fopen( pszFilename, "wb" );
+  fp = VSIFOpenL( pszFilename, "wb" );
   if( fp == NULL )
     return( NULL );
 
-  fputc( 0, fp );
-  fclose( fp );
+  {
+      char ch = 0;
+      VSIFWriteL(&ch, 1, 1, fp);
+  }
+  VSIFCloseL( fp );
 
-  fp = fopen( pszFilename, "rb+" );
+  fp = VSIFOpenL( pszFilename, "rb+" );
   if( fp == NULL )
     return( NULL );
 
@@ -346,7 +366,7 @@ DBFHandle msDBFCreate( const char * pszFilename )
   if (psDBF == NULL) {
     msSetError(MS_MEMERR, "%s: %d: Out of memory allocating %u bytes.\n", "msDBFCreate()",
                __FILE__, __LINE__, (unsigned int)sizeof(DBFInfo));
-    fclose(fp);
+    VSIFCloseL(fp);
     return NULL;
   }
 
@@ -442,10 +462,7 @@ int msDBFAddField(DBFHandle psDBF, const char * pszFieldName, DBFFieldType eType
   for( i = 0; i < 32; i++ )
     pszFInfo[i] = '\0';
 
-  if( strlen(pszFieldName) < 10 )
-    strncpy( pszFInfo, pszFieldName, strlen(pszFieldName));
-  else
-    strncpy( pszFInfo, pszFieldName, 10);
+  strncpy( pszFInfo, pszFieldName, 10);
 
   pszFInfo[11] = psDBF->pachFieldType[psDBF->nFields-1];
 
@@ -535,8 +552,11 @@ static const char *msDBFReadAttribute(DBFHandle psDBF, int hEntity, int iField )
 
     nRecordOffset = psDBF->nRecordLength * hEntity + psDBF->nHeaderLength;
 
-    zzip_pread(psDBF->fp, psDBF->pszCurrentRecord, psDBF->nRecordLength,
-               nRecordOffset);
+    if( zzip_pread( psDBF->fp, psDBF->pszCurrentRecord, psDBF->nRecordLength, nRecordOffset ) != (zzip_size_t)psDBF->nRecordLength )
+    {
+      msSetError(MS_DBFERR, "Cannot read record %d.", "msDBFReadAttribute()",hEntity );
+      return( NULL );
+    }
 
     psDBF->nCurrentRecord = hEntity;
   }
@@ -693,9 +713,9 @@ DBFFieldType msDBFGetFieldInfo( DBFHandle psDBF, int iField, char * pszFieldName
 static int msDBFWriteAttribute(DBFHandle psDBF, int hEntity, int iField, void * pValue )
 {
   unsigned int          nRecordOffset;
-  int  i, j;
+  int  i, len;
   uchar *pabyRec;
-  char  szSField[40], szFormat[12];
+  char  szSField[40];
 
   /* -------------------------------------------------------------------- */
   /*  Is this a valid record?             */
@@ -728,8 +748,9 @@ static int msDBFWriteAttribute(DBFHandle psDBF, int hEntity, int iField, void * 
 
     nRecordOffset = psDBF->nRecordLength * hEntity + psDBF->nHeaderLength;
 
-    safe_fseek( psDBF->fp, nRecordOffset, 0 );
-    fread( psDBF->pszCurrentRecord, psDBF->nRecordLength, 1, psDBF->fp );
+    VSIFSeekL( psDBF->fp, nRecordOffset, 0 );
+    if( VSIFReadL( psDBF->pszCurrentRecord, psDBF->nRecordLength, 1, psDBF->fp ) != 1 )
+      return MS_FALSE;
 
     psDBF->nCurrentRecord = hEntity;
   }
@@ -743,28 +764,14 @@ static int msDBFWriteAttribute(DBFHandle psDBF, int hEntity, int iField, void * 
     case 'D':
     case 'N':
     case 'F':
-      if( psDBF->panFieldDecimals[iField] == 0 ) {
-        snprintf( szFormat, sizeof(szFormat), "%%%dd", psDBF->panFieldSize[iField] );
-        snprintf(szSField, sizeof(szSField), szFormat, (int) *((double *) pValue) );
-        if( (int) strlen(szSField) > psDBF->panFieldSize[iField] )
-          szSField[psDBF->panFieldSize[iField]] = '\0';
-        strncpy((char *) (pabyRec+psDBF->panFieldOffset[iField]), szSField, strlen(szSField) );
-      } else {
-        snprintf( szFormat, sizeof(szFormat), "%%%d.%df", psDBF->panFieldSize[iField], psDBF->panFieldDecimals[iField] );
-        snprintf(szSField, sizeof(szSField), szFormat, *((double *) pValue) );
-        if( (int) strlen(szSField) > psDBF->panFieldSize[iField] )
-          szSField[psDBF->panFieldSize[iField]] = '\0';
-        strncpy((char *) (pabyRec+psDBF->panFieldOffset[iField]),  szSField, strlen(szSField) );
-      }
+      snprintf(szSField, sizeof(szSField), "%*.*f", psDBF->panFieldSize[iField], psDBF->panFieldDecimals[iField], *(double*) pValue); 
+      len = strlen((char *) szSField);
+      memcpy(pabyRec+psDBF->panFieldOffset[iField], szSField, MS_MIN(len, psDBF->panFieldSize[iField]));
       break;
 
     default:
-      if( (int) strlen((char *) pValue) > psDBF->panFieldSize[iField] )
-        j = psDBF->panFieldSize[iField];
-      else
-        j = strlen((char *) pValue);
-
-      strncpy((char *) (pabyRec+psDBF->panFieldOffset[iField]), (char *) pValue, j );
+      len = strlen((char *) pValue);
+      memcpy(pabyRec+psDBF->panFieldOffset[iField], pValue, MS_MIN(len, psDBF->panFieldSize[iField]));
       break;
   }
 

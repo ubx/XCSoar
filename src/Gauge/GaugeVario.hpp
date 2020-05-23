@@ -62,14 +62,20 @@ class GaugeVario : public AntiFlickerWindow
     BugsGeometry(const VarioLook &look, const PixelRect &rc) noexcept;
   };
 
+  struct LabelValueGeometry {
+    int label_right, label_top, label_bottom, label_y;
+    int value_right, value_top, value_bottom, value_y;
+
+    LabelValueGeometry() = default;
+    LabelValueGeometry(const VarioLook &look, PixelPoint position) noexcept;
+  };
+
   struct Geometry {
     unsigned nlength0, nlength1, nwidth, nline;
 
     IntPoint2D offset;
 
-    PixelPoint top_position;
-    PixelPoint middle_position;
-    PixelPoint bottom_position;
+    LabelValueGeometry average, gross, mc;
 
     BallastGeometry ballast;
     BugsGeometry bugs;
@@ -81,10 +87,19 @@ class GaugeVario : public AntiFlickerWindow
   struct DrawInfo {
     bool initialised = false;
     PixelRect rc;
-    PixelPoint text_position;
     double last_value;
     TCHAR last_text[32];
     Unit last_unit;
+  };
+
+  struct LabelValueDrawInfo {
+    DrawInfo label;
+    DrawInfo value;
+
+    void Reset() noexcept {
+      label.initialised = false;
+      value.initialised = false;
+    }
   };
 
   const FullBlackboard &blackboard;
@@ -96,12 +111,7 @@ class GaugeVario : public AntiFlickerWindow
   bool background_dirty = true;
   bool needle_initialised = false;
 
-  DrawInfo value_top;
-  DrawInfo value_middle;
-  DrawInfo value_bottom;
-  DrawInfo label_top;
-  DrawInfo label_middle;
-  DrawInfo label_bottom;
+  LabelValueDrawInfo average_di, mc_di, gross_di;
 
   int ival_av_last = 0;
   int vval_last = 0;
@@ -120,26 +130,26 @@ class GaugeVario : public AntiFlickerWindow
 public:
   GaugeVario(const FullBlackboard &blackboard,
              ContainerWindow &parent, const VarioLook &look,
-             PixelRect rc, const WindowStyle style=WindowStyle());
+             PixelRect rc, const WindowStyle style=WindowStyle()) noexcept;
 
 protected:
-  const MoreData &Basic() const {
+  const MoreData &Basic() const noexcept {
     return blackboard.Basic();
   }
 
-  const DerivedInfo &Calculated() const {
+  const DerivedInfo &Calculated() const noexcept {
     return blackboard.Calculated();
   }
 
-  const ComputerSettings &GetComputerSettings() const {
+  const ComputerSettings &GetComputerSettings() const noexcept {
     return blackboard.GetComputerSettings();
   }
 
-  const GlidePolar &GetGlidePolar() const {
+  const GlidePolar &GetGlidePolar() const noexcept {
     return GetComputerSettings().polar.glide_polar_task;
   }
 
-  const VarioSettings &Settings() const {
+  const VarioSettings &Settings() const noexcept {
     return blackboard.GetUISettings().vario;
   }
 
@@ -151,21 +161,21 @@ protected:
   virtual void OnPaintBuffer(Canvas &canvas) override;
 
 private:
-  void RenderZero(Canvas &canvas);
-  void RenderValue(Canvas &canvas, PixelPoint position,
-                   DrawInfo *diValue, DrawInfo *diLabel,
-                   double Value, const TCHAR *Label);
-  void RenderSpeedToFly(Canvas &canvas, int x, int y);
-  void RenderBallast(Canvas &canvas);
-  void RenderBugs(Canvas &canvas);
-  int  ValueToNeedlePos(double Value);
-  void RenderNeedle(Canvas &canvas, int i, bool average, bool clear);
-  void RenderVarioLine(Canvas &canvas, int i, int sink, bool clear);
-  void RenderClimb(Canvas &canvas);
+  void RenderZero(Canvas &canvas) noexcept;
+  void RenderValue(Canvas &canvas, const LabelValueGeometry &g,
+                   LabelValueDrawInfo &di,
+                   double Value, const TCHAR *Label) noexcept;
+  void RenderSpeedToFly(Canvas &canvas, int x, int y) noexcept;
+  void RenderBallast(Canvas &canvas) noexcept;
+  void RenderBugs(Canvas &canvas) noexcept;
+  int  ValueToNeedlePos(double Value) noexcept;
+  void RenderNeedle(Canvas &canvas, int i, bool average, bool clear) noexcept;
+  void RenderVarioLine(Canvas &canvas, int i, int sink, bool clear) noexcept;
+  void RenderClimb(Canvas &canvas) noexcept;
 
-  void MakePolygon(const int i);
-  void MakeAllPolygons();
-  BulkPixelPoint *getPolygon(const int i);
+  void MakePolygon(const int i) noexcept;
+  void MakeAllPolygons() noexcept;
+  BulkPixelPoint *getPolygon(const int i) noexcept;
 };
 
 #endif

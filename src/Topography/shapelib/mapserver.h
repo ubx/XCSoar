@@ -155,10 +155,8 @@ typedef const ms_uint32 *ms_const_bitarray;
 #include "mapregex.h"
 
 
-#ifdef USE_OGR
 #define CPL_SUPRESS_CPLUSPLUS
 #include "ogr_api.h"
-#endif
 
 
 /* EQUAL and EQUALN are defined in cpl_port.h, so add them in here if ogr was not included */
@@ -181,7 +179,9 @@ typedef const ms_uint32 *ms_const_bitarray;
 
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
+#if (defined(_MSC_VER) && (_MSC_VER < 1900)) || !defined(_MSC_VER)
 #define snprintf _snprintf
+#endif
 #endif
 
 #endif /* SHAPELIB_DISABLED */
@@ -390,6 +390,7 @@ extern "C" {
 #define MS_DRIVER_GDAL(format)  (strncasecmp((format)->driver,"gdal/",5)==0)
 #define MS_DRIVER_IMAGEMAP(format)  (strncasecmp((format)->driver,"imagemap",8)==0)
 #define MS_DRIVER_AGG(format) (strncasecmp((format)->driver,"agg/",4)==0)
+#define MS_DRIVER_MVT(format) (strncasecmp((format)->driver,"mvt",3)==0)
 #define MS_DRIVER_CAIRO(format) (strncasecmp((format)->driver,"cairo/",6)==0)
 #define MS_DRIVER_OGL(format) (strncasecmp((format)->driver,"ogl/",4)==0)
 #define MS_DRIVER_TEMPLATE(format) (strncasecmp((format)->driver,"template",8)==0)
@@ -410,6 +411,7 @@ extern "C" {
 #define MS_RENDER_WITH_AGG 105
 #define MS_RENDER_WITH_KML 106
 #define MS_RENDER_WITH_UTFGRID 107
+#define MS_RENDER_WITH_MVT 108
 
 #ifndef SWIG
 
@@ -419,6 +421,7 @@ extern "C" {
 #define MS_RENDERER_TEMPLATE(format) ((format)->renderer == MS_RENDER_WITH_TEMPLATE)
 #define MS_RENDERER_KML(format) ((format)->renderer == MS_RENDER_WITH_KML)
 #define MS_RENDERER_OGR(format) ((format)->renderer == MS_RENDER_WITH_OGR)
+#define MS_RENDERER_MVT(format) ((format)->renderer == MS_RENDER_WITH_MVT)
 
 #define MS_RENDERER_PLUGIN(format) ((format)->renderer > MS_RENDER_WITH_PLUGIN)
 
@@ -458,6 +461,7 @@ extern "C" {
 #define MS_REFCNT_DECR(obj) __sync_sub_and_fetch(&obj->refcount, +1)
 #define MS_REFCNT_INIT(obj) obj->refcount=1, __sync_synchronize()
 #elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+#include <intrin.h>
 #pragma intrinsic (_InterlockedExchangeAdd)
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
 #define MS_REFCNT_INCR(obj) ( _InterlockedExchangeAdd((long*)(&obj->refcount), (long)(+1)) +1 )
@@ -501,6 +505,7 @@ extern "C" {
   enum MS_SHAPE_TYPE {MS_SHAPE_POINT, MS_SHAPE_LINE, MS_SHAPE_POLYGON, MS_SHAPE_NULL};
   enum MS_LAYER_TYPE {MS_LAYER_POINT, MS_LAYER_LINE, MS_LAYER_POLYGON, MS_LAYER_RASTER, MS_LAYER_ANNOTATION /* only used for parser backwards compatibility */, MS_LAYER_QUERY, MS_LAYER_CIRCLE, MS_LAYER_TILEINDEX, MS_LAYER_CHART};
   enum MS_FONT_TYPE {MS_TRUETYPE, MS_BITMAP};
+  enum MS_RENDER_MODE {MS_FIRST_MATCHING_CLASS, MS_ALL_MATCHING_CLASSES};
 
 #define MS_POSITIONS_LENGTH 14
   enum MS_POSITIONS_ENUM {MS_UL=101, MS_LR, MS_UR, MS_LL, MS_CR, MS_CL, MS_UC, MS_LC, MS_CC, MS_AUTO, MS_XY, MS_NONE, MS_AUTO2,MS_FOLLOW};
@@ -586,10 +591,11 @@ extern "C" {
         MS_COMPOP_INVERT_RGB
   } CompositingOperation;
 
-  typedef struct {
+  typedef struct _CompositingFilter{
     char *filter;
+    struct _CompositingFilter *next;
   } CompositingFilter;
-  
+
   typedef struct _LayerCompositer{
     CompositingOperation comp_op;
     int opacity;
@@ -634,8 +640,8 @@ extern "C" {
   /* Define supported bindings here (only covers existing bindings at first). Not accessible directly using MapScript. */
 #define MS_STYLE_BINDING_LENGTH 12
   enum MS_STYLE_BINDING_ENUM { MS_STYLE_BINDING_SIZE, MS_STYLE_BINDING_WIDTH, MS_STYLE_BINDING_ANGLE, MS_STYLE_BINDING_COLOR, MS_STYLE_BINDING_OUTLINECOLOR, MS_STYLE_BINDING_SYMBOL, MS_STYLE_BINDING_OUTLINEWIDTH, MS_STYLE_BINDING_OPACITY, MS_STYLE_BINDING_OFFSET_X, MS_STYLE_BINDING_OFFSET_Y, MS_STYLE_BINDING_POLAROFFSET_PIXEL, MS_STYLE_BINDING_POLAROFFSET_ANGLE };
-#define MS_LABEL_BINDING_LENGTH 9
-  enum MS_LABEL_BINDING_ENUM { MS_LABEL_BINDING_SIZE, MS_LABEL_BINDING_ANGLE, MS_LABEL_BINDING_COLOR, MS_LABEL_BINDING_OUTLINECOLOR, MS_LABEL_BINDING_FONT, MS_LABEL_BINDING_PRIORITY, MS_LABEL_BINDING_POSITION, MS_LABEL_BINDING_SHADOWSIZEX, MS_LABEL_BINDING_SHADOWSIZEY };
+#define MS_LABEL_BINDING_LENGTH 12
+  enum MS_LABEL_BINDING_ENUM { MS_LABEL_BINDING_SIZE, MS_LABEL_BINDING_ANGLE, MS_LABEL_BINDING_COLOR, MS_LABEL_BINDING_OUTLINECOLOR, MS_LABEL_BINDING_FONT, MS_LABEL_BINDING_PRIORITY, MS_LABEL_BINDING_POSITION, MS_LABEL_BINDING_SHADOWSIZEX, MS_LABEL_BINDING_SHADOWSIZEY, MS_LABEL_BINDING_OFFSET_X, MS_LABEL_BINDING_OFFSET_Y,MS_LABEL_BINDING_ALIGN };
 
   /************************************************************************/
   /*                         attributeBindingObj                          */
@@ -779,7 +785,7 @@ extern "C" {
     colorObj *pixel; /* for raster layers */
     shapeObj *shape; /* for vector layers */
     double dblval; /* for map cellsize used by simplify */
-    double dblval2; /* for data cellsize */    
+    double dblval2; /* for data cellsize */
     expressionObj *expr; /* expression to be evaluated (contains tokens) */
     int type; /* type of parse: boolean, string/text or shape/geometry */
     parseResultObj result; /* parse result */
@@ -888,14 +894,18 @@ extern "C" {
     long tileindex;
     int clear_resultcache;
 
-    int  maxfeatures; /* global maxfeatures */    
+    int  maxfeatures; /* global maxfeatures */
     int  startindex;
     int  only_cache_result_count; /* set to 1 sometimes by WFS 2.0 GetFeature request */
-    
+
     expressionObj filter; /* by filter */
     char *filteritem;
 
     int slayer; /* selection layer, used for msQueryByFeatures() (note this is not a query mode per se) */
+
+    int cache_shapes; /* whether to cache shapes in resultCacheObj */
+    int max_cached_shape_count; /* maximum number of shapes cached in the total number of resultCacheObj */
+    int max_cached_shape_ram_amount; /* maximum number of bytes taken by shapes cached in the total number of resultCacheObj */
   } queryObj;
 #endif
 
@@ -968,6 +978,7 @@ extern "C" {
     %immutable;
 #endif /* SWIG */
     int refcount;
+    char *symbolname;
 #ifdef SWIG
     %mutable;
 #endif /* SWIG */
@@ -995,8 +1006,6 @@ extern "C" {
     int rangeitemindex;
 
     int symbol;
-    char *symbolname;
-
     double size;
     double minsize, maxsize;
 
@@ -1032,6 +1041,8 @@ extern "C" {
 #ifndef SWIG
     attributeBindingObj bindings[MS_STYLE_BINDING_LENGTH];
     int numbindings;
+    expressionObj exprBindings[MS_STYLE_BINDING_LENGTH];
+    int nexprbindings;
 #endif
   };
 
@@ -1136,10 +1147,22 @@ extern "C" {
 #ifndef SWIG
     attributeBindingObj bindings[MS_LABEL_BINDING_LENGTH];
     int numbindings;
+    expressionObj exprBindings[MS_LABEL_BINDING_LENGTH];
+    int nexprbindings;
 #endif
 
     labelLeaderObj *leader;
   };
+
+#ifdef SWIG
+#ifdef	__cplusplus
+extern "C" {
+#endif
+typedef struct labelObj labelObj;
+#ifdef	__cplusplus
+}
+#endif
+#endif
 
 #ifndef SWIG
   /* lightweight structure containing information to render a labelObj */
@@ -1147,7 +1170,7 @@ extern "C" {
     lineObj *poly;
     rectObj bbox;
   } label_bounds;
-  
+
   typedef struct {
     labelObj *label;
     char *annotext;
@@ -1170,13 +1193,15 @@ extern "C" {
   /*                                                                      */
   /*      basic symbolization and classification information              */
   /************************************************************************/
-  
+
   struct classObj {
 #ifndef SWIG
     expressionObj expression; /* the expression to be matched */
 #endif
 
     int status;
+    int isfallback; // TRUE if this class should be applied if and only if
+                    // no other class is applicable (e.g. SLD <ElseFilter/>)
 
 #ifndef SWIG
     styleObj **styles;
@@ -1187,6 +1212,7 @@ extern "C" {
     %immutable;
 #endif
     int numstyles;
+    int numlabels;
 #ifdef SWIG
     %mutable;
 #endif
@@ -1195,10 +1221,8 @@ extern "C" {
     labelObj **labels;
     int maxlabels;
 #endif
-    int numlabels; /* should be immutable */
-
     char *name; /* should be unique within a layer */
-    char *title; /* used for legend labeling */
+    char *title; /* used for legend labelling */
 
 #ifndef SWIG
     expressionObj text;
@@ -1226,6 +1250,7 @@ extern "C" {
 #endif /* SWIG */
     int refcount;
     struct layerObj *layer;
+    labelLeaderObj *leader;
 #ifdef SWIG
     %mutable;
 #endif /* SWIG */
@@ -1234,7 +1259,6 @@ extern "C" {
     char *keyimage;
 
     char *group;
-    labelLeaderObj *leader;
   };
 
   /************************************************************************/
@@ -1316,6 +1340,9 @@ extern "C" {
     int tileindex;
     int resultindex;
     int classindex;
+#ifndef SWIG
+    shapeObj* shape;
+#endif
   } resultObj;
 #ifdef SWIG
   %mutable;
@@ -1419,6 +1446,8 @@ extern "C" {
 #endif /* not SWIG */
     int postlabelcache;
     int align;
+    int offsetx;
+    int offsety;
   } scalebarObj;
 
   /************************************************************************/
@@ -1562,7 +1591,7 @@ extern "C" {
     double maxscale;
     char *value;
   } scaleTokenEntryObj;
-  
+
   typedef struct {
      char *name;
      int n_entries;
@@ -1638,13 +1667,16 @@ extern "C" {
     char *group; /* shouldn't be unique it's supposed to be a group right? */
 
     int status; /* on or off */
+    enum MS_RENDER_MODE rendermode;
+            // MS_FIRST_MATCHING_CLASS: Default and historic MapServer behavior
+            // MS_ALL_MATCHING_CLASSES: SLD behavior
 
 #ifndef SWIG
     /* RFC86 Scale-dependent token replacements */
     scaleTokenObj *scaletokens;
     int numscaletokens;
     originalScaleTokenStrings *orig_st;
-    
+
 #endif
 
     char *data; /* filename, can be relative or full path */
@@ -1684,6 +1716,8 @@ extern "C" {
     int tileitemindex;
     projectionObj projection; /* projection information for the layer */
     int project; /* boolean variable, do we need to project this layer or not */
+    reprojectionObj* reprojectorLayerToMap;
+    reprojectionObj* reprojectorMapToLayer;
 #endif /* not SWIG */
 
     int units; /* units of the projection */
@@ -1768,7 +1802,7 @@ extern "C" {
 #endif
     char *mask;
 
-#ifndef SWIG    
+#ifndef SWIG
     expressionObj _geomtransform;
 #endif
 
@@ -1782,8 +1816,10 @@ extern "C" {
 #ifndef SWIG
     sortByClause sortBy;
 #endif
-    
+
     LayerCompositer *compositer;
+
+    hashTableObj connectionoptions;
   };
 
 
@@ -1947,6 +1983,10 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
 #ifdef USE_V8_MAPSCRIPT
     void *v8context;
 #endif
+
+#ifndef SWIG
+    projectionContext* projContext;
+#endif
   };
 
   /************************************************************************/
@@ -1967,6 +2007,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
     int (*LayerWhichShapes)(layerObj *layer, rectObj rect, int isQuery);
     int (*LayerNextShape)(layerObj *layer, shapeObj *shape);
     int (*LayerGetShape)(layerObj *layer, shapeObj *shape, resultObj *record);
+    int (*LayerGetShapeCount)(layerObj *layer, rectObj rect, projectionObj *rectProjection);
     int (*LayerClose)(layerObj *layer);
     int (*LayerGetItems)(layerObj *layer);
     int (*LayerGetExtent)(layerObj *layer, rectObj *extent);
@@ -1985,7 +2026,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
 #endif /*SWIG*/
 
   /* Function prototypes, wrapable */
-  MS_DLL_EXPORT int msSaveImage(mapObj *map, imageObj *img, char *filename);
+  MS_DLL_EXPORT int msSaveImage(mapObj *map, imageObj *img, const char *filename);
   MS_DLL_EXPORT void msFreeImage(imageObj *img);
   MS_DLL_EXPORT int msSetup(void);
   MS_DLL_EXPORT void msCleanup(void);
@@ -2040,6 +2081,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT void initWeb(webObj *web);
   MS_DLL_EXPORT void freeWeb(webObj *web);
   MS_DLL_EXPORT void initResultCache(resultCacheObj *resultcache);
+  void cleanupResultCache(resultCacheObj *resultcache);
   MS_DLL_EXPORT int initLayerCompositer(LayerCompositer *compositer);
   MS_DLL_EXPORT void initLeader(labelLeaderObj *leader);
   MS_DLL_EXPORT void freeGrid( graticuleObj *pGraticule);
@@ -2103,10 +2145,10 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
 
   /* mapfile.c */
 
-  MS_DLL_EXPORT int msValidateParameter(char *value, char *pattern1, char *pattern2, char *pattern3, char *pattern4);
+  MS_DLL_EXPORT int msValidateParameter(const char *value, const char *pattern1, const char *pattern2, const char *pattern3, const char *pattern4);
   MS_DLL_EXPORT int msGetLayerIndex(mapObj *map, const char *name);
   MS_DLL_EXPORT int msGetSymbolIndex(symbolSetObj *set, char *name, int try_addimage_if_notfound);
-  MS_DLL_EXPORT mapObj  *msLoadMap(char *filename, char *new_mappath);
+  MS_DLL_EXPORT mapObj  *msLoadMap(const char *filename, const char *new_mappath);
   MS_DLL_EXPORT int msTransformXmlMapfile(const char *stylesheet, const char *xmlMapfile, FILE *tmpfile);
   MS_DLL_EXPORT int msSaveMap(mapObj *map, char *filename);
 #endif /* SHAPELIB_DISABLED */
@@ -2222,7 +2264,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT void msReplaceChar(char *str, char old, char sznew);
   MS_DLL_EXPORT char *msCaseReplaceSubstring(char *str, const char *old, const char *sznew);
   MS_DLL_EXPORT char *msStripPath(char *fn);
-  MS_DLL_EXPORT char *msGetPath(char *fn);
+  MS_DLL_EXPORT char *msGetPath(const char *fn);
   MS_DLL_EXPORT char *msBuildPath(char *pszReturnPath, const char *abs_path, const char *path);
   MS_DLL_EXPORT char *msBuildPath3(char *pszReturnPath, const char *abs_path, const char *path1, const char *path2);
   MS_DLL_EXPORT char *msTryBuildPath(char *szReturnPath, const char *abs_path, const char *path);
@@ -2262,12 +2304,15 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT int msStringInArray( const char * pszString, char **array, int numelements);
 #endif /* SHAPELIB_DISABLED */
 
-#ifndef HAVE_STRDUP
-  MS_DLL_EXPORT char *strdup(char *s);
-#endif /* NEED_STRDUP */
+  typedef struct msStringBuffer msStringBuffer;
+  MS_DLL_EXPORT msStringBuffer* msStringBufferAlloc(void);
+  MS_DLL_EXPORT void msStringBufferFree(msStringBuffer* sb);
+  MS_DLL_EXPORT const char* msStringBufferGetString(msStringBuffer* sb);
+  MS_DLL_EXPORT char* msStringBufferReleaseStringAndFree(msStringBuffer* sb);
+  MS_DLL_EXPORT int msStringBufferAppend(msStringBuffer* sb, const char* pszAppendedString);
 
 #ifndef HAVE_STRRSTR
-  MS_DLL_EXPORT char *strrstr(char *string, char *find);
+  MS_DLL_EXPORT char *strrstr(const char *string, const char *find);
 #endif /* NEED_STRRSTR */
 
 #ifndef HAVE_STRCASESTR
@@ -2347,6 +2392,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
 
   MS_DLL_EXPORT void msFreeShape(shapeObj *shape); /* in mapprimitive.c */
 #ifdef SHAPELIB_DISABLED
+  int msGetShapeRAMSize(shapeObj* shape); /* in mapprimitive.c */
   MS_DLL_EXPORT void msFreeLabelPathObj(labelPathObj *path);
   MS_DLL_EXPORT shapeObj *msShapeFromWKT(const char *string);
   MS_DLL_EXPORT char *msShapeToWKT(shapeObj *shape);
@@ -2463,6 +2509,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT int msLayerGetItems(layerObj *layer);
   MS_DLL_EXPORT int msLayerSetItems(layerObj *layer, char **items, int numitems);
   MS_DLL_EXPORT int msLayerGetShape(layerObj *layer, shapeObj *shape, resultObj *record);
+  MS_DLL_EXPORT int msLayerGetShapeCount(layerObj *layer, rectObj rect, projectionObj *rectProjection);
   MS_DLL_EXPORT int msLayerGetExtent(layerObj *layer, rectObj *extent);
   MS_DLL_EXPORT int msLayerSetExtent( layerObj *layer, double minx, double miny, double maxx, double maxy);
   MS_DLL_EXPORT int msLayerGetAutoStyle(mapObj *map, layerObj *layer, classObj *c, shapeObj* shape);
@@ -2512,10 +2559,8 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   int msOGRLayerGetShape(layerObj *layer, shapeObj *shape, resultObj *record);
   int msOGRLayerGetExtent(layerObj *layer, rectObj *extent);
 
-#ifdef USE_OGR
   MS_DLL_EXPORT int msOGRGeometryToShape(OGRGeometryH hGeometry, shapeObj *shape,
                                          OGRwkbGeometryType type);
-#endif /* USE_OGR */
 
   MS_DLL_EXPORT int msInitializeVirtualTable(layerObj *layer);
   MS_DLL_EXPORT int msConnectLayer(layerObj *layer, const int connectiontype,
@@ -2531,10 +2576,14 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT int msGraticuleLayerInitializeVirtualTable(layerObj *layer);
   MS_DLL_EXPORT int msRASTERLayerInitializeVirtualTable(layerObj *layer);
   MS_DLL_EXPORT int msUVRASTERLayerInitializeVirtualTable(layerObj *layer);
-  MS_DLL_EXPORT int msContourLayerInitializeVirtualTable(layerObj *layer);  
+  MS_DLL_EXPORT int msContourLayerInitializeVirtualTable(layerObj *layer);
   MS_DLL_EXPORT int msPluginLayerInitializeVirtualTable(layerObj *layer);
   MS_DLL_EXPORT int msUnionLayerInitializeVirtualTable(layerObj *layer);
   MS_DLL_EXPORT void msPluginFreeVirtualTableFactory(void);
+
+  MS_DLL_EXPORT int LayerDefaultGetShapeCount(layerObj *layer, rectObj rect, projectionObj *rectProjection);
+  void msUVRASTERLayerUseMapExtentAndProjectionForNextWhichShapes(layerObj* layer, mapObj* map);
+  rectObj msUVRASTERGetSearchRect( layerObj* layer, mapObj* map );
 
   /* ==================================================================== */
   /*      Prototypes for functions in mapdraw.c                           */
@@ -2548,7 +2597,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT int msDrawQueryLayer(mapObj *map, layerObj *layer, imageObj *image);
   MS_DLL_EXPORT int msDrawWMSLayer(mapObj *map, layerObj *layer, imageObj *image);
   MS_DLL_EXPORT int msDrawWFSLayer(mapObj *map, layerObj *layer, imageObj *image);
-  
+
 #define MS_DRAWMODE_FEATURES    0x00001
 #define MS_DRAW_FEATURES(mode) (MS_DRAWMODE_FEATURES&(mode))
 #define MS_DRAWMODE_LABELS      0x00002
@@ -2610,7 +2659,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   /* ==================================================================== */
   MS_DLL_EXPORT imageObj *msImageCreateIM(int width, int height, outputFormatObj *format, char *imagepath, char *imageurl, double resolution, double defresolution);
   MS_DLL_EXPORT void msImageStartLayerIM(mapObj *map, layerObj *layer, imageObj *image);
-  MS_DLL_EXPORT int msSaveImageIM(imageObj* img, char *filename, outputFormatObj *format);
+  MS_DLL_EXPORT int msSaveImageIM(imageObj* img, const char *filename, outputFormatObj *format);
   MS_DLL_EXPORT void msFreeImageIM(imageObj* img);
   MS_DLL_EXPORT void msDrawMarkerSymbolIM(mapObj *map, imageObj* img, pointObj *p, styleObj *style, double scalefactor);
   MS_DLL_EXPORT void msDrawLineSymbolIM(mapObj *map, imageObj* img, shapeObj *p, styleObj *style, double scalefactor);
@@ -2628,6 +2677,14 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT int msJoinClose(joinObj *join);
 
   /*in mapraster.c */
+  int msDrawRasterLayerLowCheckIfMustDraw(mapObj *map, layerObj *layer);
+  void* msDrawRasterLayerLowOpenDataset(mapObj *map, layerObj *layer,
+                                      const char* filename,
+                                      char szPath[MS_MAXPATHLEN],
+                                      char** p_decrypted_path);
+  void msDrawRasterLayerLowCloseDataset(layerObj *layer, void* hDataset);
+  int msDrawRasterLayerLowWithDataset(mapObj *map, layerObj *layer, imageObj *image, rasterBufferObj *rb, void* hDatasetIn );
+
   MS_DLL_EXPORT int msDrawRasterLayerLow(mapObj *map, layerObj *layer, imageObj *image, rasterBufferObj *rb );
   MS_DLL_EXPORT int msGetClass(layerObj *layer, colorObj *color, int colormap_index);
   MS_DLL_EXPORT int msGetClass_FloatRGB(layerObj *layer, float fValue,
@@ -2678,19 +2735,21 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT int msEvalContext(mapObj *map, layerObj *layer, char *context);
   MS_DLL_EXPORT int msEvalExpression(layerObj *layer, shapeObj *shape, expressionObj *expression, int itemindex);
   MS_DLL_EXPORT int msShapeGetClass(layerObj *layer, mapObj *map, shapeObj *shape, int *classgroup, int numclasses);
+  MS_DLL_EXPORT int msShapeGetNextClass(int currentclass, layerObj *layer, mapObj *map, shapeObj *shape, int *classgroup, int numclasses);
   MS_DLL_EXPORT int msShapeCheckSize(shapeObj *shape, double minfeaturesize);
   MS_DLL_EXPORT char* msShapeGetLabelAnnotation(layerObj *layer, shapeObj *shape, labelObj *lbl);
   MS_DLL_EXPORT int msGetLabelStatus(mapObj *map, layerObj *layer, shapeObj *shape, labelObj *lbl);
   MS_DLL_EXPORT int msAdjustImage(rectObj rect, int *width, int *height);
   MS_DLL_EXPORT char *msEvalTextExpression(expressionObj *expr, shapeObj *shape);
   MS_DLL_EXPORT char *msEvalTextExpressionJSonEscape(expressionObj *expr, shapeObj *shape);
+  MS_DLL_EXPORT double msEvalDoubleExpression(expressionObj *expr, shapeObj *shape);
   MS_DLL_EXPORT double msAdjustExtent(rectObj *rect, int width, int height);
   MS_DLL_EXPORT int msConstrainExtent(rectObj *bounds, rectObj *rect, double overlay);
   MS_DLL_EXPORT int *msGetLayersIndexByGroup(mapObj *map, char *groupname, int *nCount);
   MS_DLL_EXPORT unsigned char *msSaveImageBuffer(imageObj* image, int *size_ptr, outputFormatObj *format);
   MS_DLL_EXPORT shapeObj* msOffsetPolyline(shapeObj* shape, double offsetx, double offsety);
   MS_DLL_EXPORT int msMapSetLayerProjections(mapObj* map);
-  
+
   /* Functions to chnage the drawing order of the layers. */
   /* Defined in mapobject.c */
   MS_DLL_EXPORT int msMoveLayerUp(mapObj *map, int nLayerIndex);
@@ -2785,6 +2844,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT outputFormatObj *msCloneOutputFormat( outputFormatObj *format );
   MS_DLL_EXPORT int msOutputFormatValidate( outputFormatObj *format,
       int issue_error );
+  void  msOutputFormatResolveFromImage( mapObj *map, imageObj* img );
 
   /* ==================================================================== */
   /*      End of prototypes for functions in mapoutput.c                  */
@@ -2793,8 +2853,10 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   /* ==================================================================== */
   /*      prototypes for functions in mapgdal.c                           */
   /* ==================================================================== */
-  MS_DLL_EXPORT int msSaveImageGDAL( mapObj *map, imageObj *image, char *filename );
+  MS_DLL_EXPORT int msSaveImageGDAL( mapObj *map, imageObj *image, const char *filename );
   MS_DLL_EXPORT int msInitDefaultGDALOutputFormat( outputFormatObj *format );
+  void msCleanVSIDir( const char *pszDir );
+  char** msGetStringListFromHashTable(hashTableObj* table);
 
   /* ==================================================================== */
   /*      prototypes for functions in mapogroutput.c                      */
@@ -2925,15 +2987,16 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
     MS_GEOMTRANSFORM_BUFFER,
     MS_GEOMTRANSFORM_CONVEXHULL,
     MS_GEOMTRANSFORM_LABELPOINT,
-    MS_GEOMTRANSFORM_LABELPOLY
+    MS_GEOMTRANSFORM_LABELPOLY,
+    MS_GEOMTRANSFORM_LABELCENTER
   };
 
   MS_DLL_EXPORT int msDrawTransformedShape(mapObj *map, imageObj *image, shapeObj *shape, styleObj *style, double scalefactor);
   MS_DLL_EXPORT void msStyleSetGeomTransform(styleObj *s, char *transform);
   MS_DLL_EXPORT char *msStyleGetGeomTransform(styleObj *style);
 
-  MS_DLL_EXPORT int msGeomTransformShape(mapObj *map, layerObj *layer, shapeObj *shape);  
-  
+  MS_DLL_EXPORT int msGeomTransformShape(mapObj *map, layerObj *layer, shapeObj *shape);
+
   /* ==================================================================== */
   /*      end of prototypes for functions in mapgeomtransform.c                 */
   /* ==================================================================== */
@@ -2953,7 +3016,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   /*      prototypes for functions in mapsmoothing.c                      */
   /* ==================================================================== */
   MS_DLL_EXPORT shapeObj* msSmoothShapeSIA(shapeObj *shape, int ss, int si, char *preprocessing);
-  
+
   /* ==================================================================== */
   /*      end of prototypes for functions in mapsmoothing.c               */
   /* ==================================================================== */
@@ -2968,7 +3031,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT char* msV8GetFeatureStyle(mapObj *map, const char *filename,
                                           layerObj *layer, shapeObj *shape);
   MS_DLL_EXPORT shapeObj *msV8TransformShape(shapeObj *shape,
-                                             const char* filename);  
+                                             const char* filename);
 #endif
 #endif /* SHAPELIB_DISABLED */
   /* ==================================================================== */
@@ -3073,7 +3136,9 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   MS_DLL_EXPORT int msPopulateRendererVTableUTFGrid( rendererVTableObj *renderer );
   MS_DLL_EXPORT int msPopulateRendererVTableKML( rendererVTableObj *renderer );
   MS_DLL_EXPORT int msPopulateRendererVTableOGR( rendererVTableObj *renderer );
-  MS_DLL_EXPORT int msPopulateRendererVTableOGR( rendererVTableObj *renderer );
+  MS_DLL_EXPORT int msPopulateRendererVTableMVT( rendererVTableObj *renderer );
+
+  MS_DLL_EXPORT int msMVTWriteTile( mapObj *map, int sendheaders );
 
 #ifdef USE_CAIRO
   MS_DLL_EXPORT void msCairoCleanup(void);
@@ -3098,9 +3163,11 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
   int msSaveRasterBuffer(mapObj *map, rasterBufferObj *data, FILE *stream, outputFormatObj *format);
   int msSaveRasterBufferToBuffer(rasterBufferObj *data, bufferObj *buffer, outputFormatObj *format);
   int msLoadMSRasterBufferFromFile(char *path, rasterBufferObj *rb);
-  
+
   /* in mapagg.cpp */
-  rasterBufferObj* msApplyFilterToRasterBuffer(const rasterBufferObj *rb, CompositingFilter *filter);
+  void msApplyBlurringCompositingFilter(rasterBufferObj *rb, unsigned int radius);
+
+  int WARN_UNUSED msApplyCompositingFilter(mapObj *map, rasterBufferObj *rb, CompositingFilter *filter);
 
   void msBufferInit(bufferObj *buffer);
   void msBufferResize(bufferObj *buffer, size_t target_size);
@@ -3128,7 +3195,7 @@ void msPopulateTextSymbolForLabelAndString(textSymbolObj *ts, labelObj *l, char 
     int WARN_UNUSED (*renderPolygonTiled)(imageObj *img, shapeObj *p, imageObj *tile);
     int WARN_UNUSED (*renderLineTiled)(imageObj *img, shapeObj *p, imageObj *tile);
 
-    int WARN_UNUSED (*renderGlyphs)(imageObj *img, textPathObj *tp, colorObj *clr, colorObj *olcolor, int olwidth);
+    int WARN_UNUSED (*renderGlyphs)(imageObj *img, textPathObj *tp, colorObj *clr, colorObj *olcolor, int olwidth, int isMarker);
     int WARN_UNUSED (*renderText)(imageObj *img, pointObj *labelpnt, char *text, double angle, colorObj *clr, colorObj *olcolor, int olwidth);
 
     int WARN_UNUSED (*renderVectorSymbol)(imageObj *img, double x, double y,
