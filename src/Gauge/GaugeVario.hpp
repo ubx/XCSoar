@@ -68,6 +68,8 @@ class GaugeVario : public AntiFlickerWindow
 
     LabelValueGeometry() = default;
     LabelValueGeometry(const VarioLook &look, PixelPoint position) noexcept;
+
+    static unsigned GetHeight(const VarioLook &look) noexcept;
   };
 
   struct Geometry {
@@ -85,11 +87,17 @@ class GaugeVario : public AntiFlickerWindow
   } geometry;
 
   struct DrawInfo {
-    bool initialised = false;
-    PixelRect rc;
+    unsigned last_width;
     double last_value;
     TCHAR last_text[32];
     Unit last_unit;
+
+    void Reset() noexcept {
+      last_width = 0;
+      last_value = -9999;
+      last_text[0] = '\0';
+      last_unit = Unit::UNDEFINED;
+    }
   };
 
   struct LabelValueDrawInfo {
@@ -97,8 +105,8 @@ class GaugeVario : public AntiFlickerWindow
     DrawInfo value;
 
     void Reset() noexcept {
-      label.initialised = false;
-      value.initialised = false;
+      label.Reset();
+      value.Reset();
     }
   };
 

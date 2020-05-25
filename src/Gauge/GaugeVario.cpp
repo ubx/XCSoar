@@ -129,13 +129,21 @@ GaugeVario::LabelValueGeometry::LabelValueGeometry(const VarioLook &look,
    label_bottom(label_top + look.text_font->GetCapitalHeight()),
    label_y(label_top + look.text_font->GetCapitalHeight()
            - look.text_font->GetAscentHeight()),
-   value_right(position.x - Layout::Scale(5)),
-   value_top(position.y + Layout::Scale(3)
-             + look.text_font->GetCapitalHeight()),
+   // TODO: update after units got reconfigured?
+   value_right(position.x - UnitSymbolRenderer::GetSize(look.unit_font,
+                                                        Units::current.vertical_speed_unit).cx),
+   value_top(label_bottom + Layout::Scale(2)),
    value_bottom(value_top + look.value_font.GetCapitalHeight()),
    value_y(value_top + look.value_font.GetCapitalHeight()
            - look.value_font.GetAscentHeight())
 {
+}
+
+inline unsigned
+GaugeVario::LabelValueGeometry::GetHeight(const VarioLook &look) noexcept
+{
+  return Layout::Scale(4) + look.value_font.GetCapitalHeight()
+    + look.text_font->GetCapitalHeight();
 }
 
 inline
@@ -149,8 +157,7 @@ GaugeVario::Geometry::Geometry(const VarioLook &look, const PixelRect &rc) noexc
 
   offset = rc.GetMiddleRight();
 
-  unsigned value_height = 4 + look.value_font.GetCapitalHeight()
-    + look.text_font->GetCapitalHeight();
+  unsigned value_height = LabelValueGeometry::GetHeight(look);
 
   const PixelPoint gross_position{rc.right, offset.y - value_height / 2};
   gross = {look, gross_position};
@@ -177,7 +184,7 @@ GaugeVario::OnPaintBuffer(Canvas &canvas)
                    look.background_bitmap,
                    look.background_x, 0, 58, 120);
 
-    background_dirty = true;
+    background_dirty = false;
   }
 
   if (Settings().show_average) {
@@ -422,47 +429,25 @@ GaugeVario::RenderValue(Canvas &canvas, const LabelValueGeometry &g,
 {
   value = (double)iround(value * 10) / 10; // prevent the -0.0 case
 
-  if (!di.value.initialised) {
-    di.value.rc.right = g.value_right;
-    di.value.rc.top = g.value_top;
-
-    di.value.rc.left = di.value.rc.right;
-    // update back rect with max label size
-    di.value.rc.bottom = g.value_bottom;
-
-    di.value.last_value = -9999;
-    di.value.last_text[0] = '\0';
-    di.value.last_unit = Unit::UNDEFINED;
-    di.value.initialised = true;
-  }
-
-  if (!di.label.initialised) {
-    di.label.rc.right = g.label_right;
-    di.label.rc.top = g.label_top;
-
-    di.label.rc.left = di.label.rc.right;
-    // update back rect with max label size
-    di.label.rc.bottom = g.label_bottom;
-
-    di.label.last_value = -9999;
-    di.label.last_text[0] = '\0';
-    di.label.initialised = true;
-  }
-
   canvas.SetBackgroundTransparent();
 
   if (!IsPersistent() || (dirty && !StringIsEqual(di.label.last_text, label))) {
     canvas.SetTextColor(look.dimmed_text_color);
     canvas.Select(*look.text_font);
-    const auto tsize = canvas.CalcTextSize(label);
+    const unsigned width = canvas.CalcTextSize(label).cx;
 
-    const PixelPoint text_position{g.label_right - tsize.cx, g.label_y};
+    const PixelPoint text_position{g.label_right - width, g.label_y};
 
     if (IsPersistent()) {
+      PixelRect rc;
+      rc.left = text_position.x;
+      rc.top = g.label_top;
+      rc.right = g.label_right;
+      rc.bottom = g.label_bottom;
+
       canvas.SetBackgroundColor(look.background_color);
-      canvas.DrawOpaqueText(text_position.x, text_position.y,
-                            di.label.rc, label);
-      di.label.rc.left = text_position.x;
+      canvas.DrawOpaqueText(text_position.x, text_position.y, rc, label);
+      di.label.last_width = width;
       _tcscpy(di.label.last_text, label);
     } else {
       canvas.DrawText(text_position.x, text_position.y,
@@ -476,15 +461,20 @@ GaugeVario::RenderValue(Canvas &canvas, const LabelValueGeometry &g,
     canvas.SetTextColor(look.text_color);
     _stprintf(buffer, _T("%.1f"), (double)value);
     canvas.Select(look.value_font);
-    const auto tsize = canvas.CalcTextSize(buffer);
+    const unsigned width = canvas.CalcTextSize(buffer).cx;
 
-    const PixelPoint text_position{g.value_right - tsize.cx, g.value_y};
+    const PixelPoint text_position{g.value_right - width, g.value_y};
 
     if (IsPersistent()) {
-      canvas.DrawOpaqueText(text_position.x, text_position.y,
-                            di.value.rc, buffer);
+      PixelRect rc;
+      rc.left = text_position.x;
+      rc.top = g.value_top;
+      rc.right = g.value_right;
+      rc.bottom = g.value_bottom;
 
-      di.value.rc.left = text_position.x;
+      canvas.DrawOpaqueText(text_position.x, text_position.y, rc, buffer);
+
+      di.value.last_width = width;
       di.value.last_value = value;
     } else {
       canvas.DrawText(text_position.x, text_position.y, buffer);

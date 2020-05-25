@@ -21,15 +21,15 @@ Copyright_License {
 }
 */
 
-#include "IO/FileReader.hxx"
+#include "Crypto/SHA256.hxx"
 #include "OS/Args.hpp"
-#include "Util/MD5.hpp"
+#include "IO/FileReader.hxx"
 #include "Util/PrintException.hxx"
 
 #include <stdio.h>
 
 static void
-Feed(Reader &r, MD5 &state)
+Feed(Reader &r, SHA256State &state)
 {
   while (true) {
     char buffer[65536];
@@ -37,15 +37,23 @@ Feed(Reader &r, MD5 &state)
     if (nbytes == 0)
       break;
 
-    state.Append(buffer, nbytes);
+    state.Update({buffer, nbytes});
   }
 }
 
 static void
-Feed(Path path, MD5 &state)
+Feed(Path path, SHA256State &state)
 {
   FileReader r(path);
   Feed(r, state);
+}
+
+static void
+HexPrint(ConstBuffer<void> _b) noexcept
+{
+  const auto b = ConstBuffer<uint8_t>::FromVoid(_b);
+  for (uint8_t i : b)
+    printf("%02x", i);
 }
 
 int
@@ -55,17 +63,13 @@ try {
   const auto path = args.ExpectNextPath();
   args.ExpectEnd();
 
-  MD5 md5;
-  md5.Initialise();
+  SHA256State state;
+  Feed(path, state);
 
-  Feed(path, md5);
+  const auto hash = state.Final();
+  HexPrint({&hash, sizeof(hash)});
+  printf("\n");
 
-  md5.Finalize();
-
-  char digest[MD5::DIGEST_LENGTH + 1];
-  md5.GetDigest(digest);
-
-  puts(digest);
   return EXIT_SUCCESS;
 } catch (...) {
   PrintException(std::current_exception());

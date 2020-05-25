@@ -123,10 +123,16 @@ TEST_NAMES = \
 	TestIGCFilenameFormatter \
 	TestLXNToIGC \
 	TestLeastSquares \
+	TestHexString \
 	TestThermalBand
 
 
 TESTS = $(call name-to-bin,$(TEST_NAMES))
+
+TEST_HEX_STRING_SOURCES = \
+	$(TEST_SRC_DIR)/tap.c \
+	$(TEST_SRC_DIR)/TestHexString.cpp
+$(eval $(call link-program,TestHexString,TEST_HEX_STRING))
 
 TEST_CRC_SOURCES = \
 	$(SRC)/Util/CRC.cpp \
@@ -622,7 +628,7 @@ TEST_LOGGER_SOURCES = \
 	$(SRC)/Logger/LoggerFRecord.cpp \
 	$(SRC)/Logger/GRecord.cpp \
 	$(SRC)/Logger/LoggerEPE.cpp \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/Util/MD5.cpp \
 	$(SRC)/Version.cpp \
 	$(SRC)/Atmosphere/Pressure.cpp \
 	$(TEST_SRC_DIR)/tap.c \
@@ -632,7 +638,7 @@ $(eval $(call link-program,TestLogger,TEST_LOGGER))
 
 TEST_GRECORD_SOURCES = \
 	$(SRC)/Logger/GRecord.cpp \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/Util/MD5.cpp \
 	$(SRC)/Version.cpp \
 	$(TEST_SRC_DIR)/tap.c \
 	$(TEST_SRC_DIR)/TestGRecord.cpp
@@ -706,7 +712,7 @@ TEST_TRACE_SOURCES = \
 	$(SRC)/IGC/IGCParser.cpp \
 	$(TEST_SRC_DIR)/FakeTerrain.cpp \
 	$(TEST_SRC_DIR)/Printing.cpp \
-	$(TEST_SRC_DIR)/TestTrace.cpp 
+	$(TEST_SRC_DIR)/TestTrace.cpp
 TEST_TRACE_DEPENDS = IO OS GEO MATH UTIL
 $(eval $(call link-program,TestTrace,TEST_TRACE))
 
@@ -739,7 +745,7 @@ DEBUG_PROGRAM_NAMES = \
 	RunXMLParser \
 	ReadMO \
 	ReadProfileString ReadProfileInt \
-	RunMD5 \
+	RunMD5 RunSHA256 \
 	ReadGRecord VerifyGRecord AppendGRecord FixGRecord \
 	AddChecksum \
 	KeyCodeDumper \
@@ -968,7 +974,7 @@ $(eval $(call link-program,DownloadFile,DOWNLOAD_FILE))
 
 RUN_DOWNLOAD_TO_FILE_SOURCES = \
 	$(SRC)/Version.cpp \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/Util/MD5.cpp \
 	$(SRC)/OS/FileUtil.cpp \
 	$(SRC)/Operation/Operation.cpp \
 	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
@@ -1070,34 +1076,40 @@ READ_PROFILE_INT_DEPENDS = PROFILE IO OS UTIL
 $(eval $(call link-program,ReadProfileInt,READ_PROFILE_INT))
 
 RUN_MD5_SOURCES = \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/Util/MD5.cpp \
 	$(TEST_SRC_DIR)/RunMD5.cpp
+RUN_MD5_DEPENDS = IO OS UTIL
 $(eval $(call link-program,RunMD5,RUN_MD5))
+
+RUN_SHA256_SOURCES = \
+	$(TEST_SRC_DIR)/RunSHA256.cpp
+RUN_SHA256_DEPENDS = LIBSODIUM IO OS UTIL
+$(eval $(call link-program,RunSHA256,RUN_SHA256))
 
 READ_GRECORD_SOURCES = \
 	$(SRC)/Logger/GRecord.cpp \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/Util/MD5.cpp \
 	$(TEST_SRC_DIR)/ReadGRecord.cpp
 READ_GRECORD_DEPENDS = IO OS UTIL
 $(eval $(call link-program,ReadGRecord,READ_GRECORD))
 
 VERIFY_GRECORD_SOURCES = \
 	$(SRC)/Logger/GRecord.cpp \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/Util/MD5.cpp \
 	$(TEST_SRC_DIR)/VerifyGRecord.cpp
 VERIFY_GRECORD_DEPENDS = IO OS UTIL
 $(eval $(call link-program,VerifyGRecord,VERIFY_GRECORD))
 
 APPEND_GRECORD_SOURCES = \
 	$(SRC)/Logger/GRecord.cpp \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/Util/MD5.cpp \
 	$(TEST_SRC_DIR)/AppendGRecord.cpp
 APPEND_GRECORD_DEPENDS = IO OS UTIL
 $(eval $(call link-program,AppendGRecord,APPEND_GRECORD))
 
 FIX_GRECORD_SOURCES = \
 	$(SRC)/Logger/GRecord.cpp \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/Util/MD5.cpp \
 	$(TEST_SRC_DIR)/FixGRecord.cpp
 FIX_GRECORD_DEPENDS = IO OS UTIL
 $(eval $(call link-program,FixGRecord,FIX_GRECORD))
@@ -1554,7 +1566,7 @@ RUN_IGC_WRITER_SOURCES = \
 	$(SRC)/Logger/LoggerFRecord.cpp \
 	$(SRC)/Logger/GRecord.cpp \
 	$(SRC)/Logger/LoggerEPE.cpp \
-	$(SRC)/Logger/MD5.cpp \
+	$(SRC)/Util/MD5.cpp \
 	$(SRC)/Operation/Operation.cpp \
 	$(TEST_SRC_DIR)/RunIGCWriter.cpp
 RUN_IGC_WRITER_LDADD = $(DEBUG_REPLAY_LDADD)

@@ -25,6 +25,7 @@ Copyright_License {
 #define XCSOAR_UNIT_SYMBOL_RENDERER_HPP
 
 #include "Units/Units.hpp"
+#include "Util/Compiler.h"
 
 struct PixelPoint;
 struct PixelSize;
@@ -34,10 +35,17 @@ class Pen;
 
 namespace UnitSymbolRenderer
 {
-  PixelSize GetSize(const Canvas &canvas, const Unit unit);
-  unsigned GetAscentHeight(const Font &font, const Unit unit);
+  gcc_pure
+  PixelSize GetSize(const Font &font, const Unit unit) noexcept;
+
+  gcc_pure
+  PixelSize GetSize(const Canvas &canvas, const Unit unit) noexcept;
+
+  gcc_pure
+  unsigned GetAscentHeight(const Font &font, const Unit unit) noexcept;
+
   void Draw(Canvas &canvas, PixelPoint pos, Unit unit,
-            const Pen &unit_fraction_pen);
+            const Pen &unit_fraction_pen) noexcept;
 }
 
 #endif

@@ -100,6 +100,26 @@ CanDownload(const FileRepository &repository, const TCHAR *name)
   return FindRemoteFile(repository, name) != nullptr;
 }
 
+static bool
+UpdateAvailable(const FileRepository &repository, const TCHAR *name)
+{
+#ifdef HAVE_POSIX
+  const AvailableFile *remote_file = FindRemoteFile(repository, name);
+
+  if (remote_file == nullptr)
+    return false;
+
+  BrokenDate remote_changed = remote_file->update_date;
+
+  const auto path = LocalPath(name);
+  BrokenDate local_changed = static_cast<BrokenDate>(BrokenDateTime::FromUnixTimeUTC(
+                              File::GetLastModification(path)));
+
+  return local_changed < remote_changed;
+#else
+  return false;
+#endif
+}
 #endif
 
 class ManagedFileListWidget
@@ -112,6 +132,7 @@ class ManagedFileListWidget
     DOWNLOAD,
     ADD,
     CANCEL,
+    UPDATE,
   };
 
   struct DownloadStatus {
@@ -123,12 +144,12 @@ class ManagedFileListWidget
     StaticString<32u> size;
     StaticString<32u> last_modified;
 
-    bool downloading, failed;
+    bool downloading, failed, out_of_date;
 
     DownloadStatus download_status;
 
     void Set(const TCHAR *_name, const DownloadStatus *_download_status,
-             bool _failed) {
+             bool _failed, bool _out_of_date) {
       name = _name;
 
       const auto path = LocalPath(name);
@@ -153,13 +174,21 @@ class ManagedFileListWidget
         download_status = *_download_status;
 
       failed = _failed;
+
+      out_of_date = _out_of_date;
     }
   };
 
   TwoTextRowsRenderer row_renderer;
 
 #ifdef HAVE_DOWNLOAD_MANAGER
-  Button *download_button, *add_button, *cancel_button;
+  Button *download_button, *add_button, *cancel_button, *update_button;
+
+  /**
+  * Whether at least one file is out of date.
+  * Used to activate "Update All" button.
+  */
+  bool some_out_of_date;
 #endif
 
   FileRepository repository;
@@ -265,6 +294,7 @@ protected:
   void Download();
   void Add();
   void Cancel();
+  void UpdateFiles();
 
 public:
   /* virtual methods from class Widget */
@@ -364,6 +394,8 @@ ManagedFileListWidget::RefreshList()
 {
   items.clear();
 
+  some_out_of_date = false;
+
   bool download_active = false;
   for (auto i = repository.begin(), end = repository.end(); i != end; ++i) {
     const auto &remote_file = *i;
@@ -371,17 +403,31 @@ ManagedFileListWidget::RefreshList()
     const bool is_downloading = IsDownloading(remote_file, download_status);
 
     const auto path = LocalPath(remote_file);
+    const bool file_exists = File::Exists(path);
+
     if (!path.IsNull() &&
-        (is_downloading || File::Exists(path))) {
+        (is_downloading || file_exists)) {
       download_active |= is_downloading;
 
       const Path base = path.GetBase();
       if (base.IsNull())
         continue;
 
+      bool is_out_of_date = false;
+#ifdef HAVE_POSIX
+      if (file_exists) {
+        BrokenDate local_changed = static_cast<BrokenDate>(BrokenDateTime::FromUnixTimeUTC(
+                                    File::GetLastModification(path)));
+        is_out_of_date = (local_changed < remote_file.update_date);
+
+        if (is_out_of_date)
+          some_out_of_date = true;
+      }
+#endif
+
       items.append().Set(base.c_str(),
                          is_downloading ? &download_status : nullptr,
-                         HasFailed(remote_file));
+                         HasFailed(remote_file), is_out_of_date);
     }
   }
 
@@ -403,6 +449,7 @@ ManagedFileListWidget::CreateButtons(WidgetDialog &dialog)
     download_button = dialog.AddButton(_("Download"), *this, DOWNLOAD);
     add_button = dialog.AddButton(_("Add"), *this, ADD);
     cancel_button = dialog.AddButton(_("Cancel"), *this, CANCEL);
+    update_button = dialog.AddButton(_("Update all"), *this, UPDATE);
   }
 #endif
 }
@@ -417,6 +464,7 @@ ManagedFileListWidget::UpdateButtons()
     download_button->SetEnabled(!items.empty() &&
                                 CanDownload(repository, items[current].name));
     cancel_button->SetEnabled(!items.empty() && items[current].downloading);
+    update_button->SetEnabled(!items.empty() && some_out_of_date);
   }
 #endif
 }
@@ -452,9 +500,13 @@ ManagedFileListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
     row_renderer.DrawRightFirstRow(canvas, rc, text);
   }
 
-  row_renderer.DrawRightSecondRow(canvas, rc, file.last_modified.c_str());
-
   row_renderer.DrawSecondRow(canvas, rc, file.size.c_str());
+
+  if (file.out_of_date) {
+    row_renderer.DrawRightSecondRow(canvas, rc, _("Update available"));
+  } else {
+    row_renderer.DrawRightSecondRow(canvas, rc, file.last_modified.c_str());
+  }
 }
 
 void
@@ -565,6 +617,27 @@ ManagedFileListWidget::Add()
 }
 
 void
+ManagedFileListWidget::UpdateFiles() {
+#ifdef HAVE_DOWNLOAD_MANAGER
+  assert(Net::DownloadManager::IsAvailable());
+
+  for (const auto &file : items) {
+    if (UpdateAvailable(repository, file.name)) {
+      const AvailableFile *remote_file = FindRemoteFile(repository, file.name);
+
+      if (remote_file != nullptr) {
+        const UTF8ToWideConverter base(remote_file->GetName());
+        if (!base.IsValid())
+          return;
+
+        Net::DownloadManager::Enqueue(remote_file->GetURI(), Path(base));
+      }
+    }
+  }
+#endif
+}
+
+void
 ManagedFileListWidget::Cancel()
 {
 #ifdef HAVE_DOWNLOAD_MANAGER
@@ -595,6 +668,10 @@ ManagedFileListWidget::OnAction(int id) noexcept
 
   case CANCEL:
     Cancel();
+    break;
+
+  case UPDATE:
+    UpdateFiles();
     break;
   }
 }
