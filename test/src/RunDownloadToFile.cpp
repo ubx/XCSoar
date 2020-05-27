@@ -26,6 +26,7 @@ Copyright_License {
 #include "OS/Args.hpp"
 #include "Operation/ConsoleOperationEnvironment.hpp"
 #include "Util/ConstBuffer.hxx"
+#include "Util/PrintException.hxx"
 
 #include <stdio.h>
 
@@ -37,8 +38,9 @@ HexPrint(ConstBuffer<void> _b) noexcept
     printf("%02x", i);
 }
 
-int main(int argc, char **argv)
-{
+int
+main(int argc, char **argv) noexcept
+try {
   Args args(argc, argv, "URL PATH");
   const char *url = args.ExpectNext();
   const auto path = args.ExpectNextPath();
@@ -49,13 +51,12 @@ int main(int argc, char **argv)
   ConsoleOperationEnvironment env;
 
   Net::Session session;
-  if (!Net::DownloadToFile(session, url, path,
-                           &hash, env)) {
-    fprintf(stderr, "Error\n");
-    return EXIT_FAILURE;
-  }
+  Net::DownloadToFile(session, url, path, &hash, env);
 
   HexPrint({&hash, sizeof(hash)});
   printf("\n");
   return EXIT_SUCCESS;
+} catch (const std::exception &exception) {
+  PrintException(exception);
+  return EXIT_FAILURE;
 }

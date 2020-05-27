@@ -79,11 +79,12 @@ Net::Request::SetRequestBody(const MultiPartFormData &body)
 size_t
 Net::Request::ResponseData(const uint8_t *ptr, size_t size)
 {
-  if (!submitted)
-    SubmitResponse();
+  if (!submitted && !SubmitResponse())
+    return 0;
 
-  handler.DataReceived(ptr, size);
-  return size;
+  return handler.DataReceived(ptr, size)
+    ? size
+    : 0;
 }
 
 size_t
@@ -123,12 +124,12 @@ Net::Request::Send(unsigned _timeout_ms)
     SubmitResponse();
 }
 
-void
-Net::Request::SubmitResponse()
+bool
+Net::Request::SubmitResponse() noexcept
 {
   assert(!submitted);
 
   submitted = true;
 
-  handler.ResponseReceived(handle.GetContentLength());
+  return handler.ResponseReceived(handle.GetContentLength());
 }

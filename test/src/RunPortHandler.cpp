@@ -42,7 +42,7 @@ public:
   MyListener(boost::asio::io_service &_io_service, Port &_port)
     :io_service(_io_service), port(_port) {}
 
-  void PortStateChanged() override {
+  void PortStateChanged() noexcept override {
     if (port.GetState() == PortState::FAILED)
       io_service.stop();
   }
@@ -50,8 +50,8 @@ public:
 
 class MyHandler : public DataHandler {
 public:
-  virtual void DataReceived(const void *data, size_t length) {
-    fwrite(data, 1, length, stdout);
+  bool DataReceived(const void *data, size_t length) noexcept override {
+    return fwrite(data, 1, length, stdout) == length;
   }
 };
 
