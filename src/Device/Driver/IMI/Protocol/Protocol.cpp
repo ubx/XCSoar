@@ -32,9 +32,11 @@ Copyright_License {
 #include "Device/Port/Port.hpp"
 #include "OS/FileUtil.hpp"
 #include "OS/Path.hpp"
+#include "IO/BufferedOutputStream.hxx"
+#include "IO/FileOutputStream.hxx"
 #include "Time/BrokenDateTime.hpp"
 
-#include <cstdio>
+#include <memory>
 
 #include <stdlib.h>
 
@@ -200,18 +202,13 @@ IMI::FlightDownload(Port &port, const RecordedFlightInfo &flight_info,
   if (!FlashRead(port, &flight, flight_info.internal.imi, sizeof(flight), env))
     return false;
 
-  FILE *fileIGC = _tfopen(path.c_str(), _T("w+b"));
-  if (fileIGC == nullptr)
-    return false;
+  FileOutputStream fos(path);
+  BufferedOutputStream bos(fos);
 
   unsigned fixesCount = COMM_MAX_PAYLOAD_SIZE / sizeof(Fix);
-  Fix *fixBuffer = (Fix*)malloc(sizeof(Fix) * fixesCount);
-  if (fixBuffer == nullptr)
-    return false;
+  auto fixBuffer = std::make_unique<Fix[]>(fixesCount);
 
-  bool ok = true;
-
-  WriteHeader(flight.decl, flight.signature.tampered, fileIGC);
+  WriteHeader(bos, flight.decl, flight.signature.tampered);
 
   int noenl = 0;
   if ((flight.decl.header.sensor & IMINO_ENL_MASK) != 0)
@@ -220,18 +217,18 @@ IMI::FlightDownload(Port &port, const RecordedFlightInfo &flight_info,
   unsigned address = flight_info.internal.imi + sizeof(flight);
 
   unsigned fixesRemains = flight.finish.fixes;
-  while (ok && fixesRemains) {
+  while (fixesRemains) {
     unsigned fixesToRead = fixesRemains;
     if (fixesToRead > fixesCount)
       fixesToRead = fixesCount;
 
-    if (!FlashRead(port, fixBuffer, address, fixesToRead * sizeof(Fix), env))
-      ok = false;
+    if (!FlashRead(port, fixBuffer.get(), address, fixesToRead * sizeof(Fix), env))
+      return false;
 
-    for (unsigned i = 0; ok && i < fixesToRead; i++) {
-      const Fix *pFix = fixBuffer + i;
-      if (IMIIS_FIX(pFix->id))
-        WriteFix(*pFix, false, noenl, fileIGC);
+    for (unsigned i = 0; i < fixesToRead; i++) {
+      const auto &pFix = fixBuffer[i];
+      if (IMIIS_FIX(pFix.id))
+        WriteFix(bos, pFix, false, noenl);
     }
 
     address = address + fixesToRead * sizeof(Fix);
@@ -239,20 +236,13 @@ IMI::FlightDownload(Port &port, const RecordedFlightInfo &flight_info,
 
     if (env.IsCancelled())
       // canceled by user
-      ok = false;
+      return false;
   }
 
-  free(fixBuffer);
-
-  if (ok)
-    WriteSignature(flight.signature, flight.decl.header.sn, fileIGC);
-
-  fclose(fileIGC);
-
-  if (!ok)
-    File::Delete(Path(path));
-
-  return ok;
+  WriteSignature(bos, flight.signature, flight.decl.header.sn);
+  bos.Flush();
+  fos.Commit();
+  return true;
 }
 
 bool
