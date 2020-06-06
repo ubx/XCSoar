@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CPUS=$(lscpu -p | tail -n1 | cut -f1 -d,)
-let CPUS++
+(( CPUS++ ))
 cd /opt/xcsoar || exit 1
 
 case "${1}" in
@@ -19,14 +19,17 @@ case "${1}" in
       "UNIX")
         make TARGET="${1}" -j"${CPUS}" all
       ;;
+      "UNIX-SDL")
+        make TARGET="UNIX" -j"${CPUS}" all OPENGL=n ENABLE_SDL=y USE_SDL2=y
+      ;;
       "PC")
         make TARGET="${1}" -j"${CPUS}" all
       ;;
       "WIN64")
         make TARGET="${1}" -j"${CPUS}" all
       ;;
-      "*")
-        echo "No target specified. Valid targets: ANDROID DOCS KOBO UNIX PC"
+      *)
+        echo "No target specified. Valid targets: ANDROID DOCS KOBO UNIX UNIX-SDL PC"
         exit 1
       ;;
 esac
