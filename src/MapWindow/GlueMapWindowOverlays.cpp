@@ -267,27 +267,32 @@ GlueMapWindow::DrawVario(Canvas &canvas, const PixelRect &rc) const
                                 true); //NOTE: AVG enabled for now, make it configurable ;
 }
 
-/*
-    Sets a relative margin at the bottom of the screen where no HUD
-    elements should be drawn
-*/
 void
-GlueMapWindow::SetBottomMargin(unsigned int margin_factor){
+GlueMapWindow::SetBottomMargin(unsigned margin) noexcept
+{
+  if (margin == bottom_margin)
+    /* no change, don't redraw */
+    return;
 
-    if (margin_factor == 0){
-        bottom_margin = 0;
-        QuickRedraw();
-        return;
-    }
+  bottom_margin = margin;
+  QuickRedraw();
+}
 
-    PixelRect map_rect = GetClientRect();
+void
+GlueMapWindow::SetBottomMarginFactor(unsigned margin_factor) noexcept
+{
+  if (margin_factor == 0) {
+    SetBottomMargin(0);
+    return;
+  }
 
-    if (map_rect.GetHeight() > map_rect.GetWidth()){
-        bottom_margin = map_rect.bottom / margin_factor;
-    } else {
-        bottom_margin = 0;
-    }
-    QuickRedraw();
+  PixelRect map_rect = GetClientRect();
+
+  if (map_rect.GetHeight() > map_rect.GetWidth()) {
+    SetBottomMargin(map_rect.bottom / margin_factor);
+  } else {
+    SetBottomMargin(0);
+  }
 }
 
 void
