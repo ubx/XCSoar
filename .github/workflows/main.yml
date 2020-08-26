@@ -20,3 +20,4 @@ jobs:
           CHANGELOG_FILE: "NEWS.txt"
           ALLOW_EMPTY_CHANGELOG: "false"
           ALLOW_TAG_PREFIX: "true"
+          RELEASE_NAME_PREFIX: "Version: "
