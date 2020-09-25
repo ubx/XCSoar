@@ -1,10 +1,3 @@
-/*
- * Copyright (c) 1999-2000 Image Power, Inc. and the University of
- *   British Columbia.
- * Copyright (c) 2001-2003 Michael David Adams.
- * All rights reserved.
- */
-
 /* __START_OF_JASPER_LICENSE__
  * 
  * JasPer License Version 2.0
@@ -61,59 +54,47 @@
  * __END_OF_JASPER_LICENSE__
  */
 
-/*
- * $Id$
+/*!
+ * @file jas_compiler.h
+ * @brief Compiler-related macros.
  */
 
-#ifndef JAS_VERSION_H
-#define JAS_VERSION_H
+#ifndef JAS_COMPILER_H
+#define JAS_COMPILER_H
 
-/* The configuration header file should be included first. */
-#include <jasper/jas_config.h>
-
-#ifdef __cplusplus
-extern "C" {
+#ifdef _MSC_VER
+#ifndef __cplusplus
+#undef inline
+#define inline __inline
+#endif
 #endif
 
-/******************************************************************************\
-* Constants and types.
-\******************************************************************************/
-
-#if !defined(JAS_VERSION)
-/* The version information below should match that specified in
-  the "configure.in" file! */
-#define	JAS_VERSION		"unknown"
+#ifdef __GNUC__
+#define JAS_DEPRECATED __attribute__((deprecated))
+#define JAS_ATTRIBUTE_CONST __attribute__((const))
+#define JAS_ATTRIBUTE_PURE __attribute__((pure))
+#define JAS_FORCE_INLINE inline __attribute__((always_inline))
+#define JAS_UNREACHABLE() __builtin_unreachable()
+#define JAS_LIKELY(x) __builtin_expect (!!(x), 1)
+#define JAS_UNLIKELY(x) __builtin_expect (!!(x), 0)
+#else
+#define JAS_DEPRECATED
+#define JAS_ATTRIBUTE_CONST
+#define JAS_ATTRIBUTE_PURE
+#define JAS_FORCE_INLINE inline
+#define JAS_UNREACHABLE()
+#define JAS_LIKELY(x) (x)
+#define JAS_UNLIKELY(x) (x)
 #endif
 
-#define GJAS_VERSION "1.3.1"
-
-#define	JAS_COPYRIGHT \
-	"Copyright (c) 2001-2006 Michael David Adams.\n" \
-	"Copyright (c) 1999-2000 Image Power, Inc. and the University of\n" \
-	"  British Columbia.\n" \
-	"All rights reserved.\n"
-
-#define	JAS_NOTES \
-	"For more information about this software, please visit the following\n" \
-	"web sites/pages:\n" \
-	"\nGeographical implementation:\n" \
-	"    dimin@dimin.net <http://www.dimin.net>\n" \
-	"\nJPEG-2000 implementation:\n" \
-	"    http://www.ece.uvic.ca/~mdadams/jasper\n"
-
-
-/******************************************************************************\
-* Functions.
-\******************************************************************************/
-
-JAS_ATTRIBUTE_CONST
-JAS_DLLEXPORT const char *jas_getversion(void);
-/* Get the version information for the JasPer library. */
-/* Note:  Since libjasper can be built as a shared library, the version
-  returned by this function may not necessarily correspond to JAS_VERSION. */
-
-#ifdef __cplusplus
-}
+#ifdef __clang__
+#define JAS_ATTRIBUTE_DISABLE_USAN \
+  __attribute__((no_sanitize("undefined")))
+#elif defined(__GNUC__) && __GNUC__ >= 6
+#define JAS_ATTRIBUTE_DISABLE_USAN \
+  __attribute__((no_sanitize_undefined))
+#else
+#define JAS_ATTRIBUTE_DISABLE_USAN
 #endif
 
 #endif
