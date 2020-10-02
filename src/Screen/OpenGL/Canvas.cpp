@@ -124,9 +124,9 @@ Canvas::OutlineRectangleGL(int left, int top, int right, int bottom)
 {
   const ExactPixelPoint vertices[] = {
     PixelPoint{left, top},
-    PixelPoint{right, top},
-    PixelPoint{right, bottom},
-    PixelPoint{left, bottom},
+    PixelPoint{right - 1, top},
+    PixelPoint{right - 1, bottom - 1},
+    PixelPoint{left, bottom - 1},
   };
 
   const ScopeVertexPointer vp(vertices);
@@ -155,11 +155,11 @@ Canvas::DrawRaisedEdge(PixelRect &rc)
   Pen bright(1, Color(240, 240, 240));
   Select(bright);
   DrawTwoLinesExact(rc.left, rc.bottom - 2, rc.left, rc.top,
-                    rc.right - 2, rc.top);
+                    rc.right - 1, rc.top);
 
   Pen dark(1, Color(128, 128, 128));
   Select(dark);
-  DrawTwoLinesExact(rc.left + 1, rc.bottom - 1, rc.right - 1, rc.bottom - 1,
+  DrawTwoLinesExact(rc.left, rc.bottom - 1, rc.right - 1, rc.bottom - 1,
                     rc.right - 1, rc.top + 1);
 
   ++rc.left;
