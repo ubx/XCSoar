@@ -33,15 +33,15 @@ Copyright_License {
 #include "Screen/Canvas.hpp"
 #include "Language/Language.hpp"
 #include "LocalPath.hpp"
-#include "OS/FileUtil.hpp"
-#include "OS/Path.hpp"
-#include "IO/FileLineReader.hpp"
+#include "system/FileUtil.hpp"
+#include "system/Path.hpp"
+#include "io/FileLineReader.hpp"
 #include "Formatter/ByteSizeFormatter.hpp"
 #include "Formatter/TimeFormatter.hpp"
-#include "Time/BrokenDateTime.hpp"
-#include "Net/HTTP/Features.hpp"
-#include "Util/ConvertString.hpp"
-#include "Util/Macros.hpp"
+#include "time/BrokenDateTime.hpp"
+#include "net/http/Features.hpp"
+#include "util/ConvertString.hpp"
+#include "util/Macros.hpp"
 #include "Repository/FileRepository.hpp"
 #include "Repository/Parser.hpp"
 
@@ -49,10 +49,10 @@ Copyright_License {
 #include "Repository/Glue.hpp"
 #include "ListPicker.hpp"
 #include "Form/Button.hpp"
-#include "Net/HTTP/DownloadManager.hpp"
-#include "Event/Notify.hpp"
-#include "Thread/Mutex.hxx"
-#include "Event/PeriodicTimer.hpp"
+#include "net/http/DownloadManager.hpp"
+#include "event/Notify.hpp"
+#include "thread/Mutex.hxx"
+#include "event/PeriodicTimer.hpp"
 
 #include <map>
 #include <set>
@@ -131,7 +131,6 @@ class ManagedFileListWidget
   enum Buttons {
     DOWNLOAD,
     ADD,
-    REMOVE,
     CANCEL,
     UPDATE,
   };
@@ -183,7 +182,7 @@ class ManagedFileListWidget
   TwoTextRowsRenderer row_renderer;
 
 #ifdef HAVE_DOWNLOAD_MANAGER
-  Button *download_button, *add_button, *remove_button, *cancel_button, *update_button;
+  Button *download_button, *add_button, *cancel_button, *update_button;
 
   /**
   * Whether at least one file is out of date.
@@ -294,7 +293,6 @@ protected:
 
   void Download();
   void Add();
-  void Remove();
   void Cancel();
   void UpdateFiles();
 
@@ -450,7 +448,6 @@ ManagedFileListWidget::CreateButtons(WidgetDialog &dialog)
   if (Net::DownloadManager::IsAvailable()) {
     download_button = dialog.AddButton(_("Download"), *this, DOWNLOAD);
     add_button = dialog.AddButton(_("Add"), *this, ADD);
-    remove_button = dialog.AddButton(_("Remove"), *this, REMOVE);
     cancel_button = dialog.AddButton(_("Cancel"), *this, CANCEL);
     update_button = dialog.AddButton(_("Update all"), *this, UPDATE);
   }
@@ -620,22 +617,6 @@ ManagedFileListWidget::Add()
 }
 
 void
-ManagedFileListWidget::Remove()
-{
-  if (items.empty())
-    return;
-
-  const unsigned current = GetList().GetCursorIndex();
-  assert(current < items.size());
-
-  const FileItem &item = items[current];
-  if(File::Exists(LocalPath(_T(item.name))))  {
-    File::Delete(LocalPath(_T(item.name)));
-    RefreshList();
-  }
-}
-
-void
 ManagedFileListWidget::UpdateFiles() {
 #ifdef HAVE_DOWNLOAD_MANAGER
   assert(Net::DownloadManager::IsAvailable());
@@ -683,10 +664,6 @@ ManagedFileListWidget::OnAction(int id) noexcept
 
   case ADD:
     Add();
-    break;
-
-  case REMOVE:
-    Remove();
     break;
 
   case CANCEL:
