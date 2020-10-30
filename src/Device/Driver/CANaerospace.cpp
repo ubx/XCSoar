@@ -31,8 +31,8 @@ Copyright_License {
 #include <iomanip> // TODO: Remove this, its just for debugging
 #include <Device/Driver/CANaerospace/marshal.h>
 #include <map>
-#include <Time/RoughTime.hpp>
-#include <Time/LocalTime.hpp>
+#include <time/RoughTime.hpp>
+#include <time/LocalTime.hpp>
 #include <Device/Port/CANPort.hpp>
 #include <Device/Driver/FLARM/flarmPropagated.hpp>
 

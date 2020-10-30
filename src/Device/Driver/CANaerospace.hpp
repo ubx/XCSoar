@@ -22,7 +22,7 @@ Copyright_License {
 */
 
 #include "LogFile.hpp"
-#include "OS/Error.hxx"
+#include "system/Error.hxx"
 
 #ifndef XCSOAR_DEVICE_DRIVER_CANAEROSPACE_HPP
 #define XCSOAR_DEVICE_DRIVER_CANAEROSPACE_HPP

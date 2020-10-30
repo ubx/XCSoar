@@ -23,7 +23,7 @@ Copyright_License {
 
 #include <Device/Driver/CANaerospace/canaerospace/message.h> // todo -- temporary, to be removed !
 #include "CANPort.hpp"
-#include "OS/Error.hxx"
+#include "system/Error.hxx"
 
 CANPort::CANPort(boost::asio::io_context &io_context,
                  PortListener *_listener, DataHandler &_handler)

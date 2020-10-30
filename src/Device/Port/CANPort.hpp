@@ -25,7 +25,7 @@ Copyright_License {
 #define XCSOAR_DEVICE_CAN_PORT_HPP
 
 #include "BufferedPort.hpp"
-#include "IO/Async/AsioUtil.hpp"
+#include "io/async/AsioUtil.hpp"
 #include "LogFile.hpp"    // TODO: Used for debugging (LogFormat), maybe remove again
 
 #include <linux/can.h>
