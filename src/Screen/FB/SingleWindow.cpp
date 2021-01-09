@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -22,20 +22,24 @@ Copyright_License {
 */
 
 #include "Screen/SingleWindow.hpp"
-#include "event/shared/Event.hpp"
+#include "ui/event/shared/Event.hpp"
+
+namespace UI {
 
 bool
-SingleWindow::FilterEvent(const Event &event, Window *allowed) const noexcept
+SingleWindow::FilterEvent(const UI::Event &event, Window *allowed) const noexcept
 {
   assert(allowed != nullptr);
 
   switch (event.type) {
-  case Event::MOUSE_MOTION:
-  case Event::MOUSE_DOWN:
-  case Event::MOUSE_UP:
+  case UI::Event::MOUSE_MOTION:
+  case UI::Event::MOUSE_DOWN:
+  case UI::Event::MOUSE_UP:
     return FilterMouseEvent(event.point, allowed);
 
   default:
     return true;
   }
 }
+
+} // namespace UI

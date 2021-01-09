@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -50,9 +50,9 @@ Copyright_License {
 #include "ListPicker.hpp"
 #include "Form/Button.hpp"
 #include "net/http/DownloadManager.hpp"
-#include "event/Notify.hpp"
+#include "ui/event/Notify.hpp"
 #include "thread/Mutex.hxx"
-#include "event/PeriodicTimer.hpp"
+#include "ui/event/PeriodicTimer.hpp"
 
 #include <map>
 #include <set>
@@ -211,9 +211,9 @@ class ManagedFileListWidget
    */
   std::set<std::string> failures;
 
-  PeriodicTimer refresh_download_timer{[this]{ OnTimer(); }};
+  UI::PeriodicTimer refresh_download_timer{[this]{ OnTimer(); }};
 
-  Notify download_notify{[this]{ OnDownloadNotification(); }};
+  UI::Notify download_notify{[this]{ OnDownloadNotification(); }};
 
   /**
    * Was the repository file modified, and needs to be reloaded by

@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -40,8 +40,8 @@ Copyright_License {
 #include "Repository/Parser.hpp"
 #include "net/http/Features.hpp"
 #include "net/http/DownloadManager.hpp"
-#include "event/Notify.hpp"
-#include "event/PeriodicTimer.hpp"
+#include "ui/event/Notify.hpp"
+#include "ui/event/PeriodicTimer.hpp"
 #include "thread/Mutex.hxx"
 #include "Operation/ThreadedOperationEnvironment.hpp"
 #include "util/ConvertString.hpp"
@@ -58,9 +58,9 @@ class DownloadProgress final : Net::DownloadListener {
   ThreadedOperationEnvironment env;
   const Path path_relative;
 
-  PeriodicTimer update_timer{[this]{ Net::DownloadManager::Enumerate(*this); }};
+  UI::PeriodicTimer update_timer{[this]{ Net::DownloadManager::Enumerate(*this); }};
 
-  Notify download_complete_notify{[this]{ OnDownloadCompleteNotification(); }};
+  UI::Notify download_complete_notify{[this]{ OnDownloadCompleteNotification(); }};
 
   bool got_size = false, complete = false, success;
 
@@ -144,7 +144,7 @@ class DownloadFilePickerWidget final
 
   WidgetDialog &dialog;
 
-  Notify download_complete_notify{[this]{ OnDownloadCompleteNotification(); }};
+  UI::Notify download_complete_notify{[this]{ OnDownloadCompleteNotification(); }};
 
   const FileType file_type;
 

@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -34,7 +34,7 @@ Copyright_License {
 #include "NMEA/ExternalSettings.hpp"
 #include "time/PeriodClock.hpp"
 #include "Job/Async.hpp"
-#include "event/Notify.hpp"
+#include "ui/event/Notify.hpp"
 #include "thread/Mutex.hxx"
 #include "thread/Debug.hpp"
 #include "util/tstring.hpp"
@@ -42,6 +42,7 @@ Copyright_License {
 #include "Android/GliderLink.hpp"
 
 #include <chrono>
+#include <memory>
 
 #include <cassert>
 #include <tchar.h>
@@ -76,7 +77,7 @@ class DeviceDescriptor final : PortListener, PortLineSplitter {
    */
   boost::asio::io_context &io_context;
 
-  Notify job_finished_notify{[this]{ OnJobFinished(); }};
+  UI::Notify job_finished_notify{[this]{ OnJobFinished(); }};
 
   /**
    * This mutex protects modifications of the attribute "device".  If
@@ -113,7 +114,7 @@ class DeviceDescriptor final : PortListener, PortLineSplitter {
    * The #Port used by this device.  This is not applicable to some
    * devices, and is nullptr in that case.
    */
-  DumpPort *port;
+  std::unique_ptr<DumpPort> port;
 
   /**
    * A handler that will receive all data, to display it on the
@@ -238,9 +239,7 @@ class DeviceDescriptor final : PortListener, PortLineSplitter {
 public:
   DeviceDescriptor(boost::asio::io_context &_io_context,
                    unsigned index, PortListener *port_listener);
-  ~DeviceDescriptor() {
-    assert(!IsOccupied());
-  }
+  ~DeviceDescriptor() noexcept;
 
   unsigned GetIndex() const {
     return index;
@@ -331,7 +330,7 @@ private:
    * Port object.
    */
   gcc_nonnull_all
-  bool OpenOnPort(DumpPort *port, OperationEnvironment &env);
+  bool OpenOnPort(std::unique_ptr<DumpPort> &&port, OperationEnvironment &env);
 
   bool OpenInternalSensors();
 

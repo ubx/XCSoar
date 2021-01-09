@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@ Copyright_License {
 #include "Look/DialogLook.hpp"
 #include "Screen/Init.hpp"
 #include "Screen/Layout.hpp"
-#include "event/KeyCode.hpp"
+#include "ui/event/KeyCode.hpp"
 #include "../test/src/Fonts.hpp"
 #include "Language/Language.hpp"
 #include "Form/ActionListener.hpp"
@@ -50,7 +50,7 @@ enum Buttons {
 };
 
 static DialogSettings dialog_settings;
-static SingleWindow *global_main_window;
+static UI::SingleWindow *global_main_window;
 static DialogLook *global_dialog_look;
 
 const DialogSettings &
@@ -59,7 +59,7 @@ UIGlobals::GetDialogSettings()
   return dialog_settings;
 }
 
-SingleWindow &
+UI::SingleWindow &
 UIGlobals::GetMainWindow()
 {
   assert(global_main_window != nullptr);
@@ -154,7 +154,7 @@ KoboMenuWidget::OnAction(int id) noexcept
 }
 
 static int
-Main(SingleWindow &main_window, const DialogLook &dialog_look)
+Main(UI::SingleWindow &main_window, const DialogLook &dialog_look)
 {
   WidgetDialog dialog(WidgetDialog::Full{}, main_window,
                       dialog_look, nullptr);
@@ -179,10 +179,10 @@ Main()
   DialogLook dialog_look;
   dialog_look.Initialise();
 
-  TopWindowStyle main_style;
+  UI::TopWindowStyle main_style;
   main_style.Resizable();
 
-  SingleWindow main_window;
+  UI::SingleWindow main_window;
   main_window.Create(_T("XCSoar/KoboMenu"), {600, 800}, main_style);
   main_window.Show();
 

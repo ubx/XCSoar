@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -31,12 +31,12 @@ Copyright_License {
 #include "Renderer/ThermalBandRenderer.hpp"
 #include "Renderer/FinalGlideBarRenderer.hpp"
 #include "Renderer/VarioBarRenderer.hpp"
-#include "event/Timer.hpp"
-#include "event/Notify.hpp"
+#include "ui/event/Timer.hpp"
+#include "ui/event/Notify.hpp"
 #include "Screen/Features.hpp"
 
 #ifdef ENABLE_OPENGL
-#include "event/PeriodicTimer.hpp"
+#include "ui/event/PeriodicTimer.hpp"
 #endif
 
 #include <array>
@@ -92,7 +92,7 @@ class GlueMapWindow : public MapWindow {
 
 #ifdef ENABLE_OPENGL
   KineticManager kinetic_x = 700, kinetic_y = 700;
-  PeriodicTimer kinetic_timer{[this]{ OnKineticTimer(); }};
+  UI::PeriodicTimer kinetic_timer{[this]{ OnKineticTimer(); }};
 #endif
 
   /** flag to indicate if the MapItemList should be shown on mouse up */
@@ -141,9 +141,9 @@ class GlueMapWindow : public MapWindow {
 
   const GestureLook &gesture_look;
 
-  Timer map_item_timer{[this]{ OnMapItemTimer(); }};
+  UI::Timer map_item_timer{[this]{ OnMapItemTimer(); }};
 
-  Notify redraw_notify{[this]{ PartialRedraw(); }};
+  UI::Notify redraw_notify{[this]{ PartialRedraw(); }};
 
 public:
   GlueMapWindow(const Look &look);

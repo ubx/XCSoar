@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -33,7 +33,7 @@ Copyright_License {
 #include "util/StaticFifoBuffer.hxx"
 #include "Language/Language.hpp"
 #include "Operation/MessageOperationEnvironment.hpp"
-#include "event/DelayedNotify.hpp"
+#include "ui/event/DelayedNotify.hpp"
 #include "thread/Mutex.hxx"
 #include "UIGlobals.hpp"
 
@@ -53,7 +53,7 @@ class PortTerminalBridge final : public DataHandler {
   StaticFifoBuffer<char, 1024> buffer;
   bool hexOutput;
 
-  DelayedNotify notify{
+  UI::DelayedNotify notify{
     std::chrono::milliseconds(100),
     [this]{ OnNotification(); },
   };

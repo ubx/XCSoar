@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@ Copyright_License {
 
 #include "InfoBoxes/Content/Base.hpp"
 #include "Screen/LazyPaintWindow.hpp"
-#include "event/Timer.hpp"
+#include "ui/event/Timer.hpp"
 #include "Data.hpp"
 
 #include <memory>
@@ -61,14 +61,14 @@ class InfoBoxWindow : public LazyPaintWindow
   bool force_draw_selector = false;
 
   /** a timer which returns keyboard focus back to the map window after a while */
-  Timer focus_timer{[this]{ FocusParent(); }};
+  UI::Timer focus_timer{[this]{ FocusParent(); }};
 
   /**
    * This timer opens the dialog.  It is used to check for "long
    * click" and to delay the dialog a bit (for double click
    * detection).
    */
-  Timer dialog_timer{[this]{ OnDialogTimer(); }};
+  UI::Timer dialog_timer{[this]{ OnDialogTimer(); }};
 
   PixelRect title_rect;
   PixelRect value_rect;

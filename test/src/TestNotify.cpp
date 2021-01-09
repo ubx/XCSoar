@@ -1,7 +1,7 @@
 /* Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -21,24 +21,24 @@
 */
 
 #include "thread/Thread.hpp"
-#include "event/Notify.hpp"
-#include "event/Globals.hpp"
+#include "ui/event/Notify.hpp"
+#include "ui/event/Globals.hpp"
 #include "Screen/Init.hpp"
 #include "TestUtil.hpp"
 
 #ifdef ANDROID
-#include "event/android/Loop.hpp"
-#include "event/shared/Event.hpp"
+#include "ui/event/android/Loop.hpp"
+#include "ui/event/shared/Event.hpp"
 #elif defined(USE_POLL_EVENT)
-#include "event/shared/Event.hpp"
-#include "event/poll/Loop.hpp"
+#include "ui/event/shared/Event.hpp"
+#include "ui/event/poll/Loop.hpp"
 #include "Screen/TopWindow.hpp"
 #elif defined(ENABLE_SDL)
-#include "event/sdl/Event.hpp"
-#include "event/sdl/Loop.hpp"
+#include "ui/event/sdl/Event.hpp"
+#include "ui/event/sdl/Loop.hpp"
 #else
-#include "event/windows/Event.hpp"
-#include "event/windows/Loop.hpp"
+#include "ui/event/windows/Event.hpp"
+#include "ui/event/windows/Loop.hpp"
 #endif
 
 #ifdef USE_FB
@@ -52,6 +52,8 @@ Display::Rotate(DisplayOrientation orientation)
 
 #ifndef KOBO
 
+namespace UI {
+
 #if defined(USE_EGL) || defined(USE_GLX)
 /* avoid TopWindow.cpp from being linked, as it brings some heavy
    dependencies */
@@ -59,18 +61,20 @@ void TopWindow::Refresh() noexcept {}
 #endif
 
 #ifdef USE_POLL_EVENT
-bool TopWindow::OnEvent(const Event &event) { return false; }
+bool TopWindow::OnEvent(const UI::Event &event) { return false; }
 #endif
+
+} // namespace UI
 
 #endif
 
 static bool quit;
 
 class TestThread final : public Thread {
-  Notify &notify;
+  UI::Notify &notify;
 
 public:
-  TestThread(Notify &_notify):notify(_notify) {}
+  explicit TestThread(UI::Notify &_notify):notify(_notify) {}
 
 protected:
   void Run() noexcept override {
@@ -84,10 +88,10 @@ int main(int argc, char **argv)
 
   ScreenGlobalInit screen;
 
-  EventLoop loop(*event_queue);
-  Event event;
+  UI::EventLoop loop(*UI::event_queue);
+  UI::Event event;
 
-  Notify notify{[]{ quit = true; }};
+  UI::Notify notify{[]{ quit = true; }};
   TestThread thread(notify);
   thread.Start();
 

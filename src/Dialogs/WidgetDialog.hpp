@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -46,7 +46,7 @@ class WidgetDialog : public WndForm {
 public:
   explicit WidgetDialog(const DialogLook &look);
 
-  WidgetDialog(SingleWindow &parent, const DialogLook &look,
+  WidgetDialog(UI::SingleWindow &parent, const DialogLook &look,
                const PixelRect &rc, const TCHAR *caption,
                Widget *widget) noexcept;
 
@@ -56,14 +56,14 @@ public:
    * Create a dialog, but do not associate it with a #Widget yet.
    * Call FinishPreliminary() to resume building the dialog.
    */
-  WidgetDialog(Auto, SingleWindow &parent, const DialogLook &look,
+  WidgetDialog(Auto, UI::SingleWindow &parent, const DialogLook &look,
                const TCHAR *caption) noexcept;
 
   /**
    * Create a dialog with an automatic size (by
    * Widget::GetMinimumSize() and Widget::GetMaximumSize()).
    */
-  WidgetDialog(Auto, SingleWindow &parent, const DialogLook &look,
+  WidgetDialog(Auto, UI::SingleWindow &parent, const DialogLook &look,
                const TCHAR *caption, Widget *widget) noexcept;
 
   struct Full {};
@@ -72,13 +72,13 @@ public:
    * Create a dialog, but do not associate it with a #Widget yet.
    * Call FinishPreliminary() to resume building the dialog.
    */
-  WidgetDialog(Full, SingleWindow &parent, const DialogLook &look,
+  WidgetDialog(Full, UI::SingleWindow &parent, const DialogLook &look,
                const TCHAR *caption) noexcept;
 
   /**
    * Create a full-screen dialog.
    */
-  WidgetDialog(Full, SingleWindow &parent, const DialogLook &look,
+  WidgetDialog(Full, UI::SingleWindow &parent, const DialogLook &look,
                const TCHAR *caption, Widget *widget) noexcept;
 
   virtual ~WidgetDialog();
@@ -169,11 +169,11 @@ protected:
  * @return true if changed data was saved
  */
 bool
-DefaultWidgetDialog(SingleWindow &parent, const DialogLook &look,
+DefaultWidgetDialog(UI::SingleWindow &parent, const DialogLook &look,
                     const TCHAR *caption, const PixelRect &rc, Widget &widget);
 
 bool
-DefaultWidgetDialog(SingleWindow &parent, const DialogLook &look,
+DefaultWidgetDialog(UI::SingleWindow &parent, const DialogLook &look,
                     const TCHAR *caption, Widget &widget);
 
 #endif

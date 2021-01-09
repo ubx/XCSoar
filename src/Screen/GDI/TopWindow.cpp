@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -22,10 +22,12 @@ Copyright_License {
 */
 
 #include "Screen/TopWindow.hpp"
-#include "event/Globals.hpp"
-#include "event/windows/Event.hpp"
-#include "event/windows/Loop.hpp"
-#include "event/Queue.hpp"
+#include "ui/event/Globals.hpp"
+#include "ui/event/windows/Event.hpp"
+#include "ui/event/windows/Loop.hpp"
+#include "ui/event/Queue.hpp"
+
+namespace UI {
 
 void
 TopWindow::Create(const TCHAR *cls, const TCHAR *text, PixelSize size,
@@ -118,3 +120,5 @@ TopWindow::PostQuit() noexcept
 {
   ::PostQuitMessage(0);
 }
+
+} // namespace UI

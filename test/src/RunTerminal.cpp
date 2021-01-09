@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -26,13 +26,13 @@ Copyright_License {
 #include "Main.hpp"
 #include "Screen/SingleWindow.hpp"
 #include "Screen/TerminalWindow.hpp"
-#include "event/PeriodicTimer.hpp"
+#include "ui/event/PeriodicTimer.hpp"
 #include "Look/TerminalLook.hpp"
 
-class TestWindow : public SingleWindow {
+class TestWindow : public UI::SingleWindow {
   TerminalWindow terminal;
 
-  PeriodicTimer timer{[this]{ WriteRandomChar(); }};
+  UI::PeriodicTimer timer{[this]{ WriteRandomChar(); }};
 
 public:
   TestWindow(const TerminalLook &look)

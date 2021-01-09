@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -29,8 +29,8 @@ Copyright_License {
 #include "Widget/TwoWidgets.hpp"
 #include "UIGlobals.hpp"
 #include "Language/Language.hpp"
-#include "event/Timer.hpp"
-#include "event/PeriodicTimer.hpp"
+#include "ui/event/Timer.hpp"
+#include "ui/event/PeriodicTimer.hpp"
 
 #include <cassert>
 
@@ -52,7 +52,7 @@ class ListPickerWidget : public ListWidget, public ActionListener {
    * initialised yet in Show(), and recursively calling into Widget
    * methods is dangerous anyway.
    */
-  Timer postpone_update_help{[this]{
+  UI::Timer postpone_update_help{[this]{
     UpdateHelp(GetList().GetCursorIndex());
   }};
 
@@ -190,7 +190,7 @@ ListPicker(const TCHAR *caption,
 
   dialog.EnableCursorSelection();
 
-  PeriodicTimer update_timer([list_widget](){
+  UI::PeriodicTimer update_timer([list_widget](){
     list_widget->GetList().Invalidate();
   });
   if (update)

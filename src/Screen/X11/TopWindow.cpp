@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -24,8 +24,8 @@ Copyright_License {
 #include "Screen/TopWindow.hpp"
 #include "Screen/Custom/TopCanvas.hpp"
 #include "Hardware/DisplayDPI.hpp"
-#include "event/Globals.hpp"
-#include "event/poll/Queue.hpp"
+#include "ui/event/Globals.hpp"
+#include "ui/event/poll/Queue.hpp"
 #include "util/Macros.hpp"
 
 #ifdef USE_GLX
@@ -36,11 +36,13 @@ Copyright_License {
 
 #include <stdio.h>
 
+namespace UI {
+
 void
 TopWindow::CreateNative(const TCHAR *text, PixelSize size,
                         TopWindowStyle style) noexcept
 {
-  x_display = event_queue->GetDisplay();
+  x_display = UI::event_queue->GetDisplay();
   assert(x_display != nullptr);
 
   /* query the display dimensions from Xlib to calculate the DPI
@@ -142,7 +144,7 @@ TopWindow::CreateNative(const TCHAR *text, PixelSize size,
 bool
 TopWindow::IsVisible() const noexcept
 {
-  return event_queue->IsVisible();
+  return UI::event_queue->IsVisible();
 }
 
 void
@@ -161,3 +163,5 @@ TopWindow::DisableCapture() noexcept
 {
   XUngrabPointer(x_display, CurrentTime);
 }
+
+} // namespace UI

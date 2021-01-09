@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@ Copyright_License {
 #define ENABLE_CLOSE_BUTTON
 
 #include "Main.hpp"
-#include "event/PeriodicTimer.hpp"
+#include "ui/event/PeriodicTimer.hpp"
 #include "Screen/Canvas.hpp"
 #include "Form/Button.hpp"
 #include "Form/ActionListener.hpp"
@@ -117,7 +117,7 @@ Main()
   double step(10);
   double mc_mc0_step(100);
 
-  PeriodicTimer timer([&](){
+  UI::PeriodicTimer timer([&](){
     double altitude_difference = final_glide.GetAltitudeDifference();
     double altitude_difference0 = final_glide.GetAltitudeDifference0();
 

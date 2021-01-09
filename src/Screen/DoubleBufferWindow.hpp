@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ using DoubleBufferWindow = BufferWindow;
 
 #include "Screen/PaintWindow.hpp"
 #include "Screen/BufferCanvas.hpp"
-#include "event/Notify.hpp"
+#include "ui/event/Notify.hpp"
 #include "thread/Mutex.hxx"
 
 /**
@@ -45,7 +45,7 @@ using DoubleBufferWindow = BufferWindow;
  * copies the other buffer to the screen.
  */
 class DoubleBufferWindow : public PaintWindow {
-  Notify invalidate_notify{[this]{ Invalidate(); }};
+  UI::Notify invalidate_notify{[this]{ Invalidate(); }};
 
   BufferCanvas buffers[2];
 

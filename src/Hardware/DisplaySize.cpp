@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -28,8 +28,8 @@ Copyright_License {
 #include "Screen/GDI/RootDC.hpp"
 #include <windows.h>
 #elif defined(USE_X11)
-#include "event/Globals.hpp"
-#include "event/Queue.hpp"
+#include "ui/event/Globals.hpp"
+#include "ui/event/Queue.hpp"
 #define Font X11Font
 #define Window X11Window
 #define Display X11Display
@@ -47,9 +47,9 @@ Display::GetSize(PixelSize fallback)
   return PixelSize(GetDeviceCaps(dc, HORZRES),
                    GetDeviceCaps(dc, VERTRES));
 #elif defined(USE_X11)
-  assert(event_queue != nullptr);
+  assert(UI::event_queue != nullptr);
 
-  auto display = event_queue->GetDisplay();
+  auto display = UI::event_queue->GetDisplay();
   assert(display != nullptr);
 
   return PixelSize(DisplayWidth(display, 0), DisplayHeight(display, 0));

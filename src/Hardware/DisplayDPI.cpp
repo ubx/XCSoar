@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2021 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -30,8 +30,8 @@ Copyright_License {
 #endif
 
 #ifdef USE_X11
-#include "event/Globals.hpp"
-#include "event/Queue.hpp"
+#include "ui/event/Globals.hpp"
+#include "ui/event/Queue.hpp"
 
 #define Font X11Font
 #define Window X11Window
@@ -166,9 +166,9 @@ Display::GetXDPI(unsigned custom_dpi)
   RootDC dc;
   return GetDeviceCaps(dc, LOGPIXELSX);
 #elif defined(USE_X11)
-  assert(event_queue != nullptr);
+  assert(UI::event_queue != nullptr);
 
-  auto display = event_queue->GetDisplay();
+  auto display = UI::event_queue->GetDisplay();
   assert(display != nullptr);
 
   return MMToDPI(DisplayWidth(display, 0), DisplayWidthMM(display, 0));
@@ -197,9 +197,9 @@ Display::GetYDPI(unsigned custom_dpi)
   RootDC dc;
   return GetDeviceCaps(dc, LOGPIXELSY);
 #elif defined(USE_X11)
-  assert(event_queue != nullptr);
+  assert(UI::event_queue != nullptr);
 
-  auto display = event_queue->GetDisplay();
+  auto display = UI::event_queue->GetDisplay();
   assert(display != nullptr);
 
   return MMToDPI(DisplayHeight(display, 0), DisplayHeightMM(display, 0));

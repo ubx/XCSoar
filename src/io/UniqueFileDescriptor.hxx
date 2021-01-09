@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2012-2020 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 #ifndef UNIQUE_FILE_DESCRIPTOR_HXX
 #define UNIQUE_FILE_DESCRIPTOR_HXX
 
-#include "FileDescriptor.hxx"
+#include "FileDescriptor.hxx" // IWYU pragma: export
 
 #include <cassert>
 #include <utility>
@@ -64,6 +64,14 @@ public:
 		return *this;
 	}
 
+	/**
+	 * Release ownership and return the descriptor as an unmanaged
+	 * #FileDescriptor instance.
+	 */
+	FileDescriptor Release() noexcept {
+		return std::exchange(*(FileDescriptor *)this, Undefined());
+	}
+
 protected:
 	void Set(int _fd) noexcept {
 		assert(!IsDefined());
@@ -76,6 +84,11 @@ public:
 #ifndef _WIN32
 	static bool CreatePipe(UniqueFileDescriptor &r, UniqueFileDescriptor &w) noexcept {
 		return FileDescriptor::CreatePipe(r, w);
+	}
+
+	static bool CreatePipeNonBlock(UniqueFileDescriptor &r,
+				       UniqueFileDescriptor &w) noexcept {
+		return FileDescriptor::CreatePipeNonBlock(r, w);
 	}
 
 	static bool CreatePipe(FileDescriptor &r, FileDescriptor &w) noexcept;
