@@ -1,5 +1,8 @@
 /*
- * Copyright (C) 2015 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2017-2021 CM4all GmbH
+ * All rights reserved.
+ *
+ * author: Max Kellermann <mk@cm4all.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,44 +30,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SOCKET_ERROR_HPP
-#define SOCKET_ERROR_HPP
+#include "Error.hxx"
+#include "util/RuntimeError.hxx"
 
-#include "util/Compiler.h"
+#include <ares.h>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#else
-#include <errno.h>
-#endif
+namespace Cares {
 
-gcc_pure
-static inline int
-GetSocketError()
-{
-#ifdef _WIN32
-  return WSAGetLastError();
-#else
-  return errno;
-#endif
-}
+Error::Error(int _code, const char *msg) noexcept
+	:std::runtime_error(FormatRuntimeError("%s: %s",
+					       msg, ares_strerror(_code))),
+	 code(_code) {}
 
-gcc_const
-static inline bool
-IsSocketBlockingError(int e)
-{
-#ifdef _WIN32
-  return e == WSAEWOULDBLOCK;
-#else
-  return e == EAGAIN;
-#endif
-}
-
-gcc_pure
-static inline bool
-IsSocketBlockingError()
-{
-  return IsSocketBlockingError(GetSocketError());
-}
-
-#endif
+} // namespace Cares

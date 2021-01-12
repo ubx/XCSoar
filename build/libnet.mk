@@ -1,6 +1,10 @@
 # Build rules for the HTTP client library
 
 LIBNET_SOURCES = \
+	$(SRC)/net/AddressInfo.cxx \
+	$(SRC)/net/HostParser.cxx \
+	$(SRC)/net/Resolver.cxx \
+	$(SRC)/net/SocketError.cxx \
 	$(SRC)/net/State.cpp \
 	$(SRC)/net/IPv4Address.cxx \
 	$(SRC)/net/IPv6Address.cxx \
@@ -25,6 +29,11 @@ ifeq ($(TARGET_IS_OSX),y)
 LIBNET_LDLIBS = -lcurl
 else
 $(eval $(call pkg-config-library,CURL,libcurl))
+
+ifeq ($(USE_THIRDPARTY_LIBS),y)
+# This definition is missing in the CURL cmake build
+CURL_CPPFLAGS += -DCURL_STATICLIB
+endif
 
 LIBNET_CPPFLAGS = $(CURL_CPPFLAGS)
 LIBNET_LDADD = $(ZLIB_LDADD)
