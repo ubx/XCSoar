@@ -67,163 +67,160 @@ Copyright_License {
 static bool
 DetectGPS(TCHAR *path, size_t path_max_size)
 {
-  return false;
+    return false;
 }
 
 static std::unique_ptr<Port>
 WrapPort(const DeviceConfig &config, PortListener *listener,
          DataHandler &handler, std::unique_ptr<Port> port) noexcept
 {
-  if (config.k6bt && config.MaybeBluetooth())
-    port = std::make_unique<K6BtPort>(std::move(port), config.baud_rate,
-                                      listener, handler);
+    if (config.k6bt && config.MaybeBluetooth())
+        port = std::make_unique<K6BtPort>(std::move(port), config.baud_rate,
+                                          listener, handler);
 
 #ifndef NDEBUG
-  if (config.dump_port)
-    port = std::make_unique<DumpPort>(std::move(port));
+    if (config.dump_port)
+        port = std::make_unique<DumpPort>(std::move(port));
 #endif
 
-  return port;
+    return port;
 }
 
 static std::unique_ptr<Port>
-OpenPortInternal(boost::asio::io_context &io_context,
+OpenPortInternal(EventLoop &event_loop, Cares::Channel &cares,
                  const DeviceConfig &config, PortListener *listener,
                  DataHandler &handler)
 {
-  const TCHAR *path = nullptr;
-  TCHAR buffer[MAX_PATH];
+    const TCHAR *path = nullptr;
+    TCHAR buffer[MAX_PATH];
 
-  switch (config.port_type) {
-  case DeviceConfig::PortType::DISABLED:
-    throw std::runtime_error("Port is disabled");
+    switch (config.port_type) {
+        case DeviceConfig::PortType::DISABLED:
+            throw std::runtime_error("Port is disabled");
 
-  case DeviceConfig::PortType::SERIAL:
-    if (config.path.empty())
-      throw std::runtime_error("No port path configured");
+        case DeviceConfig::PortType::SERIAL:
+            if (config.path.empty())
+                throw std::runtime_error("No port path configured");
 
-    path = config.path.c_str();
-    break;
+            path = config.path.c_str();
+            break;
 
-  case DeviceConfig::PortType::RFCOMM:
+        case DeviceConfig::PortType::RFCOMM:
 #ifdef ANDROID
-    if (config.bluetooth_mac.empty())
+            if (config.bluetooth_mac.empty())
       throw std::runtime_error("No Bluetooth MAC configured");
 
     return OpenAndroidBluetoothPort(config.bluetooth_mac, listener, handler);
 #else
-    throw std::runtime_error("Bluetooth not available");
+            throw std::runtime_error("Bluetooth not available");
 #endif
 
-  case DeviceConfig::PortType::RFCOMM_SERVER:
+        case DeviceConfig::PortType::RFCOMM_SERVER:
 #ifdef ANDROID
-    return OpenAndroidBluetoothServerPort(listener, handler);
+            return OpenAndroidBluetoothServerPort(listener, handler);
 #else
-    throw std::runtime_error("Bluetooth not available");
+            throw std::runtime_error("Bluetooth not available");
 #endif
 
-  case DeviceConfig::PortType::IOIOUART:
+        case DeviceConfig::PortType::IOIOUART:
 #if defined(ANDROID)
-    if (config.ioio_uart_id >= AndroidIOIOUartPort::getNumberUarts())
+            if (config.ioio_uart_id >= AndroidIOIOUartPort::getNumberUarts())
       throw std::runtime_error("No IOIOUart configured in profile");
 
     return OpenAndroidIOIOUartPort(config.ioio_uart_id, config.baud_rate,
                                    listener, handler);
 #else
-    throw std::runtime_error("IOIO driver not available");
+            throw std::runtime_error("IOIO driver not available");
 #endif
 
-  case DeviceConfig::PortType::AUTO:
-    if (!DetectGPS(buffer, sizeof(buffer)))
-      throw std::runtime_error("No GPS detected");
+        case DeviceConfig::PortType::AUTO:
+            if (!DetectGPS(buffer, sizeof(buffer)))
+                throw std::runtime_error("No GPS detected");
 
-    LogFormat(_T("GPS detected: %s"), buffer);
+            LogFormat(_T("GPS detected: %s"), buffer);
 
-    path = buffer;
-    break;
+            path = buffer;
+            break;
 
-  case DeviceConfig::PortType::INTERNAL:
-  case DeviceConfig::PortType::DROIDSOAR_V2:
-  case DeviceConfig::PortType::NUNCHUCK:
-  case DeviceConfig::PortType::I2CPRESSURESENSOR:
-  case DeviceConfig::PortType::IOIOVOLTAGE:
-  case DeviceConfig::PortType::GLIDER_LINK:
-    break;
+        case DeviceConfig::PortType::INTERNAL:
+        case DeviceConfig::PortType::DROIDSOAR_V2:
+        case DeviceConfig::PortType::NUNCHUCK:
+        case DeviceConfig::PortType::I2CPRESSURESENSOR:
+        case DeviceConfig::PortType::IOIOVOLTAGE:
+        case DeviceConfig::PortType::GLIDER_LINK:
+            break;
 
-  case DeviceConfig::PortType::TCP_CLIENT: {
-    const WideToUTF8Converter ip_address(config.ip_address);
-    if (!ip_address.IsValid())
-      throw std::runtime_error("No IP address configured");
+        case DeviceConfig::PortType::TCP_CLIENT: {
+            const WideToUTF8Converter ip_address(config.ip_address);
+            if (!ip_address.IsValid())
+                throw std::runtime_error("No IP address configured");
 
-    return std::make_unique<TCPClientPort>(io_context,
-                                           ip_address, config.tcp_port,
-                                           listener, handler);
-  }
+            return std::make_unique<TCPClientPort>(event_loop, cares,
+                                                   ip_address, config.tcp_port,
+                                                   listener, handler);
+        }
 
-  case DeviceConfig::PortType::TCP_LISTENER:
-    return std::make_unique<TCPPort>(io_context, config.tcp_port,
-                                     listener, handler);
+        case DeviceConfig::PortType::TCP_LISTENER:
+            return std::make_unique<TCPPort>(event_loop, config.tcp_port,
+                                             listener, handler);
 
-  case DeviceConfig::PortType::UDP_LISTENER:
-    return std::make_unique<UDPPort>(io_context, config.tcp_port,
-                                     listener, handler);
+        case DeviceConfig::PortType::UDP_LISTENER:
+            return std::make_unique<UDPPort>(event_loop, config.tcp_port,
+                                             listener, handler);
 
-  case DeviceConfig::PortType::CAN: {
 #ifdef HAVE_CAN
-    CANPort *port = new CANPort(io_context, listener, handler);
-    
-    if (!port->Open(config.can_port_name, config.can_baud_rate)) {
-      delete port;
-      return nullptr;
-    }
-    return port;
+        case DeviceConfig::PortType::CAN: {
+            auto port = std::make_unique<CANport>(io_context, listener, handler);
+            if (!port->Open(config.can_port_name, config.can_baud_rate))
+              port = nullptr;
+            return port;
+        }
 #endif
-  }
 
-  case DeviceConfig::PortType::PTY: {
+        case DeviceConfig::PortType::PTY: {
 #if defined(HAVE_POSIX) && !defined(ANDROID)
-    if (config.path.empty())
-      throw std::runtime_error("No pty path configured");
+            if (config.path.empty())
+                throw std::runtime_error("No pty path configured");
 
-    if (unlink(config.path.c_str()) < 0 && errno != ENOENT)
-      throw std::system_error(std::error_code(errno,
-                                              std::system_category()),
-                              "Failed to delete pty");
+            if (unlink(config.path.c_str()) < 0 && errno != ENOENT)
+                throw std::system_error(std::error_code(errno,
+                                                        std::system_category()),
+                                        "Failed to delete pty");
 
-    auto port = std::make_unique<TTYPort>(io_context, listener, handler);
-    const char *slave_path = port->OpenPseudo();
+            auto port = std::make_unique<TTYPort>(event_loop, listener, handler);
+            const char *slave_path = port->OpenPseudo();
 
-    if (symlink(slave_path, config.path.c_str()) < 0)
-      throw std::system_error(std::error_code(errno,
-                                              std::system_category()),
-                              "Failed to symlink pty");
+            if (symlink(slave_path, config.path.c_str()) < 0)
+                throw std::system_error(std::error_code(errno,
+                                                        std::system_category()),
+                                        "Failed to symlink pty");
 
-    return port;
+            return port;
 #else
-    throw std::runtime_error("Pty not available");
+            throw std::runtime_error("Pty not available");
 #endif
-  }
-  }
+        }
+    }
 
-  if (path == nullptr)
-    throw std::runtime_error("No port path configured");
+    if (path == nullptr)
+        throw std::runtime_error("No port path configured");
 
 #ifdef HAVE_POSIX
-  auto port = std::make_unique<TTYPort>(io_context, listener, handler);
+    auto port = std::make_unique<TTYPort>(event_loop, listener, handler);
 #else
-  auto port = std::make_unique<SerialPort>(listener, handler);
+    auto port = std::make_unique<SerialPort>(listener, handler);
 #endif
-  port->Open(path, config.baud_rate);
-  return port;
+    port->Open(path, config.baud_rate);
+    return port;
 }
 
 std::unique_ptr<Port>
-OpenPort(boost::asio::io_context &io_context,
+OpenPort(EventLoop &event_loop, Cares::Channel &cares,
          const DeviceConfig &config, PortListener *listener,
          DataHandler &handler)
 {
-  auto port = OpenPortInternal(io_context, config, listener, handler);
-  if (port != nullptr)
-    port = WrapPort(config, listener, handler, std::move(port));
-  return port;
+    auto port = OpenPortInternal(event_loop, cares, config, listener, handler);
+    if (port != nullptr)
+        port = WrapPort(config, listener, handler, std::move(port));
+    return port;
 }
