@@ -25,27 +25,16 @@ Copyright_License {
 #define XCSOAR_DEVICE_CAN_PORT_HPP
 
 #include "BufferedPort.hpp"
-#include "io/async/AsioUtil.hpp"
-#include "LogFile.hpp"    // TODO: Used for debugging (LogFormat), maybe remove again
-
-#include <linux/can.h>
-#include <linux/can/raw.h>
-
-#include <libsocketcan.h>
-
+#include "event/SocketEvent.hxx"
+#include "net/UniqueSocketDescriptor.hxx"
+#include "unix/tchar.h"
 
 /**
  * A CAN listener port class.
  */
 class CANPort final : public BufferedPort
 {
-  boost::asio::posix::stream_descriptor socket_;
-
-  can_frame input;
-
-  int sc;
-
-  const char *port_name;
+  SocketEvent socket;
 
 public:
   /**
@@ -54,17 +43,19 @@ public:
    * @param handler the callback object for input received on the
    * port
    */
-  CANPort(boost::asio::io_context &io_context,
+  CANPort(EventLoop &event_loop, const TCHAR *port_name,
           PortListener *_listener, DataHandler &_handler);
   /**
    * Closes the serial port (Destructor)
    */
   virtual ~CANPort();
 
+  auto &GetEventLoop() const noexcept {
+    return socket.GetEventLoop();
+  }
+
   /* virtual methods from class Port */
   PortState GetState() const override;
-
-  bool Open(const char *port_name, unsigned baud_rate);
 
   bool Drain() override {
     /* writes are synchronous */
@@ -72,22 +63,17 @@ public:
   }
 
   bool SetBaudrate(unsigned baud_rate) override {
-      int ret = can_set_bitrate(port_name, baud_rate);
-    return ret == 0;
+    return true;
   }
 
   unsigned GetBaudrate() const override {
     return 0;
   }
 
-  int SetFilter(const std::vector<uint32_t>& can_ids);
-
   size_t Write(const void *data, size_t length) override;
 
 protected:
-  void AsyncRead();
-
-  void OnRead(const boost::system::error_code &ec, size_t nbytes);
+  void OnSocketReady(unsigned events) noexcept;
 };
 
 #endif

@@ -169,12 +169,9 @@ OpenPortInternal(EventLoop &event_loop, Cares::Channel &cares,
                                              listener, handler);
 
 #ifdef HAVE_CAN
-       case DeviceConfig::PortType::CAN: {
-          auto port = std::make_unique<CANport>(io_context, listener, handler);
-          if (!port->Open(config.can_port_name, config.can_baud_rate))
-            port = nullptr;
-          return port;
-       }
+       case DeviceConfig::PortType::CAN:
+            return std::make_unique<CANPort>(event_loop, config.can_port_name,
+                                             listener, handler);
 #endif
 
         case DeviceConfig::PortType::PTY: {
