@@ -98,8 +98,9 @@ CANPort::Write(const void *data, size_t length)
 void
 CANPort::OnSocketReady(unsigned) noexcept
 try {
-  char input[4096];
-  ssize_t nbytes = socket.GetSocket().Read(input, sizeof(input));
+  can_frame input;
+  ssize_t nbytes;
+  nbytes = socket.GetSocket().Read(&input, sizeof(input));
   if (nbytes < 0)
     throw MakeSocketError("Failed to receive");
 
@@ -109,7 +110,7 @@ try {
     return;
   }
 
-  DataReceived(input, nbytes);
+  DataReceived(&input, nbytes);
 } catch (...) {
   socket.Close();
   StateChanged();
