@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008-2014 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2011-2021 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,26 +27,21 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TEXT_FILE_HXX
-#define TEXT_FILE_HXX
+#ifndef NET_TO_STRING_HXX
+#define NET_TO_STRING_HXX
 
-#include <cstring>
+#include "util/Compiler.h"
 
-template<typename B>
-char *
-ReadBufferedLine(B &buffer)
-{
-	auto r = buffer.Read();
-	char *newline = reinterpret_cast<char*>(std::memchr(r.data, '\n', r.size));
-	if (newline == nullptr)
-		return nullptr;
+#include <string>
 
-	buffer.Consume(newline + 1 - r.data);
+class SocketAddress;
 
-	if (newline > r.data && newline[-1] == '\r')
-		--newline;
-	*newline = 0;
-	return r.data;
-}
+/**
+ * Converts the specified socket address into a string in the form
+ * "IP:PORT".
+ */
+gcc_pure
+std::string
+ToString(SocketAddress address) noexcept;
 
 #endif

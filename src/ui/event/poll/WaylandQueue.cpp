@@ -28,8 +28,7 @@ Copyright_License {
 
 #include <wayland-client.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdexcept>
 
 namespace UI {
 
@@ -122,15 +121,13 @@ static constexpr struct wl_pointer_listener pointer_listener = {
   WaylandPointerAxis,
 };
 
-WaylandEventQueue::WaylandEventQueue(boost::asio::io_context &io_context,
-                                     EventQueue &_queue)
+WaylandEventQueue::WaylandEventQueue(EventQueue &_queue)
   :queue(_queue),
-   display(wl_display_connect(nullptr)), fd(io_context)
+   display(wl_display_connect(nullptr)),
+   socket_event(queue.GetEventLoop(), BIND_THIS_METHOD(OnSocketReady))
 {
-  if (display == nullptr) {
-    fprintf(stderr, "wl_display_connect() failed\n");
-    exit(EXIT_FAILURE);
-  }
+  if (display == nullptr)
+    throw std::runtime_error("wl_display_connect() failed");
 
   auto registry = wl_display_get_registry(display);
   wl_registry_add_listener(registry, &registry_listener, this);
@@ -138,28 +135,22 @@ WaylandEventQueue::WaylandEventQueue(boost::asio::io_context &io_context,
   wl_display_dispatch(display);
   wl_display_roundtrip(display);
 
-  if (compositor == nullptr) {
-    fprintf(stderr, "No Wayland compositor found\n");
-    exit(EXIT_FAILURE);
-  }
+  if (compositor == nullptr)
+    throw std::runtime_error("No Wayland compositor found");
 
-  if (seat == nullptr) {
-    fprintf(stderr, "No Wayland seat found\n");
-    exit(EXIT_FAILURE);
-  }
+  if (seat == nullptr)
+    throw std::runtime_error("No Wayland seat found");
 
-  if (shell == nullptr) {
-    fprintf(stderr, "No Wayland shell found\n");
-    exit(EXIT_FAILURE);
-  }
+  if (shell == nullptr)
+    throw std::runtime_error("No Wayland shell found");
 
-  fd.assign(wl_display_get_fd(display));
-  AsyncRead();
+  socket_event.Open(SocketDescriptor(wl_display_get_fd(display)));
+  socket_event.ScheduleRead();
 }
 
 WaylandEventQueue::~WaylandEventQueue()
 {
-  fd.cancel();
+  socket_event.Cancel();
   wl_display_disconnect(display);
 }
 
@@ -171,13 +162,9 @@ WaylandEventQueue::Generate(Event &event)
 }
 
 void
-WaylandEventQueue::OnReadReady(const boost::system::error_code &ec)
+WaylandEventQueue::OnSocketReady(unsigned events) noexcept
 {
-  if (ec)
-    return;
-
   wl_display_dispatch(display);
-  AsyncRead();
 }
 
 inline void

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2012-2020 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,7 +31,7 @@
 #define IPV6_ADDRESS_HXX
 
 #include "SocketAddress.hxx"
-#include "system/ByteOrder.hpp"
+#include "util/ByteOrder.hxx"
 #include "util/Compiler.h"
 
 #include <cstdint>
@@ -127,13 +127,20 @@ public:
 	}
 
 	/**
+	 * Cast a #sockaddr_in6 reference to an IPv6Address reference.
+	 */
+	static constexpr const IPv6Address &Cast(const struct sockaddr_in6 &src) noexcept {
+		/* this reinterpret_cast works because this class is
+		   just a wrapper for struct sockaddr_in6 */
+		return *(const IPv6Address *)(const void *)&src;
+	}
+
+	/**
 	 * Return a downcasted reference to the address.  This call is
 	 * only legal after verifying SocketAddress::GetFamily().
 	 */
-	static constexpr const IPv6Address &Cast(const SocketAddress &src) noexcept {
-		/* this reinterpret_cast works because this class is
-		   just a wrapper for struct sockaddr_in6 */
-		return *(const IPv6Address *)(const void *)src.GetAddress();
+	static constexpr const IPv6Address &Cast(const SocketAddress src) noexcept {
+		return Cast(src.CastTo<struct sockaddr_in6>());
 	}
 
 	constexpr operator SocketAddress() const noexcept {
@@ -178,7 +185,7 @@ public:
 	/**
 	 * Is this an IPv4 address mapped inside struct sockaddr_in6?
 	 */
-#if !GCC_OLDER_THAN(5,0) && !defined(_WIN32)
+#if defined(__linux__)
 	constexpr
 #endif
 	bool IsV4Mapped() const noexcept {

@@ -28,10 +28,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef XCSOAR_BYTE_ORDER_HPP
-#define XCSOAR_BYTE_ORDER_HPP
+#ifndef BYTE_ORDER_HXX
+#define BYTE_ORDER_HXX
 
-#include "util/Compiler.h"
+#include "Compiler.h"
 
 #include <cstdint>
 
@@ -43,10 +43,19 @@
 /* well-known big-endian */
 #  define IS_LITTLE_ENDIAN false
 #  define IS_BIG_ENDIAN true
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__NetBSD__)
 /* compile-time check for MacOS */
 #  include <machine/endian.h>
 #  if BYTE_ORDER == LITTLE_ENDIAN
+#    define IS_LITTLE_ENDIAN true
+#    define IS_BIG_ENDIAN false
+#  else
+#    define IS_LITTLE_ENDIAN false
+#    define IS_BIG_ENDIAN true
+#  endif
+#elif defined(__BYTE_ORDER__)
+/* GCC-specific macros */
+#  if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #    define IS_LITTLE_ENDIAN true
 #    define IS_BIG_ENDIAN false
 #  else
@@ -65,54 +74,40 @@
 #  endif
 #endif
 
-/* x86 always allows unaligned access */
-#if defined(__i386__) || defined(__x86_64__) || \
-  /* ARM has it from ARMv6 on */ \
-  defined(__ARM_ARCH_6__) || \
-  defined(__ARM_ARCH_7__) || \
-  defined(__ARM_ARCH_7A__) || \
-  /* _M_ARM is the Microsoft way of checking the ARM generation \
-     (supported by mingw32ce) */ \
-  (defined(_M_ARM) && _M_ARM >= 6)
-#ifndef FORCE_ALIGNED_READ_WRITE
-#define CAN_READ_WRITE_UNALIGNED
-#endif
-#endif
-
 constexpr bool
-IsLittleEndian()
+IsLittleEndian() noexcept
 {
-  return IS_LITTLE_ENDIAN;
+	return IS_LITTLE_ENDIAN;
 }
 
 constexpr bool
-IsBigEndian()
+IsBigEndian() noexcept
 {
-  return IS_BIG_ENDIAN;
+	return IS_BIG_ENDIAN;
 }
 
 constexpr uint16_t
-GenericByteSwap16(uint16_t value)
+GenericByteSwap16(uint16_t value) noexcept
 {
-  return (value >> 8) | (value << 8);
+	return (value >> 8) | (value << 8);
 }
 
 constexpr uint32_t
-GenericByteSwap32(uint32_t value)
+GenericByteSwap32(uint32_t value) noexcept
 {
-  return (value >> 24) | ((value >> 8) & 0x0000ff00) |
-    ((value << 8) & 0x00ff0000) | (value << 24);
+	return (value >> 24) | ((value >> 8) & 0x0000ff00) |
+		((value << 8) & 0x00ff0000) | (value << 24);
 }
 
 constexpr uint64_t
-GenericByteSwap64(uint64_t value)
+GenericByteSwap64(uint64_t value) noexcept
 {
-  return uint64_t(GenericByteSwap32(uint32_t(value >> 32)))
-    | (uint64_t(GenericByteSwap32(value)) << 32);
+	return uint64_t(GenericByteSwap32(uint32_t(value >> 32)))
+		| (uint64_t(GenericByteSwap32(value)) << 32);
 }
 
 constexpr uint16_t
-ByteSwap16(uint16_t value)
+ByteSwap16(uint16_t value) noexcept
 {
 #if CLANG_OR_GCC_VERSION(4,8)
   return __builtin_bswap16(value);
@@ -122,7 +117,7 @@ ByteSwap16(uint16_t value)
 }
 
 constexpr uint32_t
-ByteSwap32(uint32_t value)
+ByteSwap32(uint32_t value) noexcept
 {
 #if CLANG_OR_GCC_VERSION(4,3)
   return __builtin_bswap32(value);
@@ -132,7 +127,7 @@ ByteSwap32(uint32_t value)
 }
 
 constexpr uint64_t
-ByteSwap64(uint64_t value)
+ByteSwap64(uint64_t value) noexcept
 {
 #if CLANG_OR_GCC_VERSION(4,3)
   return __builtin_bswap64(value);
@@ -145,7 +140,7 @@ ByteSwap64(uint64_t value)
  * Converts a 16bit value from big endian to the system's byte order
  */
 constexpr uint16_t
-FromBE16(uint16_t value)
+FromBE16(uint16_t value) noexcept
 {
   return IsBigEndian() ? value : ByteSwap16(value);
 }
@@ -154,7 +149,7 @@ FromBE16(uint16_t value)
  * Converts a 32bit value from big endian to the system's byte order
  */
 constexpr uint32_t
-FromBE32(uint32_t value)
+FromBE32(uint32_t value) noexcept
 {
   return IsBigEndian() ? value : ByteSwap32(value);
 }
@@ -163,7 +158,7 @@ FromBE32(uint32_t value)
  * Converts a 64bit value from big endian to the system's byte order
  */
 constexpr uint64_t
-FromBE64(uint64_t value)
+FromBE64(uint64_t value) noexcept
 {
   return IsBigEndian() ? value : ByteSwap64(value);
 }
@@ -172,7 +167,7 @@ FromBE64(uint64_t value)
  * Converts a 16bit value from little endian to the system's byte order
  */
 constexpr uint16_t
-FromLE16(uint16_t value)
+FromLE16(uint16_t value) noexcept
 {
   return IsLittleEndian() ? value : ByteSwap16(value);
 }
@@ -181,7 +176,7 @@ FromLE16(uint16_t value)
  * Converts a 32bit value from little endian to the system's byte order
  */
 constexpr uint32_t
-FromLE32(uint32_t value)
+FromLE32(uint32_t value) noexcept
 {
   return IsLittleEndian() ? value : ByteSwap32(value);
 }
@@ -190,7 +185,7 @@ FromLE32(uint32_t value)
  * Converts a 64bit value from little endian to the system's byte order
  */
 constexpr uint64_t
-FromLE64(uint64_t value)
+FromLE64(uint64_t value) noexcept
 {
   return IsLittleEndian() ? value : ByteSwap64(value);
 }
@@ -199,7 +194,7 @@ FromLE64(uint64_t value)
  * Converts a 16bit value from the system's byte order to big endian
  */
 constexpr uint16_t
-ToBE16(uint16_t value)
+ToBE16(uint16_t value) noexcept
 {
   return IsBigEndian() ? value : ByteSwap16(value);
 }
@@ -208,7 +203,7 @@ ToBE16(uint16_t value)
  * Converts a 32bit value from the system's byte order to big endian
  */
 constexpr uint32_t
-ToBE32(uint32_t value)
+ToBE32(uint32_t value) noexcept
 {
   return IsBigEndian() ? value : ByteSwap32(value);
 }
@@ -217,7 +212,7 @@ ToBE32(uint32_t value)
  * Converts a 64bit value from the system's byte order to big endian
  */
 constexpr uint64_t
-ToBE64(uint64_t value)
+ToBE64(uint64_t value) noexcept
 {
   return IsBigEndian() ? value : ByteSwap64(value);
 }
@@ -226,7 +221,7 @@ ToBE64(uint64_t value)
  * Converts a 16bit value from the system's byte order to little endian
  */
 constexpr uint16_t
-ToLE16(uint16_t value)
+ToLE16(uint16_t value) noexcept
 {
   return IsLittleEndian() ? value : ByteSwap16(value);
 }
@@ -235,7 +230,7 @@ ToLE16(uint16_t value)
  * Converts a 32bit value from the system's byte order to little endian
  */
 constexpr uint32_t
-ToLE32(uint32_t value)
+ToLE32(uint32_t value) noexcept
 {
   return IsLittleEndian() ? value : ByteSwap32(value);
 }
@@ -244,81 +239,20 @@ ToLE32(uint32_t value)
  * Converts a 64bit value from the system's byte order to little endian
  */
 constexpr uint64_t
-ToLE64(uint64_t value)
+ToLE64(uint64_t value) noexcept
 {
   return IsLittleEndian() ? value : ByteSwap64(value);
 }
 
-gcc_pure
-static inline uint16_t
-ReadUnalignedLE16(const uint16_t *p)
+/**
+ * Converts a 16 bit integer from little endian to the host byte order
+ * and returns it as a signed integer.
+ */
+constexpr int16_t
+FromLE16S(uint16_t value) noexcept
 {
-#ifdef CAN_READ_WRITE_UNALIGNED
-  return FromLE16(*p);
-#else
-  const uint8_t *c = (const uint8_t *)p;
-  return c[0] | (c[1] << 8);
-#endif
-}
-
-gcc_pure
-static inline uint16_t
-ReadUnalignedBE16(const uint16_t *p)
-{
-#ifdef CAN_READ_WRITE_UNALIGNED
-  return FromBE16(*p);
-#else
-  const uint8_t *c = (const uint8_t *)p;
-  return c[1] | (c[0] << 8);
-#endif
-}
-
-static inline void
-WriteUnalignedLE16(uint16_t *p, uint16_t value)
-{
-#ifdef CAN_READ_WRITE_UNALIGNED
-  *p = ToLE16(value);
-#else
-  uint8_t *c = (uint8_t *)p;
-  c[0] = value;
-  c[1] = value >> 8;
-#endif
-}
-
-static inline void
-WriteUnalignedBE16(uint16_t *p, uint16_t value)
-{
-#ifdef CAN_READ_WRITE_UNALIGNED
-  *p = ToBE16(value);
-#else
-  uint8_t *c = (uint8_t *)p;
-  c[0] = value >> 8;
-  c[1] = value;
-#endif
-}
-
-gcc_pure
-static inline uint32_t
-ReadUnalignedLE32(const uint32_t *p)
-{
-#ifdef CAN_READ_WRITE_UNALIGNED
-  return FromLE32(*p);
-#else
-  const uint8_t *c = (const uint8_t *)p;
-  return c[0] | (c[1] << 8) | (c[2] << 16) | (c[3] << 24);
-#endif
-}
-
-gcc_pure
-static inline uint32_t
-ReadUnalignedBE32(const uint32_t *p)
-{
-#ifdef CAN_READ_WRITE_UNALIGNED
-  return FromBE32(*p);
-#else
-  const uint8_t *c = (const uint8_t *)p;
-  return c[3] | (c[2] << 8) | (c[1] << 16) | (c[0] << 24);
-#endif
+	/* assuming two's complement representation */
+	return static_cast<int16_t>(FromLE16(value));
 }
 
 /**
@@ -346,7 +280,7 @@ public:
 		return u.out;
 	}
 
-	constexpr operator uint16_t() const {
+	constexpr operator uint16_t() const noexcept {
 		return (uint16_t(hi) << 8) | uint16_t(lo);
 	}
 
@@ -389,11 +323,11 @@ public:
 		return u.out;
 	}
 
-	constexpr operator uint16_t() const {
+	constexpr operator uint16_t() const noexcept {
 		return (uint16_t(hi) << 8) | uint16_t(lo);
 	}
 
-	PackedLE16 &operator=(uint16_t new_value) {
+	PackedLE16 &operator=(uint16_t new_value) noexcept {
 		lo = uint8_t(new_value);
 		hi = uint8_t(new_value >> 8);
 		return *this;
