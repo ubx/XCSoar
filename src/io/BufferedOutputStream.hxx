@@ -53,7 +53,7 @@ class BufferedOutputStream {
 	DynamicFifoBuffer<char> buffer;
 
 public:
-	explicit BufferedOutputStream(OutputStream &_os)
+	explicit BufferedOutputStream(OutputStream &_os) noexcept
 		:os(_os), buffer(32768) {}
 
 	void Write(const void *data, size_t size);
@@ -87,5 +87,14 @@ private:
 	void WriteWideToUTF8(const wchar_t *p, size_t length);
 #endif
 };
+
+template<typename F>
+void
+WithBufferedOutputStream(OutputStream &os, F &&f)
+{
+	BufferedOutputStream bos(os);
+	f(bos);
+	bos.Flush();
+}
 
 #endif

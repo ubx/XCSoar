@@ -22,7 +22,7 @@ Copyright_License {
 */
 
 #include "Screen/TopWindow.hpp"
-#include "Screen/Custom/TopCanvas.hpp"
+#include "ui/canvas/custom/TopCanvas.hpp"
 #include "ui/event/shared/Event.hpp"
 #include "ui/event/poll/Loop.hpp"
 #include "ui/event/Queue.hpp"
@@ -34,14 +34,16 @@ Copyright_License {
 #endif
 
 #ifdef KOBO
-#include "Screen/Canvas.hpp"
+#include "ui/canvas/Canvas.hpp"
+#endif
+
+#ifdef USE_FB
+#include "ui/canvas/memory/Canvas.hpp"
 #endif
 
 namespace UI {
 
 #ifdef USE_FB
-
-#include "Screen/Memory/Canvas.hpp"
 
 void
 TopWindow::CheckResize() noexcept

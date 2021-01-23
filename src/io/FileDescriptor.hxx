@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2018 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2012-2021 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,6 +32,7 @@
 
 #include "util/Compiler.h"
 
+#include <cstddef>
 #include <utility>
 
 #include <unistd.h>
@@ -178,7 +179,7 @@ public:
 	 * Duplicate the file descriptor onto the given file descriptor.
 	 */
 	bool Duplicate(FileDescriptor new_fd) const noexcept {
-		return ::dup2(Get(), new_fd.Get()) == 0;
+		return ::dup2(Get(), new_fd.Get()) != -1;
 	}
 
 	/**
@@ -229,7 +230,7 @@ public:
 	gcc_pure
 	off_t GetSize() const noexcept;
 
-	ssize_t Read(void *buffer, size_t length) noexcept {
+	ssize_t Read(void *buffer, std::size_t length) noexcept {
 		return ::read(fd, buffer, length);
 	}
 
@@ -237,11 +238,17 @@ public:
 	 * Read until all of the given buffer has been filled.  Throws
 	 * on error.
 	 */
-	void FullRead(void *buffer, size_t length);
+	void FullRead(void *buffer, std::size_t length);
 
-	ssize_t Write(const void *buffer, size_t length) noexcept {
+	ssize_t Write(const void *buffer, std::size_t length) noexcept {
 		return ::write(fd, buffer, length);
 	}
+
+	/**
+	 * Write until all of the given buffer has been written.
+	 * Throws on error.
+	 */
+	void FullWrite(const void *buffer, std::size_t length);
 
 #ifndef _WIN32
 	int Poll(short events, int timeout) const noexcept;

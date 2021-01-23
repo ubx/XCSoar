@@ -70,7 +70,7 @@ public:
   AllocatedPath operator+(const_pointer other) const;
 
   constexpr bool IsNull() const {
-    return value.IsNull();
+    return value == nullptr;
   }
 
   bool IsEmpty() const {
@@ -169,7 +169,7 @@ public:
   typedef Path::char_type char_type;
   typedef Path::const_pointer const_pointer;
   typedef Path::pointer pointer;
-  typedef AllocatedString<char_type> value_type;
+  typedef BasicAllocatedString<char_type> value_type;
 
   static constexpr auto SENTINEL = value_type::SENTINEL;
 
@@ -186,13 +186,13 @@ public:
   AllocatedPath(std::nullptr_t n):value(n) {}
 
   AllocatedPath(Path src)
-    :value(src.IsNull() ? nullptr : value_type::Duplicate(src.c_str())) {}
+    :value(src.IsNull() ? nullptr : value_type(src.c_str())) {}
 
   explicit AllocatedPath(const_pointer src)
     :AllocatedPath(Path(src)) {}
 
   AllocatedPath(const_pointer _begin, const_pointer _end)
-    :AllocatedPath(value_type::Duplicate({_begin, size_t(_end - _begin)})) {}
+    :AllocatedPath(value_type({_begin, size_t(_end - _begin)})) {}
 
   static AllocatedPath Donate(pointer value) {
     return value_type::Donate(value);
@@ -228,7 +228,7 @@ public:
   }
 
   bool IsNull() const {
-    return value.IsNull();
+    return value == nullptr;
   }
 
   bool IsEmpty() const {
@@ -255,12 +255,12 @@ public:
 
   gcc_pure
   bool operator==(std::nullptr_t) const {
-    return value.IsNull();
+    return value == nullptr;
   }
 
   gcc_pure
   bool operator!=(std::nullptr_t) const {
-    return !value.IsNull();
+    return value != nullptr;
   }
 
   operator Path() const {

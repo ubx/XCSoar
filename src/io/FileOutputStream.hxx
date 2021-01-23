@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2018 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2014-2021 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -45,10 +45,23 @@
 #include <windows.h>
 #endif
 
+#if defined(__linux__) && !defined(ANDROID)
+/* we don't use O_TMPFILE on Android because Android's braindead
+   SELinux policy disallows hardlinks
+   (https://android.googlesource.com/platform/external/sepolicy/+/85ce2c7),
+   even hardlinks from /proc/self/fd/N, which however is required to
+   use O_TMPFILE */
+#define HAVE_O_TMPFILE
+#endif
+
 class Path;
 
 class FileOutputStream final : public OutputStream {
 	const AllocatedPath path;
+
+#ifdef __linux__
+	const FileDescriptor directory_fd;
+#endif
 
 #ifdef _WIN32
 	HANDLE handle = INVALID_HANDLE_VALUE;
@@ -56,7 +69,7 @@ class FileOutputStream final : public OutputStream {
 	FileDescriptor fd = FileDescriptor::Undefined();
 #endif
 
-#ifdef __linux__
+#ifdef HAVE_O_TMPFILE
 	/**
 	 * Was O_TMPFILE used?  If yes, then linkat() must be used to
 	 * create a link to this file.
@@ -99,10 +112,18 @@ private:
 public:
 	explicit FileOutputStream(Path _path, Mode _mode=Mode::CREATE);
 
+#ifdef __linux__
+	FileOutputStream(FileDescriptor _directory_fd, Path _path,
+			 Mode _mode=Mode::CREATE);
+#endif
+
 	~FileOutputStream() noexcept {
 		if (IsDefined())
 			Cancel();
 	}
+
+	FileOutputStream(const FileOutputStream &) = delete;
+	FileOutputStream &operator=(const FileOutputStream &) = delete;
 
 public:
 	Path GetPath() const noexcept {
@@ -121,6 +142,7 @@ public:
 private:
 	void OpenCreate(bool visible);
 	void OpenAppend(bool create);
+	void Open();
 
 	bool Close() noexcept {
 		assert(IsDefined());

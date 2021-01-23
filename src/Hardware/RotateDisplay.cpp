@@ -34,11 +34,11 @@ Copyright_License {
 #endif
 
 #ifdef ENABLE_OPENGL
-#include "Screen/OpenGL/Features.hpp"
+#include "ui/opengl/Features.hpp"
 #ifdef SOFTWARE_ROTATE_DISPLAY
 #include "UIGlobals.hpp"
 #include "Screen/SingleWindow.hpp"
-#include "Screen/OpenGL/Globals.hpp"
+#include "ui/canvas/opengl/Globals.hpp"
 #endif
 #endif
 

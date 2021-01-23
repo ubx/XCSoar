@@ -24,9 +24,10 @@ Copyright_License {
 #ifndef XCSOAR_LOGO_VIEW_HPP
 #define XCSOAR_LOGO_VIEW_HPP
 
-#include "Screen/Bitmap.hpp"
-#include "Screen/Font.hpp"
+#include "ui/canvas/Bitmap.hpp"
+#include "ui/canvas/Font.hpp"
 
+struct PixelRect;
 class Canvas;
 
 class LogoView {

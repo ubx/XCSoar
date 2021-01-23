@@ -36,8 +36,8 @@ Copyright_License {
 #include "Widget/Widget.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
 #include "LocalPath.hpp"
-#include "Screen/Canvas.hpp"
-#include "Screen/Bitmap.hpp"
+#include "ui/canvas/Canvas.hpp"
+#include "ui/canvas/Bitmap.hpp"
 #include "Screen/Layout.hpp"
 #include "ui/event/KeyCode.hpp"
 #include "Screen/LargeTextWindow.hpp"
@@ -673,7 +673,7 @@ UpdateCaption(WndForm *form, const Waypoint &waypoint)
 
   if (key != nullptr) {
     const auto filename = Profile::map.GetPathBase(key);
-    if (!filename.IsNull())
+    if (filename != nullptr)
       buffer.AppendFormat(_T(" (%s)"), filename.c_str());
   } else if (name != nullptr)
     buffer.AppendFormat(_T(" (%s)"), name);

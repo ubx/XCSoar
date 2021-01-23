@@ -64,7 +64,7 @@ ConvertWideToACP(const TCHAR *p);
  */
 class UTF8ToWideConverter {
 #ifdef _UNICODE
-  typedef AllocatedString<TCHAR> Value;
+  typedef BasicAllocatedString<TCHAR> Value;
 #else
   typedef StringPointer<> Value;
 #endif
@@ -88,16 +88,16 @@ public:
   gcc_pure
   bool IsValid() const {
 #ifdef _UNICODE
-    return !value.IsNull();
+    return value != nullptr;
 #else
-    assert(!value.IsNull());
+    assert(value != nullptr);
 
     return ValidateUTF8(value.c_str());
 #endif
   }
 
   operator const_pointer() const {
-    assert(!value.IsNull());
+    assert(value != nullptr);
 
     return value.c_str();
   }
@@ -109,7 +109,7 @@ public:
  */
 class WideToUTF8Converter {
 #ifdef _UNICODE
-  typedef AllocatedString<> Value;
+  typedef AllocatedString Value;
 #else
   typedef StringPointer<> Value;
 #endif
@@ -133,16 +133,16 @@ public:
   gcc_pure
   bool IsValid() const {
 #ifdef _UNICODE
-    return !value.IsNull();
+    return value != nullptr;
 #else
-    assert(!value.IsNull());
+    assert(value != nullptr);
 
     return true;
 #endif
   }
 
   operator const_pointer() const {
-    assert(!value.IsNull());
+    assert(value != nullptr);
 
     return value.c_str();
   }
@@ -155,7 +155,7 @@ public:
  */
 class WideToACPConverter {
 #ifdef _UNICODE
-  typedef AllocatedString<> Value;
+  typedef AllocatedString Value;
 #else
   typedef StringPointer<> Value;
 #endif
@@ -179,16 +179,16 @@ public:
   gcc_pure
   bool IsValid() const {
 #ifdef _UNICODE
-    return !value.IsNull();
+    return value != nullptr;
 #else
-    assert(!value.IsNull());
+    assert(value != nullptr);
 
     return true;
 #endif
   }
 
   operator const_pointer() const {
-    assert(!value.IsNull());
+    assert(value != nullptr);
 
     return value.c_str();
   }

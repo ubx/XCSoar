@@ -47,7 +47,7 @@ Copyright_License {
 #include "Look/GlobalFonts.hpp"
 #include "ui/event/Globals.hpp"
 #include "ui/event/Queue.hpp"
-#include "Screen/OpenGL/Init.hpp"
+#include "ui/canvas/opengl/Init.hpp"
 #include "Dialogs/Message.hpp"
 #include "Simulator.hpp"
 #include "Profile/Profile.hpp"
@@ -75,8 +75,8 @@ Copyright_License {
 #include "VoltageDevice.hpp"
 
 #ifndef NDEBUG
-#include "Screen/OpenGL/Texture.hpp"
-#include "Screen/OpenGL/Buffer.hpp"
+#include "ui/canvas/opengl/Texture.hpp"
+#include "ui/canvas/opengl/Buffer.hpp"
 #endif
 
 #include <cassert>
@@ -94,24 +94,6 @@ Vibrator *vibrator;
 bool os_haptic_feedback_enabled;
 
 IOIOHelper *ioio_helper;
-
-extern "C" {
-  /* workaround for
-     http://code.google.com/p/android/issues/detail?id=23203 copied
-     from https://bugzilla.mozilla.org/show_bug.cgi?id=734832 */
-  __attribute__((weak)) void *__dso_handle;
-}
-
-gcc_visibility_default
-JNIEXPORT jint JNICALL
-Java_org_xcsoar_NativeView_getEglContextClientVersion(JNIEnv *env, jobject obj)
-{
-#ifdef HAVE_GLES2
-  return 2;
-#else
-  return 1;
-#endif
-}
 
 gcc_visibility_default
 JNIEXPORT jboolean JNICALL

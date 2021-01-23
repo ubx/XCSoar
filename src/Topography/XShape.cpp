@@ -30,7 +30,7 @@ Copyright_License {
 
 #ifdef ENABLE_OPENGL
 #include "Projection/Projection.hpp"
-#include "Screen/OpenGL/Triangulate.hpp"
+#include "ui/canvas/opengl/Triangulate.hpp"
 #endif
 
 #ifdef _UNICODE
@@ -41,7 +41,7 @@ Copyright_License {
 
 #include <tchar.h>
 
-static AllocatedString<TCHAR>
+static BasicAllocatedString<TCHAR>
 ImportLabel(const char *src)
 {
   if (src == nullptr)
@@ -54,12 +54,12 @@ ImportLabel(const char *src)
     return nullptr;
 
 #ifdef _UNICODE
-  return AllocatedString<TCHAR>::Donate(ConvertUTF8ToWide(src));
+  return BasicAllocatedString<TCHAR>::Donate(ConvertUTF8ToWide(src));
 #else
   if (!ValidateUTF8(src))
     return nullptr;
 
-  return AllocatedString<TCHAR>::Duplicate(src);
+  return BasicAllocatedString<TCHAR>(src);
 #endif
 }
 
