@@ -24,7 +24,7 @@ Copyright_License {
 #define ENABLE_DIALOG_LOOK
 
 #include "Main.hpp"
-#include "Screen/SingleWindow.hpp"
+#include "ui/window/SingleWindow.hpp"
 #include "ui/canvas/Canvas.hpp"
 #include "Look/ChartLook.hpp"
 #include "Form/List.hpp"
@@ -168,7 +168,7 @@ protected:
                    unsigned idx) noexcept override {
     assert(idx < ARRAY_SIZE(chart_names));
 
-    canvas.DrawText(rc.left + 2, rc.top + 2, chart_names[idx]);
+    canvas.DrawText(rc.WithPadding(2).GetTopLeft(), chart_names[idx]);
   }
 
   /* virtual methods from ListCursorHandler */

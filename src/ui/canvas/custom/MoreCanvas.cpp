@@ -34,7 +34,8 @@ Copyright_License {
 #include <winuser.h>
 
 unsigned
-Canvas::DrawFormattedText(PixelRect r, const TCHAR *text, unsigned format)
+Canvas::DrawFormattedText(PixelRect r, const TCHAR *text,
+                          unsigned format) noexcept
 {
   assert(text != nullptr);
 #ifndef UNICODE
@@ -80,7 +81,7 @@ Canvas::DrawFormattedText(PixelRect r, const TCHAR *text, unsigned format)
     TCHAR *prev_p = nullptr;
 
     // remove words from behind till line fits or no more space is found
-    while (unsigned(sz.cx) > r.GetWidth() &&
+    while (sz.width > r.GetWidth() &&
            (p = StringFindLast(duplicated + i, _T(' '))) != nullptr) {
       if (prev_p)
         *prev_p = _T(' ');
@@ -110,13 +111,13 @@ Canvas::DrawFormattedText(PixelRect r, const TCHAR *text, unsigned format)
       if (format & (DT_RIGHT | DT_CENTER)) {
         PixelSize sz = CalcTextSize(duplicated + i);
         x = (format & DT_CENTER)
-          ? (r.left + r.right - sz.cx) / 2
-          : r.right - sz.cx;  // DT_RIGHT
+          ? (r.left + r.right - (int)sz.width) / 2
+          : r.right - (int)sz.width;  // DT_RIGHT
       } else {  // default is DT_LEFT
         x = r.left;
       }
 
-      TextAutoClipped(x, y, duplicated + i);
+      TextAutoClipped({x, y}, duplicated + i);
 
       if (format & DT_UNDERLINE)
         DrawHLine(x, x + CalcTextWidth(duplicated + i),
@@ -132,8 +133,7 @@ Canvas::DrawFormattedText(PixelRect r, const TCHAR *text, unsigned format)
 }
 
 void
-Canvas::DrawText(int x, int y,
-                 const TCHAR *_text, size_t length)
+Canvas::DrawText(PixelPoint p, const TCHAR *_text, size_t length) noexcept
 {
   assert(_text != nullptr);
 
@@ -144,12 +144,12 @@ Canvas::DrawText(int x, int y,
   assert(ValidateUTF8(copy));
 #endif
 
-  DrawText(x, y, copy);
+  DrawText(p, copy);
 }
 
 void
-Canvas::DrawOpaqueText(int x, int y, const PixelRect &rc,
-                       const TCHAR *_text)
+Canvas::DrawOpaqueText(PixelPoint p, const PixelRect &rc,
+                       const TCHAR *_text) noexcept
 {
   assert(_text != nullptr);
 #ifndef UNICODE
@@ -157,5 +157,5 @@ Canvas::DrawOpaqueText(int x, int y, const PixelRect &rc,
 #endif
 
   DrawFilledRectangle(rc, background_color);
-  DrawTransparentText(x, y, _text);
+  DrawTransparentText(p, _text);
 }

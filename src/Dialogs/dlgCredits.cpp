@@ -63,8 +63,8 @@ LogoPageWindow::OnPaint(Canvas &canvas)
   PixelSize title_size = title.GetSize();
 
   // Draw 'XCSoar N.N' title
-  canvas.Copy(x, y, title_size.cx, title_size.cy, title, 0, 0);
-  y += title_size.cy + Layout::FastScale(20);
+  canvas.Copy({x, y}, title_size, title, {0, 0});
+  y += title_size.height + Layout::FastScale(20);
 
   Font font;
   font.Load(FontDescription(Layout::FontScale(16)));
@@ -72,25 +72,25 @@ LogoPageWindow::OnPaint(Canvas &canvas)
   canvas.SetTextColor(COLOR_BLACK);
   canvas.SetBackgroundTransparent();
 
-  canvas.DrawText(x, y, _T("version: "));
-  canvas.DrawText(x + Layout::FastScale(80), y, XCSoar_VersionString);
+  canvas.DrawText({x, y}, _T("version: "));
+  canvas.DrawText({x + Layout::FastScale(80), y}, XCSoar_VersionString);
   y += Layout::FastScale(22);
 
-  canvas.DrawText(x, y, _T("date: "));
-  canvas.DrawText(x + Layout::FastScale(80), y, _T(__DATE__));
+  canvas.DrawText({x, y}, _T("date: "));
+  canvas.DrawText({x + Layout::FastScale(80), y}, _T(__DATE__));
 #ifdef GIT_COMMIT_ID
   y += Layout::FastScale(22);
 
-  canvas.DrawText(x, y, _T("git: "));
-  canvas.DrawText(x + Layout::FastScale(80), y, _T(GIT_COMMIT_ID));
+  canvas.DrawText({x, y}, _T("git: "));
+  canvas.DrawText({x + Layout::FastScale(80), y}, _T(GIT_COMMIT_ID));
 #endif
   y += Layout::FastScale(37);
 
-  canvas.DrawText(x, y, _T("more information at"));
+  canvas.DrawText({x, y}, _T("more information at"));
   y += Layout::FastScale(22);
 
   canvas.SetTextColor(COLOR_XCSOAR);
-  canvas.DrawText(x, y, _T("http://www.xcsoar.org"));
+  canvas.DrawText({x, y}, _T("http://www.xcsoar.org"));
 }
 
 static Window *

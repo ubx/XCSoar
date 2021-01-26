@@ -30,7 +30,7 @@ Copyright_License {
 #define ENABLE_DIALOG_LOOK
 
 #include "Main.hpp"
-#include "Screen/SingleWindow.hpp"
+#include "ui/window/SingleWindow.hpp"
 #include "ui/canvas/BufferCanvas.hpp"
 #include "Look/AirspaceLook.hpp"
 #include "Look/TaskLook.hpp"
@@ -167,8 +167,8 @@ protected:
 
   virtual void OnResize(PixelSize new_size) override {
     PaintWindow::OnResize(new_size);
-    projection.SetScale(new_size.cx / 21000.);
-    projection.SetScreenOrigin(new_size.cx / 2, new_size.cy / 2);
+    projection.SetScale(new_size.width / 21000.);
+    projection.SetScreenOrigin(new_size.width / 2, new_size.height / 2);
   }
 };
 
@@ -260,7 +260,7 @@ protected:
   /* virtual methods from ListItemRenderer */
   void OnPaintItem(Canvas &canvas, const PixelRect rc,
                    unsigned idx) noexcept override {
-    canvas.DrawText(rc.left + 2, rc.top + 2, oz_type_names[idx]);
+    canvas.DrawText(rc.WithPadding(2).GetTopLeft(), oz_type_names[idx]);
   }
 
   /* virtual methods from ListCursorHandler */

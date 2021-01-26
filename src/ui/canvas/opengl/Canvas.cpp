@@ -96,8 +96,7 @@ ClipText(TStringView text, int x, unsigned canvas_width) noexcept
 }
 
 void
-Canvas::DrawFilledRectangle(int left, int top, int right, int bottom,
-                            const Color color)
+Canvas::DrawFilledRectangle(PixelRect r, const Color color) noexcept
 {
   assert(offset == OpenGL::translate);
 
@@ -109,10 +108,10 @@ Canvas::DrawFilledRectangle(int left, int top, int right, int bottom,
      shader */
 
   const BulkPixelPoint vertices[] = {
-    { left, top },
-    { right, top },
-    { left, bottom },
-    { right, bottom },
+    {r.left, r.top},
+    {r.right, r.top},
+    {r.left, r.bottom},
+    {r.right, r.bottom},
   };
 
   const ScopeVertexPointer vp(vertices);
@@ -120,13 +119,16 @@ Canvas::DrawFilledRectangle(int left, int top, int right, int bottom,
 }
 
 void
-Canvas::OutlineRectangleGL(int left, int top, int right, int bottom)
+Canvas::DrawOutlineRectangleGL(PixelRect r) noexcept
 {
+  --r.right;
+  --r.bottom;
+
   const ExactPixelPoint vertices[] = {
-    PixelPoint{left, top},
-    PixelPoint{right - 1, top},
-    PixelPoint{right - 1, bottom - 1},
-    PixelPoint{left, bottom - 1},
+    r.GetTopLeft(),
+    r.GetTopRight(),
+    r.GetBottomRight(),
+    r.GetBottomLeft(),
   };
 
   const ScopeVertexPointer vp(vertices);
@@ -146,7 +148,7 @@ Canvas::FadeToWhite(PixelRect rc, GLubyte alpha)
 {
   const ScopeAlphaBlend alpha_blend;
   const Color color(0xff, 0xff, 0xff, alpha);
-  DrawFilledRectangle(rc.left, rc.right, rc.right, rc.bottom, color);
+  DrawFilledRectangle(rc, color);
 }
 
 void
@@ -556,7 +558,7 @@ Canvas::DrawKeyhole(PixelPoint center,
 void
 Canvas::DrawFocusRectangle(PixelRect rc)
 {
-  DrawOutlineRectangle(rc.left, rc.top, rc.right, rc.bottom, COLOR_DARK_GRAY);
+  DrawOutlineRectangle(rc, COLOR_DARK_GRAY);
 }
 
 const PixelSize
@@ -577,7 +579,7 @@ Canvas::CalcTextSize(TStringView text) const noexcept
 
   /* see if the TextCache can handle this request */
   size = TextCache::LookupSize(*font, text2);
-  if (size.cy > 0)
+  if (size.height > 0)
     return size;
 
   return TextCache::GetSize(*font, text2);
@@ -594,7 +596,7 @@ PrepareColoredAlphaTexture(Color color)
 }
 
 void
-Canvas::DrawText(int x, int y, const TCHAR *text)
+Canvas::DrawText(PixelPoint p, const TCHAR *text) noexcept
 {
   assert(text != nullptr);
 #ifdef UNICODE
@@ -611,7 +613,7 @@ Canvas::DrawText(int x, int y, const TCHAR *text)
   if (font == nullptr)
     return;
 
-  const StringView text3 = ClipText(text2, x, size.cx);
+  const StringView text3 = ClipText(text2, p.x, size.width);
   if (text3.empty())
     return;
 
@@ -620,20 +622,18 @@ Canvas::DrawText(int x, int y, const TCHAR *text)
     return;
 
   if (background_mode == OPAQUE)
-    DrawFilledRectangle(x, y,
-                        x + texture->GetWidth(), y + texture->GetHeight(),
-                        background_color);
+    DrawFilledRectangle({p, texture->GetSize()}, background_color);
 
   PrepareColoredAlphaTexture(text_color);
 
   const ScopeAlphaBlend alpha_blend;
 
   texture->Bind();
-  texture->Draw(PixelPoint(x, y));
+  texture->Draw(p);
 }
 
 void
-Canvas::DrawTransparentText(int x, int y, const TCHAR *text)
+Canvas::DrawTransparentText(PixelPoint p, const TCHAR *text) noexcept
 {
   assert(text != nullptr);
 #ifdef UNICODE
@@ -650,7 +650,7 @@ Canvas::DrawTransparentText(int x, int y, const TCHAR *text)
   if (font == nullptr)
     return;
 
-  const StringView text3 = ClipText(text2, x, size.cx);
+  const StringView text3 = ClipText(text2, p.x, size.width);
   if (text3.empty())
     return;
 
@@ -663,12 +663,11 @@ Canvas::DrawTransparentText(int x, int y, const TCHAR *text)
   const ScopeAlphaBlend alpha_blend;
 
   texture->Bind();
-  texture->Draw(PixelPoint(x, y));
+  texture->Draw(p);
 }
 
 void
-Canvas::DrawClippedText(int x, int y,
-                        unsigned width, unsigned height,
+Canvas::DrawClippedText(PixelPoint p, PixelSize size,
                         const TCHAR *text)
 {
   assert(text != nullptr);
@@ -686,7 +685,7 @@ Canvas::DrawClippedText(int x, int y,
   if (font == nullptr)
     return;
 
-  const StringView text3 = ClipText(text2, 0, width);
+  const StringView text3 = ClipText(text2, 0, size.width);
   if (text3.empty())
     return;
 
@@ -694,18 +693,17 @@ Canvas::DrawClippedText(int x, int y,
   if (texture == nullptr)
     return;
 
-  if (texture->GetHeight() < height)
-    height = texture->GetHeight();
-  if (texture->GetWidth() < width)
-    width = texture->GetWidth();
+  if (texture->GetHeight() < size.height)
+    size.height = texture->GetHeight();
+  if (texture->GetWidth() < size.width)
+    size.width = texture->GetWidth();
 
   PrepareColoredAlphaTexture(text_color);
 
   const ScopeAlphaBlend alpha_blend;
 
   texture->Bind();
-  texture->Draw(PixelRect(PixelPoint(x, y), PixelSize(width, height)),
-                PixelRect(0, 0, width, height));
+  texture->Draw({p, size}, PixelRect{size});
 }
 
 void
@@ -731,18 +729,17 @@ Canvas::Stretch(PixelPoint dest_position, PixelSize dest_size,
 }
 
 void
-Canvas::Copy(int dest_x, int dest_y,
-             unsigned dest_width, unsigned dest_height,
-             const Bitmap &src, int src_x, int src_y)
+Canvas::Copy(PixelPoint dest_position, PixelSize dest_size,
+             const Bitmap &src, PixelPoint src_position) noexcept
 {
-  Stretch({dest_x, dest_y}, {dest_width, dest_height},
-          src, {src_x, src_y}, {dest_width, dest_height});
+  Stretch(dest_position, dest_size,
+          src, src_position, dest_size);
 }
 
 void
 Canvas::Copy(const Bitmap &src)
 {
-  Copy(0, 0, src.GetWidth(), src.GetHeight(), src, 0, 0);
+  Copy({0, 0}, src.GetSize(), src, {0, 0});
 }
 
 void
@@ -829,12 +826,10 @@ Canvas::CopyToTexture(GLTexture &texture, PixelRect src_rc) const
 }
 
 void
-Canvas::DrawRoundRectangle(int left, int top, int right, int bottom,
-                           unsigned ellipse_width,
-                           unsigned ellipse_height)
+Canvas::DrawRoundRectangle(PixelRect r, PixelSize ellipse_size) noexcept
 {
-  unsigned radius = std::min(std::min(ellipse_width, ellipse_height),
-                             unsigned(std::min(bottom - top,
-                                               right - left))) / 2u;
-  ::RoundRect(*this, left, top, right, bottom, radius);
+  unsigned radius = std::min(std::min(ellipse_size.width, ellipse_size.height),
+                             std::min(r.GetWidth(),
+                                      r.GetHeight())) / 2u;
+  ::RoundRect(*this, r, radius);
 }

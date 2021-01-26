@@ -500,9 +500,9 @@ TopographyFileRenderer::PaintLabels(Canvas &canvas,
       PixelSize tsize = canvas.CalcTextSize(label);
       PixelRect brect;
       brect.left = minx;
-      brect.right = brect.left + tsize.cx;
+      brect.right = brect.left + tsize.width;
       brect.top = miny;
-      brect.bottom = brect.top + tsize.cy;
+      brect.bottom = brect.top + tsize.height;
 
       if (!label_block.check(brect))
         continue;
@@ -510,7 +510,7 @@ TopographyFileRenderer::PaintLabels(Canvas &canvas,
       if (!drawn_labels.insert(label).second)
         continue;
 
-      canvas.DrawText(minx, miny, label);
+      canvas.DrawText({minx, miny}, label);
     }
   }
 }

@@ -129,57 +129,56 @@ Canvas::GetFontHeight() const
 }
 
 void
-Canvas::DrawText(int x, int y, const TCHAR *text)
+Canvas::DrawText(PixelPoint p, const TCHAR *text) noexcept
 {
   assert(IsDefined());
 
-  ::ExtTextOut(dc, x, y, 0, nullptr, text, _tcslen(text), nullptr);
+  ::ExtTextOut(dc, p.x, p.y, 0, nullptr, text, _tcslen(text), nullptr);
 }
 
 void
-Canvas::DrawText(int x, int y,
-                 const TCHAR *text, size_t length)
+Canvas::DrawText(PixelPoint p, const TCHAR *text, size_t length)
 {
   assert(IsDefined());
 
-  ::ExtTextOut(dc, x, y, 0, nullptr, text, length, nullptr);
+  ::ExtTextOut(dc, p.x, p.y, 0, nullptr, text, length, nullptr);
 }
 
 void
-Canvas::DrawOpaqueText(int x, int y, const PixelRect &_rc,
+Canvas::DrawOpaqueText(PixelPoint p, const PixelRect &_rc,
                        const TCHAR *text)
 {
   assert(IsDefined());
 
   RECT rc = _rc;
-  ::ExtTextOut(dc, x, y, ETO_OPAQUE, &rc, text, _tcslen(text), nullptr);
+  ::ExtTextOut(dc, p.x, p.y, ETO_OPAQUE, &rc, text, _tcslen(text), nullptr);
 }
 
 void
-Canvas::DrawClippedText(int x, int y, const PixelRect &_rc,
+Canvas::DrawClippedText(PixelPoint p, const PixelRect &_rc,
                         const TCHAR *text)
 {
   assert(IsDefined());
 
   RECT rc = _rc;
-  ::ExtTextOut(dc, x, y, ETO_CLIPPED, &rc, text, _tcslen(text), nullptr);
+  ::ExtTextOut(dc, p.x, p.y, ETO_CLIPPED, &rc, text, _tcslen(text), nullptr);
 }
 
 void
-Canvas::DrawClippedText(int x, int y, unsigned width,
+Canvas::DrawClippedText(PixelPoint p, unsigned width,
                         const TCHAR *text)
 {
   const PixelSize size = CalcTextSize(text);
 
   RECT rc;
-  ::SetRect(&rc, x, y, x + std::min(width, unsigned(size.cx)), y + size.cy);
-  ::ExtTextOut(dc, x, y, ETO_CLIPPED, &rc, text, _tcslen(text), nullptr);
+  ::SetRect(&rc, p.x, p.y,
+            p.x + std::min(width, size.width), p.y + size.height);
+  ::ExtTextOut(dc, p.x, p.y, ETO_CLIPPED, &rc, text, _tcslen(text), nullptr);
 }
 
 void
-Canvas::Copy(int dest_x, int dest_y,
-             unsigned dest_width, unsigned dest_height,
-             HBITMAP src, int src_x, int src_y,
+Canvas::Copy(PixelPoint dest_position, PixelSize dest_size,
+             HBITMAP src, PixelPoint src_position,
              DWORD dwRop)
 {
   assert(IsDefined());
@@ -187,40 +186,34 @@ Canvas::Copy(int dest_x, int dest_y,
 
   HDC virtual_dc = GetCompatibleDC();
   HBITMAP old = (HBITMAP)::SelectObject(virtual_dc, src);
-  Copy(dest_x, dest_y, dest_width, dest_height,
-       virtual_dc, src_x, src_y,
-       dwRop);
+  Copy(dest_position, dest_size, virtual_dc, src_position, dwRop);
   ::SelectObject(virtual_dc, old);
 }
 
 void
-Canvas::Copy(int dest_x, int dest_y,
-             unsigned dest_width, unsigned dest_height,
-             const Bitmap &src, int src_x, int src_y,
+Canvas::Copy(PixelPoint dest_position, PixelSize dest_size,
+             const Bitmap &src, PixelPoint src_position,
              DWORD dwRop)
 {
-  Copy(dest_x, dest_y, dest_width, dest_height,
-       src.GetNative(), src_x, src_y,
-       dwRop);
+  Copy(dest_position, dest_size, src.GetNative(), src_position, dwRop);
 }
 
 void
-Canvas::Copy(const Canvas &src, int src_x, int src_y)
+Canvas::Copy(const Canvas &src, PixelPoint src_position) noexcept
 {
-  Copy(0, 0, GetWidth(), GetHeight(), src, src_x, src_y);
+  Copy({0, 0}, GetSize(), src, src_position);
 }
 
 void
 Canvas::Copy(const Canvas &src)
 {
-  Copy(src, 0, 0);
+  Copy(src, {0, 0});
 }
 
 void
 Canvas::Copy(const Bitmap &src)
 {
-  const PixelSize size = src.GetSize();
-  Copy(0, 0, size.cx, size.cy, src, 0, 0);
+  Copy({0, 0}, src.GetSize(), src, {0, 0});
 }
 
 void
@@ -232,10 +225,10 @@ Canvas::CopyTransparentWhite(PixelPoint dest_position, PixelSize dest_size,
   assert(src.IsDefined());
 
   ::TransparentBlt(dc, dest_position.x, dest_position.y,
-                   dest_size.cx, dest_size.cy,
+                   dest_size.width, dest_size.height,
                    src.dc,
                    src_position.x, src_position.y,
-                   dest_size.cx, dest_size.cy,
+                   dest_size.width, dest_size.height,
                    COLOR_WHITE);
 }
 
@@ -351,9 +344,9 @@ Canvas::AlphaBlend(PixelPoint dest_position, PixelSize dest_size,
   fn.AlphaFormat = 0;
 
   ::AlphaBlend(dc, dest_position.x, dest_position.y,
-               dest_size.cx, dest_size.cy,
+               dest_size.width, dest_size.height,
                src, src_position.x, src_position.y,
-               src_size.cx, src_size.cy,
+               src_size.width, src_size.height,
                fn);
 }
 

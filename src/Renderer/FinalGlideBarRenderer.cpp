@@ -108,7 +108,7 @@ FinalGlideBarRenderer::Draw(Canvas &canvas, const PixelRect &rc,
   Offset = Layout::Scale(Offset);
   if (altitude_difference <= 0) {
     GlideBar[1].y = Layout::Scale(9);
-    dy_glidebar = text_size.cy + 2;
+    dy_glidebar = text_size.height + 2;
   } else {
     GlideBar[1].y = -Layout::Scale(9);
     clipping_arrow[1].y = -clipping_arrow[1].y;
@@ -131,7 +131,7 @@ FinalGlideBarRenderer::Draw(Canvas &canvas, const PixelRect &rc,
   Offset0 = Layout::Scale(Offset0);
   if (altitude_difference0 <= 0) {
     GlideBar0[1].y = Layout::Scale(9);
-    dy_glidebar0 = text_size.cy + 2;
+    dy_glidebar0 = text_size.height + 2;
   } else {
     GlideBar0[1].y = -Layout::Scale(9);
     clipping_arrow0[1].y = -clipping_arrow0[1].y;
@@ -244,10 +244,10 @@ FinalGlideBarRenderer::Draw(Canvas &canvas, const PixelRect &rc,
   style.shape = LabelShape::ROUNDED_BLACK;
   style.move_in_view = true;
 
-  if (text_size.cx < Layout::Scale(18)) {
+  if (text_size.width < Layout::Scale(18u)) {
     style.align = TextInBoxMode::Alignment::RIGHT;
-    TextInBox(canvas, Value, Layout::Scale(18), y0, style, rc);
+    TextInBox(canvas, Value, {Layout::Scale(18), y0}, style, rc);
   } else
-    TextInBox(canvas, Value, 0, y0, style, rc);
+    TextInBox(canvas, Value, {0, y0}, style, rc);
 
 }

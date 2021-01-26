@@ -49,10 +49,25 @@ struct PixelRect {
 
   constexpr PixelRect(PixelPoint origin, PixelSize size) noexcept
     :left(origin.x), top(origin.y),
-     right(origin.x + size.cx), bottom(origin.y + size.cy) {}
+     right(origin.x + size.width), bottom(origin.y + size.height) {}
 
   explicit constexpr PixelRect(PixelSize size) noexcept
-    :left(0), top(0), right(size.cx), bottom(size.cy) {}
+    :left(0), top(0), right(size.width), bottom(size.height) {}
+
+  /**
+   * Construct an empty rectangle at the given position.
+   */
+  explicit constexpr PixelRect(PixelPoint origin) noexcept
+    :left(origin.x), top(origin.y), right(origin.x), bottom(origin.y) {}
+
+  /**
+   * Construct a #PixelRect that is centered at the given #PixelPoint
+   * with the given (total) size.
+   */
+  static constexpr PixelRect Centered(PixelPoint center, PixelSize size) noexcept {
+    const PixelPoint top_left = center - size / 2u;
+    return {top_left, size};
+  }
 
   bool IsEmpty() noexcept {
     return left >= right || top >= bottom;
@@ -147,12 +162,44 @@ struct PixelRect {
   }
 
   /**
+   * Return a new #PixelRect grown by this number of pixels.
+   */
+  constexpr PixelRect WithMargin(PixelSize margin) const noexcept {
+    return {
+      left - (int)margin.width,
+      top - (int)margin.height,
+      right + (int)margin.width,
+      bottom + (int)margin.height,
+    };
+  }
+
+  constexpr PixelRect WithMargin(int margin) const noexcept {
+    return WithMargin({margin, margin});
+  }
+
+  /**
+   * Return a new #PixelRect shrunk by this number of pixels.
+   */
+  constexpr PixelRect WithPadding(PixelSize padding) const noexcept {
+    return {
+      left + (int)padding.width,
+      top + (int)padding.height,
+      right - (int)padding.width,
+      bottom - (int)padding.height,
+    };
+  }
+
+  constexpr PixelRect WithPadding(int padding) const noexcept {
+    return WithPadding({padding, padding});
+  }
+
+  /**
    * Calculate the top-left point of a rectangle centered inside this
    * one.
    */
   constexpr PixelPoint CenteredTopLeft(PixelSize size) const noexcept {
-    return PixelPoint((left + right - size.cx) / 2,
-                      (top + bottom - size.cy) / 2);
+    return PixelPoint((left + right - (int)size.width) / 2,
+                      (top + bottom - (int)size.height) / 2);
   }
 
 #ifdef USE_WINUSER

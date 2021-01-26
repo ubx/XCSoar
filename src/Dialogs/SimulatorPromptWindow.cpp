@@ -68,7 +68,7 @@ SimulatorPromptWindow::OnResize(PixelSize new_size)
 
   const PixelRect rc = GetClientRect();
 
-  const unsigned h_middle = new_size.cx / 2;
+  const unsigned h_middle = new_size.width / 2;
   const unsigned bottom_padding = Layout::Scale(15);
   const unsigned button_width = Layout::Scale(112);
   const unsigned button_height = Layout::Scale(30);
@@ -109,8 +109,7 @@ SimulatorPromptWindow::OnPaint(Canvas &canvas)
   canvas.Select(look.text_font);
   canvas.SetTextColor(COLOR_BLACK);
   canvas.SetBackgroundTransparent();
-  canvas.DrawText(label_position.x, label_position.y,
-                  _("What do you want to do?"));
+  canvas.DrawText(label_position, _("What do you want to do?"));
 
   ContainerWindow::OnPaint(canvas);
 }

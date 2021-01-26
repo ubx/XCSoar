@@ -31,7 +31,7 @@
 #endif
 
 #ifdef ENABLE_MAIN_WINDOW
-#include "Screen/SingleWindow.hpp"
+#include "ui/window/SingleWindow.hpp"
 #include "Form/ActionListener.hpp"
 #include "UIGlobals.hpp"
 #include "util/CharUtil.hxx"
@@ -57,7 +57,7 @@
 #endif
 
 #ifdef ENABLE_SCREEN
-#include "Screen/Init.hpp"
+#include "ui/window/Init.hpp"
 #include "Screen/Layout.hpp"
 #include "ui/dim/Size.hpp"
 #include "Fonts.hpp"
@@ -213,11 +213,11 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   if (a != nullptr && a[0] == '-' && IsDigitASCII(a[1])) {
     args.GetNext();
     char *p;
-    window_size.cx = ParseUnsigned(a + 1, &p);
+    window_size.width = ParseUnsigned(a + 1, &p);
     if (*p != 'x' && *p != 'X')
       args.UsageError();
     a = p;
-    window_size.cy = ParseUnsigned(a + 1, &p);
+    window_size.height = ParseUnsigned(a + 1, &p);
     if (*p != '\0')
       args.UsageError();
   }

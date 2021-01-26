@@ -26,7 +26,7 @@ Copyright_License {
 
 #include "Main.hpp"
 #include "Math/Angle.hpp"
-#include "Screen/SingleWindow.hpp"
+#include "ui/window/SingleWindow.hpp"
 #include "ui/canvas/BufferCanvas.hpp"
 #include "Form/Button.hpp"
 #include "Form/ActionListener.hpp"
@@ -170,9 +170,9 @@ private:
     canvas.SetTextColor(Color(0, 0, 128));
     canvas.SetBackgroundTransparent();
     canvas.Select(normal_font);
-    canvas.DrawText(5, 5, label);
+    canvas.DrawText({5, 5}, label);
 #ifndef ENABLE_OPENGL
-    canvas.DrawText(5, 25,
+    canvas.DrawText({5, 25},
                     buffered ? _T("buffered") : _T("not buffered"));
 #endif
   }

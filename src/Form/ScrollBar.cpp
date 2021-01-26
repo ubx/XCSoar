@@ -24,7 +24,7 @@ Copyright_License {
 #include "Form/ScrollBar.hpp"
 #include "ui/canvas/Canvas.hpp"
 #include "Screen/Layout.hpp"
-#include "Screen/PaintWindow.hpp"
+#include "ui/window/PaintWindow.hpp"
 #include "Asset.hpp"
 #include "util/Macros.hpp"
 
@@ -51,10 +51,10 @@ ScrollBar::SetSize(const PixelSize size)
     width = Layout::SmallScale(12);
 
   // Update the coordinates of the scrollbar
-  rc.left = size.cx - width;
+  rc.left = size.width - width;
   rc.top = 0;
-  rc.right = size.cx;
-  rc.bottom = size.cy;
+  rc.right = size.width;
+  rc.bottom = size.height;
 }
 
 void
@@ -126,7 +126,7 @@ ScrollBar::Paint(Canvas &canvas) const
   // draw rectangle around entire scrollbar area
   canvas.SelectBlackPen();
   canvas.SelectHollowBrush();
-  canvas.Rectangle(rc.left, rc.top, rc.right, rc.bottom);
+  canvas.DrawRectangle(rc);
 
   // ###################
   // ####  Buttons  ####
@@ -194,13 +194,11 @@ ScrollBar::Paint(Canvas &canvas) const
   const Color background_color = IsDithered() ? COLOR_BLACK : COLOR_GRAY;
 
   if (up_arrow_rect.bottom + 1 < rc_slider.top)
-    canvas.DrawFilledRectangle(rc.left + 1, up_arrow_rect.bottom + 1,
-                               rc.right, rc_slider.top,
+    canvas.DrawFilledRectangle({rc.left + 1, up_arrow_rect.bottom + 1, rc.right, rc_slider.top},
                                background_color);
 
   if (rc_slider.bottom + 1 < down_arrow_rect.top - 1)
-    canvas.DrawFilledRectangle(rc.left + 1, rc_slider.bottom + 1,
-                               rc.right, down_arrow_rect.top - 1,
+    canvas.DrawFilledRectangle({rc.left + 1, rc_slider.bottom + 1, rc.right, down_arrow_rect.top - 1},
                                background_color);
 }
 

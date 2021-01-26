@@ -70,8 +70,8 @@ protected:
 
   void Create(HDC _dc, PixelSize new_size) {
     assert(_dc != nullptr);
-    assert(new_size.cx > 0);
-    assert(new_size.cy > 0);
+    assert(new_size.width > 0);
+    assert(new_size.height > 0);
 
     Destroy();
 
@@ -106,13 +106,13 @@ public:
   unsigned GetWidth() const {
     assert(IsDefined());
 
-    return size.cx;
+    return size.width;
   }
 
   unsigned GetHeight() const {
     assert(IsDefined());
 
-    return size.cy;
+    return size.height;
   }
 
   gcc_pure
@@ -233,26 +233,10 @@ public:
     ::SetROP2(dc, R2_MASKPEN);
   }
 
-  void Rectangle(int left, int top, int right, int bottom) {
+  void DrawRectangle(PixelRect r) noexcept {
     assert(IsDefined());
 
-    ::Rectangle(dc, left, top, right, bottom);
-  }
-
-  void DrawFilledRectangle(int left, int top, int right, int bottom,
-                           const HWColor color) {
-    PixelRect rc;
-    rc.left = left;
-    rc.top = top;
-    rc.right = right;
-    rc.bottom = bottom;
-
-    DrawFilledRectangle(rc, color);
-  }
-
-  void DrawFilledRectangle(int left, int top, int right, int bottom,
-                           const Color color) {
-    DrawFilledRectangle(left, top, right, bottom, map(color));
+    ::Rectangle(dc, r.left, r.top, r.right, r.bottom);
   }
 
   void DrawFilledRectangle(const PixelRect &_rc, const HWColor color) {
@@ -277,16 +261,6 @@ public:
     ::FillRect(dc, &rc, brush.Native());
   }
 
-  void DrawFilledRectangle(int left, int top, int right, int bottom,
-                           const Brush &brush) {
-    PixelRect rc;
-    rc.left = left;
-    rc.top = top;
-    rc.right = right;
-    rc.bottom = bottom;
-    DrawFilledRectangle(rc, brush);
-  }
-
   void InvertRectangle(const RECT r) {
     ::InvertRect(dc, &r);
   }
@@ -296,19 +270,19 @@ public:
   }
 
   void Clear() {
-    Rectangle(0, 0, GetWidth(), GetHeight());
+    DrawRectangle(GetRect());
   }
 
   void Clear(const HWColor color) {
-    DrawFilledRectangle(0, 0, GetWidth(), GetHeight(), color);
+    DrawFilledRectangle(GetRect(), color);
   }
 
   void Clear(const Color color) {
-    DrawFilledRectangle(0, 0, GetWidth(), GetHeight(), color);
+    DrawFilledRectangle(GetRect(), color);
   }
 
   void Clear(const Brush &brush) {
-    DrawFilledRectangle(0, 0, GetWidth(), GetHeight(), brush);
+    DrawFilledRectangle(GetRect(), brush);
   }
 
   void ClearWhite() {
@@ -317,12 +291,11 @@ public:
     ::BitBlt(dc, 0, 0, GetWidth(), GetHeight(), nullptr, 0, 0, WHITENESS);
   }
 
-  void DrawRoundRectangle(int left, int top, int right, int bottom,
-                          unsigned ellipse_width,
-                          unsigned ellipse_height) {
+  void DrawRoundRectangle(PixelRect r, PixelSize ellipse_size) noexcept {
     assert(IsDefined());
 
-    ::RoundRect(dc, left, top, right, bottom, ellipse_width, ellipse_height);
+    ::RoundRect(dc, r.left, r.top, r.right, r.bottom,
+                ellipse_size.width, ellipse_size.height);
   }
 
   void DrawRaisedEdge(PixelRect &_rc) {
@@ -409,27 +382,27 @@ public:
 
   gcc_pure
   unsigned CalcTextWidth(const TCHAR *text) const {
-    return CalcTextSize(text).cx;
+    return CalcTextSize(text).width;
   }
 
   gcc_pure
   unsigned GetFontHeight() const;
 
-  void DrawText(int x, int y, const TCHAR *text);
-  void DrawText(int x, int y,
-                const TCHAR *text, size_t length);
-  void DrawOpaqueText(int x, int y, const PixelRect &rc, const TCHAR *text);
+  void DrawText(PixelPoint p, const TCHAR *text) noexcept;
+  void DrawText(PixelPoint p, const TCHAR *text, size_t length) noexcept;
+  void DrawOpaqueText(PixelPoint p, const PixelRect &rc,
+                      const TCHAR *text);
 
-  void DrawClippedText(int x, int y, const PixelRect &rc,
+  void DrawClippedText(PixelPoint p, const PixelRect &rc,
                        const TCHAR *text);
-  void DrawClippedText(int x, int y, unsigned width,
+  void DrawClippedText(PixelPoint p, unsigned width,
                        const TCHAR *text);
 
   /**
    * Render text, clip it within the bounds of this Canvas.
    */
-  void TextAutoClipped(int x, int y, const TCHAR *t) {
-    DrawText(x, y, t);
+  void TextAutoClipped(PixelPoint p, const TCHAR *t) {
+    DrawText(p, t);
   }
 
   unsigned DrawFormattedText(RECT rc, const TCHAR *text, unsigned format) {
@@ -438,31 +411,31 @@ public:
     return rc.bottom - rc.top;
   }
 
-  void Copy(int dest_x, int dest_y, unsigned dest_width, unsigned dest_height,
-            HDC src, int src_x, int src_y,
+  void Copy(PixelPoint dest_position, PixelSize dest_size,
+            HDC src, PixelPoint src_position,
             DWORD dwRop=SRCCOPY) {
     assert(IsDefined());
     assert(src != nullptr);
 
-    ::BitBlt(dc, dest_x, dest_y, dest_width, dest_height,
-             src, src_x, src_y, dwRop);
+    ::BitBlt(dc, dest_position.x, dest_position.y,
+             dest_size.width, dest_size.height,
+             src, src_position.x, src_position.y, dwRop);
   }
 
-  void Copy(int dest_x, int dest_y, unsigned dest_width, unsigned dest_height,
-            const Canvas &src, int src_x, int src_y) {
-    Copy(dest_x, dest_y, dest_width, dest_height,
-         src.dc, src_x, src_y);
+  void Copy(PixelPoint dest_position, PixelSize dest_size,
+            const Canvas &src, PixelPoint src_position) noexcept {
+    Copy(dest_position, dest_size, src.dc, src_position);
   }
 
-  void Copy(int dest_x, int dest_y, unsigned dest_width, unsigned dest_height,
-            HBITMAP src, int src_x, int src_y,
+  void Copy(PixelPoint dest_position, PixelSize dest_size,
+            HBITMAP src, PixelPoint src_position,
             DWORD dwRop=SRCCOPY);
 
-  void Copy(int dest_x, int dest_y, unsigned dest_width, unsigned dest_height,
-            const Bitmap &src, int src_x, int src_y,
+  void Copy(PixelPoint dest_position, PixelSize dest_size,
+            const Bitmap &src, PixelPoint src_position,
             DWORD dwRop=SRCCOPY);
 
-  void Copy(const Canvas &src, int src_x, int src_y);
+  void Copy(const Canvas &src, PixelPoint src_position) noexcept;
   void Copy(const Canvas &src);
 
   void Copy(const Bitmap &src);
@@ -480,9 +453,9 @@ public:
     assert(src != nullptr);
 
     ::StretchBlt(dc, dest_position.x, dest_position.y,
-                 dest_size.cx, dest_size.cy,
+                 dest_size.width, dest_size.height,
                  src, src_position.x, src_position.y,
-                 src_size.cx, src_size.cy,
+                 src_size.width, src_size.height,
                  dwRop);
   }
 
@@ -563,62 +536,46 @@ public:
   }
 #endif
 
-  void CopyOr(int dest_x, int dest_y,
-              unsigned dest_width, unsigned dest_height,
-              const Canvas &src, int src_x, int src_y) {
-    Copy(dest_x, dest_y, dest_width, dest_height,
-         src, src_x, src_y, SRCPAINT);
+  void CopyOr(PixelPoint dest_position, PixelSize dest_size,
+              const Canvas &src, PixelPoint src_position) noexcept {
+    Copy(dest_position, dest_size, src, src_position, SRCPAINT);
   }
 
   void CopyOr(const Canvas &src) {
-    CopyOr(0, 0, GetWidth(), GetHeight(), src, 0, 0);
+    CopyOr({0, 0}, GetSize(), src, {0, 0});
   }
 
-  void CopyOr(int dest_x, int dest_y,
-              unsigned dest_width, unsigned dest_height,
-              const Bitmap &src, int src_x, int src_y) {
-    Copy(dest_x, dest_y, dest_width, dest_height,
-         src, src_x, src_y,
-         SRCPAINT);
+  void CopyOr(PixelPoint dest_position, PixelSize dest_size,
+              const Bitmap &src, PixelPoint src_position) noexcept {
+    Copy(dest_position, dest_size, src, src_position, SRCPAINT);
   }
 
   /**
    * Merges the colors of the inverted source bitmap with the colors
    * of this Canvas using the "OR" operator.
    */
-  void CopyNotOr(int dest_x, int dest_y,
-                 unsigned dest_width, unsigned dest_height,
-                 const Bitmap &src, int src_x, int src_y) {
-    Copy(dest_x, dest_y, dest_width, dest_height,
-         src, src_x, src_y,
-         MERGEPAINT);
+  void CopyNotOr(PixelPoint dest_position, PixelSize dest_size,
+                 const Bitmap &src, PixelPoint src_position) noexcept {
+    Copy(dest_position, dest_size, src, src_position, MERGEPAINT);
   }
 
-  void CopyNot(int dest_x, int dest_y,
-               unsigned dest_width, unsigned dest_height,
-               const Bitmap &src, int src_x, int src_y) {
-    Copy(dest_x, dest_y, dest_width, dest_height,
-         src, src_x, src_y,
-         NOTSRCCOPY);
+  void CopyNot(PixelPoint dest_position, PixelSize dest_size,
+               const Bitmap &src, PixelPoint src_position) noexcept {
+    Copy(dest_position, dest_size, src, src_position, NOTSRCCOPY);
   }
 
-  void CopyAnd(int dest_x, int dest_y,
-               unsigned dest_width, unsigned dest_height,
-               const Canvas &src, int src_x, int src_y) {
-    Copy(dest_x, dest_y, dest_width, dest_height,
-         src.dc, src_x, src_y, SRCAND);
+  void CopyAnd(PixelPoint dest_position, PixelSize dest_size,
+               const Canvas &src, PixelPoint src_position) noexcept {
+    Copy(dest_position, dest_size, src.dc, src_position, SRCAND);
   }
 
   void CopyAnd(const Canvas &src) {
-    CopyAnd(0, 0, GetWidth(), GetHeight(), src, 0, 0);
+    CopyAnd({0, 0}, GetSize(), src, {0, 0});
   }
 
-  void CopyAnd(int dest_x, int dest_y,
-               unsigned dest_width, unsigned dest_height,
-               const Bitmap &src, int src_x, int src_y) {
-    Copy(dest_x, dest_y, dest_width, dest_height,
-         src, src_x, src_y,
-         SRCAND);
+  void CopyAnd(PixelPoint dest_position, PixelSize dest_size,
+               const Bitmap &src, PixelPoint src_position) noexcept {
+    Copy(dest_position, dest_size, src, src_position, SRCAND);
   }
 
   void ScaleCopy(PixelPoint dest_position,

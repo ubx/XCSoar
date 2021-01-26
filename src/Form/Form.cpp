@@ -25,7 +25,7 @@ Copyright_License {
 #include "time/PeriodClock.hpp"
 #include "Asset.hpp"
 #include "ui/canvas/Canvas.hpp"
-#include "Screen/SingleWindow.hpp"
+#include "ui/window/SingleWindow.hpp"
 #include "Screen/Layout.hpp"
 #include "ui/event/KeyCode.hpp"
 #include "util/Macros.hpp"
@@ -33,7 +33,7 @@ Copyright_License {
 #include "ui/event/Globals.hpp"
 
 #ifndef USE_WINUSER
-#include "Screen/Custom/Reference.hpp"
+#include "ui/window/custom/Reference.hpp"
 #endif
 
 #ifdef ENABLE_OPENGL
@@ -496,9 +496,7 @@ WndForm::OnPaint(Canvas &canvas)
   if (!IsMaximised()) {
 #ifndef USE_GDI
     if (IsDithered())
-      canvas.DrawOutlineRectangle(rcClient.left, rcClient.top,
-                                  rcClient.right, rcClient.bottom,
-                                  COLOR_BLACK);
+      canvas.DrawOutlineRectangle(rcClient, COLOR_BLACK);
     else
 #endif
       canvas.DrawRaisedEdge(rcClient);
@@ -520,15 +518,15 @@ WndForm::OnPaint(Canvas &canvas)
                      look.caption.background_bitmap);
 
       // Draw titlebar text
-      canvas.DrawText(title_rect.left + Layout::GetTextPadding(),
-                      title_rect.top, caption.c_str());
+      canvas.DrawText({title_rect.left + Layout::GetTextPadding(), title_rect.top},
+                      caption.c_str());
     } else {
 #endif
       canvas.SetBackgroundColor(is_active
                                 ? look.caption.background_color
                                 : look.caption.inactive_background_color);
-      canvas.DrawOpaqueText(title_rect.left + Layout::GetTextPadding(),
-                            title_rect.top, title_rect, caption.c_str());
+      canvas.DrawOpaqueText({title_rect.left + Layout::GetTextPadding(), title_rect.top},
+                            title_rect, caption.c_str());
 #ifdef EYE_CANDY
     }
 #endif
@@ -537,8 +535,7 @@ WndForm::OnPaint(Canvas &canvas)
   if (dragging) {
 #ifdef ENABLE_OPENGL
     const ScopeAlphaBlend alpha_blend;
-    canvas.DrawFilledRectangle(0, 0, canvas.GetWidth(), canvas.GetHeight(),
-                               COLOR_YELLOW.WithAlpha(80));
+    canvas.Clear(COLOR_YELLOW.WithAlpha(80));
 #elif defined(USE_GDI)
     canvas.InvertRectangle(title_rect);
 #else

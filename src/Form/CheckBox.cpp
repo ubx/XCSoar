@@ -185,11 +185,12 @@ CheckBoxControl::OnPaint(Canvas &canvas)
           : cb_look.standard))
     : cb_look.disabled;
 
-  unsigned size = canvas.GetHeight() - 4;
+  const unsigned padding = 2;
+  unsigned size = canvas.GetHeight() - 2 * padding;
 
   canvas.Select(state_look.box_brush);
   canvas.Select(state_look.box_pen);
-  canvas.Rectangle(2, 2, size, size);
+  canvas.DrawRectangle(PixelRect{PixelSize{canvas.GetHeight()}}.WithPadding(padding));
 
   if (checked) {
     canvas.Select(state_look.check_brush);
@@ -216,5 +217,5 @@ CheckBoxControl::OnPaint(Canvas &canvas)
   canvas.Select(*cb_look.font);
   canvas.SetTextColor(state_look.text_color);
   canvas.SetBackgroundTransparent();
-  canvas.DrawText(canvas.GetHeight() + 2, 2, caption.c_str());
+  canvas.DrawText({canvas.GetHeight() + 2, 2}, caption.c_str());
 }

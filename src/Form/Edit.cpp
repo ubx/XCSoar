@@ -132,7 +132,7 @@ WndProperty::~WndProperty() noexcept
 unsigned
 WndProperty::GetRecommendedCaptionWidth() const noexcept
 {
-  return look.text_font.TextSize(caption).cx + Layout::GetTextPadding() * 2;
+  return look.text_font.TextSize(caption).width + Layout::GetTextPadding() * 2;
 }
 
 void
@@ -302,19 +302,19 @@ WndProperty::OnPaint(Canvas &canvas)
     PixelPoint org;
     if (caption_width < 0) {
       org.x = edit_rc.left;
-      org.y = edit_rc.top - tsize.cy;
+      org.y = edit_rc.top - tsize.height;
     } else {
-      org.x = caption_width - tsize.cx - Layout::GetTextPadding();
-      org.y = (GetHeight() - tsize.cy) / 2;
+      org.x = caption_width - tsize.width - Layout::GetTextPadding();
+      org.y = (GetHeight() - tsize.height) / 2;
     }
 
     if (org.x < 1)
       org.x = 1;
 
     if (HaveClipping())
-      canvas.DrawText(org.x, org.y, caption.c_str());
+      canvas.DrawText(org, caption.c_str());
     else
-      canvas.DrawClippedText(org.x, org.y, caption_width - org.x,
+      canvas.DrawClippedText(org, caption_width - org.x,
                              caption.c_str());
   }
 
@@ -337,8 +337,7 @@ WndProperty::OnPaint(Canvas &canvas)
 
   canvas.SelectHollowBrush();
   canvas.SelectBlackPen();
-  canvas.Rectangle(edit_rc.left, edit_rc.top,
-                   edit_rc.right, edit_rc.bottom);
+  canvas.DrawRectangle(edit_rc);
 
   if (!value.empty()) {
     canvas.SetTextColor(text_color);
@@ -350,7 +349,7 @@ WndProperty::OnPaint(Canvas &canvas)
     const int text_height = canvas.GetFontHeight();
     const int y = edit_rc.top + (canvas_height - text_height) / 2;
 
-    canvas.TextAutoClipped(x, y, value.c_str());
+    canvas.TextAutoClipped({x, y}, value.c_str());
   }
 }
 

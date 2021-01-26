@@ -110,11 +110,11 @@ public:
   }
 
   unsigned GetWidth() const {
-    return size.cx;
+    return size.width;
   }
 
   unsigned GetHeight() const {
-    return size.cy;
+    return size.height;
   }
 
   gcc_pure
@@ -192,46 +192,33 @@ public:
 
   void InvertRectangle(PixelRect r);
 
-  void Rectangle(int left, int top, int right, int bottom) {
-    DrawFilledRectangle(left, top, right, bottom, brush);
+  void DrawRectangle(PixelRect r) noexcept {
+    DrawFilledRectangle(r, brush);
 
     if (IsPenOverBrush())
-      DrawOutlineRectangle(left, top, right, bottom);
+      DrawOutlineRectangle(r);
   }
 
-  void DrawFilledRectangle(int left, int top,
-                           int right, int bottom,
-                           const Color color);
+  void DrawFilledRectangle(PixelRect r, const Color color) noexcept;
 
-  void DrawFilledRectangle(int left, int top,
-                           int right, int bottom,
-                           const Brush &brush) {
+  void DrawFilledRectangle(PixelRect r, const Brush &brush) noexcept {
     if (!brush.IsHollow())
-      DrawFilledRectangle(left, top, right, bottom, brush.GetColor());
-  }
-
-  void DrawFilledRectangle(const PixelRect &rc, const Color color) {
-    DrawFilledRectangle(rc.left, rc.top, rc.right, rc.bottom, color);
-  }
-
-  void DrawFilledRectangle(const PixelRect &rc, const Brush &brush) {
-    DrawFilledRectangle(rc.left, rc.top, rc.right, rc.bottom, brush);
+      DrawFilledRectangle(r, brush.GetColor());
   }
 
   /**
    * Draw a rectangle outline with the current OpenGL color and
    * settings.
    */
-  void OutlineRectangleGL(int left, int top, int right, int bottom);
+  void DrawOutlineRectangleGL(PixelRect r) noexcept;
 
-  void DrawOutlineRectangle(int left, int top, int right, int bottom) {
+  void DrawOutlineRectangle(PixelRect r) noexcept {
     pen.Bind();
-    OutlineRectangleGL(left, top, right, bottom);
+    DrawOutlineRectangleGL(r);
     pen.Unbind();
   }
 
-  void DrawOutlineRectangle(int left, int top, int right, int bottom,
-                            Color color) {
+  void DrawOutlineRectangle(PixelRect r, Color color) noexcept {
     color.Bind();
 #if defined(HAVE_GLES) && !defined(HAVE_GLES2)
     glLineWidthx(1 << 16);
@@ -239,7 +226,7 @@ public:
     glLineWidth(1);
 #endif
 
-    OutlineRectangleGL(left, top, right, bottom);
+    DrawOutlineRectangleGL(r);
   }
 
   /**
@@ -252,23 +239,22 @@ public:
   void FadeToWhite(GLubyte alpha);
 
   void Clear() {
-    Rectangle(0, 0, GetWidth(), GetHeight());
+    DrawRectangle(PixelRect{GetSize()});
   }
 
   void Clear(const Color color) {
-    DrawFilledRectangle(0, 0, GetWidth(), GetHeight(), color);
+    DrawFilledRectangle(PixelRect{GetSize()}, color);
   }
 
   void Clear(const Brush &brush) {
-    DrawFilledRectangle(0, 0, GetWidth(), GetHeight(), brush);
+    DrawFilledRectangle(PixelRect{GetSize()}, brush);
   }
 
   void ClearWhite() {
     Clear(COLOR_WHITE);
   }
 
-  void DrawRoundRectangle(int left, int top, int right, int bottom,
-                          unsigned ellipse_width, unsigned ellipse_height);
+  void DrawRoundRectangle(PixelRect r, PixelSize ellipse_size) noexcept;
 
   void DrawRaisedEdge(PixelRect &rc);
 
@@ -343,7 +329,7 @@ public:
 
   gcc_pure
   unsigned CalcTextWidth(const TCHAR *text) const {
-    return CalcTextSize(text).cx;
+    return CalcTextSize(text).width;
   }
 
   gcc_pure
@@ -351,37 +337,36 @@ public:
     return font != nullptr ? font->GetHeight() : 0;
   }
 
-  void DrawText(int x, int y, const TCHAR *text);
-  void DrawText(int x, int y, const TCHAR *text, size_t length);
+  void DrawText(PixelPoint p, const TCHAR *text) noexcept;
+  void DrawText(PixelPoint p, const TCHAR *text, size_t length) noexcept;
 
-  void DrawTransparentText(int x, int y, const TCHAR *text);
+  void DrawTransparentText(PixelPoint p, const TCHAR *text) noexcept;
 
-  void DrawOpaqueText(int x, int y, const PixelRect &rc,
-                      const TCHAR *text);
+  void DrawOpaqueText(PixelPoint p, const PixelRect &rc,
+                      const TCHAR *text) noexcept;
 
-  void DrawClippedText(int x, int y, const PixelRect &rc,
-                       const TCHAR *text) {
+  void DrawClippedText(PixelPoint p, const PixelRect &rc,
+                       const TCHAR *text) noexcept {
     // XXX
 
-    if (x < rc.right)
-      DrawClippedText(x, y, rc.right - x, text);
+    if (p.x < rc.right)
+      DrawClippedText(p, rc.right - p.x, text);
   }
 
-  void DrawClippedText(int x, int y,
-                       unsigned width, unsigned height,
+  void DrawClippedText(PixelPoint p, PixelSize size,
                        const TCHAR *text);
 
-  void DrawClippedText(int x, int y, unsigned width,
+  void DrawClippedText(PixelPoint p, unsigned width,
                        const TCHAR *text) {
-    DrawClippedText(x, y, width, 16384, text);
+    DrawClippedText(p, {width, 16384u}, text);
   }
 
   /**
    * Render text, clip it within the bounds of this Canvas.
    */
-  void TextAutoClipped(int x, int y, const TCHAR *t) {
-    if (x < (int)GetWidth() && y < (int)GetHeight())
-      DrawClippedText(x, y, GetWidth() - x, GetHeight() - y, t);
+  void TextAutoClipped(PixelPoint p, const TCHAR *t) noexcept {
+    if (p.x < (int)GetWidth() && p.y < (int)GetHeight())
+      DrawClippedText(p, {GetWidth() - p.x, GetHeight() - p.y}, t);
   }
 
   /**
@@ -389,7 +374,8 @@ public:
    *
    * @return the resulting text height
    */
-  unsigned DrawFormattedText(PixelRect r, const TCHAR *text, unsigned format);
+  unsigned DrawFormattedText(PixelRect r, const TCHAR *text,
+                             unsigned format) noexcept;
 
   /**
    * Draws a texture.  The caller is responsible for binding it and
@@ -402,9 +388,8 @@ public:
   void Stretch(PixelPoint dest_position, PixelSize dest_size,
                const GLTexture &texture);
 
-  void Copy(int dest_x, int dest_y,
-            unsigned dest_width, unsigned dest_height,
-            const Bitmap &src, int src_x, int src_y);
+  void Copy(PixelPoint dest_position, PixelSize dest_size,
+            const Bitmap &src, PixelPoint src_position) noexcept;
   void Copy(const Bitmap &src);
 
   void StretchNot(const Bitmap &src);

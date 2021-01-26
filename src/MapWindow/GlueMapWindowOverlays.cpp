@@ -99,13 +99,12 @@ GlueMapWindow::DrawPanInfo(Canvas &canvas) const
 
   unsigned padding = Layout::FastScale(4);
   unsigned height = font.GetHeight();
-  int y = 0 + padding;
-  int x = render_projection.GetScreenWidth() - padding;
+  PixelPoint p(render_projection.GetScreenWidth() - padding, padding);
 
   if (compass_visible)
     /* don't obscure the north arrow */
     /* TODO: obtain offset from CompassRenderer */
-    y += Layout::Scale(19) + Layout::FastScale(13);
+    p.y += Layout::Scale(19) + Layout::FastScale(13);
 
   if (terrain) {
     TerrainHeight elevation = terrain->GetTerrainHeight(location);
@@ -114,11 +113,10 @@ GlueMapWindow::DrawPanInfo(Canvas &canvas) const
       elevation_long = _("Elevation: ");
       elevation_long += FormatUserAltitude(elevation.GetValue());
 
-      TextInBox(canvas, elevation_long, x, y, mode,
-                render_projection.GetScreenWidth(),
-                render_projection.GetScreenHeight());
+      TextInBox(canvas, elevation_long, p, mode,
+                render_projection.GetScreenSize());
 
-      y += height;
+      p.y += height;
     }
   }
 
@@ -131,11 +129,9 @@ GlueMapWindow::DrawPanInfo(Canvas &canvas) const
     if (newline != nullptr)
       *newline = _T('\0');
 
-    TextInBox(canvas, start, x, y, mode,
-              render_projection.GetScreenWidth(),
-              render_projection.GetScreenHeight());
+    TextInBox(canvas, start, p, mode, render_projection.GetScreenSize());
 
-    y += height;
+    p.y += height;
 
     if (newline == nullptr)
       break;
@@ -165,7 +161,7 @@ GlueMapWindow::DrawGPSStatus(Canvas &canvas, const PixelRect &rc,
                rc.bottom - Layout::FastScale(35));
   icon->Draw(canvas, p);
 
-  p.x += icon->GetSize().cx + Layout::FastScale(4);
+  p.x += icon->GetSize().width + Layout::FastScale(4);
   p.y = rc.bottom - Layout::FastScale(34);
 
   TextInBoxMode mode;
@@ -173,7 +169,7 @@ GlueMapWindow::DrawGPSStatus(Canvas &canvas, const PixelRect &rc,
 
   const Font &font = *look.overlay.overlay_font;
   canvas.Select(font);
-  TextInBox(canvas, txt, p.x, p.y, mode, rc, nullptr);
+  TextInBox(canvas, txt, p, mode, rc, nullptr);
 }
 
 void
@@ -193,11 +189,11 @@ GlueMapWindow::DrawFlightMode(Canvas &canvas, const PixelRect &rc) const
   else
     bmp = &look.cruise_mode_icon;
 
-  offset += bmp->GetSize().cx + Layout::Scale(6);
+  offset += bmp->GetSize().width + Layout::Scale(6);
 
   bmp->Draw(canvas,
             PixelPoint(rc.right - offset,
-                       rc.bottom - bmp->GetSize().cy - Layout::Scale(4)));
+                       rc.bottom - bmp->GetSize().height - Layout::Scale(4)));
 
   // draw flarm status
   if (!GetMapSettings().show_flarm_alarm_level)
@@ -222,11 +218,11 @@ GlueMapWindow::DrawFlightMode(Canvas &canvas, const PixelRect &rc) const
     break;
   };
 
-  offset += bmp->GetSize().cx + Layout::Scale(6);
+  offset += bmp->GetSize().width + Layout::Scale(6);
 
   bmp->Draw(canvas,
             PixelPoint(rc.right - offset,
-                       rc.bottom - bmp->GetSize().cy - Layout::Scale(2)));
+                       rc.bottom - bmp->GetSize().height - Layout::Scale(2)));
 }
 
 void
@@ -353,13 +349,12 @@ GlueMapWindow::DrawMapScale(Canvas &canvas, const PixelRect &rc,
     canvas.Select(font);
     const unsigned height = font.GetCapitalHeight()
         + Layout::GetTextPadding();
-    int y = scale_pos.bottom - height;
 
     TextInBoxMode mode;
     mode.vertical_position = TextInBoxMode::VerticalPosition::ABOVE;
     mode.shape = LabelShape::OUTLINED;
 
-    TextInBox(canvas, buffer, 0, y, mode, rc, nullptr);
+    TextInBox(canvas, buffer, {0, scale_pos.bottom - height}, mode, rc, nullptr);
   }
 }
 
