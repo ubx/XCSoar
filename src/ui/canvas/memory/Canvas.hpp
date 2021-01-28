@@ -34,6 +34,7 @@ Copyright_License {
 #include "Buffer.hpp"
 #include "ActivePixelTraits.hpp"
 #include "util/Compiler.h"
+#include "util/StringView.hxx"
 
 #include <tchar.h>
 
@@ -217,22 +218,7 @@ public:
 
   void DrawRoundRectangle(PixelRect r, PixelSize ellipse_size) noexcept;
 
-  void DrawRaisedEdge(PixelRect &rc) {
-    Pen bright(1, Color(240, 240, 240));
-    Select(bright);
-    DrawTwoLines(rc.left, rc.bottom - 2, rc.left, rc.top,
-                 rc.right - 1, rc.top);
-
-    Pen dark(1, Color(128, 128, 128));
-    Select(dark);
-    DrawTwoLines(rc.left, rc.bottom - 1, rc.right - 1, rc.bottom - 1,
-              rc.right - 1, rc.top + 1);
-
-    ++rc.left;
-    ++rc.top;
-    --rc.right;
-    --rc.bottom;
-  }
+  void DrawRaisedEdge(PixelRect &rc) noexcept;
 
   void DrawPolyline(const BulkPixelPoint *points, unsigned num_points);
   void DrawPolygon(const BulkPixelPoint *points, unsigned num_points);
@@ -246,15 +232,7 @@ public:
    */
   void DrawHLine(int x1, int x2, int y, Color color);
 
-  void DrawLine(int ax, int ay, int bx, int by);
-
-  void DrawLine(const PixelPoint a, const PixelPoint b) {
-    DrawLine(a.x, a.y, b.x, b.y);
-  }
-
-  void DrawExactLine(int ax, int ay, int bx, int by) {
-    DrawLine(ax, ay, bx, by);
-  }
+  void DrawLine(PixelPoint a, PixelPoint b) noexcept;
 
   void DrawExactLine(const PixelPoint a, const PixelPoint b) {
     DrawLine(a, b);
@@ -264,22 +242,16 @@ public:
     DrawLine(a, b);
   }
 
-  void DrawTwoLines(int ax, int ay, int bx, int by, int cx, int cy)
-  {
-    DrawLine(ax, ay, bx, by);
-    DrawLine(bx, by, cx, cy);
+  void DrawTwoLines(PixelPoint a, PixelPoint b, PixelPoint c) noexcept {
+    DrawLine(a, b);
+    DrawLine(b, c);
   }
 
-  void DrawTwoLines(const PixelPoint a, const PixelPoint b,
-                    const PixelPoint c) {
-    DrawTwoLines(a.x, a.y, b.x, b.y, c.x, c.y);
+  void DrawTwoLinesExact(PixelPoint a, PixelPoint b, PixelPoint c) noexcept {
+    DrawTwoLines(a, b, c);
   }
 
-  void DrawTwoLinesExact(int ax, int ay, int bx, int by, int cx, int cy) {
-    DrawTwoLines(ax, ay, bx, by, cx, cy);
-  }
-
-  void DrawCircle(int x, int y, unsigned radius);
+  void DrawCircle(PixelPoint center, unsigned radius) noexcept;
 
   void DrawSegment(PixelPoint center, unsigned radius,
                    Angle start, Angle end, bool horizon=false);
@@ -300,13 +272,10 @@ public:
   }
 
   gcc_pure
-  const PixelSize CalcTextSize(TStringView text) const noexcept;
+  const PixelSize CalcTextSize(BasicStringView<TCHAR> text) const noexcept;
 
   gcc_pure
-  const PixelSize CalcTextSize(const TCHAR *text) const;
-
-  gcc_pure
-  unsigned CalcTextWidth(const TCHAR *text) const {
+  unsigned CalcTextWidth(BasicStringView<TCHAR> text) const noexcept {
     return CalcTextSize(text).width;
   }
 
@@ -315,23 +284,22 @@ public:
     return font != nullptr ? font->GetHeight() : 0;
   }
 
-  void DrawText(PixelPoint p, const TCHAR *text) noexcept;
-  void DrawText(PixelPoint p, const TCHAR *text, size_t length) noexcept;
+  void DrawText(PixelPoint p, BasicStringView<TCHAR> text) noexcept;
 
-  void DrawTransparentText(PixelPoint p, const TCHAR *text) noexcept;
+  void DrawTransparentText(PixelPoint p, BasicStringView<TCHAR> text) noexcept;
 
   void DrawOpaqueText(PixelPoint p, const PixelRect &rc,
-                      const TCHAR *text) noexcept;
+                      BasicStringView<TCHAR> text) noexcept;
 
   void DrawClippedText(PixelPoint p, const PixelRect &rc,
-                       const TCHAR *text) noexcept;
+                       BasicStringView<TCHAR> text) noexcept;
   void DrawClippedText(PixelPoint p, unsigned width,
-                       const TCHAR *text) noexcept;
+                       BasicStringView<TCHAR> text) noexcept;
 
   /**
    * Render text, clip it within the bounds of this Canvas.
    */
-  void TextAutoClipped(PixelPoint p, const TCHAR *t) noexcept {
+  void TextAutoClipped(PixelPoint p, BasicStringView<TCHAR> t) noexcept {
     DrawText(p, t);
   }
 
@@ -340,7 +308,7 @@ public:
    *
    * @return the resulting text height
    */
-  unsigned DrawFormattedText(PixelRect r, const TCHAR *text,
+  unsigned DrawFormattedText(PixelRect r, BasicStringView<TCHAR> text,
                              unsigned format) noexcept;
 
   void Copy(PixelPoint dest_position, PixelSize dest_size,

@@ -144,13 +144,13 @@ ArrowPagerWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
   style.TabStop();
 
   previous_button.Create(parent, layout.previous_button, style,
-                         new SymbolButtonRenderer(look, _T("<")),
-                         *this, PREVIOUS);
+                         std::make_unique<SymbolButtonRenderer>(look, _T("<")),
+                         [this](){ Previous(false); });
   next_button.Create(parent, layout.next_button, style,
-                     new SymbolButtonRenderer(look, _T(">")),
-                     *this, NEXT);
+                     std::make_unique<SymbolButtonRenderer>(look, _T(">")),
+                     [this](){ Next(false); });
   close_button.Create(parent, look, _("Close"), layout.close_button,
-                      style, action_listener, mrOK);
+                      style, close_callback);
 }
 
 void
@@ -223,19 +223,5 @@ ArrowPagerWidget::KeyPress(unsigned key_code)
 
   default:
     return false;
-  }
-}
-
-void
-ArrowPagerWidget::OnAction(int id) noexcept
-{
-  switch (id) {
-  case PREVIOUS:
-    Previous(false);
-    break;
-
-  case NEXT:
-    Next(false);
-    break;
   }
 }

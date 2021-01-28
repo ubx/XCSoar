@@ -157,12 +157,12 @@ GaugeVario::Geometry::Geometry(const VarioLook &look, const PixelRect &rc) noexc
 
   offset = rc.GetMiddleRight();
 
-  unsigned value_height = LabelValueGeometry::GetHeight(look);
+  const PixelSize value_offset{0u, LabelValueGeometry::GetHeight(look)};
 
-  const PixelPoint gross_position{rc.right, offset.y - value_height / 2};
+  const PixelPoint gross_position = offset + value_offset / 2u;
   gross = {look, gross_position};
-  average = {look, {rc.right, gross_position.y - value_height}};
-  mc = {look, {rc.right, gross_position.y + value_height}};
+  average = {look, gross_position - value_offset};
+  mc = {look, gross_position + value_offset};
 }
 
 GaugeVario::GaugeVario(const FullBlackboard &_blackboard,
@@ -181,7 +181,7 @@ GaugeVario::OnPaintBuffer(Canvas &canvas)
   if (!IsPersistent() || background_dirty) {
     canvas.Stretch(rc.GetTopLeft(), rc.GetSize(),
                    look.background_bitmap,
-                   {look.background_x, 0}, {58, 120});
+                   {(int)look.background_x, 0}, {58, 120});
 
     background_dirty = false;
   }
@@ -341,10 +341,10 @@ GaugeVario::RenderZero(Canvas &canvas) noexcept
   else
     canvas.SelectBlackPen();
 
-  canvas.DrawLine(0, geometry.offset.y,
-                  Layout::Scale(17), geometry.offset.y);
-  canvas.DrawLine(0, geometry.offset.y + 1,
-                  Layout::Scale(17), geometry.offset.y + 1);
+  canvas.DrawLine({0, geometry.offset.y},
+                  {Layout::Scale(17), geometry.offset.y});
+  canvas.DrawLine({0, geometry.offset.y + 1},
+                  {Layout::Scale(17), geometry.offset.y + 1});
 }
 
 int
@@ -435,7 +435,7 @@ GaugeVario::RenderValue(Canvas &canvas, const LabelValueGeometry &g,
     canvas.Select(*look.text_font);
     const unsigned width = canvas.CalcTextSize(label).width;
 
-    const PixelPoint text_position{g.label_right - width, g.label_y};
+    const PixelPoint text_position{g.label_right - (int)width, g.label_y};
 
     if (IsPersistent()) {
       PixelRect rc;
@@ -461,7 +461,7 @@ GaugeVario::RenderValue(Canvas &canvas, const LabelValueGeometry &g,
     canvas.Select(look.value_font);
     const unsigned width = canvas.CalcTextSize(buffer).width;
 
-    const PixelPoint text_position{g.value_right - width, g.value_y};
+    const PixelPoint text_position{g.value_right - (int)width, g.value_y};
 
     if (IsPersistent()) {
       PixelRect rc;

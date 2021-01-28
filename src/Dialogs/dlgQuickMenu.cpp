@@ -33,12 +33,13 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #include "ui/canvas/Canvas.hpp"
 #include "ui/event/KeyCode.hpp"
-#include "util/StaticArray.hxx"
 #include "util/StaticString.hxx"
 #include "util/Macros.hpp"
 #include "Menu/ButtonLabel.hpp"
 #include "Menu/MenuData.hpp"
 #include "UIGlobals.hpp"
+
+#include <boost/container/static_vector.hpp>
 
 #include <stdio.h>
 
@@ -97,13 +98,13 @@ QuickMenuButtonRenderer::DrawButton(Canvas &canvas, const PixelRect &rc,
   text_renderer.Draw(canvas, rc, caption);
 }
 
-class QuickMenu final : public WindowWidget, ActionListener {
+class QuickMenu final : public WindowWidget {
   WndForm &dialog;
   const Menu &menu;
 
   GridView grid_view;
 
-  StaticArray<Window *, GridView::MAX_ITEMS> buttons;
+  boost::container::static_vector<Button, GridView::MAX_ITEMS> buttons;
 
 public:
   unsigned clicked_event;
@@ -119,10 +120,6 @@ protected:
   void Unprepare() override;
   bool SetFocus() override;
   bool KeyPress(unsigned key_code) override;
-
-private:
-  /* virtual methods from class ActionListener */
-  void OnAction(int id) noexcept override;
 };
 
 void
@@ -148,7 +145,7 @@ QuickMenu::Prepare(ContainerWindow &parent, const PixelRect &rc)
   buttonStyle.TabStop();
 
   for (unsigned i = 0; i < menu.MAX_ITEMS; ++i) {
-    if (buttons.full())
+    if (buttons.size() >= buttons.max_size())
       continue;
 
     const auto &menuItem = menu[i];
@@ -166,14 +163,17 @@ QuickMenu::Prepare(ContainerWindow &parent, const PixelRect &rc)
     button_rc.top = 0;
     button_rc.right = 80;
     button_rc.bottom = 30;
-    auto *button = new Button(grid_view, button_rc, buttonStyle,
-                              new QuickMenuButtonRenderer(dialog_look,
-                                                          expanded.text),
-                              *this, menuItem.event);
-    button->SetEnabled(expanded.enabled);
 
-    buttons.append(button);
-    grid_view.AddItem(*button);
+    auto &button = buttons.emplace_back(grid_view, button_rc, buttonStyle,
+                                        std::make_unique<QuickMenuButtonRenderer>(dialog_look,
+                                                                                  expanded.text),
+                                        [this, &menuItem](){
+                                          clicked_event = menuItem.event;
+                                          dialog.SetModalResult(mrOK);
+                                        });
+    button.SetEnabled(expanded.enabled);
+
+    grid_view.AddItem(button);
   }
 
   grid_view.RefreshLayout();
@@ -183,8 +183,7 @@ QuickMenu::Prepare(ContainerWindow &parent, const PixelRect &rc)
 void
 QuickMenu::Unprepare()
 {
-  for (auto *button : buttons)
-    delete button;
+  buttons.clear();
 }
 
 void
@@ -218,7 +217,7 @@ QuickMenu::SetFocus()
   if (centerPos >= buttons.size())
     return false;
 
-  buttons[centerPos]->SetFocus();
+  buttons[centerPos].SetFocus();
   grid_view.RefreshLayout();
   return true;
 }
@@ -256,11 +255,23 @@ QuickMenu::KeyPress(unsigned key_code)
   return true;
 }
 
-void
-QuickMenu::OnAction(int id) noexcept
+static int
+ShowQuickMenu(UI::SingleWindow &parent, const Menu &menu) noexcept
 {
-  clicked_event = id;
-  dialog.SetModalResult(mrOK);
+  const auto &dialog_look = UIGlobals::GetDialogLook();
+
+  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
+                      dialog_look, nullptr);
+  QuickMenu quick_menu(dialog, menu);
+
+  dialog.FinishPreliminary(&quick_menu);
+
+  const auto result = dialog.ShowModal();
+  dialog.StealWidget();
+
+  return result == mrOK
+    ? int(quick_menu.clicked_event)
+    : -1;
 }
 
 void
@@ -270,17 +281,7 @@ dlgQuickMenuShowModal(UI::SingleWindow &parent)
   if (menu == nullptr)
     return;
 
-  const auto &dialog_look = UIGlobals::GetDialogLook();
-
-  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
-                      dialog_look, nullptr);
-  QuickMenu quick_menu(dialog, *menu);
-
-  dialog.FinishPreliminary(&quick_menu);
-
-  const auto result = dialog.ShowModal();
-  dialog.StealWidget();
-
-  if (result == mrOK)
-    InputEvents::ProcessEvent(quick_menu.clicked_event);
+  const int event = ShowQuickMenu(parent, *menu);
+  if (event >= 0)
+    InputEvents::ProcessEvent(event);
 }

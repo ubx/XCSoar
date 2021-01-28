@@ -68,13 +68,7 @@ struct WarningItem
 };
 
 class AirspaceWarningListWidget final
-  : public ListWidget, private ActionListener {
-
-  enum Buttons {
-    ACK,
-    ACK_DAY,
-    ENABLE,
-  };
+  : public ListWidget {
 
   ProtectedAirspaceWarningManager &airspace_warnings;
 
@@ -104,9 +98,9 @@ public:
   {}
 
   void CreateButtons(WidgetDialog &buttons) {
-    ack_button = buttons.AddButton(_("ACK"), *this, ACK);
-    ack_day_button = buttons.AddButton(_("ACK Day"), *this, ACK_DAY);
-    enable_button = buttons.AddButton(_("Enable"), *this, ENABLE);
+    ack_button = buttons.AddButton(_("ACK"), [this](){ Ack(); });
+    ack_day_button = buttons.AddButton(_("ACK Day"), [this](){ AckDay(); });
+    enable_button = buttons.AddButton(_("Enable"), [this](){ Enable(); });
   }
 
   void CopyList();
@@ -143,10 +137,6 @@ public:
   }
 
   void OnActivateItem(unsigned index) noexcept override;
-
-private:
-  /* virtual methods from class ActionListener */
-  void OnAction(int id) noexcept override;
 };
 
 static WndForm *dialog = NULL;
@@ -430,7 +420,7 @@ AirspaceWarningListWidget::OnPaintItem(Canvas &canvas,
 
   if (state_text != NULL) {
     // -- status text will be centered inside its table cell:
-    canvas.DrawText({paint_rc.left + left2 + padding + (status_width / 2) - (canvas.CalcTextWidth(state_text) / 2),
+    canvas.DrawText({paint_rc.left + left2 + (int)padding + (int)(status_width / 2) - (int)(canvas.CalcTextWidth(state_text) / 2),
         (paint_rc.bottom + paint_rc.top - (int)state_text_size.height) / 2},
                     state_text);
   }
@@ -445,24 +435,6 @@ AirspaceWarningListWidget::CopyList()
   for (auto i = lease->begin(), end = lease->end();
        i != end && !warning_list.full(); ++i)
     warning_list.push_back(*i);
-}
-
-void
-AirspaceWarningListWidget::OnAction(int id) noexcept
-{
-  switch (id) {
-  case ACK:
-    Ack();
-    break;
-
-  case ACK_DAY:
-    AckDay();
-    break;
-
-  case ENABLE:
-    Enable();
-    break;
-  }
 }
 
 void

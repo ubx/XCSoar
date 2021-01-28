@@ -47,18 +47,18 @@ SimulatorPromptWindow::OnCreate()
   fly_bitmap.Load(IDB_LAUNCHER1);
   fly_bitmap.EnableInterpolation();
   fly_button.Create(*this, rc, style,
-                    new BitmapButtonRenderer(fly_bitmap),
-                    action_listener, FLY);
+                    std::make_unique<BitmapButtonRenderer>(fly_bitmap),
+                    [this](){ callback(Result::FLY); });
 
   sim_bitmap.Load(IDB_LAUNCHER2);
   sim_bitmap.EnableInterpolation();
   sim_button.Create(*this, rc, style,
-                    new BitmapButtonRenderer(sim_bitmap),
-                    action_listener, SIMULATOR);
+                    std::make_unique<BitmapButtonRenderer>(sim_bitmap),
+                    [this](){ callback(Result::SIMULATOR); });
 
   if (have_quit_button)
     quit_button.Create(*this, look.button, _("Quit"), rc, style,
-                       action_listener, QUIT);
+                       [this](){ callback(Result::QUIT); });
 }
 
 void

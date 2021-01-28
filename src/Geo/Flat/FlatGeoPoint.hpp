@@ -33,21 +33,8 @@
  * Integer projected (flat-earth) version of Geodetic coordinates
  */
 struct FlatGeoPoint : IntPoint2D {
-  /**
-   * Non-initialising constructor.
-   */
   FlatGeoPoint() = default;
-
-  /**
-   * Constructor at specified location (x,y)
-   *
-   * @param x x location
-   * @param y y location
-   *
-   * @return Initialised object at origin
-   */
-  constexpr
-  FlatGeoPoint(const int _x, const int _y):IntPoint2D(_x, _y) {}
+  using IntPoint2D::IntPoint2D;
 
   /**
    * Find distance from one point to another
@@ -111,12 +98,12 @@ struct FlatGeoPoint : IntPoint2D {
    * @return True if coincident
    */
   constexpr
-  bool operator==(const FlatGeoPoint other) const {
+  bool operator==(const FlatGeoPoint &other) const noexcept {
     return IntPoint2D::operator==(other);
   };
 
   constexpr
-  bool operator!=(const FlatGeoPoint other) const {
+  bool operator!=(const FlatGeoPoint &other) const noexcept {
     return IntPoint2D::operator!=(other);
   };
 
@@ -165,9 +152,12 @@ struct AFlatGeoPoint : public FlatGeoPoint {
    *
    * @return true if location and altitude are equal
    */
-  constexpr
-  bool operator==(const AFlatGeoPoint other) const {
+  constexpr bool operator==(const AFlatGeoPoint &other) const noexcept {
     return FlatGeoPoint::operator==(other) && (altitude == other.altitude);
+  };
+
+  constexpr bool operator!=(const AFlatGeoPoint &other) const noexcept {
+    return !(*this == other);
   };
 
   /**

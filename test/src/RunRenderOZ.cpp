@@ -36,7 +36,6 @@ Copyright_License {
 #include "Look/TaskLook.hpp"
 #include "Form/List.hpp"
 #include "Form/Button.hpp"
-#include "Form/ActionListener.hpp"
 #include "InfoBoxes/InfoBoxLayout.hpp"
 #include "Renderer/OZRenderer.hpp"
 #include "Engine/Task/ObservationZones/LineSectorZone.hpp"
@@ -191,21 +190,16 @@ OZWindow::OnPaint(Canvas &canvas)
   const OZBoundary boundary = oz->GetBoundary();
   for (auto i = boundary.begin(), end = boundary.end(); i != end; ++i) {
     auto p = projection.GeoToScreen(*i);
-    canvas.DrawLine(p.x - 3, p.y - 3, p.x + 3, p.y + 3);
-    canvas.DrawLine(p.x + 3, p.y - 3, p.x - 3, p.y + 3);
+    canvas.DrawLine(p.At(-3, -3), p.At(3, 3));
+    canvas.DrawLine(p.At(3, -3), p.At(-3, 3));
   }
 }
 
 class TestWindow : public UI::SingleWindow,
-                   ActionListener,
                    ListItemRenderer, ListCursorHandler {
   Button close_button;
   ListControl *type_list;
   OZWindow oz;
-
-  enum Buttons {
-    CLOSE,
-  };
 
 public:
   TestWindow(const TaskLook &task_look, const AirspaceLook &airspace_look)
@@ -240,7 +234,7 @@ public:
     button_rc.top = button_rc.bottom - 30;
     close_button.Create(*this, *button_look, _T("Close"), button_rc,
                         WindowStyle(),
-                        *this, CLOSE);
+                        [this](){ Close(); });
 
     oz.set_shape(ObservationZone::Shape::LINE);
 
@@ -248,15 +242,6 @@ public:
   }
 
 protected:
-  /* virtual methods from class ActionListener */
-  void OnAction(int id) noexcept override {
-    switch (id) {
-    case CLOSE:
-      Close();
-      break;
-    }
-  }
-
   /* virtual methods from ListItemRenderer */
   void OnPaintItem(Canvas &canvas, const PixelRect rc,
                    unsigned idx) noexcept override {

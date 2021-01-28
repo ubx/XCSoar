@@ -28,7 +28,6 @@ Copyright_License {
 #include "RasterCanvas.hpp"
 #include "ui/canvas/custom/Cache.hpp"
 #include "Math/Angle.hpp"
-#include "util/TStringView.hxx"
 
 #ifdef __ARM_NEON__
 #include "NEON.hpp"
@@ -139,7 +138,7 @@ Canvas::DrawHLine(int x1, int x2, int y, Color color)
 }
 
 void
-Canvas::DrawLine(int ax, int ay, int bx, int by)
+Canvas::DrawLine(PixelPoint a, PixelPoint b) noexcept
 {
   const unsigned thickness = pen.GetWidth();
   const unsigned mask = pen.GetMask();
@@ -148,14 +147,14 @@ Canvas::DrawLine(int ax, int ay, int bx, int by)
   const auto color = canvas.Import(pen.GetColor());
   unsigned mask_position = 0;
   if (thickness > 1)
-    canvas.DrawThickLine(ax, ay, bx, by, thickness, color,
+    canvas.DrawThickLine(a.x, a.y, b.x, b.y, thickness, color,
                          mask, mask_position);
   else
-    canvas.DrawLine(ax, ay, bx, by, color, mask);
+    canvas.DrawLine(a.x, a.y, b.x, b.y, color, mask);
 }
 
 void
-Canvas::DrawCircle(int x, int y, unsigned radius)
+Canvas::DrawCircle(PixelPoint center, unsigned radius) noexcept
 {
   SDLRasterCanvas canvas(buffer);
 
@@ -163,21 +162,23 @@ Canvas::DrawCircle(int x, int y, unsigned radius)
     const auto color = canvas.Import(brush.GetColor());
 
     if (brush.GetColor().IsOpaque())
-      canvas.FillCircle(x, y, radius, color);
+      canvas.FillCircle(center.x, center.y, radius, color);
     else
-      canvas.FillCircle(x, y, radius, color,
+      canvas.FillCircle(center.x, center.y, radius, color,
                         AlphaPixelOperations<ActivePixelTraits>(brush.GetColor().Alpha()));
   }
 
   if (IsPenOverBrush()) {
     if (pen.GetWidth() < 2) {
-      canvas.DrawCircle(x, y, radius, canvas.Import(pen.GetColor()));
+      canvas.DrawCircle(center.x, center.y, radius,
+                        canvas.Import(pen.GetColor()));
       return;
     }
 
     // no thickCircleColor in SDL_gfx, so need to emulate it with multiple draws (slow!)
     for (int i= (pen.GetWidth()/2); i>= -(int)(pen.GetWidth()-1)/2; --i) {
-      canvas.DrawCircle(x, y, radius + i, canvas.Import(pen.GetColor()));
+      canvas.DrawCircle(center.x, center.y, radius + i,
+                        canvas.Import(pen.GetColor()));
     }
   }
 }
@@ -219,7 +220,7 @@ Canvas::DrawArc(PixelPoint center, unsigned radius,
 }
 
 const PixelSize
-Canvas::CalcTextSize(TStringView text) const noexcept
+Canvas::CalcTextSize(BasicStringView<TCHAR> text) const noexcept
 {
   assert(text != nullptr);
 #ifdef UNICODE
@@ -243,7 +244,7 @@ Canvas::CalcTextSize(TStringView text) const noexcept
 }
 
 static TextCache::Result
-RenderText(const Font *font, const TCHAR *text)
+RenderText(const Font *font, BasicStringView<TCHAR> text) noexcept
 {
   if (font == nullptr)
     return TextCache::Result::Null();
@@ -290,7 +291,7 @@ CopyTextRectangle(SDLRasterCanvas &canvas, int x, int y,
 }
 
 void
-Canvas::DrawText(PixelPoint p, const TCHAR *text) noexcept
+Canvas::DrawText(PixelPoint p, BasicStringView<TCHAR> text) noexcept
 {
   assert(text != nullptr);
 #ifndef UNICODE
@@ -308,7 +309,7 @@ Canvas::DrawText(PixelPoint p, const TCHAR *text) noexcept
 }
 
 void
-Canvas::DrawTransparentText(PixelPoint p, const TCHAR *text) noexcept
+Canvas::DrawTransparentText(PixelPoint p, BasicStringView<TCHAR> text) noexcept
 {
   assert(text != nullptr);
 #ifndef UNICODE
@@ -327,7 +328,7 @@ Canvas::DrawTransparentText(PixelPoint p, const TCHAR *text) noexcept
 
 void
 Canvas::DrawClippedText(PixelPoint p, const PixelRect &rc,
-                        const TCHAR *text) noexcept
+                        BasicStringView<TCHAR> text) noexcept
 {
   // TODO: implement full clipping
   if (rc.right > p.x)
@@ -336,7 +337,7 @@ Canvas::DrawClippedText(PixelPoint p, const PixelRect &rc,
 
 void
 Canvas::DrawClippedText(PixelPoint p, unsigned width,
-                        const TCHAR *text) noexcept
+                        BasicStringView<TCHAR> text) noexcept
 {
   assert(text != nullptr);
 #ifndef UNICODE

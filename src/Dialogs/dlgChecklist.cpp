@@ -141,9 +141,10 @@ dlgChecklistShowModal()
   WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
                       look, _("Checklist"));
 
-  ArrowPagerWidget widget(dialog, look.button);
+  ArrowPagerWidget widget(look.button,
+                          dialog.MakeModalResultCallback(mrOK));
   for (int i = 0; i < nLists; ++i)
-    widget.Add(new LargeTextWidget(look, ChecklistText[i]));
+    widget.Add(std::make_unique<LargeTextWidget>(look, ChecklistText[i]));
   widget.SetCurrent(current_page);
 
   dialog.FinishPreliminary(&widget);
