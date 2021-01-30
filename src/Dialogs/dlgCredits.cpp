@@ -36,6 +36,7 @@ Copyright_License {
 #include "Version.hpp"
 #include "Inflate.hpp"
 #include "util/ConvertString.hpp"
+#include "util/AllocatedString.hxx"
 #include "Resources.hpp"
 #include "UIGlobals.hpp"
 #include "Language/Language.hpp"
@@ -93,11 +94,11 @@ LogoPageWindow::OnPaint(Canvas &canvas)
   canvas.DrawText({x, y}, _T("http://www.xcsoar.org"));
 }
 
-static Window *
+static std::unique_ptr<Window>
 CreateLogoPage(ContainerWindow &parent, const PixelRect &rc,
                WindowStyle style)
 {
-  LogoPageWindow *window = new LogoPageWindow();
+  auto window = std::make_unique<LogoPageWindow>();
   window->Create(parent, rc, style);
   return window;
 }
@@ -116,24 +117,21 @@ dlgCreditsShowModal(UI::SingleWindow &parent)
 {
   const DialogLook &look = UIGlobals::GetDialogLook();
 
-  char *authors = InflateToString(AUTHORS_gz, AUTHORS_gz_size);
-  const UTF8ToWideConverter authors2(authors);
+  const auto authors = InflateToString(AUTHORS_gz, AUTHORS_gz_size);
+  const UTF8ToWideConverter authors2(authors.c_str());
 
-  char *license = InflateToString(COPYING_gz, COPYING_gz_size);
-  const UTF8ToWideConverter license2(license);
+  const auto license = InflateToString(COPYING_gz, COPYING_gz_size);
+  const UTF8ToWideConverter license2(license.c_str());
 
   WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
                       look, _("Credits"));
 
-  ArrowPagerWidget pager(look.button, dialog.MakeModalResultCallback(mrOK));
-  pager.Add(std::make_unique<CreateWindowWidget>(CreateLogoPage));
-  pager.Add(std::make_unique<LargeTextWidget>(look, authors2));
-  pager.Add(std::make_unique<LargeTextWidget>(look, license2));
+  auto pager = std::make_unique<ArrowPagerWidget>(look.button,
+                                                  dialog.MakeModalResultCallback(mrOK));
+  pager->Add(std::make_unique<CreateWindowWidget>(CreateLogoPage));
+  pager->Add(std::make_unique<LargeTextWidget>(look, authors2));
+  pager->Add(std::make_unique<LargeTextWidget>(look, license2));
 
-  dialog.FinishPreliminary(&pager);
+  dialog.FinishPreliminary(std::move(pager));
   dialog.ShowModal();
-  dialog.StealWidget();
-
-  delete[] authors;
-  delete[] license;
 }

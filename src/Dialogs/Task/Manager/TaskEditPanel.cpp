@@ -178,7 +178,8 @@ class TaskEditPanel
   const TaskLook &task_look;
   const AirspaceLook &airspace_look;
 
-  OrderedTask **ordered_task_pointer, *ordered_task;
+  std::unique_ptr<OrderedTask> &ordered_task_pointer;
+  OrderedTask *ordered_task;
   bool *task_modified;
 
   TextWidget &summary;
@@ -191,7 +192,7 @@ class TaskEditPanel
 public:
   TaskEditPanel(TaskManagerDialog &_dialog,
                 const TaskLook &_task_look, const AirspaceLook &_airspace_look,
-                OrderedTask **_active_task, bool *_task_modified,
+                std::unique_ptr<OrderedTask> &_active_task, bool *_task_modified,
                 TextWidget &_summary, TaskEditButtons &_buttons)
     :dialog(_dialog),
      task_look(_task_look), airspace_look(_airspace_look),
@@ -215,10 +216,6 @@ public:
 
   /* virtual methods from Widget */
   void Prepare(ContainerWindow &parent, const PixelRect &rc) override;
-
-  void Unprepare() override {
-    DeleteWindow();
-  }
 
   void ReClick() override;
   void Show(const PixelRect &rc) override;
@@ -405,7 +402,6 @@ TaskEditPanel::EditTaskPoint(unsigned ItemIndex)
     }
   } else if (!ordered_task->IsFull()) {
 
-    OrderedTaskPoint* point = nullptr;
     AbstractTaskFactory &factory = ordered_task->GetFactory();
     auto way_point =
       ShowWaypointListDialog(ordered_task->TaskSize() > 0
@@ -415,11 +411,9 @@ TaskEditPanel::EditTaskPoint(unsigned ItemIndex)
     if (!way_point)
       return;
 
-    if (ItemIndex == 0) {
-      point = factory.CreateStart(std::move(way_point));
-    } else {
-      point = factory.CreateIntermediate(std::move(way_point));
-     }
+    auto point = ItemIndex == 0
+      ? (std::unique_ptr<OrderedTaskPoint>)factory.CreateStart(std::move(way_point))
+      : (std::unique_ptr<OrderedTaskPoint>)factory.CreateIntermediate(std::move(way_point));
     if (point == nullptr)
       return;
 
@@ -429,8 +423,6 @@ TaskEditPanel::EditTaskPoint(unsigned ItemIndex)
       ordered_task->UpdateGeometry();
       RefreshView();
     }
-
-    delete point;
   }
 }
 
@@ -501,7 +493,7 @@ TaskEditPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
              row_renderer.CalculateLayout(*look.list.font_bold,
                                           look.small_font));
 
-  ordered_task = *ordered_task_pointer;
+  ordered_task = ordered_task_pointer.get();
 }
 
 void
@@ -513,8 +505,8 @@ TaskEditPanel::ReClick()
 void
 TaskEditPanel::Show(const PixelRect &rc)
 {
-  if (ordered_task != *ordered_task_pointer) {
-    ordered_task = *ordered_task_pointer;
+  if (ordered_task != ordered_task_pointer.get()) {
+    ordered_task = ordered_task_pointer.get();
     GetList().SetCursorIndex(0);
   }
 
@@ -559,15 +551,17 @@ std::unique_ptr<Widget>
 CreateTaskEditPanel(TaskManagerDialog &dialog,
                     const TaskLook &task_look,
                     const AirspaceLook &airspace_look,
-                    OrderedTask **active_task, bool *task_modified)
+                    std::unique_ptr<OrderedTask> &active_task,
+                    bool *task_modified) noexcept
 {
-  TaskEditButtons *buttons = new TaskEditButtons();
-  TextWidget *summary = new TextWidget();
-  TaskEditPanel *widget = new TaskEditPanel(dialog, task_look, airspace_look,
-                                            active_task, task_modified,
-                                            *summary, *buttons);
+  auto buttons = std::make_unique<TaskEditButtons>();
+  auto summary = std::make_unique<TextWidget>();
+  auto widget = std::make_unique<TaskEditPanel>(dialog, task_look, airspace_look,
+                                                active_task, task_modified,
+                                                *summary, *buttons);
   buttons->SetEditPanel(*widget);
-  TwoWidgets *tw1 = new TwoWidgets(widget, summary);
-  widget->SetTwoWidgets(*tw1);
-  return std::make_unique<TwoWidgets>(tw1, buttons);
+  auto tw1 = std::make_unique<TwoWidgets>(std::move(widget),
+                                          std::move(summary));
+  ((TaskEditPanel &)tw1->GetFirst()).SetTwoWidgets(*tw1);
+  return std::make_unique<TwoWidgets>(std::move(tw1), std::move(buttons));
 }

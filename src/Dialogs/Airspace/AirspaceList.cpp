@@ -37,8 +37,6 @@ Copyright_License {
 #include "Renderer/TwoTextRowsRenderer.hpp"
 #include "Look/MapLook.hpp"
 #include "Look/DialogLook.hpp"
-#include "ui/canvas/Canvas.hpp"
-#include "Screen/Layout.hpp"
 #include "util/Compiler.h"
 #include "util/Macros.hpp"
 #include "Units/Units.hpp"
@@ -85,10 +83,6 @@ public:
   /* virtual methods from class Widget */
   virtual void Prepare(ContainerWindow &parent,
                        const PixelRect &rc) override;
-
-  virtual void Unprepare() override {
-    DeleteWindow();
-  }
 
   virtual void Show(const PixelRect &rc) override {
     ListWidget::Show(rc);
@@ -307,8 +301,7 @@ AirspaceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
   if (items.empty()) {
     assert(i == 0);
 
-    canvas.DrawText(rc.WithPadding(Layout::GetTextPadding()).GetTopLeft(),
-                    _("No Match!"));
+    row_renderer.DrawFirstRow(canvas, rc, _("No Match!"));
     return;
   }
 
@@ -444,20 +437,21 @@ ShowAirspaceListDialog(const Airspaces &_airspaces,
   WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
                       look, _("Select Airspace"));
 
-  AirspaceFilterWidget *filter_widget = new AirspaceFilterWidget(look);
+  auto filter_widget = std::make_unique<AirspaceFilterWidget>(look);
 
-  AirspaceListButtons *buttons_widget = new AirspaceListButtons(look, dialog);
+  auto list_widget = std::make_unique<AirspaceListWidget>(*filter_widget);
 
-  TwoWidgets *left_widget =
-    new TwoWidgets(filter_widget, buttons_widget, true);
+  auto buttons_widget = std::make_unique<AirspaceListButtons>(look, dialog);
 
-  AirspaceListWidget *const list_widget =
-    new AirspaceListWidget(*filter_widget);
+  filter_widget->SetListener(list_widget.get());
+  buttons_widget->SetList(list_widget.get());
 
-  filter_widget->SetListener(list_widget);
-  buttons_widget->SetList(list_widget);
+  auto left_widget = std::make_unique<TwoWidgets>(std::move(filter_widget),
+                                                  std::move(buttons_widget),
+                                                  true);
 
-  dialog.FinishPreliminary(new TwoWidgets(left_widget, list_widget, false));
+  dialog.FinishPreliminary(new TwoWidgets(std::move(left_widget),
+                                          std::move(list_widget), false));
   dialog.ShowModal();
 }
 

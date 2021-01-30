@@ -28,6 +28,9 @@ Copyright_License {
 #include "Form/ButtonPanel.hpp"
 #include "Widget/ManagedWidget.hpp"
 
+#include <memory>
+#include <type_traits>
+
 #include <tchar.h>
 
 class Widget;
@@ -88,6 +91,7 @@ public:
   }
 
   void FinishPreliminary(Widget *widget);
+  void FinishPreliminary(std::unique_ptr<Widget> widget) noexcept;
 
   bool GetChanged() const {
     return changed;
@@ -158,6 +162,27 @@ protected:
   virtual void ReinitialiseLayout(const PixelRect &parent_rc) override;
   virtual void SetDefaultFocus() override;
   virtual bool OnAnyKeyDown(unsigned key_code) override;
+};
+
+/**
+ * Helper class for #WidgetDialog which can construct a #Widget of the
+ * given type.
+ */
+template<typename T>
+class TWidgetDialog final : public WidgetDialog {
+  static_assert(std::is_base_of_v<Widget, T>, "Not a Widget");
+
+public:
+  using WidgetDialog::WidgetDialog;
+
+  template<typename... Args>
+  void SetWidget(Args&&... args) {
+    FinishPreliminary(std::make_unique<T>(std::forward<Args>(args)...));
+  }
+
+  auto &GetWidget() noexcept {
+    return static_cast<T &>(WidgetDialog::GetWidget());
+  }
 };
 
 /**

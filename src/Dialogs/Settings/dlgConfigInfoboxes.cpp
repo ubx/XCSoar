@@ -261,7 +261,7 @@ InfoBoxesConfigWidget::Prepare(ContainerWindow &parent,
   Add(_("Content"), nullptr, dfe);
 
   ContainerWindow &form_parent = (ContainerWindow &)RowFormWidget::GetWindow();
-  AddRemaining(new WndFrame(form_parent, GetLook(), rc));
+  AddRemaining(std::make_unique<WndFrame>(form_parent, GetLook(), rc));
 
   WindowStyle button_style;
   button_style.Hide();
@@ -422,14 +422,11 @@ dlgConfigInfoboxesShowModal(SingleWindow &parent,
                             InfoBoxSettings::Panel &data_r,
                             bool allow_name_change)
 {
-  WidgetDialog dialog(WidgetDialog::Full{}, parent,
-                      dialog_look, nullptr);
-  InfoBoxesConfigWidget widget(dialog, dialog_look, _look,
-                               data_r, allow_name_change, geometry);
-  dialog.FinishPreliminary(&widget);
+  TWidgetDialog<InfoBoxesConfigWidget> dialog(WidgetDialog::Full{}, parent,
+                                              dialog_look, nullptr);
+  dialog.SetWidget(dialog, dialog_look, _look,
+                   data_r, allow_name_change, geometry);
 
   dialog.ShowModal();
-  dialog.StealWidget();
-
   return dialog.GetChanged();
 }

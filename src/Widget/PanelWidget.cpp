@@ -33,16 +33,10 @@ PanelWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
   style.ControlParent();
   style.Hide();
 
-  PanelControl *panel = new PanelControl(parent, UIGlobals::GetDialogLook(),
-                                         rc,
-                                         style);
-  SetWindow(panel);
-}
-
-void
-PanelWidget::Unprepare()
-{
-  DeleteWindow();
+  SetWindow(std::make_unique<PanelControl>(parent,
+                                           UIGlobals::GetDialogLook(),
+                                           rc,
+                                           style));
 }
 
 

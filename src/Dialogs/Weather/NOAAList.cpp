@@ -93,7 +93,6 @@ public:
   /* virtual methods from class Widget */
   virtual void Prepare(ContainerWindow &parent,
                        const PixelRect &rc) override;
-  virtual void Unprepare() override;
 
 protected:
   /* virtual methods from ListItemRenderer */
@@ -127,12 +126,6 @@ NOAAListWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
              row_renderer.CalculateLayout(*look.list.font_bold,
                                           look.small_font));
   UpdateList();
-}
-
-void
-NOAAListWidget::Unprepare()
-{
-  DeleteWindow();
 }
 
 void
@@ -254,11 +247,10 @@ NOAAListWidget::OnActivateItem(unsigned index) noexcept
 std::unique_ptr<Widget>
 CreateNOAAListWidget()
 {
-  NOAAListWidget *list = new NOAAListWidget();
   auto buttons =
-    std::make_unique<ButtonPanelWidget>(list,
+    std::make_unique<ButtonPanelWidget>(std::make_unique<NOAAListWidget>(),
                                         ButtonPanelWidget::Alignment::BOTTOM);
-  list->SetButtonPanel(*buttons);
+  ((NOAAListWidget &)buttons->GetWidget()).SetButtonPanel(*buttons);
   return buttons;
 }
 

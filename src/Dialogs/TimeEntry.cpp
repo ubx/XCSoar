@@ -42,8 +42,9 @@ TimeEntryDialog(const TCHAR *caption, RoughTime &value,
 
   const DialogLook &look = UIGlobals::GetDialogLook();
 
-  WidgetDialog dialog(WidgetDialog::Auto{}, UIGlobals::GetMainWindow(),
-                      look, caption);
+  TWidgetDialog<FixedWindowWidget> dialog(WidgetDialog::Auto{},
+                                          UIGlobals::GetMainWindow(),
+                                          look, caption);
 
   ContainerWindow &client_area = dialog.GetClientAreaWindow();
 
@@ -53,38 +54,35 @@ TimeEntryDialog(const TCHAR *caption, RoughTime &value,
   control_style.Hide();
   control_style.TabStop();
 
-  DigitEntry entry(look);
-  entry.CreateTime(client_area, client_area.GetClientRect(), control_style);
-  entry.Resize(entry.GetRecommendedSize());
-  entry.SetValue(value + time_zone);
-  entry.SetCallback(dialog.MakeModalResultCallback(mrOK));
+  auto entry = std::make_unique<DigitEntry>(look);
+  entry->CreateTime(client_area, client_area.GetClientRect(), control_style);
+  entry->Resize(entry->GetRecommendedSize());
+  entry->SetValue(value + time_zone);
+  entry->SetCallback(dialog.MakeModalResultCallback(mrOK));
 
   /* create buttons */
 
   dialog.AddButton(_("OK"), mrOK);
   dialog.AddButton(_("Cancel"), mrCancel);
 
-  dialog.AddButton(_("Now"), [&entry, time_zone](){
+  dialog.AddButton(_("Now"), [&entry = *entry, time_zone](){
     const BrokenTime bt = BrokenDateTime::NowUTC();
     RoughTime now_utc = RoughTime(bt.hour, bt.minute);
     entry.SetValue(now_utc + time_zone);
   });
 
   if (nullable)
-    dialog.AddButton(_("Clear"), [&entry](){
+    dialog.AddButton(_("Clear"), [&entry=*entry](){
       entry.SetInvalid();
     });
 
   /* run it */
 
-  FixedWindowWidget widget(&entry);
-  dialog.FinishPreliminary(&widget);
+  dialog.SetWidget(std::move(entry));
 
-  bool result = dialog.ShowModal() == mrOK;
-  dialog.StealWidget();
-  if (!result)
+  if (dialog.ShowModal() != mrOK)
     return false;
 
-  value = entry.GetTimeValue() - time_zone;
+  value = ((DigitEntry &)dialog.GetWidget().GetWindow()).GetTimeValue() - time_zone;
   return true;
 }

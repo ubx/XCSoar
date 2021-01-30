@@ -27,6 +27,7 @@ Copyright_License {
 #include "Widget.hpp"
 
 #include <cassert>
+#include <memory>
 
 class ButtonPanel;
 
@@ -40,14 +41,16 @@ public:
   };
 
 private:
-  Widget *widget;
-  ButtonPanel *buttons;
+  const std::unique_ptr<Widget> widget;
+  std::unique_ptr<ButtonPanel> buttons;
   Alignment alignment;
 
 public:
-  ButtonPanelWidget(Widget *_widget, Alignment _alignment=Alignment::AUTO)
-    :widget(_widget), buttons(nullptr), alignment(_alignment) {}
-  virtual ~ButtonPanelWidget();
+  ButtonPanelWidget(std::unique_ptr<Widget> &&_widget,
+                    Alignment _alignment=Alignment::AUTO) noexcept
+    :widget(std::move(_widget)), alignment(_alignment) {}
+
+  ~ButtonPanelWidget() noexcept override;
 
   Widget &GetWidget() {
     return *widget;

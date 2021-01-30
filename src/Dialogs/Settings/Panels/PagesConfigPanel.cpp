@@ -22,8 +22,8 @@ Copyright_License {
 */
 
 #include "PagesConfigPanel.hpp"
-#include "Screen/Layout.hpp"
-#include "ui/canvas/Canvas.hpp"
+#include "Look/DialogLook.hpp"
+#include "Renderer/TextRowRenderer.hpp"
 #include "Form/Button.hpp"
 #include "Form/ButtonPanel.hpp"
 #include "Form/DataField/Enum.hpp"
@@ -83,6 +83,8 @@ private:
 class PageListWidget
   : public ListWidget,
     public PageLayoutEditWidget::Listener {
+
+  TextRowRenderer row_renderer;
 
   PageLayoutEditWidget *editor;
 
@@ -299,10 +301,13 @@ PageLayoutEditWidget::OnModified(DataField &df)
 void
 PageListWidget::Initialise(ContainerWindow &parent, const PixelRect &rc)
 {
+  const DialogLook &look = UIGlobals::GetDialogLook();
+
   settings = CommonInterface::GetUISettings().pages;
 
-  CreateList(parent, UIGlobals::GetDialogLook(),
-             rc, Layout::Scale(18)).SetLength(settings.n_pages);
+  CreateList(parent, UIGlobals::GetDialogLook(), rc,
+             row_renderer.CalculateLayout(*look.list.font))
+    .SetLength(settings.n_pages);
 
   CreateButtons(buttons->GetButtonPanel());
   UpdateButtons();
@@ -402,8 +407,7 @@ PageListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
     gcc_unreachable();
   }
 
-  canvas.DrawText(rc.WithPadding(Layout::GetTextPadding()).GetTopLeft(),
-                  buffer);
+  row_renderer.DrawTextRow(canvas, rc, buffer);
 }
 
 void
@@ -439,14 +443,19 @@ PageListWidget::OnModified(const PageLayout &new_value)
 std::unique_ptr<Widget>
 CreatePagesConfigPanel()
 {
-  PageListWidget *list = new PageListWidget();
-  PageLayoutEditWidget *editor =
-    new PageLayoutEditWidget(UIGlobals::GetDialogLook(), *list);
-  list->SetEditor(*editor);
+  auto _list = std::make_unique<PageListWidget>();
+  auto _editor = std::make_unique<PageLayoutEditWidget>(UIGlobals::GetDialogLook(),
+                                                        *_list);
 
-  TwoWidgets *two = new TwoWidgets(list, editor);
-  auto buttons = std::make_unique<ButtonPanelWidget>(two, ButtonPanelWidget::Alignment::BOTTOM);
-  list->SetButtonPanel(*buttons);
+  auto two = std::make_unique<TwoWidgets>(std::move(_list),
+                                          std::move(_editor));
+  auto &list = (PageListWidget &)two->GetFirst();
+  auto &editor = (PageLayoutEditWidget &)two->GetSecond();
+  list.SetEditor(editor);
+
+  auto buttons = std::make_unique<ButtonPanelWidget>(std::move(two),
+                                                     ButtonPanelWidget::Alignment::BOTTOM);
+  list.SetButtonPanel(*buttons);
 
   return buttons;
 }

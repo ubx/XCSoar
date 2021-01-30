@@ -95,11 +95,6 @@ public:
     logo.Create(parent, rc, style);
   }
 
-  virtual void Unprepare() override {
-    logo.Destroy();
-    quit.Destroy();
-  }
-
   virtual void Show(const PixelRect &rc) override {
     quit.MoveAndShow(GetButtonRect(rc));
     logo.MoveAndShow(rc);
@@ -241,15 +236,13 @@ dlgStartupShowModal()
 
   /* show the dialog */
   const DialogLook &look = UIGlobals::GetDialogLook();
-  WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
-                      UIGlobals::GetDialogLook(), nullptr);
-  TwoWidgets widget(new LogoQuitWidget(look.button, dialog),
-                    new StartupWidget(look, dialog, dff));
+  TWidgetDialog<TwoWidgets> dialog(WidgetDialog::Full{},
+                                   UIGlobals::GetMainWindow(),
+                                   UIGlobals::GetDialogLook(),
+                                   nullptr);
 
-  dialog.FinishPreliminary(&widget);
+  dialog.SetWidget(std::make_unique<LogoQuitWidget>(look.button, dialog),
+                   std::make_unique<StartupWidget>(look, dialog, dff));
 
-  const int result = dialog.ShowModal();
-  dialog.StealWidget();
-
-  return result == mrOK;
+  return dialog.ShowModal() == mrOK;
 }

@@ -56,15 +56,9 @@ ViewImageWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
   WindowStyle hidden;
   hidden.Hide();
 
-  auto *w = new ViewImageWindow(bitmap);
+  auto w = std::make_unique<ViewImageWindow>(bitmap);
   w->Create(parent, rc, hidden);
-  SetWindow(w);
-}
-
-void
-ViewImageWidget::Unprepare()
-{
-  DeleteWindow();
+  SetWindow(std::move(w));
 }
 
 void

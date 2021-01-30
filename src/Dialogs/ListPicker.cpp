@@ -76,11 +76,11 @@ public:
   using ListWidget::GetList;
 
   void EnableItemHelp(ItemHelpCallback_t _item_help_callback,
-                      TextWidget *_help_widget,
-                      TwoWidgets *_two_widgets) {
+                      TextWidget &_help_widget,
+                      TwoWidgets &_two_widgets) {
     item_help_callback = _item_help_callback;
-    help_widget = _help_widget;
-    two_widgets = _two_widgets;
+    help_widget = &_help_widget;
+    two_widgets = &_two_widgets;
   }
 
   void UpdateHelp(unsigned index) {
@@ -103,10 +103,6 @@ public:
                                    row_height);
     list.SetLength(num_items);
     list.SetCursorIndex(initial_value);
-  }
-
-  virtual void Unprepare() override {
-    DeleteWindow();
   }
 
   virtual void Show(const PixelRect &rc) override {
@@ -161,16 +157,16 @@ ListPicker(const TCHAR *caption,
   ListPickerWidget *const list_widget =
     new ListPickerWidget(num_items, initial_value, item_height,
                          item_renderer, dialog, caption, help_text);
-  TextWidget *text_widget = nullptr;
-  TwoWidgets *two_widgets = nullptr;
 
-  Widget *widget = list_widget;
+  std::unique_ptr<Widget> widget(list_widget);
 
   if (_itemhelp_callback != nullptr) {
-    text_widget = new TextWidget();
-    widget = two_widgets = new TwoWidgets(list_widget, text_widget);
-
-    list_widget->EnableItemHelp(_itemhelp_callback, text_widget, two_widgets);
+    widget = std::make_unique<TwoWidgets>(std::move(widget),
+                                          std::make_unique<TextWidget>());
+    auto &two_widgets = (TwoWidgets &)*widget;
+    list_widget->EnableItemHelp(_itemhelp_callback,
+                                (TextWidget &)two_widgets.GetSecond(),
+                                two_widgets);
   }
 
   if (help_text != nullptr)
@@ -194,7 +190,7 @@ ListPicker(const TCHAR *caption,
   if (update)
     update_timer.Schedule(std::chrono::seconds(1));
 
-  dialog.FinishPreliminary(widget);
+  dialog.FinishPreliminary(widget.release());
 
   int result = dialog.ShowModal();
   if (result == mrOK)

@@ -24,14 +24,6 @@ Copyright_License {
 #include "Widget.hpp"
 #include "ui/dim/Size.hpp"
 
-Widget::~Widget()
-{
-}
-
-NullWidget::~NullWidget()
-{
-}
-
 PixelSize
 NullWidget::GetMinimumSize() const
 {

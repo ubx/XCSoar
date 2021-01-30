@@ -44,7 +44,7 @@ public:
    * A virtual destructor prototype that allows containers to delete
    * Widget pointers.
    */
-  virtual ~Widget();
+  virtual ~Widget() noexcept = default;
 
   /**
    * Estimate the minimum recommended size.  May return zero if the
@@ -160,8 +160,6 @@ public:
  */
 class NullWidget : public Widget {
 public:
-  virtual ~NullWidget();
-
   PixelSize GetMinimumSize() const override;
   PixelSize GetMaximumSize() const override;
   void Initialise(ContainerWindow &parent, const PixelRect &rc) override;

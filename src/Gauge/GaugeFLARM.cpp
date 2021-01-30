@@ -157,14 +157,7 @@ GaugeFLARM::Prepare(ContainerWindow &parent, const PixelRect &rc)
   WindowStyle style;
   style.Hide();
 
-  SetWindow(new SmallTrafficWindow(parent, rc, look, style));
-}
-
-void
-GaugeFLARM::Unprepare()
-{
-  DeleteWindow();
-  OverlappedWidget::Unprepare();
+  SetWindow(std::make_unique<SmallTrafficWindow>(parent, rc, look, style));
 }
 
 void

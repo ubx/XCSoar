@@ -72,14 +72,8 @@ TextWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
   WindowStyle style;
   style.Hide();
 
-  WndFrame *w = new WndFrame(parent, UIGlobals::GetDialogLook(), rc, style);
-  SetWindow(w);
-}
-
-void
-TextWidget::Unprepare()
-{
-  DeleteWindow();
+  SetWindow(std::make_unique<WndFrame>(parent, UIGlobals::GetDialogLook(),
+                                       rc, style));
 }
 
 

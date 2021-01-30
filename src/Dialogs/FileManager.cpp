@@ -30,7 +30,6 @@ Copyright_License {
 #include "Renderer/TwoTextRowsRenderer.hpp"
 #include "Form/List.hpp"
 #include "Widget/ListWidget.hpp"
-#include "ui/canvas/Canvas.hpp"
 #include "Language/Language.hpp"
 #include "LocalPath.hpp"
 #include "system/FileUtil.hpp"
@@ -339,15 +338,9 @@ void
 ManagedFileListWidget::Unprepare()
 {
 #ifdef HAVE_DOWNLOAD_MANAGER
-  refresh_download_timer.Cancel();
-
   if (Net::DownloadManager::IsAvailable())
     Net::DownloadManager::RemoveListener(*this);
-
-  download_notify.ClearNotification();
 #endif
-
-  DeleteWindow();
 }
 
 int
@@ -467,10 +460,7 @@ ManagedFileListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
 {
   const FileItem &file = items[i];
 
-  canvas.Select(row_renderer.GetFirstFont());
   row_renderer.DrawFirstRow(canvas, rc, file.name.c_str());
-
-  canvas.Select(row_renderer.GetSecondFont());
 
   if (file.downloading) {
     StaticString<64> text;
