@@ -311,9 +311,9 @@ ifeq ($(TARGET),UNIX)
 endif
 
 ifeq ($(TARGET),ANDROID)
-  ANDROID_NDK ?= $(HOME)/opt/android-ndk-r21d
+  ANDROID_NDK ?= $(HOME)/opt/android-ndk-r22
 
-  ANDROID_SDK_PLATFORM = android-26
+  ANDROID_SDK_PLATFORM = android-29
   ANDROID_NDK_API = 21
 
   # The naming of CPU ABIs, architectures, and various NDK directory names is an unholy mess.

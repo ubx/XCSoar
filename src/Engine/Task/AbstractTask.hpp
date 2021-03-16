@@ -24,6 +24,7 @@
 #define ABSTRACTTASK_H
 
 #include "TaskInterface.hpp"
+#include "Factory/ValidationError.hpp"
 #include "Stats/TaskStats.hpp"
 #include "Computer/TaskStatsComputer.hpp"
 #include "TaskBehaviour.hpp"
@@ -43,12 +44,12 @@ class AbstractTask:
 {
 protected:
   /** task point sequence index */
-  unsigned active_task_point;
+  unsigned active_task_point = 0;
   /** statistics of this task */
   TaskStats stats;
   TaskStatsComputer stats_computer;
   /** reference to task events (feedback) */
-  TaskEvents *task_events;
+  TaskEvents *task_events = nullptr;
 
   /** settings */
   TaskBehaviour task_behaviour;
@@ -58,20 +59,20 @@ protected:
    * #CalculationThread iteration.  Set it when the task has been
    * edited.
    */
-  bool force_full_update;
+  bool force_full_update = true;
 
 private:
   /** low pass filter on best MC calculations */
-  Filter mc_lpf;
+  Filter mc_lpf{8};
   /** low pass filter on cruise efficiency calculations */
-  Filter ce_lpf;
+  Filter ce_lpf{60};
   /** low pass filter on effective MC calculations */
-  Filter em_lpf;
+  Filter em_lpf{60};
 
   /**
    * True when #mc_lpf has been initialised.
    */
-  bool mc_lpf_valid;
+  bool mc_lpf_valid = false;
 
 public:
   /** 
@@ -143,12 +144,10 @@ public:
                     double fallback_mc);
 
   /**
-   * Check if task is valid.  Calls task_event methods on failure.
-   *
-   * @return True if task is valid
+   * Check if task is valid.
    */
   gcc_pure
-  virtual bool CheckTask() const = 0;
+  virtual TaskValidationErrorSet CheckTask() const noexcept = 0;
 
 protected:
   /**
@@ -426,9 +425,9 @@ public:
   /* virtual methods from class TaskInterface */
   bool Update(const AircraftState &state_now,
               const AircraftState &state_last,
-              const GlidePolar &glide_polar) override;
+              const GlidePolar &glide_polar) noexcept override;
   bool UpdateIdle(const AircraftState &state_now,
-                  const GlidePolar &glide_polar) override;
+                  const GlidePolar &glide_polar) noexcept override;
 };
 
 #endif //ABSTRACTTASK_H

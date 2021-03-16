@@ -30,14 +30,7 @@
 AbstractTask::AbstractTask(TaskType _type,
                            const TaskBehaviour &tb)
   :TaskInterface(_type),
-   active_task_point(0),
-   task_events(NULL),
-   task_behaviour(tb),
-   force_full_update(true),
-   mc_lpf(8),
-   ce_lpf(60),
-   em_lpf(60),
-   mc_lpf_valid(false)
+   task_behaviour(tb)
 {
    stats.reset();
    stats_computer.Reset(stats);
@@ -106,7 +99,7 @@ AbstractTask::UpdateAutoMC(GlidePolar &glide_polar,
 
 bool 
 AbstractTask::UpdateIdle(const AircraftState &state,
-                         const GlidePolar &glide_polar)
+                         const GlidePolar &glide_polar) noexcept
 {
   const bool valid = state.location.IsValid() && glide_polar.IsValid();
 
@@ -237,10 +230,10 @@ AbstractTask::UpdateGlideSolutions(const AircraftState &state,
 bool
 AbstractTask::Update(const AircraftState &state, 
                      const AircraftState &state_last,
-                     const GlidePolar &glide_polar)
+                     const GlidePolar &glide_polar) noexcept
 {
   stats.active_index = GetActiveTaskPointIndex();
-  stats.task_valid = CheckTask();
+  stats.task_valid = !IsError(CheckTask());
 
   const bool full_update = 
     (state.location.IsValid() && state_last.location.IsValid() &&

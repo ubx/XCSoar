@@ -21,30 +21,14 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_UNIT_SYMBOL_RENDERER_HPP
-#define XCSOAR_UNIT_SYMBOL_RENDERER_HPP
+#ifndef XCSOAR_UI_CANVAS_GDI_GDIBITMAP_HPP
+#define XCSOAR_UI_CANVAS_GDI_GDIBITMAP_HPP
 
-#include "Units/Units.hpp"
+#if defined(_WIN32) && defined(USE_GDI)
+#include <windows.h>
+HBITMAP GdiLoadImage(const TCHAR* filename);
+void GdiStartup();
+void GdiShutdown();
+#endif  // _WIN32 && USE_GDI
 
-struct PixelPoint;
-struct PixelSize;
-class Canvas;
-class Font;
-class Pen;
-
-namespace UnitSymbolRenderer
-{
-  [[gnu::pure]]
-  PixelSize GetSize(const Font &font, const Unit unit) noexcept;
-
-  [[gnu::pure]]
-  PixelSize GetSize(const Canvas &canvas, const Unit unit) noexcept;
-
-  [[gnu::pure]]
-  unsigned GetAscentHeight(const Font &font, const Unit unit) noexcept;
-
-  void Draw(Canvas &canvas, PixelPoint pos, Unit unit,
-            const Pen &unit_fraction_pen) noexcept;
-}
-
-#endif
+#endif  // XCSOAR_UI_CANVAS_GDI_GDIBITMAP_HPP

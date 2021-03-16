@@ -47,9 +47,9 @@ BitmapDialog(const Bitmap &bitmap)
   TWidgetDialog<ViewImageWidget>
     dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
            UIGlobals::GetDialogLook(),
-           _T("pc_met"));
-  dialog.SetWidget();
+           _T("pc_met"), new ViewImageWidget(bitmap));
   dialog.AddButton(_("Close"), mrOK);
+//  dialog.SetWidget();
   dialog.ShowModal();
 }
 
@@ -173,4 +173,4 @@ CreatePCMetWidget()
                                       false);
 }
 
-#endif
+#endif  // HAVE_PCMET

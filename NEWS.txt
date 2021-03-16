@@ -2,7 +2,7 @@ Version 7.0 - not yet released
 * LUA scripting
 * user interface
   - screen layout with 12 infoboxes on the left, vario+3 infoboxes on right
-  - new translation: Traditional Chinese
+  - new translations: Catalan, Traditional Chinese, Telugu
   - new Logger-setting "CoPilot"
   - new setting "Thermal Averager needle"
   - select position of Thermal Assistant
@@ -48,6 +48,7 @@ Version 7.0 - not yet released
   - glide polar: dolphin speed line drawn on polar
 * map display
   - new display: glide range line drawn to working floor
+  - per page zoom state
 * thermal band
   - new algorithm, with improved statistics
   - separate active climb and encounter-averaged bands
@@ -73,6 +74,12 @@ Version 7.0 - not yet released
   - support Kobo Glo HD
 * Raspberry Pi
   - resizable mouse cursor
+
+Version 6.8.18 - not yet released
+* Android
+  - support devices with aspect ratio greater than 16:9
+* Raspberry Pi
+  - autodetect display orientation
 
 Version 6.8.17 - 2020/09/22
 * tracking

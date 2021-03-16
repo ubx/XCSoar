@@ -24,64 +24,117 @@ Copyright_License {
 #include "ChartRenderer.hpp"
 #include "ui/canvas/Canvas.hpp"
 #include "Screen/Layout.hpp"
+#include "Language/Language.hpp"
 #include "Math/LeastSquares.hpp"
 #include "util/StaticString.hxx"
+#include "util/StringFormat.hpp"
+#include "util/TruncateString.hpp"
+#include "util/ConstBuffer.hxx"
 
 #include <cassert>
-#include <windef.h> /* for MAX_PATH */
 
 #ifdef ENABLE_OPENGL
 #include "ui/canvas/opengl/Scope.hpp"
 #endif
 
-void
-ChartRenderer::Axis::Reset()
-{
-  unscaled = true;
-  scale = 0;
-  min = 0;
-  max = 0;
-}
-
 int
-ChartRenderer::Axis::ToScreen(double value) const
+ChartRenderer::Axis::ToScreen(double value) const noexcept
 {
   return int((value - min) * scale);
 }
 
-void
-ChartRenderer::ResetScale()
+ChartRenderer::ChartRenderer(const ChartLook &_look, Canvas &the_canvas,
+                             const PixelRect &the_rc,
+                             const bool has_padding) noexcept
+  :look(_look), canvas(the_canvas),
+   rc(the_rc),
+   minor_tick_size(Layout::VptScale(4))
 {
-  x.Reset();
-  y.Reset();
+  x_label.clear();
+  y_label.clear();
 }
 
-ChartRenderer::ChartRenderer(const ChartLook &_look, Canvas &the_canvas,
-                             const PixelRect the_rc,
-                             const bool has_padding)
-  :look(_look), canvas(the_canvas), rc(the_rc), padding_text(Layout::GetTextPadding())
+void
+ChartRenderer::SetXLabel(const TCHAR *text) noexcept
 {
-  SetPadding(has_padding);
-  if (has_padding)
+  CopyTruncateString(x_label.data(), x_label.capacity(), text);
+}
+
+void
+ChartRenderer::SetXLabel(const TCHAR *text, const TCHAR *unit) noexcept
+{
+  StringFormat(x_label.data(), x_label.capacity(),
+               _T("%s [%s]"), text, unit);
+}
+
+void
+ChartRenderer::SetYLabel(const TCHAR *text, const TCHAR *unit) noexcept
+{
+  StringFormat(y_label.data(), y_label.capacity(),
+               _T("%s [%s]"), text, unit);
+}
+
+void
+ChartRenderer::SetYLabel(const TCHAR *text) noexcept
+{
+  CopyTruncateString(y_label.data(), y_label.capacity(), text);
+}
+
+void
+ChartRenderer::Begin() noexcept
+{
+  rc_chart = rc;
+
+  if (!x_label.empty()) {
+    /* make room for X axis labels below the chart */
+    const auto size = look.axis_label_font.TextSize(x_label.c_str());
+
+    rc_chart.bottom -= size.height + Layout::GetTextPadding() * 2;
+    x_label_left = rc.right - size.width - Layout::GetTextPadding() * 2;
+  }
+
+  if (!y_label.empty()) {
+    /* make room for Y axis labels left of the chart */
+    const auto size = look.axis_label_font.TextSize(y_label.c_str());
+
+    rc_chart.left += std::max(size.width + Layout::GetTextPadding() * 2,
+                              Layout::VptScale(30));
+    y_label_bottom = rc.top - size.height - Layout::GetTextPadding() * 2;
+  }
+
+  if (!x_label.empty() || !y_label.empty())
     canvas.DrawFilledRectangle(rc_chart, COLOR_WHITE);
 }
 
 void
-ChartRenderer::SetPadding(bool do_pad)
+ChartRenderer::Finish() noexcept
 {
-  if (do_pad) {
-    rc_chart.left = rc.left+Layout::VptScale(30);
-    rc_chart.right = rc.right;
-    rc_chart.top = rc.top;
-    rc_chart.bottom = rc.bottom-Layout::VptScale(26);
-  } else
-    rc_chart = rc;
-  ResetScale();
-  minor_tick_size = Layout::VptScale(4);
+  if (!x_label.empty()) {
+    /* draw the X axis label */
+
+    canvas.Select(look.axis_label_font);
+    canvas.SetBackgroundTransparent();
+
+    PixelSize tsize = canvas.CalcTextSize(x_label.c_str());
+    int x = rc.right - tsize.width - Layout::GetTextPadding();
+    int y = rc.bottom - tsize.height - Layout::GetTextPadding();
+
+    canvas.DrawText({x, y}, x_label.c_str());
+  }
+
+  if (!y_label.empty()) {
+    /* draw the Y axis label */
+
+    canvas.Select(look.axis_label_font);
+    canvas.SetBackgroundTransparent();
+
+    canvas.DrawText(rc.WithPadding(Layout::GetTextPadding()).GetTopLeft(),
+                    y_label.c_str());
+  }
 }
 
 void
-ChartRenderer::ScaleYFromData(const LeastSquares &lsdata)
+ChartRenderer::ScaleYFromData(const LeastSquares &lsdata) noexcept
 {
   if (lsdata.IsEmpty())
     return;
@@ -112,7 +165,7 @@ ChartRenderer::ScaleYFromData(const LeastSquares &lsdata)
 }
 
 void
-ChartRenderer::ScaleXFromData(const LeastSquares &lsdata)
+ChartRenderer::ScaleXFromData(const LeastSquares &lsdata) noexcept
 {
   if (lsdata.IsEmpty())
     return;
@@ -132,7 +185,7 @@ ChartRenderer::ScaleXFromData(const LeastSquares &lsdata)
 }
 
 void
-ChartRenderer::ScaleYFromValue(const double value)
+ChartRenderer::ScaleYFromValue(const double value) noexcept
 {
   if (y.unscaled) {
     y.min = value;
@@ -149,7 +202,7 @@ ChartRenderer::ScaleYFromValue(const double value)
 }
 
 void
-ChartRenderer::ScaleXFromValue(const double value)
+ChartRenderer::ScaleXFromValue(const double value) noexcept
 {
   if (x.unscaled) {
     x.min = value;
@@ -166,7 +219,8 @@ ChartRenderer::ScaleXFromValue(const double value)
 }
 
 void
-ChartRenderer::DrawLabel(const TCHAR *text, const double xv, const double yv)
+ChartRenderer::DrawLabel(const TCHAR *text,
+                         const double xv, const double yv) noexcept
 {
   canvas.Select(look.label_font);
   canvas.SetBackgroundTransparent();
@@ -180,14 +234,14 @@ ChartRenderer::DrawLabel(const TCHAR *text, const double xv, const double yv)
 #endif
     canvas.Select(look.label_blank_brush);
 
-    const PixelSize rect_size = tsize + PixelSize{padding_text * 2, padding_text * 2};
+    const PixelSize rect_size = tsize + PixelSize{Layout::GetTextPadding() * 2};
     canvas.DrawRectangle(PixelRect::Centered(pt, rect_size));
   }
   canvas.DrawText(pt + tsize / 2u, text);
 }
 
 void
-ChartRenderer::DrawNoData(const TCHAR *text)
+ChartRenderer::DrawNoData(const TCHAR *text) noexcept
 {
   canvas.Select(look.label_font);
   canvas.SetBackgroundTransparent();
@@ -196,51 +250,14 @@ ChartRenderer::DrawNoData(const TCHAR *text)
 }
 
 void
-ChartRenderer::DrawXLabel(const TCHAR *text)
+ChartRenderer::DrawNoData() noexcept
 {
-  canvas.Select(look.axis_label_font);
-  canvas.SetBackgroundTransparent();
-
-  PixelSize tsize = canvas.CalcTextSize(text);
-  int x = rc.right - tsize.width - Layout::GetTextPadding();
-  int y = rc.bottom - tsize.height - Layout::GetTextPadding();
-
-  canvas.DrawText({x, y}, text);
+  DrawNoData(_("No data"));
 }
 
 void
-ChartRenderer::DrawXLabel(const TCHAR *text, const TCHAR *unit)
-{
-  assert(text != nullptr);
-  assert(unit != nullptr);
-
-  StaticString<64> buffer;
-  buffer.UnsafeFormat(_T("%s [%s]"), text, unit);
-  DrawXLabel(buffer);
-}
-
-void
-ChartRenderer::DrawYLabel(const TCHAR *text)
-{
-  canvas.Select(look.axis_label_font);
-  canvas.SetBackgroundTransparent();
-
-  canvas.DrawText(rc.WithPadding(Layout::GetTextPadding()).GetTopLeft(), text);
-}
-
-void
-ChartRenderer::DrawYLabel(const TCHAR *text, const TCHAR *unit)
-{
-  assert(text != nullptr);
-  assert(unit != nullptr);
-
-  StaticString<64> buffer;
-  buffer.UnsafeFormat(_T("%s [%s]"), text, unit);
-  DrawYLabel(buffer);
-}
-
-void
-ChartRenderer::DrawTrend(const LeastSquares &lsdata, ChartLook::Style style)
+ChartRenderer::DrawTrend(const LeastSquares &lsdata,
+                         ChartLook::Style style) noexcept
 {
   if (!lsdata.HasResult())
     return;
@@ -257,7 +274,8 @@ ChartRenderer::DrawTrend(const LeastSquares &lsdata, ChartLook::Style style)
 }
 
 void
-ChartRenderer::DrawTrendN(const LeastSquares &lsdata, ChartLook::Style style)
+ChartRenderer::DrawTrendN(const LeastSquares &lsdata,
+                          ChartLook::Style style) noexcept
 {
   if (!lsdata.HasResult())
     return;
@@ -275,7 +293,8 @@ ChartRenderer::DrawTrendN(const LeastSquares &lsdata, ChartLook::Style style)
 
 void
 ChartRenderer::DrawLine(const double xmin, const double ymin,
-                        const double xmax, const double ymax, const Pen &pen)
+                        const double xmax, const double ymax,
+                        const Pen &pen) noexcept
 {
   if (x.unscaled || y.unscaled)
     return;
@@ -288,7 +307,7 @@ ChartRenderer::DrawLine(const double xmin, const double ymin,
 void 
 ChartRenderer::DrawFilledLine(const double xmin, const double ymin,
                               const double xmax, const double ymax,
-                              const Brush &brush)
+                              const Brush &brush) noexcept
 {
   BulkPixelPoint line[4];
 
@@ -308,13 +327,13 @@ ChartRenderer::DrawFilledLine(const double xmin, const double ymin,
 void
 ChartRenderer::DrawLine(const double xmin, const double ymin,
                         const double xmax, const double ymax,
-                        ChartLook::Style style)
+                        ChartLook::Style style) noexcept
 {
   DrawLine(xmin, ymin, xmax, ymax, look.GetPen(style));
 }
 
 void
-ChartRenderer::DrawBarChart(const XYDataStore &lsdata)
+ChartRenderer::DrawBarChart(const XYDataStore &lsdata) noexcept
 {
   if (x.unscaled || y.unscaled)
     return;
@@ -333,7 +352,8 @@ ChartRenderer::DrawBarChart(const XYDataStore &lsdata)
 }
 
 void
-ChartRenderer::DrawFilledLineGraph(const XYDataStore &lsdata, bool swap)
+ChartRenderer::DrawFilledLineGraph(const XYDataStore &lsdata,
+                                   bool swap) noexcept
 {
   const auto &slots = lsdata.GetSlots();
   assert(slots.size() >= 2);
@@ -359,7 +379,8 @@ ChartRenderer::DrawFilledLineGraph(const XYDataStore &lsdata, bool swap)
 }
 
 void
-ChartRenderer::DrawLineGraph(const XYDataStore &lsdata, const Pen &pen, bool swap)
+ChartRenderer::DrawLineGraph(const XYDataStore &lsdata, const Pen &pen,
+                             bool swap) noexcept
 {
   const auto &slots = lsdata.GetSlots();
   assert(slots.size() >= 2);
@@ -378,30 +399,35 @@ ChartRenderer::DrawLineGraph(const XYDataStore &lsdata, const Pen &pen, bool swa
 
 void
 ChartRenderer::DrawLineGraph(const XYDataStore &lsdata,
-                             ChartLook::Style style, bool swap)
+                             ChartLook::Style style, bool swap) noexcept
 {
   DrawLineGraph(lsdata, look.GetPen(style), swap);
 }
 
-void
-ChartRenderer::FormatTicText(TCHAR *text, const double val, const double step,
-                             UnitFormat units)
+BasicStringBuffer<TCHAR, 32>
+ChartRenderer::FormatTicText(const double val, const double step,
+                             UnitFormat units) noexcept
 {
+  BasicStringBuffer<TCHAR, 32> buffer;
+
   if (units == UnitFormat::TIME) {
     int hh = (int)(val);
     int mm = (int)((val-hh)*60);
-    _stprintf(text, _T("%02d:%02d"), hh, mm);
+    StringFormat(buffer.data(), buffer.capacity(), _T("%02d:%02d"), hh, mm);
   } else {
     if (step < 1) {
-      _stprintf(text, _T("%.1f"), val);
+      StringFormat(buffer.data(), buffer.capacity(), _T("%.1f"), val);
     } else {
-      _stprintf(text, _T("%.0f"), val);
+      StringFormat(buffer.data(), buffer.capacity(), _T("%.0f"), val);
     }
   }
+
+  return buffer;
 }
 
 void
-ChartRenderer::DrawXGrid(double tic_step, double unit_step, UnitFormat unit_format)
+ChartRenderer::DrawXGrid(double tic_step, double unit_step,
+                         UnitFormat unit_format) noexcept
 {
   assert(tic_step > 0);
 
@@ -424,7 +450,7 @@ ChartRenderer::DrawXGrid(double tic_step, double unit_step, UnitFormat unit_form
   line[2].y += minor_tick_size;
   line[3].y -= minor_tick_size;
 
-  const int y = line[1].y + padding_text;
+  const int y = line[1].y + Layout::GetTextPadding();
 
   auto start = (int)(x.min / tic_step) * tic_step;
 
@@ -448,12 +474,12 @@ ChartRenderer::DrawXGrid(double tic_step, double unit_step, UnitFormat unit_form
           canvas.DrawLine(line[0], line[1]);
 
           if (unit_format != UnitFormat::NONE) {
-            TCHAR unit_text[MAX_PATH];
-            FormatTicText(unit_text, xval * unit_step / tic_step, unit_step, unit_format);
-            const auto w = canvas.CalcTextSize(unit_text).width;
+            const auto unit_text = FormatTicText(xval * unit_step / tic_step,
+                                                 unit_step, unit_format);
+            const auto w = canvas.CalcTextSize(unit_text.c_str()).width;
             xmin -= w/2;
-            if ((xmin >= next_text) && ((int)(xmin + Layout::VptScale(30)) < rc_chart.right)) {
-              canvas.DrawText({xmin, y}, unit_text);
+            if ((xmin >= next_text) && ((int)(xmin + Layout::VptScale(30)) < x_label_left)) {
+              canvas.DrawText({xmin, y}, unit_text.c_str());
               next_text = xmin + w + Layout::GetTextPadding();
             }
           }
@@ -464,7 +490,8 @@ ChartRenderer::DrawXGrid(double tic_step, double unit_step, UnitFormat unit_form
 }
 
 void
-ChartRenderer::DrawYGrid(double tic_step, double unit_step, UnitFormat unit_format)
+ChartRenderer::DrawYGrid(double tic_step, double unit_step,
+                         UnitFormat unit_format) noexcept
 {
   assert(tic_step > 0);
 
@@ -484,7 +511,7 @@ ChartRenderer::DrawYGrid(double tic_step, double unit_step, UnitFormat unit_form
   line[2].x += minor_tick_size;
   line[3].x -= minor_tick_size;
 
-  const int x = line[0].x - padding_text;
+  const int x = line[0].x - Layout::GetTextPadding();
 
   auto start = (int)(y.min / tic_step) * tic_step;
 
@@ -507,11 +534,12 @@ ChartRenderer::DrawYGrid(double tic_step, double unit_step, UnitFormat unit_form
           }
           canvas.DrawLine(line[0], line[1]);
 
-          if ((unit_format != UnitFormat::NONE) && (ymin > (int)(rc.top + Layout::VptScale(30)))) {
-            TCHAR unit_text[MAX_PATH];
-            FormatTicText(unit_text, yval * unit_step / tic_step, unit_step, unit_format);
-            const auto c = canvas.CalcTextSize(unit_text);
-            canvas.DrawText({std::max(x - (int)c.width, rc.left + padding_text), ymin - (int)c.height / 2}, unit_text);
+          if ((unit_format != UnitFormat::NONE) && (ymin > (int)(y_label_bottom + Layout::VptScale(30)))) {
+            const auto unit_text = FormatTicText(yval * unit_step / tic_step,
+                                                 unit_step, unit_format);
+            const auto c = canvas.CalcTextSize(unit_text.c_str());
+            canvas.DrawText({std::max(x - (int)c.width, rc.left + (int)Layout::GetTextPadding()), ymin - (int)c.height / 2},
+                            unit_text.c_str());
           }
         }
       }
@@ -520,27 +548,27 @@ ChartRenderer::DrawYGrid(double tic_step, double unit_step, UnitFormat unit_form
 }
 
 int
-ChartRenderer::ScreenX(double _x) const
+ChartRenderer::ScreenX(double _x) const noexcept
 {
   return rc_chart.left + x.ToScreen(_x);
 }
 
 int
-ChartRenderer::ScreenY(double _y) const
+ChartRenderer::ScreenY(double _y) const noexcept
 {
   return rc_chart.bottom - y.ToScreen(_y);
 }
 
 void
-ChartRenderer::DrawFilledY(const std::vector<std::pair<double, double>> &vals,
-                           const Brush &brush, const Pen* pen)
+ChartRenderer::DrawFilledY(ConstBuffer<std::pair<double, double>> vals,
+                           const Brush &brush, const Pen *pen) noexcept
 {
-  if (vals.size()<2)
+  if (vals.size < 2)
     return;
-  const unsigned fsize = vals.size()+2;
+  const unsigned fsize = vals.size + 2;
   auto *line = point_buffer.get(fsize);
 
-  for (unsigned i = 0; i < vals.size(); ++i)
+  for (std::size_t i = 0; i < vals.size; ++i)
     line[i + 2] = ToScreen(vals[i].first, vals[i].second);
 
   line[0].x = rc_chart.left;
@@ -558,7 +586,8 @@ ChartRenderer::DrawFilledY(const std::vector<std::pair<double, double>> &vals,
 }
 
 void
-ChartRenderer::DrawDot(const double x, const double y, const unsigned _width)
+ChartRenderer::DrawDot(const double x, const double y,
+                       const unsigned _width) noexcept
 {
   auto p = ToScreen(x, y);
 
@@ -575,7 +604,7 @@ ChartRenderer::DrawDot(const double x, const double y, const unsigned _width)
 
 void
 ChartRenderer::DrawBlankRectangle(double x_min, double y_min,
-                                  double x_max, double y_max)
+                                  double x_max, double y_max) noexcept
 {
   if (x.unscaled || y.unscaled)
     return;
@@ -584,7 +613,8 @@ ChartRenderer::DrawBlankRectangle(double x_min, double y_min,
 }
 
 void
-ChartRenderer::DrawImpulseGraph(const XYDataStore &lsdata, const Pen &pen)
+ChartRenderer::DrawImpulseGraph(const XYDataStore &lsdata,
+                                const Pen &pen) noexcept
 {
   const auto &slots = lsdata.GetSlots();
   assert(slots.size() >= 1);
@@ -599,13 +629,13 @@ ChartRenderer::DrawImpulseGraph(const XYDataStore &lsdata, const Pen &pen)
 
 void
 ChartRenderer::DrawImpulseGraph(const XYDataStore &lsdata,
-                                ChartLook::Style style)
+                                ChartLook::Style style) noexcept
 {
   DrawImpulseGraph(lsdata, look.GetPen(style));
 }
 
 void
-ChartRenderer::DrawWeightBarGraph(const XYDataStore &lsdata)
+ChartRenderer::DrawWeightBarGraph(const XYDataStore &lsdata) noexcept
 {
   const auto &slots = lsdata.GetSlots();
 

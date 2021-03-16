@@ -2578,11 +2578,13 @@ TASK_INFO_SOURCES = \
 	$(SRC)/Engine/Util/Gradient.cpp \
 	$(SRC)/Task/Deserialiser.cpp \
 	$(SRC)/Task/LoadFile.cpp \
+	$(SRC)/Task/ValidationErrorStrings.cpp \
 	$(SRC)/XML/Node.cpp \
 	$(SRC)/XML/Parser.cpp \
 	$(SRC)/XML/Writer.cpp \
 	$(SRC)/XML/DataNode.cpp \
 	$(SRC)/XML/DataNodeXML.cpp \
+	$(TEST_SRC_DIR)/FakeLanguage.cpp \
 	$(TEST_SRC_DIR)/TaskInfo.cpp
 TASK_INFO_DEPENDS = TASK ROUTE GLIDE WAYPOINT IO OS GEO TIME MATH UTIL
 $(eval $(call link-program,TaskInfo,TASK_INFO))
