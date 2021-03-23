@@ -26,6 +26,7 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #include "Language/Language.hpp"
 #include "Math/LeastSquares.hpp"
+#include "Math/Point2D.hpp"
 #include "util/StaticString.hxx"
 #include "util/StringFormat.hpp"
 #include "util/TruncateString.hpp"
@@ -341,38 +342,70 @@ ChartRenderer::DrawBarChart(const XYDataStore &lsdata) noexcept
   canvas.Select(look.bar_brush);
   canvas.SelectNullPen();
 
-  const auto &slots = lsdata.GetSlots();
-  for (unsigned i = 0, n = slots.size(); i != n; i++) {
-    int xmin((i + 1.2) * x.scale + rc_chart.left);
-    int ymin = ScreenY(y.min);
-    int xmax((i + 1.8) * x.scale + rc_chart.left);
-    int ymax = ScreenY(slots[i].y);
-    canvas.DrawRectangle({xmin, ymin, xmax, ymax});
+  double xmin = rc_chart.left + 1.2 * x.scale;
+  double xmax = rc_chart.left + 1.8 * x.scale;
+  const int ymin = ScreenY(y.min);
+
+  for (const auto &i : lsdata.GetSlots()) {
+    int ymax = ScreenY(i.y);
+
+    canvas.DrawRectangle({int(xmin), ymin, int(xmax), ymax});
+
+    xmin += x.scale;
+    xmax += x.scale;
   }
+}
+
+template<typename T>
+static BulkPixelPoint *
+PrepareLineGraph(BulkPixelPoint *p, ConstBuffer<T> src,
+                 const ChartRenderer &chart, bool swap) noexcept
+{
+  if (swap) {
+    for (const auto &i : src)
+      *p++ = chart.ToScreen(i.y, i.x);
+  } else {
+    for (const auto &i : src)
+      *p++ = chart.ToScreen(i.x, i.y);
+  }
+
+  return p;
+}
+
+template<typename T>
+static BulkPixelPoint *
+PrepareFilledLineGraph(BulkPixelPoint *p, ConstBuffer<T> src,
+                       const ChartRenderer &chart, bool swap) noexcept
+{
+  const auto &p0 = *p;
+
+  p = PrepareLineGraph(p, src, chart, swap);
+
+  const auto &last = p[-1];
+  const auto &rc_chart = chart.GetChartRect();
+  if (swap) {
+    *p++ = BulkPixelPoint(rc_chart.left, last.y);
+    *p++ = BulkPixelPoint(rc_chart.left, p0.y);
+  } else {
+    *p++ = BulkPixelPoint(last.x, rc_chart.bottom);
+    *p++ = BulkPixelPoint(p0.x, rc_chart.bottom);
+  }
+
+  return p;
 }
 
 void
 ChartRenderer::DrawFilledLineGraph(const XYDataStore &lsdata,
                                    bool swap) noexcept
 {
-  const auto &slots = lsdata.GetSlots();
-  assert(slots.size() >= 2);
+  const auto slots = lsdata.GetSlots();
+  assert(slots.size >= 2);
 
-  const unsigned n = slots.size() + 2;
+  const unsigned n = slots.size + 2;
   auto *points = point_buffer.get(n);
 
-  auto *p = points;
-  for (const auto &i : slots)
-    *p++ = swap? ToScreen(i.y, i.x) : ToScreen(i.x, i.y);
-  const auto &last = p[-1];
-  if (swap) {
-    *p++ = BulkPixelPoint(rc_chart.left, last.y);
-    *p++ = BulkPixelPoint(rc_chart.left, points[0].y);
-  } else {
-    *p++ = BulkPixelPoint(last.x, rc_chart.bottom);
-    *p++ = BulkPixelPoint(points[0].x, rc_chart.bottom);
-  }
-
+  [[maybe_unused]] auto *p =
+    PrepareFilledLineGraph(points, slots, *this, swap);
   assert(p == points + n);
 
   canvas.DrawPolygon(points, n);
@@ -382,15 +415,14 @@ void
 ChartRenderer::DrawLineGraph(const XYDataStore &lsdata, const Pen &pen,
                              bool swap) noexcept
 {
-  const auto &slots = lsdata.GetSlots();
-  assert(slots.size() >= 2);
+  const auto slots = lsdata.GetSlots();
+  assert(slots.size >= 2);
 
-  const unsigned n = slots.size();
+  const unsigned n = slots.size;
   auto *points = point_buffer.get(n);
 
-  auto *p = points;
-  for (const auto &i : slots)
-    *p++ = swap? ToScreen(i.y, i.x) : ToScreen(i.x, i.y);
+  [[maybe_unused]] auto *p =
+    PrepareLineGraph(points, slots, *this, swap);
   assert(p == points + n);
 
   canvas.Select(pen);
@@ -560,7 +592,7 @@ ChartRenderer::ScreenY(double _y) const noexcept
 }
 
 void
-ChartRenderer::DrawFilledY(ConstBuffer<std::pair<double, double>> vals,
+ChartRenderer::DrawFilledY(ConstBuffer<DoublePoint2D> vals,
                            const Brush &brush, const Pen *pen) noexcept
 {
   if (vals.size < 2)
@@ -568,8 +600,7 @@ ChartRenderer::DrawFilledY(ConstBuffer<std::pair<double, double>> vals,
   const unsigned fsize = vals.size + 2;
   auto *line = point_buffer.get(fsize);
 
-  for (std::size_t i = 0; i < vals.size; ++i)
-    line[i + 2] = ToScreen(vals[i].first, vals[i].second);
+  PrepareLineGraph(line + 2, vals, *this, false);
 
   line[0].x = rc_chart.left;
   line[0].y = line[fsize-1].y;
@@ -616,8 +647,8 @@ void
 ChartRenderer::DrawImpulseGraph(const XYDataStore &lsdata,
                                 const Pen &pen) noexcept
 {
-  const auto &slots = lsdata.GetSlots();
-  assert(slots.size() >= 1);
+  const auto slots = lsdata.GetSlots();
+  assert(slots.size >= 1);
 
   canvas.Select(pen);
   for (const auto &i : slots) {
@@ -637,7 +668,7 @@ ChartRenderer::DrawImpulseGraph(const XYDataStore &lsdata,
 void
 ChartRenderer::DrawWeightBarGraph(const XYDataStore &lsdata) noexcept
 {
-  const auto &slots = lsdata.GetSlots();
+  const auto slots = lsdata.GetSlots();
 
   canvas.SelectNullPen();
 

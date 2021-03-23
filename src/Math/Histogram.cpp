@@ -20,25 +20,25 @@
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
   }
 */
-#include "Math/Histogram.hpp"
 
-#define NUM_SLOTS 60
-#define SPREAD 0.15
+#include "Histogram.hpp"
+#include "Util.hpp"
 
-void
-Histogram::IncrementSlot(const unsigned i, const double mag)
+inline void
+Histogram::IncrementSlot(const unsigned i, const double mag) noexcept
 {
   slots[i].y += mag;
   y_max = std::max(slots[i].y, y_max);
 }
 
 void
-Histogram::UpdateHistogram(double x)
+Histogram::UpdateHistogram(double x) noexcept
 {
-  assert(sum_n);
+  assert(sum_n == NUM_SLOTS);
 
-  unsigned i = (int)(m*(x-b)+0.5);
-  if (i>= sum_n) i = sum_n-1;
+  unsigned i = uround(m * (x - b));
+  if (i >= NUM_SLOTS)
+    i = NUM_SLOTS - 1;
 
   double mag = 1;
 
@@ -46,7 +46,7 @@ Histogram::UpdateHistogram(double x)
     IncrementSlot(i-1, SPREAD);
     mag -= SPREAD;
   }
-  if (i< sum_n-1) {
+  if (i < NUM_SLOTS - 1) {
     IncrementSlot(i+1, SPREAD);
     mag -= SPREAD;
   }
@@ -61,11 +61,12 @@ Histogram::UpdateHistogram(double x)
   x_max = std::max(x+1.5/m, x_max);
 }
 
-void Histogram::Reset(double minx, double maxx)
+void
+Histogram::Reset(double minx, double maxx) noexcept
 {
   assert(maxx > minx);
   b = minx;
-  m = NUM_SLOTS/(maxx-minx);
+  m = (NUM_SLOTS - 1) / (maxx - minx);
   StoreReset();
   for (double x = minx; x<= maxx; x+= 1/m) {
     StoreAdd(x, 0);
@@ -75,24 +76,26 @@ void Histogram::Reset(double minx, double maxx)
   x_max = 0;
 }
 
-void Histogram::Clear()
+void
+Histogram::Clear() noexcept
 {
-  for (unsigned i=0; i< sum_n; ++i) {
+  for (std::size_t i = 0; i < NUM_SLOTS; ++i)
     slots[i].y = 0;
-  }
+
   n_pts = 0;
   x_min = 0;
   x_max = 0;
 }
 
-double Histogram::GetPercentile(const double p) const
+double
+Histogram::GetPercentile(const double p) const noexcept
 {
   assert(p>= 0);
   assert(p<= 1);
 
   const double np = n_pts*p;
   double acc_n = 0;
-  for (unsigned i=0; i+1< sum_n; ++i) {
+  for (unsigned i = 0; i + 1 < NUM_SLOTS; ++i) {
     if (slots[i].y > np - acc_n) {
       const double residual = (np- acc_n)/slots[i].y;
       return slots[i+1].x * (residual) + slots[i].x* (1-residual)-0.5/m;
@@ -101,5 +104,5 @@ double Histogram::GetPercentile(const double p) const
   }
 
   // return mid point
-  return b+ (sum_n-1)/(2*m);
+  return b + (NUM_SLOTS - 1) / (2 * m);
 }

@@ -24,16 +24,18 @@ Copyright_License {
 #ifndef _HISTOGRAM_H
 #define _HISTOGRAM_H
 
-#include "Math/XYDataStore.hpp"
+#include "XYDataStore.hpp"
 
 #include <type_traits>
 
 class Histogram: public XYDataStore
 {
+  static constexpr std::size_t NUM_SLOTS = 61;
+  static constexpr double SPREAD = 0.15;
+
   unsigned n_pts;
   double m;
   double b;
-  void IncrementSlot(unsigned i, double mag);
 
 public:
 
@@ -42,22 +44,22 @@ public:
    *
    * @param x x-Value of the new data point
    */
-  void UpdateHistogram(double x);
+  void UpdateHistogram(double x) noexcept;
 
   /**
    * Initialise the histogram, with specified range
    */
-  void Reset(double smin, double smax);
+  void Reset(double smin, double smax) noexcept;
 
   /**
    * Clear counters
    */
-  void Clear();
+  void Clear() noexcept;
 
   /**
    * Retrieve total number of points accumulated
    */
-  unsigned GetAccumulator() const {
+  unsigned GetAccumulator() const noexcept {
     return n_pts;
   }
 
@@ -65,7 +67,10 @@ public:
    * Return the x value associated with the cumulative percentile value,
    * counted from lowest up.
    */
-  double GetPercentile(const double p) const;
+  double GetPercentile(double p) const noexcept;
+
+private:
+    void IncrementSlot(unsigned i, double mag) noexcept;
 };
 
 static_assert(std::is_trivial<Histogram>::value, "type is not trivial");
