@@ -24,11 +24,13 @@ Copyright_License {
 #ifndef _HISTOGRAM_H
 #define _HISTOGRAM_H
 
-#include "XYDataStore.hpp"
+#include "Math/Point2D.hpp"
+#include "util/ConstBuffer.hxx"
 
+#include <array>
 #include <type_traits>
 
-class Histogram: public XYDataStore
+class Histogram
 {
   static constexpr std::size_t NUM_SLOTS = 61;
   static constexpr double SPREAD = 0.15;
@@ -37,7 +39,16 @@ class Histogram: public XYDataStore
   double m;
   double b;
 
+  double x_min, x_max, y_max;
+
+  std::array<DoublePoint2D, NUM_SLOTS> slots;
+
+  using size_type = decltype(slots)::size_type;
+
 public:
+  bool empty() const noexcept {
+    return n_pts == 0;
+  }
 
   /**
    * Add a new data point to the values and convex solution
@@ -56,11 +67,16 @@ public:
    */
   void Clear() noexcept;
 
-  /**
-   * Retrieve total number of points accumulated
-   */
-  unsigned GetAccumulator() const noexcept {
-    return n_pts;
+  constexpr double GetMinX() const noexcept {
+    return x_min;
+  }
+
+  constexpr double GetMaxX() const noexcept {
+    return x_max;
+  }
+
+  constexpr double GetMaxY() const noexcept {
+    return y_max;
   }
 
   /**
@@ -69,8 +85,15 @@ public:
    */
   double GetPercentile(double p) const noexcept;
 
+  constexpr ConstBuffer<DoublePoint2D> GetSlots() const noexcept {
+    return {slots.data(), slots.size()};
+  }
+
 private:
-    void IncrementSlot(unsigned i, double mag) noexcept;
+  [[gnu::const]]
+  size_type SlotNumber(double x) const noexcept;
+
+  void IncrementSlot(size_type i, double mag) noexcept;
 };
 
 static_assert(std::is_trivial<Histogram>::value, "type is not trivial");
