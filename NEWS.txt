@@ -1,4 +1,21 @@
-Version 7.1 - not yet released
+Version 7.3 - not yet released
+
+Version 7.2 - 2021/04/04
+* user interface
+  - fix task point editor
+  - display goto button in wp details when called from alternate
+* data files
+  - fix crash bug when loading broken CUP files
+* fix crash when loading broken PNG files
+
+Version 7.1 - 2021/03/28
+* user interface
+  - fix crash when canceling a download
+  - fix crash when repository index download failed
+* Android
+  - handle DownloadManager errors
+  - show early initialisation errors
+  - store the terrain cache in the Android cache directory
 
 Version 7.0 - 2021/03/25
 * LUA scripting

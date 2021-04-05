@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="org.xcsoar.testing"
           android:installLocation="auto"
-          android:versionCode="127"
-          android:versionName="7.1">
+          android:versionCode="129"
+          android:versionName="7.3">
   <application
       android:requestLegacyExternalStorage="true"
       android:icon="@drawable/icon"
@@ -46,6 +46,9 @@
 
   <!-- required since Android 9 / targetSdkVersion 28 -->
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+
+  <!-- XCSoar renders maps and the UI with GLES 2.0 -->
+  <uses-feature android:glEsVersion="0x00020000" android:required="true"/>
 
   <!-- Disable implicit requirements -->
   <uses-feature android:name="android.hardware.bluetooth" android:required="false"/>
