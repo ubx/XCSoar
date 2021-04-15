@@ -1,4 +1,24 @@
-Version 7.3 - not yet released
+Version 7.5 - not yet released
+* calculations
+  - support for WeGlide distance contests
+* Kobo
+  - fix touch screen
+
+Version 7.4 - 2021/04/08
+* user interface
+  - properly save and apply updated settings in the configuration dialog
+  - fix overlapping observation zones in the task point list
+  - fix text background in the analysis graphs
+
+Version 7.3 - 2021/04/07
+* user interface
+  - fix crash in waypoint editor
+  - fix swapped longitude/latitude in waypoint editor
+  - fix "Import" button in waypoint editor
+  - fix zoom button label in Traffic Radar View
+  - fix the vario trace infobox
+* Android
+  - fix download progress
 
 Version 7.2 - 2021/04/04
 * user interface
