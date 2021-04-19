@@ -26,8 +26,11 @@ Copyright_License {
 
 #include "thread/SharedMutex.hpp"
 
+#include <cstdint>
+
 struct zzip_dir;
 struct GeoPoint;
+struct RasterLocation;
 class RasterTileCache;
 class RasterProjection;
 class OperationEnvironment;
@@ -70,12 +73,11 @@ public:
   void StartTile(unsigned index);
 
   void SetSize(unsigned width, unsigned height,
-               unsigned tile_width, unsigned tile_height,
+               uint_least16_t tile_width, uint_least16_t tile_height,
                unsigned tile_columns, unsigned tile_rows);
 
   void PutTileData(unsigned index,
-                   unsigned start_x, unsigned start_y,
-                   unsigned end_x, unsigned end_y,
+                   RasterLocation start, RasterLocation end,
                    const struct jas_matrix &m);
 
 private:

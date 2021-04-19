@@ -160,23 +160,21 @@ TerrainLoader::StartTile(unsigned index)
 
 void
 TerrainLoader::SetSize(unsigned _width, unsigned _height,
-                       unsigned _tile_width, unsigned _tile_height,
+                       uint_least16_t _tile_width, uint_least16_t _tile_height,
                        unsigned tile_columns, unsigned tile_rows)
 {
   if (scan_overview)
-    raster_tile_cache.SetSize(_width, _height, _tile_width, _tile_height,
-                              tile_columns, tile_rows);
+    raster_tile_cache.SetSize({_width, _height}, {_tile_width, _tile_height},
+                              {tile_columns, tile_rows});
 }
 
 void
 TerrainLoader::PutTileData(unsigned index,
-                           unsigned start_x, unsigned start_y,
-                           unsigned end_x, unsigned end_y,
+                           RasterLocation start, RasterLocation end,
                            const struct jas_matrix &m)
 {
   if (scan_overview)
-    raster_tile_cache.PutOverviewTile(index, start_x, start_y,
-                                      end_x, end_y, m);
+    raster_tile_cache.PutOverviewTile(index, start, end, m);
 
   if (scan_tiles) {
     const std::lock_guard<SharedMutex> lock(mutex);
@@ -263,8 +261,8 @@ LoadWorldFile(RasterTileCache &tile_cache,
   if (path == nullptr)
     return false;
 
-  const auto new_bounds = LoadWorldFile(dir, path, tile_cache.GetWidth(),
-                                        tile_cache.GetHeight());
+  const auto new_bounds = LoadWorldFile(dir, path, tile_cache.GetSize().x,
+                                        tile_cache.GetSize().y);
   bool success = new_bounds.IsValid();
   if (success)
     tile_cache.SetBounds(new_bounds);
