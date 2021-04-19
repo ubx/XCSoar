@@ -266,7 +266,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             break;
 
         default:
-            std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;
+            // std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;
             break;
     }
     return false;
