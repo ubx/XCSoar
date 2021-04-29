@@ -38,7 +38,7 @@ class RasterTile {
   };
 
 public:
-  RasterLocation start{0, 0}, end, size;
+  RasterLocation start{0, 0}, end, size{0, 0};
 
   /**
    * The distance of this tile to the center of the screen.  This
@@ -98,16 +98,12 @@ public:
 
   bool CheckTileVisibility(IntPoint2D view, unsigned view_radius) noexcept;
 
-  void Disable() noexcept {
+  void Unload() noexcept {
     buffer.Reset();
   }
 
-  bool IsEnabled() const noexcept {
+  bool IsLoaded() const noexcept {
     return buffer.IsDefined();
-  }
-
-  bool IsDisabled() const noexcept {
-    return !buffer.IsDefined();
   }
 
   void CopyFrom(const struct jas_matrix &m) noexcept;

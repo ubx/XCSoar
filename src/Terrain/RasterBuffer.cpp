@@ -87,30 +87,31 @@ RasterBuffer::GetInterpolated(RasterLocation p) const noexcept
  */
 class PixelIterator
 {
-  unsigned src_increment, src_counter;
-  unsigned dest_increment, dest_counter;
+  int error = 0;
+  int src_increment;
+  int dest_increment;
 
 public:
   constexpr PixelIterator(unsigned src_size, unsigned dest_size) noexcept
-    :src_increment(dest_size), src_counter(0),
-     dest_increment(src_size), dest_counter(0) {}
+    :src_increment(dest_size),
+     dest_increment(src_size) {}
 
   /**
    * @return the number of source pixels to skip
    */
   constexpr unsigned Next() noexcept {
-    if (dest_counter < src_counter) {
-      dest_counter += dest_increment;
+    if (error < 0) {
+      error += dest_increment;
       return 0;
     }
 
-    dest_counter += dest_increment;
+    error += dest_increment;
 
     unsigned n = 0;
 
     /* this loop is inefficient with large dest_increment values */
-    while (src_counter + src_increment <= dest_counter) {
-      src_counter += src_increment;
+    while (error >= src_increment) {
+      error -= src_increment;
       ++n;
     }
 
@@ -118,6 +119,7 @@ public:
   }
 };
 
+[[gnu::hot]]
 void
 RasterBuffer::ScanHorizontalLine(unsigned ax, unsigned bx, unsigned y,
                                  TerrainHeight *gcc_restrict buffer, unsigned size,
@@ -167,10 +169,8 @@ RasterBuffer::ScanHorizontalLine(unsigned ax, unsigned bx, unsigned y,
 
     PixelIterator iterator(dx >> RasterTraits::SUBPIXEL_BITS, size);
     TerrainHeight *gcc_restrict end = buffer + size;
-    while (true) {
+    while (buffer != end) {
       *buffer++ = *src;
-      if (buffer >= end)
-        break;
       src += iterator.Next();
     }
   } else {
@@ -188,6 +188,7 @@ RasterBuffer::ScanHorizontalLine(unsigned ax, unsigned bx, unsigned y,
   }
 }
 
+[[gnu::hot]]
 void
 RasterBuffer::ScanLine(RasterLocation a, RasterLocation b,
                        TerrainHeight *gcc_restrict buffer,
