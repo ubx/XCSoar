@@ -1,4 +1,10 @@
-Version 7.5 - not yet released
+Version 7.6 - 2021/05/01
+* user interface
+  - fix disappearing aircraft symbol
+  - fix crash bug in task editor
+
+Version 7.5 - 2021/04/30
+* fix crash bug in terrain loader
 * fix paths with backslashes
 * user interface
   - use different colors to indicate relative traffic altitude

@@ -143,7 +143,7 @@ ifeq ($(TARGET),FUZZER)
 
   FUZZER = y
   CLANG = y
-  HEADLESS = y
+  VFB = y
 endif
 
 ifeq ($(TARGET),UNIX)
@@ -507,13 +507,9 @@ ifeq ($(TARGET_IS_KOBO),y)
       TARGET_CPPFLAGS += --sysroot=$(KOBO_SYSROOT)
     endif
   else
-    LIBSTDCXX_HEADERS_DIR = $(abspath $(THIRDPARTY_LIBS_ROOT)/include/libstdc++)
-    TARGET_CXXFLAGS += \
-      -nostdinc++ \
-      -isystem $(LIBSTDCXX_HEADERS_DIR) \
-      -isystem $(LIBSTDCXX_HEADERS_DIR)/$(ACTUAL_HOST_TRIPLET)
-
     TARGET_CXXFLAGS += -Wno-psabi
+
+    TCPREFIX = $(abspath $(THIRDPARTY_LIBS_DIR))/bin/$(ACTUAL_HOST_TRIPLET)-
   endif
 endif
 
@@ -598,8 +594,6 @@ ifeq ($(TARGET_IS_KOBO),y)
      TARGET_LDFLAGS += -B$(KOBO_TOOLCHAIN)/bin
      TARGET_LDFLAGS += --sysroot=$(KOBO_SYSROOT)
     endif
-  else
-    TARGET_LDFLAGS += -specs=$(abspath $(THIRDPARTY_LIBS_ROOT)/lib/musl-gcc.specs)
   endif
 endif
 
