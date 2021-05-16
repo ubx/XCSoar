@@ -118,8 +118,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                 if (value < 0.0) {
                     value += 360.0;
                 }
-                info.heading = Angle::Degrees(value);
-                info.heading_available.Update(info.clock);
+                info.attitude.heading = Angle::Degrees(value);
+                info.attitude.heading_available.Update(info.clock);
                 return true;
             }
             break;
