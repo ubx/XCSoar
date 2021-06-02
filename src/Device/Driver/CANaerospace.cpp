@@ -265,6 +265,13 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
+        case MCCRADY_VALUE_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.settings.ProvideMacCready(canasMessage.data.container.FLOAT, info.clock);
+                return true;
+            }
+        break;
+
         default:
             // std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;
             break;

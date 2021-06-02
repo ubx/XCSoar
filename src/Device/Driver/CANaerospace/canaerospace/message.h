@@ -59,8 +59,9 @@ typedef enum {
     FLARM_OBJECT_AL1_ID = 1303,
     FLARM_OBJECT_AL0_ID = 1304,
 
-    ADSB_STATE_ID = 1305
+    ADSB_STATE_ID = 1305,
 
+    MCCRADY_VALUE_ID  = 1518
 } CanIDsForXCSoar;
 
 
