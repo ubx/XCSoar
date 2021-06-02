@@ -26,22 +26,40 @@ Copyright_License {
 #include "net/http/DownloadManager.hpp"
 #include "Context.hpp"
 #include "java/Class.hxx"
+#include "java/Path.hxx"
 #include "java/String.hxx"
 #include "LocalPath.hpp"
-#include "system/FileUtil.hpp"
+#include "io/CopyFile.hxx"
 #include "util/Macros.hpp"
 #include "util/StringAPI.hxx"
 #include "org_xcsoar_DownloadUtil.h"
 
 #include <algorithm>
 
-#include <windef.h> /* for MAX_PATH */
-
-static AndroidDownloadManager *instance;
-
 static Java::TrivialClass util_class;
 
-static jmethodID enumerate_method, enqueue_method, cancel_method;
+static jmethodID ctor, close_method, enumerate_method, enqueue_method, cancel_method;
+
+static Java::LocalObject
+NewDownloadUtil(JNIEnv *env, AndroidDownloadManager &instance, Context &context)
+{
+  auto obj = env->NewObject(util_class, ctor,
+                            (jlong)(std::size_t)&instance,
+                            context.Get());
+  Java::RethrowException(env);
+  return {env, obj};
+}
+
+AndroidDownloadManager::AndroidDownloadManager(JNIEnv *env,
+                                               Context &context)
+  :util(env, NewDownloadUtil(env, *this, context))
+{
+}
+
+AndroidDownloadManager::~AndroidDownloadManager() noexcept
+{
+  Java::GetEnv()->CallVoidMethod(util, close_method);
+}
 
 bool
 AndroidDownloadManager::Initialise(JNIEnv *env) noexcept
@@ -52,16 +70,18 @@ AndroidDownloadManager::Initialise(JNIEnv *env) noexcept
   if (!util_class.FindOptional(env, "org/xcsoar/DownloadUtil"))
     return false;
 
-  enumerate_method = env->GetStaticMethodID(util_class, "enumerate",
-                                            "(Landroid/app/DownloadManager;J)V");
+  ctor = env->GetMethodID(util_class, "<init>",
+                          "(JLandroid/content/Context;)V");
 
-  enqueue_method = env->GetStaticMethodID(util_class, "enqueue",
-                                          "(Landroid/app/DownloadManager;"
-                                          "Ljava/lang/String;Ljava/lang/String;)J");
+  close_method = env->GetMethodID(util_class, "close", "()V");
 
-  cancel_method = env->GetStaticMethodID(util_class, "cancel",
-                                         "(Landroid/app/DownloadManager;"
-                                         "Ljava/lang/String;)V");
+  enumerate_method = env->GetMethodID(util_class, "enumerate", "(J)V");
+
+  enqueue_method = env->GetMethodID(util_class, "enqueue",
+                                    "(Ljava/lang/String;Ljava/lang/String;)J");
+
+  cancel_method = env->GetMethodID(util_class, "cancel",
+                                   "(Ljava/lang/String;)V");
 
   return true;
 }
@@ -76,16 +96,6 @@ bool
 AndroidDownloadManager::IsAvailable() noexcept
 {
   return util_class.Get() != nullptr;
-}
-
-AndroidDownloadManager *
-AndroidDownloadManager::Create(JNIEnv *env, Context &context) noexcept
-{
-  const auto obj = context.GetSystemService(env, "download");
-  if (obj == nullptr)
-    return nullptr;
-
-  return instance = new AndroidDownloadManager(env, obj);
 }
 
 void
@@ -124,61 +134,40 @@ AndroidDownloadManager::OnDownloadComplete(Path path_relative,
       (*i)->OnDownloadError(path_relative, {});
 }
 
-[[gnu::pure]]
-static AllocatedPath
-EraseSuffix(Path p, const char *suffix) noexcept
-{
-  assert(p != nullptr);
-  assert(suffix != nullptr);
-
-  const auto current_suffix = p.GetExtension();
-  return current_suffix != nullptr && StringIsEqual(suffix, current_suffix)
-    ? AllocatedPath(p.c_str(), current_suffix)
-    : nullptr;
-}
-
 JNIEXPORT void JNICALL
-Java_org_xcsoar_DownloadUtil_onDownloadAdded(JNIEnv *env, jclass cls,
+Java_org_xcsoar_DownloadUtil_onDownloadAdded(JNIEnv *env, jobject obj,
                                              jlong j_handler, jstring j_path,
                                              jlong size, jlong position)
 {
-  char tmp_path[MAX_PATH];
-  Java::String::CopyTo(env, j_path, tmp_path, ARRAY_SIZE(tmp_path));
-
-  const auto final_path = EraseSuffix(Path(tmp_path), ".tmp");
-  if (final_path == nullptr)
-    return;
-
-  const auto relative = RelativePath(final_path);
-  if (relative == nullptr)
-    return;
+  const auto relative_path = Java::ToPath(env, j_path);
 
   Net::DownloadListener &handler = *(Net::DownloadListener *)(size_t)j_handler;
-  handler.OnDownloadAdded(relative, size, position);
+  handler.OnDownloadAdded(relative_path, size, position);
 }
 
 JNIEXPORT void JNICALL
-Java_org_xcsoar_DownloadUtil_onDownloadComplete(JNIEnv *env, jclass cls,
-                                                jstring j_path,
+Java_org_xcsoar_DownloadUtil_onDownloadComplete(JNIEnv *env, jobject obj,
+                                                jlong ptr,
+                                                jstring j_tmp_path,
+                                                jstring j_relative_path,
                                                 jboolean success)
 {
-  if (instance == nullptr)
-    return;
+  auto &dm = *(AndroidDownloadManager *)(size_t)ptr;
 
-  char tmp_path[MAX_PATH];
-  Java::String::CopyTo(env, j_path, tmp_path, ARRAY_SIZE(tmp_path));
+  const auto tmp_path = Java::ToPath(env, j_tmp_path);
+  const auto relative_path = Java::ToPath(env, j_relative_path);
 
-  const auto final_path = EraseSuffix(Path(tmp_path), ".tmp");
-  if (final_path == nullptr)
-    return;
+  const auto final_path = LocalPath(relative_path);
 
-  const auto relative = RelativePath(final_path);
-  if (relative == nullptr)
-    return;
+  if (success) {
+    try {
+      MoveOrCopyFile(tmp_path, final_path);
+    } catch (...) {
+      success = false;
+    }
+  }
 
-  success = success && File::Replace(Path(tmp_path), final_path);
-
-  instance->OnDownloadComplete(relative, success);
+  dm.OnDownloadComplete(relative_path, success);
 }
 
 void
@@ -187,8 +176,8 @@ AndroidDownloadManager::Enumerate(JNIEnv *env,
 {
   assert(env != nullptr);
 
-  env->CallStaticVoidMethod(util_class, enumerate_method,
-                            object.Get(), (jlong)(size_t)&listener);
+  env->CallVoidMethod(util, enumerate_method,
+                      (jlong)(size_t)&listener);
 }
 
 void
@@ -199,15 +188,11 @@ AndroidDownloadManager::Enqueue(JNIEnv *env, const char *uri,
   assert(uri != nullptr);
   assert(path_relative != nullptr);
 
-  const auto tmp_absolute = LocalPath(path_relative) + ".tmp";
-  File::Delete(tmp_absolute);
-
   Java::String j_uri(env, uri);
-  Java::String j_path(env, tmp_absolute.c_str());
+  Java::String j_path(env, path_relative.c_str());
 
-  env->CallStaticLongMethod(util_class, enqueue_method,
-                            object.Get(), j_uri.Get(),
-                            j_path.Get());
+  env->CallLongMethod(util, enqueue_method,
+                      j_uri.Get(), j_path.Get());
 
   try {
     /* the method DownloadManager.enqueue() can throw
@@ -234,9 +219,6 @@ AndroidDownloadManager::Cancel(JNIEnv *env, Path path_relative) noexcept
   assert(env != nullptr);
   assert(path_relative != nullptr);
 
-  const auto tmp_absolute = LocalPath(path_relative) + ".tmp";
-
-  Java::String j_path(env, tmp_absolute.c_str());
-  env->CallStaticVoidMethod(util_class, cancel_method,
-                            object.Get(), j_path.Get());
+  Java::String j_path(env, path_relative.c_str());
+  env->CallVoidMethod(util, cancel_method, j_path.Get());
 }

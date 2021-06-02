@@ -34,7 +34,7 @@ class Context;
 namespace Net { class DownloadListener; }
 
 class AndroidDownloadManager {
-  Java::GlobalObject object;
+  Java::GlobalObject util;
 
   /**
    * Protects the #listeners attribute.
@@ -43,17 +43,19 @@ class AndroidDownloadManager {
 
   std::list<Net::DownloadListener *> listeners;
 
-  AndroidDownloadManager(JNIEnv *env, jobject obj) noexcept:object(env, obj) {}
-
 public:
+  /**
+   * Throws on error.
+   */
+  AndroidDownloadManager(JNIEnv *env, Context &context);
+
+  ~AndroidDownloadManager() noexcept;
+
   static bool Initialise(JNIEnv *env) noexcept;
   static void Deinitialise(JNIEnv *env) noexcept;
 
   [[gnu::pure]]
   static bool IsAvailable() noexcept;
-
-  static AndroidDownloadManager *Create(JNIEnv *env,
-                                        Context &context) noexcept;
 
   void AddListener(Net::DownloadListener &listener) noexcept;
   void RemoveListener(Net::DownloadListener &listener) noexcept;

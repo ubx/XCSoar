@@ -23,6 +23,7 @@ Copyright_License {
 
 #include "DownloadManager.hpp"
 #include "system/Path.hpp"
+#include "LogFile.hpp"
 
 #ifdef ANDROID
 
@@ -39,8 +40,14 @@ Net::DownloadManager::Initialise() noexcept
   if (!AndroidDownloadManager::Initialise(Java::GetEnv()))
     return false;
 
-  download_manager = AndroidDownloadManager::Create(Java::GetEnv(), *context);
-  return download_manager != nullptr;
+  try {
+    download_manager = new AndroidDownloadManager(Java::GetEnv(), *context);
+    return true;
+  } catch (...) {
+    LogError(std::current_exception(),
+             "Failed to initialise the DownloadManager");
+    return false;
+  }
 }
 
 void
@@ -111,7 +118,6 @@ Net::DownloadManager::Cancel(Path relative_path) noexcept
 #include "Operation/Operation.hpp"
 #include "LocalPath.hpp"
 #include "io/FileTransaction.hpp"
-#include "LogFile.hpp"
 
 #include <string>
 #include <list>
@@ -273,14 +279,14 @@ private:
   }
 };
 
-static bool
+static void
 DownloadToFileTransaction(CurlGlobal &curl,
                           const char *url, Path path,
                           std::array<std::byte, 32> *sha256, OperationEnvironment &env)
 {
   FileTransaction transaction(path);
   Net::DownloadToFile(curl, url, transaction.GetTemporaryPath(), sha256, env);
-  return transaction.Commit();
+  transaction.Commit();
 }
 
 inline void
@@ -298,9 +304,10 @@ DownloadManagerThread::ProcessQueue(CurlGlobal &curl) noexcept
 
     try {
       const ScopeUnlock unlock(mutex);
-      success = DownloadToFileTransaction(curl, item.uri.c_str(),
-                                          LocalPath(item.path_relative.c_str()),
-                                          nullptr, *this);
+      DownloadToFileTransaction(curl, item.uri.c_str(),
+                                LocalPath(item.path_relative.c_str()),
+                                nullptr, *this);
+      success = true;
     } catch (...) {
       error = std::current_exception();
       LogError(error);
