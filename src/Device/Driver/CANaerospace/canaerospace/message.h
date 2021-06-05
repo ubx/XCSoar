@@ -61,7 +61,8 @@ typedef enum {
 
     ADSB_STATE_ID = 1305,
 
-    MCCRADY_VALUE_ID  = 1518
+    VARIO_MODE_ID = 1510,
+    MCCRADY_VALUE_ID  = 1518,
 } CanIDsForXCSoar;
 
 

@@ -272,6 +272,15 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
         break;
 
+        case VARIO_MODE_ID: // todo -- check if datatype is correct
+            if (canasNetworkToHost(&canasMessage.data, canData, 2, CANAS_DATATYPE_SHORT) > 0) {
+                /* NOTE: works only if the Glide Computer has Flap force cruise ON  */
+                info.switch_state.flight_mode = (canasMessage.data.container.SHORT == 0)
+                                              ? SwitchState::FlightMode::CIRCLING : SwitchState::FlightMode::CRUISE;
+                return true;
+            }
+        break;
+
         default:
             // std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;
             break;
