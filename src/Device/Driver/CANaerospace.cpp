@@ -160,7 +160,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
         case AIRMASS_SPEED_VERTICAL:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideNettoVario(canasMessage.data.container.FLOAT);
+                info.ProvideTotalEnergyVario(canasMessage.data.container.FLOAT);
                 return true;
             }
             break;
