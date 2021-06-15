@@ -160,7 +160,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
         case AIRMASS_SPEED_VERTICAL:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideTotalEnergyVario(canasMessage.data.container.FLOAT);
+                info.ProvideTotalEnergyVario(-canasMessage.data.container.FLOAT);
                 return true;
             }
             break;
@@ -280,6 +280,10 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                 return true;
             }
         break;
+
+      case BARO_ALT_CORR_ID: { // todo -- implement
+        return true;
+      }
 
         default:
             // std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;

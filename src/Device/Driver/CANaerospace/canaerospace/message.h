@@ -45,7 +45,7 @@ typedef enum {
     HEADING_ANGLE = 321,
     STANDARD_ALTITUDE = 322,
     STATIC_PRESSURE = 326,
-    AIRMASS_SPEED_VERTICAL = 354,
+    AIRMASS_SPEED_VERTICAL = 354, /* Vertical speed of the airmass earth NED (negative is lift)*/
     GPS_AIRCRAFT_LATITUDE = 1036,
     GPS_AIRCRAFT_LONGITUDE = 1037,
     GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID = 1038,
@@ -63,6 +63,9 @@ typedef enum {
 
     VARIO_MODE_ID = 1510,
     MCCRADY_VALUE_ID  = 1518,
+    BARO_ALT_CORR_ID  = 1519 /* barometric altitude corretion in meters: altQNH = altSTD + <value> */
+                             /* SC = 0: QNH  SC = 1: QFE */
+
 } CanIDsForXCSoar;
 
 
