@@ -73,6 +73,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
     canasMessage.message_code = cm->message_code;
     canasMessage.service_code = cm->service_code;
 
+    static double qnh_corr = 0.0;
+
     info.alive.Update(info.clock);
 
     switch (canFrame->can_id) {
@@ -165,19 +167,48 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-        case STATIC_PRESSURE:
+        case STATIC_PRESSURE: // todo -- verify!
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideStaticPressure(AtmosphericPressure::HectoPascal(canasMessage.data.container.FLOAT));
+                info.ProvideStaticPressure(AtmosphericPressure::Pascal(canasMessage.data.container.FLOAT));
+                //std::cout << "STATIC_PRESSURE [Pascal]=" << info.static_pressure.GetPascal() << std::endl;
                 return true;
             }
             break;
 
-        case STANDARD_ALTITUDE:
+        case STANDARD_ALTITUDE: // todo -- verify!
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideBaroAltitudeTrue(canasMessage.data.container.FLOAT);
+                info.ProvideWeakBaroAltitude(canasMessage.data.container.FLOAT + qnh_corr);
+                //std::cout << "QNH_CORR [m]=" << qnh_corr << std::endl;
+                // std::cout << "STANDARD_ALTITUDE [m]=" << info.baro_altitude << std::endl;
                 return true;
             }
             break;
+
+        case BARO_CORRECTION_ID: /* QNH */
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.settings.ProvideQNH(AtmosphericPressure::Pascal(canasMessage.data.container.FLOAT), info.clock);
+                //std::cout << "BARO_CORRECTION_ID QNH [Pascal]=" << info.settings.qnh.GetPascal() << std::endl;
+                return true;
+            }
+            break;
+
+        case BARO_ALT_CORR_ID:  // todo -- implement
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                switch (canasMessage.service_code & 0x0f) {
+                case 0: /* QNH */
+                   qnh_corr = canasMessage.data.container.FLOAT;
+                   //std::cout << "BARO_ALT_CORR_ID QNH [m]=" << qnh_corr << std::endl;
+                   break;
+
+                case 1: /* QFE */
+                   //std::cout << "BARO_ALT_CORR_ID QFE [m]=" << canasMessage.data.container.FLOAT << std::endl;
+                   break;
+
+                default:
+                   break;
+                }
+            }
+        break;
 
         case FLARM_STATE_ID:  // Flarm messages: PFLAU
             // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>
@@ -280,10 +311,6 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                 return true;
             }
         break;
-
-      case BARO_ALT_CORR_ID: { // todo -- implement
-        return true;
-      }
 
         default:
             // std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;

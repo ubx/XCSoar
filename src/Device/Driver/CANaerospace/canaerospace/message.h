@@ -42,6 +42,7 @@ typedef enum {
 typedef enum {
     INDICATED_AIRSPEED = 315,
     TRUE_AIRSPEED = 316,
+    BARO_CORRECTION_ID = 319,    /* barometric correction (QNH) */
     HEADING_ANGLE = 321,
     STANDARD_ALTITUDE = 322,
     STATIC_PRESSURE = 326,
