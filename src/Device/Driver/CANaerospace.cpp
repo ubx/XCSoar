@@ -187,7 +187,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
         case BARO_CORRECTION_ID: /* QNH */
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 info.settings.ProvideQNH(AtmosphericPressure::Pascal(canasMessage.data.container.FLOAT), info.clock);
-                //std::cout << "BARO_CORRECTION_ID QNH [Pascal]=" << info.settings.qnh.GetPascal() << std::endl;
+                //std::cout << "BARO_CORRECTION_ID QNH-1 [Hp]=" << info.settings.qnh.GetHectoPascal() << std::endl;
+                info.settings.qnh_available.Update(info.clock);
                 return true;
             }
             break;
@@ -198,11 +199,11 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                 case 0: /* QNH */
                    qnh_corr = canasMessage.data.container.FLOAT;
                    //std::cout << "BARO_ALT_CORR_ID QNH [m]=" << qnh_corr << std::endl;
-                   break;
+                   return true;
 
                 case 1: /* QFE */
                    //std::cout << "BARO_ALT_CORR_ID QFE [m]=" << canasMessage.data.container.FLOAT << std::endl;
-                   break;
+                  return true;
 
                 default:
                    break;
