@@ -47,6 +47,7 @@ DeviceConfig::IsAvailable() const
   case PortType::RFCOMM:
   case PortType::RFCOMM_SERVER:
   case PortType::GLIDER_LINK:
+  case PortType::ANDROID_USB_SERIAL:
     return IsAndroid();
 
   case PortType::IOIOUART:
@@ -98,6 +99,7 @@ DeviceConfig::ShouldReopenOnTimeout() const
 
   case PortType::RFCOMM:
   case PortType::RFCOMM_SERVER:
+  case PortType::ANDROID_USB_SERIAL:
   case PortType::IOIOUART:
   case PortType::DROIDSOAR_V2:
   case PortType::NUNCHUCK:
@@ -271,6 +273,10 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const
 
   case PortType::PTY:
     StringFormat(buffer, max_size, _T("Pseudo-terminal %s"), path.c_str());
+    return buffer;
+
+  case PortType::ANDROID_USB_SERIAL:
+    StringFormat(buffer, max_size, _T("USB serial %s"), path.c_str());
     return buffer;
   }
 
