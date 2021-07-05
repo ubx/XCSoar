@@ -718,6 +718,7 @@ XCSOAR_SOURCES += \
 	$(SRC)/Device/Port/AndroidPort.cpp \
 	$(SRC)/Device/Port/AndroidBluetoothPort.cpp \
 	$(SRC)/Device/Port/AndroidIOIOUartPort.cpp \
+	$(SRC)/Device/Port/AndroidUsbSerialPort.cpp \
 	$(SRC)/Android/NativeView.cpp \
 	$(SRC)/Android/Environment.cpp \
 	$(SRC)/Android/Bitmap.cpp \
@@ -746,6 +747,7 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/NativeVoltageListener.cpp \
 	$(SRC)/Android/VoltageDevice.cpp \
 	$(SRC)/Android/IOIOHelper.cpp \
+	$(SRC)/Android/UsbSerialHelper.cpp \
 	$(SRC)/Android/Main.cpp
 
 else
