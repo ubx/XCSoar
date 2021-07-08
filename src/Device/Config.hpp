@@ -300,40 +300,31 @@ struct DeviceConfig {
    * Does this port type use a driver?
    */
   static bool UsesDriver(PortType port_type) {
-<<<<<<<<< Temporary merge branch 1
-    return port_type == PortType::SERIAL || port_type == PortType::RFCOMM ||
-      port_type == PortType::RFCOMM_SERVER ||
-      port_type == PortType::AUTO || port_type == PortType::TCP_LISTENER ||
-      port_type == PortType::TCP_CLIENT ||
-      port_type == PortType::IOIOUART || port_type == PortType::PTY ||
-      port_type == PortType::UDP_LISTENER ||
-      port_type == PortType::CAN;
-=========
     switch (port_type) {
-    case PortType::DISABLED:
-    case PortType::GLIDER_LINK:
-    case PortType::DROIDSOAR_V2:
-    case PortType::NUNCHUCK:
-    case PortType::I2CPRESSURESENSOR:
-    case PortType::IOIOVOLTAGE:
-    case PortType::INTERNAL:
-      return false;
+      case PortType::DISABLED:
+      case PortType::GLIDER_LINK:
+      case PortType::DROIDSOAR_V2:
+      case PortType::NUNCHUCK:
+      case PortType::I2CPRESSURESENSOR:
+      case PortType::IOIOVOLTAGE:
+      case PortType::INTERNAL:
+        return false;
 
-    case PortType::SERIAL:
-    case PortType::RFCOMM:
-    case PortType::RFCOMM_SERVER:
-    case PortType::AUTO:
-    case PortType::TCP_LISTENER:
-    case PortType::TCP_CLIENT:
-    case PortType::IOIOUART:
-    case PortType::PTY:
-    case PortType::UDP_LISTENER:
-    case PortType::ANDROID_USB_SERIAL:
-      return true;
+      case PortType::SERIAL:
+      case PortType::RFCOMM:
+      case PortType::RFCOMM_SERVER:
+      case PortType::AUTO:
+      case PortType::TCP_LISTENER:
+      case PortType::TCP_CLIENT:
+      case PortType::IOIOUART:
+      case PortType::PTY:
+      case PortType::UDP_LISTENER:
+      case PortType::ANDROID_USB_SERIAL:
+      case PortType::CAN:
+        return true;
     }
 
     gcc_unreachable();
->>>>>>>>> Temporary merge branch 2
   }
 
   bool UsesDriver() const {
