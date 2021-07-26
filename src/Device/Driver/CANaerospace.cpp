@@ -177,7 +177,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
         case STANDARD_ALTITUDE: // todo -- verify!
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.ProvideWeakBaroAltitude(canasMessage.data.container.FLOAT + qnh_corr);
+                info.ProvideBaroAltitudeTrue(canasMessage.data.container.FLOAT + qnh_corr);
                 //std::cout << "QNH_CORR [m]=" << qnh_corr << std::endl;
                 // std::cout << "STANDARD_ALTITUDE [m]=" << info.baro_altitude << std::endl;
                 return true;
