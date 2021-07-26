@@ -24,37 +24,23 @@ Copyright_License {
 #ifndef XCSOAR_ANDROID_NUNCHUCK_DEVICE_HPP
 #define XCSOAR_ANDROID_NUNCHUCK_DEVICE_HPP
 
-#include "NunchuckListener.hpp"
-#include "java/Object.hxx"
-#include "Math/SelfTimingKalmanFilter1d.hpp"
+#include "java/Closeable.hxx"
 #include "util/Compiler.h"
 
 #include <jni.h>
 
-class NunchuckDevice final : private NunchuckListener {
-  unsigned index;
-  Java::GlobalObject obj;
+class SensorListener;
 
-  /**
-   * Kept as sample, not used.
-   */
-  SelfTimingKalmanFilter1d kalman_filter;
+class NunchuckDevice final {
+  Java::GlobalCloseable obj;
 
 public:
-  static void Initialise(JNIEnv *env);
-  static void Deinitialise(JNIEnv *env);
+  static void Initialise(JNIEnv *env) noexcept;
+  static void Deinitialise(JNIEnv *env) noexcept;
 
-  NunchuckDevice(unsigned index,
-               JNIEnv *env, jobject holder,
-               unsigned twi_num, unsigned sample_rate);
-
-  ~NunchuckDevice();
-
-private:
-  /* virtual methods from class NunchuckListener */
-  virtual void onNunchuckValues(int joy_x, int joy_y,
-                                int acc_x, int acc_y, int acc_z, int switches) override;
-  virtual void onNunchuckError() override;
+  NunchuckDevice(JNIEnv *env, jobject holder,
+                 unsigned twi_num, unsigned sample_rate,
+                 SensorListener &listener);
 };
 
 #endif

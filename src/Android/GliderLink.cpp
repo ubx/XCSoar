@@ -23,6 +23,7 @@ Copyright_License {
 
 #include "GliderLink.hpp"
 #include "org_xcsoar_GliderLinkReceiver.h"
+#include "java/Env.hxx"
 #include "java/String.hxx"
 #include "util/Compiler.h"
 #include "Components.hpp"
@@ -30,11 +31,10 @@ Copyright_License {
 #include "Context.hpp"
 
 Java::TrivialClass GliderLink::gl_cls;
-jmethodID GliderLink::gl_ctor_id, GliderLink::close_method;
+jmethodID GliderLink::gl_ctor_id;
 
-
-bool
-GliderLink::Initialise(JNIEnv *env)
+void
+GliderLink::Initialise(JNIEnv *env) noexcept
 {
   assert(!gl_cls.IsDefined());
   assert(env != nullptr);
@@ -43,36 +43,17 @@ GliderLink::Initialise(JNIEnv *env)
 
   gl_ctor_id = env->GetMethodID(gl_cls, "<init>",
                                  "(Landroid/content/Context;I)V");
-  close_method = env->GetMethodID(gl_cls, "close", "()V");
-
-  return true;
 }
 
 void
-GliderLink::Deinitialise(JNIEnv *env)
+GliderLink::Deinitialise(JNIEnv *env) noexcept
 {
   gl_cls.Clear(env);
 }
 
-GliderLink* GliderLink::create(JNIEnv* env, Context* context,
-                                         unsigned index) {
-  assert(gl_cls != nullptr);
-
-  // Construct GliderLinkReceiver object.
-  Java::LocalObject obj{env,
-    env->NewObject(gl_cls, gl_ctor_id, context->Get(), index)};
-  assert(obj != nullptr);
-
-  return new GliderLink(env, obj);
-}
-
-GliderLink::GliderLink(JNIEnv* env, jobject obj)
-    : obj(env, obj) {
-}
-
-GliderLink::~GliderLink() {
-  JNIEnv *env = Java::GetEnv();
-  env->CallVoidMethod(obj.Get(), close_method);
+GliderLink::GliderLink(JNIEnv *env, Context &context, unsigned index) noexcept
+  :obj(Java::NewObjectRethrow(env, gl_cls, gl_ctor_id, context.Get(), index))
+{
 }
 
 gcc_visibility_default

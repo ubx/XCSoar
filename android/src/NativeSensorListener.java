@@ -26,7 +26,7 @@ package org.xcsoar;
  * An #SensorListener implementation that passes method calls to
  * native code.
  */
-public class NativeSensorListener implements SensorListener {
+final class NativeSensorListener implements SensorListener {
   /**
    * A native pointer.
    */
@@ -36,8 +36,10 @@ public class NativeSensorListener implements SensorListener {
     this.ptr = ptr;
   }
 
+  @Override
   public native void onConnected(int connected);
 
+  @Override
   public native void onLocationSensor(long time, int n_satellites,
                                       double longitude, double latitude,
                                       boolean hasAltitude, double altitude,
@@ -47,13 +49,38 @@ public class NativeSensorListener implements SensorListener {
                                       boolean hasAcceleration,
                                       double acceleration);
 
+  @Override
   public native void onAccelerationSensor(float ddx, float ddy, float ddz);
+
+  @Override
   public native void onRotationSensor(float dtheta_x, float dtheta_y,
                                       float dtheta_z);
+
+  @Override
   public native void onMagneticFieldSensor(float h_x, float h_y, float h_z);
+
+  @Override
   public native void onBarometricPressureSensor(float pressure,
                                                 float sensor_noise_variance);
+
+  @Override
   public native void onPressureAltitudeSensor(float altitude);
+
+  @Override
   public native void onVarioSensor(float vario);
+
+  @Override
   public native void onHeartRateSensor(int bpm);
+
+  @Override
+  public native void onVoltageValues(int temp_adc, int voltage_index,
+                                     int volt_adc);
+
+  @Override
+  public native void onNunchukValues(int joy_x, int joy_y,
+                                     int acc_x, int acc_y, int acc_z,
+                                     int switches);
+
+  @Override
+  public native void onSensorError(String msg);
 }

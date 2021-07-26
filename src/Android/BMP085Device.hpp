@@ -24,38 +24,23 @@ Copyright_License {
 #ifndef XCSOAR_ANDROID_BMP085_DEVICE_HPP
 #define XCSOAR_ANDROID_BMP085_DEVICE_HPP
 
-#include "BMP085Listener.hpp"
-#include "java/Object.hxx"
-#include "Math/SelfTimingKalmanFilter1d.hpp"
-#include "util/Compiler.h"
+#include "java/Closeable.hxx"
 
 #include <jni.h>
 
-class BMP085Device final : private BMP085Listener {
-  unsigned index;
-  Java::GlobalObject obj;
+class SensorListener;
 
-  /**
-   * This Kalman filter is used to smooth the pressure input.
-   */
-  SelfTimingKalmanFilter1d kalman_filter;
+class BMP085Device final {
+  Java::GlobalCloseable obj;
 
 public:
-  static void Initialise(JNIEnv *env);
-  static void Deinitialise(JNIEnv *env);
+  static void Initialise(JNIEnv *env) noexcept;
+  static void Deinitialise(JNIEnv *env) noexcept;
 
-  BMP085Device(unsigned index,
-               JNIEnv *env, jobject holder,
+  BMP085Device(JNIEnv *env, jobject holder,
                unsigned twi_num, unsigned eoc_pin,
-               unsigned oversampling);
-
-  ~BMP085Device();
-
-private:
-  /* virtual methods from class BMP085Listener */
-  virtual void onBMP085Values(double temperature,
-                              AtmosphericPressure pressure) override;
-  virtual void onBMP085Error() override;
+               unsigned oversampling,
+               SensorListener &listener) noexcept;
 };
 
 #endif

@@ -25,6 +25,7 @@ Copyright_License {
 #include "DeviceEditWidget.hpp"
 #include "Vega/VegaDialogs.hpp"
 #include "BlueFly/BlueFlyDialogs.hpp"
+#include "ManageI2CPitotDialog.hpp"
 #include "ManageCAI302Dialog.hpp"
 #include "ManageFlarmDialog.hpp"
 #include "LX/ManageV7Dialog.hpp"
@@ -77,7 +78,7 @@ class DeviceListWidget final
   struct Flags {
     bool duplicate:1;
     bool open:1, error:1;
-    bool alive:1, location:1, gps:1, baro:1, airspeed:1, vario:1, traffic:1;
+    bool alive:1, location:1, gps:1, baro:1, pitot:1, airspeed:1, vario:1, traffic:1;
     bool temperature:1;
     bool humidity:1;
     bool radio:1;
@@ -113,6 +114,7 @@ class DeviceListWidget final
       baro = basic.baro_altitude_available ||
         basic.pressure_altitude_available ||
         basic.static_pressure_available;
+      pitot = basic.pitot_pressure_available;
       airspeed = basic.airspeed_available;
       vario = basic.total_energy_vario_available;
       traffic = basic.flarm.IsDetected();
@@ -392,6 +394,11 @@ DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
       buffer.append(_("Baro"));
     }
 
+    if (flags.pitot) {
+      buffer.append(_T("; "));
+      buffer.append(_("Pitot"));
+    }
+
     if (flags.airspeed) {
       buffer.append(_T("; "));
       buffer.append(_("Airspeed"));
@@ -601,6 +608,16 @@ DeviceListWidget::ManageCurrent()
   DeviceDescriptor &descriptor = (*devices)[current];
   if (!descriptor.IsManageable())
     return;
+
+#ifdef ANDROID
+  const auto &config = descriptor.GetConfig();
+  if (config.port_type == DeviceConfig::PortType::DROIDSOAR_V2 ||
+      (config.port_type == DeviceConfig::PortType::I2CPRESSURESENSOR &&
+       config.press_use == DeviceConfig::PressureUse::PITOT)) {
+    ManageI2CPitotDialog(UIGlobals::GetMainWindow(), look, descriptor);
+    return;
+  }
+#endif
 
   if (descriptor.GetState() != PortState::READY) {
     ShowMessageBox(_("Device is not connected"), _("Manage"),

@@ -193,8 +193,6 @@ struct DeviceConfig {
     TEK_PRESSURE,
     /** ProvideIndicatedAirspeedWithAltitude() */
     PITOT,
-    /** Determine and then save the offset between static and pitot sensor */
-    PITOT_ZERO,
   } press_use;
 
   /**

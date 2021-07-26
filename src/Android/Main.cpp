@@ -70,13 +70,10 @@ Copyright_License {
 #include "util/Exception.hxx"
 
 #include "IOIOHelper.hpp"
-#include "NativeBMP085Listener.hpp"
 #include "BMP085Device.hpp"
 #include "NativeI2CbaroListener.hpp"
 #include "I2CbaroDevice.hpp"
-#include "NativeNunchuckListener.hpp"
 #include "NunchuckDevice.hpp"
-#include "NativeVoltageListener.hpp"
 #include "VoltageDevice.hpp"
 
 #ifndef NDEBUG
@@ -138,13 +135,10 @@ try {
   UsbSerialHelper::Initialise(env);
   NativeDetectDeviceListener::Initialise(env);
   const bool have_ioio = IOIOHelper::Initialise(env);
-  NativeBMP085Listener::Initialise(env);
   BMP085Device::Initialise(env);
   NativeI2CbaroListener::Initialise(env);
   I2CbaroDevice::Initialise(env);
-  NativeNunchuckListener::Initialise(env);
   NunchuckDevice::Initialise(env);
-  NativeVoltageListener::Initialise(env);
   VoltageDevice::Initialise(env);
 
   context = new Context(env, _context);
@@ -263,13 +257,10 @@ Java_org_xcsoar_NativeView_deinitializeNative(JNIEnv *env, jobject obj)
   context = nullptr;
 
   BMP085Device::Deinitialise(env);
-  NativeBMP085Listener::Deinitialise(env);
   I2CbaroDevice::Deinitialise(env);
   NativeI2CbaroListener::Deinitialise(env);
   NunchuckDevice::Deinitialise(env);
-  NativeNunchuckListener::Deinitialise(env);
   VoltageDevice::Deinitialise(env);
-  NativeVoltageListener::Deinitialise(env);
   IOIOHelper::Deinitialise(env);
   NativeDetectDeviceListener::Deinitialise(env);
   UsbSerialHelper::Deinitialise(env);

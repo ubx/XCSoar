@@ -189,3 +189,47 @@ Java_org_xcsoar_NativeSensorListener_onHeartRateSensor(JNIEnv *env,
   auto &listener = *(SensorListener *)ptr;
   listener.OnHeartRateSensor(bpm);
 }
+
+JNIEXPORT void JNICALL
+Java_org_xcsoar_NativeSensorListener_onVoltageValues(JNIEnv *env, jobject obj,
+                                                     jint temp_adc,
+                                                     jint voltage_index,
+                                                     jint volt_adc)
+ {
+  jlong ptr = env->GetLongField(obj, NativeSensorListener::ptr_field);
+  if (ptr == 0)
+    return;
+
+  auto &listener = *(SensorListener *)ptr;
+  listener.OnVoltageValues(temp_adc, voltage_index, volt_adc);
+}
+
+gcc_visibility_default
+JNIEXPORT void JNICALL
+Java_org_xcsoar_NativeSensorListener_onNunchuckValues(JNIEnv *env, jobject obj,
+                                                      jint joy_x, jint joy_y,
+                                                      jint acc_x, jint acc_y,
+                                                      jint acc_z,
+                                                      jint switches)
+ {
+  jlong ptr = env->GetLongField(obj, NativeSensorListener::ptr_field);
+  if (ptr == 0)
+    return;
+
+  auto &listener = *(SensorListener *)ptr;
+  listener.OnNunchukValues(joy_x, joy_y, acc_x, acc_y, acc_z, switches);
+}
+
+gcc_visibility_default
+JNIEXPORT void JNICALL
+Java_org_xcsoar_NativeSensorListener_onSensorError(JNIEnv *env,
+                                                   jobject obj,
+                                                   jstring msg)
+{
+  jlong ptr = env->GetLongField(obj, NativeSensorListener::ptr_field);
+  if (ptr == 0)
+    return;
+
+  auto &listener = *(SensorListener *)ptr;
+  listener.OnSensorError(Java::String::GetUTFChars(env, msg).c_str());
+}

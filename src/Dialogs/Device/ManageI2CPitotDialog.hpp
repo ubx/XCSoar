@@ -21,13 +21,12 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_ANDROID_NUNCHUCK_LISTENER_HPP
-#define XCSOAR_ANDROID_NUNCHUCK_LISTENER_HPP
+#pragma once
 
-class NunchuckListener {
-public:
-  virtual void onNunchuckValues(int joy_x, int joy_y, int acc_x, int acc_y, int acc_z, int switches) = 0;
-  virtual void onNunchuckError() = 0;
-};
+struct DialogLook;
+namespace UI { class SingleWindow; }
+class DeviceDescriptor;
 
-#endif
+void
+ManageI2CPitotDialog(UI::SingleWindow &parent, const DialogLook &look,
+                     DeviceDescriptor &descriptor) noexcept;

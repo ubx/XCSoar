@@ -23,26 +23,28 @@
 
 package org.xcsoar;
 
+import java.io.Closeable;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
 
 /*
  * A driver for voltage measurement on the IOIO board.
  */
-final class GlueVoltage implements IOIOConnectionListener {
+final class GlueVoltage implements Closeable, IOIOConnectionListener {
   private IOIOConnectionHolder holder;
-  private final Voltage.Listener listener;
-  int sample_rate;
+  private final SensorListener listener;
+  private final int sample_rate;
   private Voltage instance;
 
   GlueVoltage(IOIOConnectionHolder _holder, int _sample_rate,
-             Voltage.Listener _listener) {
+              SensorListener _listener) {
     listener = _listener;
     sample_rate = _sample_rate;
     holder = _holder;
     _holder.addListener(this);
   }
 
+  @Override
   public void close() {
     IOIOConnectionHolder holder;
     synchronized(this) {
@@ -56,7 +58,11 @@ final class GlueVoltage implements IOIOConnectionListener {
 
   @Override public void onIOIOConnect(IOIO ioio)
     throws ConnectionLostException, InterruptedException {
-    instance = new Voltage(ioio, sample_rate, listener);
+    try {
+      instance = new Voltage(ioio, sample_rate, listener);
+    } catch (Exception e) {
+      listener.onSensorError(e.getMessage());
+    }
   }
 
   @Override public void onIOIODisconnect(IOIO ioio) {

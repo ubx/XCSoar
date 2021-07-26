@@ -22,6 +22,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Device/CAI302/WaypointUploader.cpp \
 	$(SRC)/Dialogs/Device/ManageFlarmDialog.cpp \
 	$(SRC)/Dialogs/Device/BlueFly/BlueFlyConfigurationDialog.cpp \
+	$(SRC)/Dialogs/Device/ManageI2CPitotDialog.cpp \
 	$(SRC)/Dialogs/Device/LX/ManageV7Dialog.cpp \
 	$(SRC)/Dialogs/Device/LX/V7ConfigWidget.cpp \
 	$(SRC)/Dialogs/Device/LX/ManageNanoDialog.cpp \
@@ -743,13 +744,10 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/DownloadManager.cpp \
 	$(SRC)/Android/Vibrator.cpp \
 	$(SRC)/Android/Context.cpp \
-	$(SRC)/Android/NativeBMP085Listener.cpp \
 	$(SRC)/Android/BMP085Device.cpp \
 	$(SRC)/Android/NativeI2CbaroListener.cpp \
 	$(SRC)/Android/I2CbaroDevice.cpp \
-	$(SRC)/Android/NativeNunchuckListener.cpp \
 	$(SRC)/Android/NunchuckDevice.cpp \
-	$(SRC)/Android/NativeVoltageListener.cpp \
 	$(SRC)/Android/VoltageDevice.cpp \
 	$(SRC)/Android/IOIOHelper.cpp \
 	$(SRC)/Android/UsbSerialHelper.cpp \

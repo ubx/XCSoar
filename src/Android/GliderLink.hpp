@@ -26,12 +26,10 @@ Copyright_License {
 #ifndef XCSOAR_ANDROID_GLIDER_LINK_HPP
 #define XCSOAR_ANDROID_GLIDER_LINK_HPP
 
-#include "java/Object.hxx"
 #include "java/Class.hxx"
-#include "util/Compiler.h"
+#include "java/Closeable.hxx"
 
 #include <jni.h>
-#include <vector>
 
 class Context;
 
@@ -39,21 +37,15 @@ class GliderLink {
   static Java::TrivialClass gl_cls;
 
   // IDs for methods in GliderLinkReceiver.java.
-  static jmethodID gl_ctor_id, close_method;
-private:
-  Java::GlobalObject obj;
+  static jmethodID gl_ctor_id;
+
+  Java::GlobalCloseable obj;
 
 public:
-  static bool Initialise(JNIEnv *env);
-  static void Deinitialise(JNIEnv *env);
+  static void Initialise(JNIEnv *env) noexcept;
+  static void Deinitialise(JNIEnv *env) noexcept;
 
-  GliderLink(JNIEnv *env, jobject obj);
-
-  ~GliderLink();
-
-  gcc_malloc
-  static GliderLink *create(JNIEnv* env, Context* native_view,
-                                 unsigned int index);
+  GliderLink(JNIEnv *env, Context &context, unsigned index) noexcept;
 };
 
 #endif

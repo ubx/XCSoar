@@ -150,6 +150,9 @@ DeviceDescriptor::ClearConfig()
 PortState
 DeviceDescriptor::GetState() const
 {
+  if (has_failed)
+    return PortState::FAILED;
+
   if (open_job != nullptr)
     return PortState::LIMBO;
 
@@ -165,7 +168,7 @@ DeviceDescriptor::GetState() const
   if (droidsoar_v2 != nullptr)
     return PortState::READY;
 
-  if (i2cbaro[0] != nullptr)
+  if (i2cbaro.front() != nullptr)
     return PortState::READY;
 
   if (nunchuck != nullptr)
@@ -320,28 +323,25 @@ DeviceDescriptor::OpenDroidSoarV2()
   if (ioio_helper == nullptr)
     return false;
 
-  if (i2cbaro[0] == nullptr) {
-    i2cbaro[0] = new I2CbaroDevice(GetIndex(), Java::GetEnv(),
-                       ioio_helper->GetHolder(),
-                       DeviceConfig::PressureUse::STATIC_WITH_VARIO,
-                       config.sensor_offset,
-                       2 + (0x77 << 8) + (27 << 16), 0,	// bus, address
-                       5,                               // update freq.
-                       0);                              // flags
+  i2cbaro[0] = new I2CbaroDevice(GetIndex(), Java::GetEnv(),
+                                 ioio_helper->GetHolder(),
+                                 DeviceConfig::PressureUse::STATIC_WITH_VARIO,
+                                 AtmosphericPressure::HectoPascal(config.sensor_offset),
+                                 2 + (0x77 << 8) + (27 << 16), 0,	// bus, address
+                                 5,                               // update freq.
+                                 0);                              // flags
 
-    i2cbaro[1] = new I2CbaroDevice(GetIndex(), Java::GetEnv(),
-                       ioio_helper->GetHolder(),
-                       // needs calibration ?
-                       config.sensor_factor == 0
-                       ? DeviceConfig::PressureUse::PITOT_ZERO
-                       : DeviceConfig::PressureUse::PITOT,
-                       config.sensor_offset, 1 + (0x77 << 8) + (46 << 16), 0 ,
-                       5,
-                       0);
-    return true;
-  }
-#endif
+  i2cbaro[1] = new I2CbaroDevice(GetIndex(), Java::GetEnv(),
+                                 ioio_helper->GetHolder(),
+                                 DeviceConfig::PressureUse::PITOT,
+                                 AtmosphericPressure::HectoPascal(config.sensor_offset),
+                                 1 + (0x77 << 8) + (46 << 16), 0 ,
+                                 5,
+                                 0);
+  return true;
+#else
   return false;
+#endif
 }
 
 bool
@@ -354,23 +354,17 @@ DeviceDescriptor::OpenI2Cbaro()
   if (ioio_helper == nullptr)
     return false;
 
-  for (unsigned i=0; i<sizeof i2cbaro/sizeof i2cbaro[0]; i++) {
-    if (i2cbaro[i] == nullptr) {
-      i2cbaro[i] = new I2CbaroDevice(GetIndex(), Java::GetEnv(),
-                       ioio_helper->GetHolder(),
-                       // needs calibration ?
-                       config.sensor_factor == 0 && config.press_use == DeviceConfig::PressureUse::PITOT
-                       ? DeviceConfig::PressureUse::PITOT_ZERO
-                       : config.press_use,
-                       config.sensor_offset,
-                       config.i2c_bus, config.i2c_addr,
-                       config.press_use == DeviceConfig::PressureUse::TEK_PRESSURE ? 20 : 5,
-                       0); // called flags, actually reserved for future use.
-      return true;
-    }
-  }
-#endif
+  i2cbaro.front() = new I2CbaroDevice(GetIndex(), Java::GetEnv(),
+                                      ioio_helper->GetHolder(),
+config.press_use,
+                                      AtmosphericPressure::HectoPascal(config.sensor_offset),
+                                      config.i2c_bus, config.i2c_addr,
+                                      config.press_use == DeviceConfig::PressureUse::TEK_PRESSURE ? 20 : 5,
+                                      0); // called flags, actually reserved for future use.
+  return true;
+#else
   return false;
+#endif
 }
 
 bool
@@ -383,9 +377,12 @@ DeviceDescriptor::OpenNunchuck()
   if (ioio_helper == nullptr)
     return false;
 
-  nunchuck = new NunchuckDevice(GetIndex(), Java::GetEnv(),
-                                  ioio_helper->GetHolder(),
-                                  config.i2c_bus, 5); // twi, sample_rate
+  joy_state_x = joy_state_y = 0;
+
+  nunchuck = new NunchuckDevice(Java::GetEnv(),
+                                ioio_helper->GetHolder(),
+                                config.i2c_bus, 5, // twi, sample_rate
+                                *this);
   return true;
 #else
   return false;
@@ -402,10 +399,17 @@ DeviceDescriptor::OpenVoltage()
   if (ioio_helper == nullptr)
     return false;
 
-  voltage = new VoltageDevice(GetIndex(), Java::GetEnv(),
-                                  ioio_helper->GetHolder(),
-                                  config.sensor_offset, config.sensor_factor,
-                                  60); // sample_rate per minute
+  voltage_offset = config.sensor_offset;
+  voltage_factor = config.sensor_factor;
+
+  for (auto &i : voltage_filter)
+    i.Reset();
+  temperature_filter.Reset();
+
+  voltage = new VoltageDevice(Java::GetEnv(),
+                              ioio_helper->GetHolder(),
+                              60, // sample_rate per minute
+                              *this);
   return true;
 #else
   return false;
@@ -419,7 +423,7 @@ DeviceDescriptor::OpenGliderLink()
   if (is_simulator())
     return true;
 
-  glider_link = GliderLink::create(Java::GetEnv(), context, GetIndex());
+  glider_link = new GliderLink(Java::GetEnv(), *context, GetIndex());
 
   return true;
 #else
@@ -549,6 +553,7 @@ DeviceDescriptor::Open(OperationEnvironment &env)
   assert(port == nullptr);
   assert(device == nullptr);
   assert(second_device == nullptr);
+  assert(!has_failed);
   assert(!ticker);
   assert(!IsBorrowed());
 
@@ -562,6 +567,10 @@ DeviceDescriptor::Open(OperationEnvironment &env)
 
   TCHAR buffer[64];
   LogFormat(_T("Opening device %s"), config.GetPortName(buffer, 64));
+
+#ifdef ANDROID
+  kalman_filter.Reset();
+#endif
 
   open_job = new OpenDeviceJob(*this);
   async.Start(open_job, env, &job_finished_notify);
@@ -586,9 +595,9 @@ DeviceDescriptor::Close()
   delete droidsoar_v2;
   droidsoar_v2 = nullptr;
 
-  for (unsigned i=0; i<sizeof i2cbaro/sizeof i2cbaro[0]; i++) {
-    delete i2cbaro[i];
-    i2cbaro[i] = nullptr;
+  for (auto &i : i2cbaro) {
+    delete i;
+    i = nullptr;
   }
   delete nunchuck;
   nunchuck = nullptr;
@@ -621,6 +630,7 @@ DeviceDescriptor::Close()
 
   port.reset();
 
+  has_failed = false;
   ticker = false;
 
   {
@@ -728,6 +738,14 @@ DeviceDescriptor::IsManageable() const
     }
   }
 
+#ifdef ANDROID
+  if (config.port_type == DeviceConfig::PortType::I2CPRESSURESENSOR)
+      return config.press_use == DeviceConfig::PressureUse::PITOT;
+
+  if (config.port_type == DeviceConfig::PortType::DROIDSOAR_V2)
+    return true;
+#endif
+
   return false;
 }
 
@@ -772,6 +790,13 @@ DeviceDescriptor::GetClock() const noexcept
   const std::lock_guard<Mutex> lock(device_blackboard->mutex);
   const NMEAInfo &basic = device_blackboard->RealState(index);
   return basic.clock;
+}
+
+NMEAInfo
+DeviceDescriptor::GetData() const noexcept
+{
+  const std::lock_guard<Mutex> lock(device_blackboard->mutex);
+  return device_blackboard->RealState(index);
 }
 
 DeviceDataEditor
@@ -1154,7 +1179,10 @@ DeviceDescriptor::OnSysTicker()
 {
   assert(InMainThread());
 
-  if (port != nullptr && port->GetState() == PortState::FAILED && !IsOccupied())
+  if (port != nullptr && port->GetState() == PortState::FAILED)
+    has_failed = true;
+
+  if (has_failed && !IsOccupied())
     Close();
 
   if (device == nullptr)
@@ -1244,6 +1272,8 @@ DeviceDescriptor::PortError(const char *msg) noexcept
       error_message = tmsg;
     }
   }
+
+  has_failed = true;
 
   if (port_listener != nullptr)
     port_listener->PortError(msg);

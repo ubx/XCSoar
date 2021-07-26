@@ -44,8 +44,11 @@ Copyright_License {
 #ifdef ANDROID
 #include "Android/SensorListener.hpp"
 #include "Math/SelfTimingKalmanFilter1d.hpp"
+#include "Math/WindowFilter.hpp"
 #endif
 
+#include <array>
+#include <atomic>
 #include <chrono>
 #include <memory>
 
@@ -181,7 +184,7 @@ class DeviceDescriptor final
 
 #ifdef ANDROID
   BMP085Device *droidsoar_v2 = nullptr;
-  I2CbaroDevice *i2cbaro[3]{nullptr, nullptr, nullptr}; // static, pitot, tek; in any order
+  std::array<I2CbaroDevice *, 3> i2cbaro{nullptr, nullptr, nullptr}; // static, pitot, tek; in any order
   NunchuckDevice *nunchuck = nullptr;
   VoltageDevice *voltage = nullptr;
   GliderLink *glider_link = nullptr;
@@ -202,6 +205,16 @@ class DeviceDescriptor final
   static constexpr double KF_MAX_DT = 60;
 
   SelfTimingKalmanFilter1d kalman_filter{KF_MAX_DT, KF_VAR_ACCEL};
+
+  double voltage_offset;
+  double voltage_factor;
+  std::array<WindowFilter<16>, 1> voltage_filter;
+  WindowFilter<64> temperature_filter;
+
+  /**
+   * State for Nunchuk.
+   */
+  int joy_state_x, joy_state_y;
 #endif
 
   /**
@@ -247,6 +260,12 @@ class DeviceDescriptor final
    * @param see ResetFailureCounter()
    */
   unsigned n_failures = 0;
+
+  /**
+   * True when a sensor has failed and the device should be closed in
+   * the next OnSysTicker() call.
+   */
+  std::atomic_bool has_failed{false};
 
   /**
    * Internal flag for OnSysTicker() for detecting link timeout.
@@ -502,6 +521,12 @@ public:
   [[gnu::pure]]
   double GetClock() const noexcept;
 
+  /**
+   * Return a copy of the device's current data.
+   */
+  [[gnu::pure]]
+  NMEAInfo GetData() const noexcept;
+
   DeviceDataEditor BeginEdit() noexcept;
 
 private:
@@ -605,6 +630,12 @@ private:
   void OnPressureAltitudeSensor(float altitude) noexcept override;
   void OnVarioSensor(float vario) noexcept override;
   void OnHeartRateSensor(unsigned bpm) noexcept override;
+  void OnVoltageValues(int temp_adc, unsigned voltage_index,
+                       int volt_adc) noexcept override;
+  void OnNunchukValues(int joy_x, int joy_y,
+                       int acc_x, int acc_y, int acc_z,
+                       int switches) noexcept final;
+  void OnSensorError(const char *msg) noexcept override;
 #endif // ANDROID
 };
 
