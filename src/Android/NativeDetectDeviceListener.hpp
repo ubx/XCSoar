@@ -21,30 +21,24 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_DYNAMIC_LIBRARY_HPP
-#define XCSOAR_DYNAMIC_LIBRARY_HPP
+#pragma once
 
-#include <tchar.h>
-#include <windows.h>
+#include "java/Object.hxx"
 
-class DynamicLibrary {
-protected:
-  HMODULE module;
+class DetectDeviceListener;
 
-public:
-  DynamicLibrary(const TCHAR *name)
-    :module(::LoadLibrary(name)) {}
-  ~DynamicLibrary() {
-    ::FreeLibrary(module);
-  }
+/**
+ * Glue code to use the Java class NativeDetectDeviceListener from C++.
+ */
+namespace NativeDetectDeviceListener {
 
-  bool IsDefined() const {
-    return module != nullptr;
-  }
+void
+Initialise(JNIEnv *env) noexcept;
 
-  FARPROC WINAPI Lookup(const TCHAR *name) const {
-    return ::GetProcAddress(module, name);
-  }
-};
+void
+Deinitialise(JNIEnv *env) noexcept;
 
-#endif
+Java::LocalObject
+Create(JNIEnv *env, DetectDeviceListener &cb) noexcept;
+
+} // namespace NativeDetectDeviceListener

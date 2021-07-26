@@ -45,6 +45,7 @@
 #include "java/Global.hxx"
 #include "java/Ref.hxx"
 #include "java/String.hxx"
+#include "Android/Main.hpp"
 #include "Android/BluetoothHelper.hpp"
 #include "Android/UsbSerialHelper.hpp"
 #include "Device/Port/AndroidIOIOUartPort.hpp"
@@ -97,7 +98,7 @@ AddPort(DataFieldEnum &df, DeviceConfig::PortType type,
         const TCHAR *text, const TCHAR *display_string=NULL,
         const TCHAR *help=NULL) noexcept
 {
-  /* the uppper 16 bit is the port type, and the lower 16 bit is a
+  /* the upper 16 bit is the port type, and the lower 16 bit is a
      serial number to make the enum id unique */
 
   unsigned id = ((unsigned)type << 16) + df.Count();
@@ -199,38 +200,45 @@ FillAndroidBluetoothPorts(DataFieldEnum &df,
                           const DeviceConfig &config) noexcept
 {
 #ifdef ANDROID
-  JNIEnv *env = Java::GetEnv();
-  jobjectArray bonded = BluetoothHelper::list(env);
-  if (bonded == NULL)
+  if (bluetooth_helper == nullptr)
     return;
 
-  jsize n = env->GetArrayLength(bonded) / 2;
-  for (jsize i = 0; i < n; ++i) {
-    jstring address = (jstring)env->GetObjectArrayElement(bonded, i * 2);
-    if (address == NULL)
-      continue;
+  JNIEnv *env = Java::GetEnv();
+  // list() returns an array of strings, 3 for each device, giving
+  //   mac address
+  //   name
+  //   type - either "BLE" or "CLASSIC"
+  static constexpr jsize BLUETOOTH_LIST_STRIDE = 3;
+  const auto bonded = bluetooth_helper->GetBondedList(env);
+  if (bonded) {
+    jsize n = env->GetArrayLength(bonded) / BLUETOOTH_LIST_STRIDE;
+    for (jsize i = 0; i < n; ++i) {
+      Java::String address{env, (jstring)env->GetObjectArrayElement(bonded, i * BLUETOOTH_LIST_STRIDE)};
+      if (!address)
+        continue;
 
-    const char *address2 = env->GetStringUTFChars(address, NULL);
-    if (address2 == NULL)
-      continue;
+      const auto address2 = Java::String::GetUTFChars(env, address);
 
-    jstring name = (jstring)env->GetObjectArrayElement(bonded, i * 2 + 1);
-    const char *name2 = name != NULL
-      ? env->GetStringUTFChars(name, NULL)
-      : NULL;
+      Java::String name{env, (jstring)env->GetObjectArrayElement(bonded, i * BLUETOOTH_LIST_STRIDE + 1)};
+      const auto name2 = name
+        ? name.GetUTFChars()
+        : nullptr;
 
-    AddPort(df, DeviceConfig::PortType::RFCOMM, address2, name2);
-
-    env->ReleaseStringUTFChars(address, address2);
-    if (name2 != NULL)
-      env->ReleaseStringUTFChars(name, name2);
+      // TODO PortType::BLE_SENSOR?
+      Java::String devType{env, (jstring)env->GetObjectArrayElement(bonded, i * BLUETOOTH_LIST_STRIDE + 2)};
+      const DeviceConfig::PortType portType = devType != nullptr &&
+        strcmp("BLE", Java::String::GetUTFChars(env, devType).c_str()) == 0
+        ? DeviceConfig::PortType::BLE_HM10
+        : DeviceConfig::PortType::RFCOMM;
+      AddPort(df, portType, address2.c_str(), name2.c_str());
+    }
   }
 
-  env->DeleteLocalRef(bonded);
-
-  if (config.port_type == DeviceConfig::PortType::RFCOMM &&
+  if ((config.port_type == DeviceConfig::PortType::RFCOMM ||
+       config.port_type == DeviceConfig::PortType::BLE_SENSOR ||
+       config.port_type == DeviceConfig::PortType::BLE_HM10) &&
       !config.bluetooth_mac.empty())
-    SetPort(df, DeviceConfig::PortType::RFCOMM, config.bluetooth_mac);
+    SetPort(df, config.port_type, config.bluetooth_mac);
 #endif
 }
 
@@ -385,6 +393,8 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config) noexcept
     SetPort(df, config.port_type, config.can_port_name);
     return;
 
+  case DeviceConfig::PortType::BLE_SENSOR:
+  case DeviceConfig::PortType::BLE_HM10:
   case DeviceConfig::PortType::RFCOMM:
     SetPort(df, config.port_type, config.bluetooth_mac);
     return;
@@ -414,7 +424,8 @@ EditPortCallback(const TCHAR *caption, DataField &_df,
 
 #ifdef ANDROID
   static constexpr int SCAN_BLUETOOTH_LE = -1;
-  if (BluetoothHelper::HasLe(Java::GetEnv()))
+  if (bluetooth_helper != nullptr &&
+      bluetooth_helper->HasLe(Java::GetEnv()))
     combo_list.Append(SCAN_BLUETOOTH_LE, _("Bluetooth LE"));
 #endif
 
@@ -426,11 +437,15 @@ EditPortCallback(const TCHAR *caption, DataField &_df,
 
 #ifdef ANDROID
   if (item.int_value == SCAN_BLUETOOTH_LE) {
-    auto address = ScanBluetoothLeDialog();
+    auto [address, is_hm10] = ScanBluetoothLeDialog(*bluetooth_helper);
     if (address.empty())
         return false;
 
-    SetPort(df, DeviceConfig::PortType::RFCOMM, address.c_str());
+    const auto type = is_hm10
+      ? DeviceConfig::PortType::BLE_HM10
+      : DeviceConfig::PortType::BLE_SENSOR;
+
+    SetPort(df, type, address.c_str());
     return true;
   }
 #endif
@@ -613,7 +628,6 @@ DeviceEditWidget::UpdateVisibilities() noexcept
   SetRowVisible(BulkBaudRate, uses_speed &&
                 DeviceConfig::UsesDriver(type) &&
                 SupportsBulkBaudRate(GetDataField(Driver)));
-
   SetRowAvailable(IP_ADDRESS, DeviceConfig::UsesIPAddress(type));
   SetRowAvailable(TCPPort, DeviceConfig::UsesTCPPort(type));
   SetRowAvailable(I2CBus, DeviceConfig::UsesI2C(type));
@@ -781,6 +795,8 @@ FinishPortField(DeviceConfig &config, const DataFieldEnum &df) noexcept
     return true;
 
   case DeviceConfig::PortType::RFCOMM:
+  case DeviceConfig::PortType::BLE_HM10:
+  case DeviceConfig::PortType::BLE_SENSOR:
     /* Bluetooth */
     if (new_type == config.port_type &&
         StringIsEqual(config.bluetooth_mac, df.GetAsString()))

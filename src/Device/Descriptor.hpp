@@ -41,6 +41,11 @@ Copyright_License {
 #include "util/StaticFifoBuffer.hxx"
 #include "Android/GliderLink.hpp"
 
+#ifdef ANDROID
+#include "Android/SensorListener.hpp"
+#include "Math/SelfTimingKalmanFilter1d.hpp"
+#endif
+
 #include <chrono>
 #include <memory>
 
@@ -49,6 +54,7 @@ Copyright_License {
 #include <stdio.h>
 
 namespace Cares { class Channel; }
+namespace Java { class GlobalCloseable; }
 class EventLoop;
 struct NMEAInfo;
 struct MoreData;
@@ -70,8 +76,14 @@ class RecordedFlightList;
 struct RecordedFlightInfo;
 class OperationEnvironment;
 class OpenDeviceJob;
+class DeviceDataEditor;
 
-class DeviceDescriptor final : PortListener, PortLineSplitter {
+class DeviceDescriptor final
+  : PortListener,
+#ifdef ANDROID
+    SensorListener,
+#endif
+    PortLineSplitter {
   /**
    * The #EventLoop instance used by #Port instances.
    */
@@ -113,7 +125,7 @@ class DeviceDescriptor final : PortListener, PortLineSplitter {
    * The #Job that currently opens the device.  nullptr if the device is
    * not currently being opened.
    */
-  OpenDeviceJob *open_job;
+  OpenDeviceJob *open_job = nullptr;
 
   /**
    * The #Port used by this device.  This is not applicable to some
@@ -125,18 +137,18 @@ class DeviceDescriptor final : PortListener, PortLineSplitter {
    * A handler that will receive all data, to display it on the
    * screen.  Can be set with SetMonitor().
    */
-  DataHandler  *monitor;
+  DataHandler *monitor = nullptr;
 
   /**
    * A handler that will receive all NMEA lines, to dispatch it to
    * other devices.
    */
-  PortLineHandler *dispatcher;
+  PortLineHandler *dispatcher = nullptr;
 
   /**
    * The device driver used to handle data to/from the device.
    */
-  const DeviceRegister *driver;
+  const DeviceRegister *driver = nullptr;
 
   /**
    * An instance of the driver.
@@ -147,33 +159,49 @@ class DeviceDescriptor final : PortListener, PortLineSplitter {
    * device was borrowed with the method Borrow().  The latter,
    * however, is only possible from the main thread.
    */
-  Device *device;
+  Device *device = nullptr;
 
   /**
    * The second device driver for a passed through device.
    */
-  const DeviceRegister *second_driver;
+  const DeviceRegister *second_driver = nullptr;
 
   /**
    * An instance of the passed through driver, if available.
    */
-  Device *second_device;
-
+  Device *second_device = nullptr;
 
 #ifdef HAVE_INTERNAL_GPS
   /**
    * A pointer to the Java object managing all Android sensors (GPS,
    * baro sensor and others).
    */
-  InternalSensors *internal_sensors;
+  InternalSensors *internal_sensors = nullptr;
 #endif
 
 #ifdef ANDROID
-  BMP085Device *droidsoar_v2;
-  I2CbaroDevice *i2cbaro[3]; // static, pitot, tek; in any order
-  NunchuckDevice *nunchuck;
-  VoltageDevice *voltage;
-  GliderLink *glider_link;
+  BMP085Device *droidsoar_v2 = nullptr;
+  I2CbaroDevice *i2cbaro[3]{nullptr, nullptr, nullptr}; // static, pitot, tek; in any order
+  NunchuckDevice *nunchuck = nullptr;
+  VoltageDevice *voltage = nullptr;
+  GliderLink *glider_link = nullptr;
+  Java::GlobalCloseable *java_sensor = nullptr;
+
+  /* We use a Kalman filter to smooth Android device pressure sensor
+     noise.  The filter requires two parameters: the first is the
+     variance of the distribution of second derivatives of pressure
+     values that we expect to see in flight, and the second is the
+     maximum time between pressure sensor updates in seconds before
+     the filter gives up on smoothing and uses the raw value.
+     The pressure acceleration variance used here is actually wider
+     than the maximum likelihood variance observed in the data: it
+     turns out that the distribution is more heavy-tailed than a
+     normal distribution, probably because glider pilots usually
+     experience fairly constant pressure change most of the time. */
+  static constexpr double KF_VAR_ACCEL = 0.0075;
+  static constexpr double KF_MAX_DT = 60;
+
+  SelfTimingKalmanFilter1d kalman_filter{KF_MAX_DT, KF_VAR_ACCEL};
 #endif
 
   /**
@@ -218,7 +246,7 @@ class DeviceDescriptor final : PortListener, PortLineSplitter {
    *
    * @param see ResetFailureCounter()
    */
-  unsigned n_failures;
+  unsigned n_failures = 0;
 
   /**
    * Internal flag for OnSysTicker() for detecting link timeout.
@@ -229,7 +257,7 @@ class DeviceDescriptor final : PortListener, PortLineSplitter {
    * Internal flag for OnSysTicker() for calling Device::OnSysTicker()
    * only every other time.
    */
-  bool ticker;
+  bool ticker = false;
 
   /**
    * True when somebody has "borrowed" the device.  Link timeouts are
@@ -239,7 +267,7 @@ class DeviceDescriptor final : PortListener, PortLineSplitter {
    *
    * @see CanBorrow(), Borrow()
    */
-  bool borrowed;
+  bool borrowed = false;
 
 public:
   DeviceDescriptor(EventLoop &_event_loop, Cares::Channel &_cares,
@@ -348,6 +376,9 @@ private:
   bool OpenVoltage();
 
   bool OpenGliderLink();
+
+  bool OpenBluetoothSensor();
+
 public:
   /**
    * To be used by OpenDeviceJob, don't call directly.
@@ -468,6 +499,11 @@ public:
   gcc_pure
   bool IsAlive() const;
 
+  [[gnu::pure]]
+  double GetClock() const noexcept;
+
+  DeviceDataEditor BeginEdit() noexcept;
+
 private:
   bool ParseNMEA(const char *line, struct NMEAInfo &info);
 
@@ -536,8 +572,6 @@ public:
                           const DerivedInfo &calculated);
 
 private:
-  bool ParseLine(const char *line);
-
   void OnJobFinished() noexcept;
 
   /* virtual methods from class PortListener */
@@ -549,6 +583,29 @@ private:
 
   /* virtual methods from PortLineHandler */
   bool LineReceived(const char *line) noexcept override;
+
+#ifdef ANDROID
+  /* methods from SensorListener */
+  void OnConnected(int connected) noexcept override;
+  void OnLocationSensor(long time, int n_satellites,
+                        double longitude, double latitude,
+                        bool hasAltitude, double altitude,
+                        bool hasBearing, double bearing,
+                        bool hasSpeed, double speed,
+                        bool hasAccuracy, double accuracy,
+                        bool hasAcceleration,
+                        double acceleration) noexcept override;
+  void OnAccelerationSensor(float ddx, float ddy,
+                            float ddz) noexcept override;
+  void OnRotationSensor(float dtheta_x, float dtheta_y,
+                        float dtheta_z) noexcept override;
+  void OnMagneticFieldSensor(float h_x, float h_y, float h_z) noexcept override;
+  void OnBarometricPressureSensor(float pressure,
+                                  float sensor_noise_variance) noexcept override;
+  void OnPressureAltitudeSensor(float altitude) noexcept override;
+  void OnVarioSensor(float vario) noexcept override;
+  void OnHeartRateSensor(unsigned bpm) noexcept override;
+#endif // ANDROID
 };
 
 #endif

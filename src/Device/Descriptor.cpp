@@ -22,6 +22,7 @@ Copyright_License {
 */
 
 #include "Descriptor.hpp"
+#include "DataEditor.hpp"
 #include "Driver.hpp"
 #include "Parser.hpp"
 #include "Util/NMEAWriter.hpp"
@@ -48,7 +49,9 @@ Copyright_License {
 
 #ifdef ANDROID
 #include "java/Object.hxx"
+#include "java/Closeable.hxx"
 #include "java/Global.hxx"
+#include "Android/BluetoothHelper.hpp"
 #include "Android/InternalSensors.hpp"
 #include "Android/GliderLink.hpp"
 #include "Android/Main.hpp"
@@ -62,6 +65,10 @@ Copyright_License {
 
 #ifdef __APPLE__
 #include "Apple/InternalSensors.hpp"
+#endif
+
+#ifdef _UNICODE
+#include <stringapiset.h> // for WideCharToMultiByte()
 #endif
 
 #include <cassert>
@@ -93,7 +100,7 @@ public:
   OpenDeviceJob(DeviceDescriptor &_device):device(_device) {}
 
   /* virtual methods from class Job */
-  virtual void Run(OperationEnvironment &env) {
+  void Run(OperationEnvironment &env) override {
     device.DoOpen(env);
   };
 };
@@ -103,28 +110,9 @@ DeviceDescriptor::DeviceDescriptor(EventLoop &_event_loop,
                                    unsigned _index,
                                    PortListener *_port_listener)
   :event_loop(_event_loop), cares(_cares), index(_index),
-   port_listener(_port_listener),
-   open_job(nullptr),
-   port(nullptr), monitor(nullptr), dispatcher(nullptr),
-   driver(nullptr), device(nullptr), second_device(nullptr),
-#ifdef HAVE_INTERNAL_GPS
-   internal_sensors(nullptr),
-#endif
-#ifdef ANDROID
-   droidsoar_v2(nullptr),
-   nunchuck(nullptr),
-   voltage(nullptr),
-   glider_link(nullptr),
-#endif
-   n_failures(0u),
-   ticker(false), borrowed(false)
+   port_listener(_port_listener)
 {
   config.Clear();
-
-#ifdef ANDROID
-  for (unsigned i=0; i<sizeof i2cbaro/sizeof i2cbaro[0]; i++)
-    i2cbaro[i] = nullptr;
-#endif
 }
 
 DeviceDescriptor::~DeviceDescriptor() noexcept
@@ -187,6 +175,9 @@ DeviceDescriptor::GetState() const
     return PortState::READY;
 
   if (glider_link != nullptr)
+    return PortState::READY;
+
+  if (java_sensor != nullptr)
     return PortState::READY;
 #endif
 
@@ -254,9 +245,9 @@ DeviceDescriptor::OpenOnPort(std::unique_ptr<DumpPort> &&_port, OperationEnviron
   reopen_clock.Update();
 
   {
-    const std::lock_guard<Mutex> lock(device_blackboard->mutex);
-    device_blackboard->SetRealState(index).Reset();
-    device_blackboard->ScheduleMerge();
+    const auto e = BeginEdit();
+    e->Reset();
+    e.Commit();
   }
 
   settings_sent.Clear();
@@ -305,7 +296,7 @@ DeviceDescriptor::OpenInternalSensors()
 
 #ifdef ANDROID
   internal_sensors =
-      InternalSensors::create(Java::GetEnv(), context, GetIndex());
+      InternalSensors::create(Java::GetEnv(), context, *this);
   if (internal_sensors) {
     // TODO: Allow user to specify whether they want certain sensors.
     internal_sensors->subscribeToSensor(InternalSensors::TYPE_PRESSURE);
@@ -436,6 +427,24 @@ DeviceDescriptor::OpenGliderLink()
 #endif
 }
 
+inline bool
+DeviceDescriptor::OpenBluetoothSensor()
+{
+#ifdef ANDROID
+  if (is_simulator())
+    return true;
+
+  if (config.bluetooth_mac.empty())
+    throw std::runtime_error("No Bluetooth MAC configured");
+
+  java_sensor = new Java::GlobalCloseable(bluetooth_helper->connectSensor(Java::GetEnv(),
+                                                                          config.bluetooth_mac,
+                                                                          *this));
+  return true;
+#else
+  return false;
+#endif
+}
 
 bool
 DeviceDescriptor::DoOpen(OperationEnvironment &env) noexcept
@@ -464,6 +473,9 @@ try {
 
   if (config.port_type == DeviceConfig::PortType::GLIDER_LINK)
     return OpenGliderLink();
+
+  if (config.port_type == DeviceConfig::PortType::BLE_SENSOR)
+    return OpenBluetoothSensor();
 
   reopen_clock.Update();
 
@@ -586,6 +598,9 @@ DeviceDescriptor::Close()
 
   delete glider_link;
   glider_link = nullptr;
+
+  delete java_sensor;
+  java_sensor = nullptr;
 #endif
 
   /* safely delete the Device object */
@@ -609,9 +624,9 @@ DeviceDescriptor::Close()
   ticker = false;
 
   {
-    const std::lock_guard<Mutex> lock(device_blackboard->mutex);
-    device_blackboard->SetRealState(index).Reset();
-    device_blackboard->ScheduleMerge();
+    const auto e = BeginEdit();
+    e->Reset();
+    e.Commit();
   }
 
   settings_sent.Clear();
@@ -751,6 +766,20 @@ DeviceDescriptor::IsAlive() const
   return device_blackboard->RealState(index).alive;
 }
 
+double
+DeviceDescriptor::GetClock() const noexcept
+{
+  const std::lock_guard<Mutex> lock(device_blackboard->mutex);
+  const NMEAInfo &basic = device_blackboard->RealState(index);
+  return basic.clock;
+}
+
+DeviceDataEditor
+DeviceDescriptor::BeginEdit() noexcept
+{
+  return {*device_blackboard, index};
+}
+
 bool
 DeviceDescriptor::ParseNMEA(const char *line, NMEAInfo &info)
 {
@@ -844,10 +873,8 @@ DeviceDescriptor::PutMacCready(double value, OperationEnvironment &env)
   if (!device->PutMacCready(value, env))
     return false;
 
-  std::lock_guard<Mutex> lock(device_blackboard->mutex);
-  NMEAInfo &basic = device_blackboard->SetRealState(index);
   settings_sent.mac_cready = value;
-  settings_sent.mac_cready_available.Update(basic.clock);
+  settings_sent.mac_cready_available.Update(GetClock());
 
   return true;
 }
@@ -869,10 +896,8 @@ DeviceDescriptor::PutBugs(double value, OperationEnvironment &env)
   if (!device->PutBugs(value, env))
     return false;
 
-  std::lock_guard<Mutex> lock(device_blackboard->mutex);
-  NMEAInfo &basic = device_blackboard->SetRealState(index);
   settings_sent.bugs = value;
-  settings_sent.bugs_available.Update(basic.clock);
+  settings_sent.bugs_available.Update(GetClock());
 
   return true;
 }
@@ -896,12 +921,11 @@ DeviceDescriptor::PutBallast(double fraction, double overload,
   if (!device->PutBallast(fraction, overload, env))
     return false;
 
-  std::lock_guard<Mutex> lock(device_blackboard->mutex);
-  NMEAInfo &basic = device_blackboard->SetRealState(index);
+  const auto clock = GetClock();
   settings_sent.ballast_fraction = fraction;
-  settings_sent.ballast_fraction_available.Update(basic.clock);
+  settings_sent.ballast_fraction_available.Update(clock);
   settings_sent.ballast_overload = overload;
-  settings_sent.ballast_overload_available.Update(basic.clock);
+  settings_sent.ballast_overload_available.Update(clock);
 
   return true;
 }
@@ -992,10 +1016,8 @@ DeviceDescriptor::PutQNH(const AtmosphericPressure &value,
   if (!device->PutQNH(value, env))
     return false;
 
-  std::lock_guard<Mutex> lock(device_blackboard->mutex);
-  NMEAInfo &basic = device_blackboard->SetRealState(index);
   settings_sent.qnh = value;
-  settings_sent.qnh_available.Update(basic.clock);
+  settings_sent.qnh_available.Update(GetClock());
 
   return true;
 }
@@ -1179,15 +1201,6 @@ DeviceDescriptor::OnCalculatedUpdate(const MoreData &basic,
     device->OnCalculatedUpdate(basic, calculated);
 }
 
-bool
-DeviceDescriptor::ParseLine(const char *line)
-{
-  std::lock_guard<Mutex> lock(device_blackboard->mutex);
-  NMEAInfo &basic = device_blackboard->SetRealState(index);
-  basic.UpdateClock();
-  return ParseNMEA(line, basic);
-}
-
 void
 DeviceDescriptor::OnJobFinished() noexcept
 {
@@ -1274,8 +1287,10 @@ DeviceDescriptor::LineReceived(const char *line) noexcept
   if (dispatcher != nullptr)
     dispatcher->LineReceived(line);
 
-  if (ParseLine(line))
-    device_blackboard->ScheduleMerge();
+  const auto e = BeginEdit();
+  e->UpdateClock();
+  ParseNMEA(line, *e);
+  e.Commit();
 
   return true;
 }

@@ -21,35 +21,31 @@ Copyright_License {
 }
 */
 
-/*! \file
- * \brief GDI compatibility functions
- *
- * This header provides GDI functions which might not be available on
- * all WIN32 platforms.
- */
+#pragma once
 
-#ifndef XCSOAR_COMPAT_GDI_H
-#define XCSOAR_COMPAT_GDI_H
+#include "thread/Mutex.hxx"
 
-#include <windows.h>
+class DeviceBlackboard;
+struct NMEAInfo;
 
-#ifdef HAVE_MSVCRT
+class DeviceDataEditor {
+  DeviceBlackboard &blackboard;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+  const std::lock_guard<Mutex> lock;
 
-BOOL
-TransparentImage(HDC hdcDest,
-                 LONG DstX, LONG DstY, LONG DstCx, LONG DstCy,
-                 HANDLE hSrc,
-                 LONG SrcX, LONG SrcY, LONG SrcCx, LONG SrcCy,
-                 COLORREF TransparentColor);
+  NMEAInfo &basic;
 
-#ifdef __cplusplus
-}
-#endif
+public:
+  DeviceDataEditor(DeviceBlackboard &blackboard,
+                   std::size_t idx) noexcept;
 
-#endif
+  void Commit() const noexcept;
 
-#endif
+  NMEAInfo *operator->() const noexcept {
+    return &basic;
+  }
+
+  NMEAInfo &operator*() const noexcept {
+    return basic;
+  }
+};

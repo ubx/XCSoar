@@ -17,7 +17,7 @@ apt-get install ${APTOPTS[*]} make \
   git quilt zip \
   m4 automake wget \
   ttf-bitstream-vera fakeroot \
-  pkg-config cmake ninja-build
+  pkg-config cmake ninja-build ccache
 echo
 
 echo Installing Manual dependencies...
@@ -49,6 +49,14 @@ apt-get install ${APTOPTS[*]} make g++ \
   mesa-common-dev libgl1-mesa-dev libegl1-mesa-dev \
   fonts-dejavu \
   xz-utils
+echo
+
+echo Installing dependencies for creating Debian package
+  apt-get install ${APTOPTS[*]} dpkg-dev \
+    debhelper \
+    texlive-lang-english \
+    libio-captureoutput-perl \
+    build-essential
 echo
 
 echo Installing dependencies for compiling targets which need SocketCan...

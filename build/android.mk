@@ -41,14 +41,13 @@ JAVA_PACKAGE = org.xcsoar
 NATIVE_CLASSES := \
 	NativeView \
 	EventBridge \
-	InternalGPS \
-	NonGPSSensors \
+	NativeSensorListener \
 	NativeInputListener \
 	DownloadUtil \
 	BatteryReceiver \
 	GliderLinkReceiver \
 	NativePortListener \
-	NativeLeScanCallback \
+	NativeDetectDeviceListener \
 	NativeBMP085Listener \
 	NativeI2CbaroListener \
 	NativeNunchuckListener \
@@ -153,14 +152,6 @@ $(SOUND_FILES): $(RAW_DIR)/%.ogg: Data/sound/%.wav | $(RAW_DIR)/dirstamp
 	$(Q)$(OGGENC) -o $@ $<
 
 PNG1 := $(patsubst Data/bitmaps/%.bmp,$(DRAWABLE_DIR)/%.png,$(BMP_BITMAPS))
-
-# workaround for an ImageMagick bug (observed with the Debian package
-# 8:6.7.7.10-2): it corrupts 4-bit gray-scale images when converting
-# BMP to PNG (TRAC #2220)
-PNG1b := $(filter $(DRAWABLE_DIR)/vario_scale_%.png,$(PNG1))
-PNG1 := $(filter-out $(DRAWABLE_DIR)/vario_scale_%.png,$(PNG1))
-$(DRAWABLE_DIR)/vario_scale_%.png: Data/bitmaps/vario_scale_%.bmp | $(DRAWABLE_DIR)/dirstamp
-	$(Q)$(IM_PREFIX)convert -depth 8 $< $@
 
 $(PNG1): $(DRAWABLE_DIR)/%.png: Data/bitmaps/%.bmp | $(DRAWABLE_DIR)/dirstamp
 	$(Q)$(IM_PREFIX)convert $< $@
@@ -282,7 +273,8 @@ else # !FAT_BINARY
 # add dependency to this source file
 $(call SRC_TO_OBJ,$(SRC)/Android/Main.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/EventBridge.cpp): $(NATIVE_HEADERS)
-$(call SRC_TO_OBJ,$(SRC)/Android/InternalSensors.cpp): $(NATIVE_HEADERS)
+$(call SRC_TO_OBJ,$(SRC)/Android/NativeSensorListener.cpp): $(NATIVE_HEADERS)
+$(call SRC_TO_OBJ,$(SRC)/Android/NativeDetectDeviceListener.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/Battery.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/GliderLink.cpp): $(NATIVE_HEADERS)
 $(call SRC_TO_OBJ,$(SRC)/Android/NativePortListener.cpp): $(NATIVE_HEADERS)

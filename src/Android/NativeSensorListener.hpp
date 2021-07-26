@@ -21,15 +21,24 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_ANDROID_LE_SCAN_CALLBACK_HPP
-#define XCSOAR_ANDROID_LE_SCAN_CALLBACK_HPP
+#pragma once
+
+#include "java/Object.hxx"
+
+class SensorListener;
 
 /**
- * C++ wrapper for the Java class BluetoothAdapter.LeScanCallback.
+ * Glue code to use the Java class NativeSensorListener from C++.
  */
-class LeScanCallback {
-public:
-  virtual void OnLeScan(const char *address, const char *name) = 0;
-};
+namespace NativeSensorListener {
 
-#endif
+void
+Initialise(JNIEnv *env) noexcept;
+
+void
+Deinitialise(JNIEnv *env) noexcept;
+
+Java::LocalObject
+Create(JNIEnv *env, SensorListener &l) noexcept;
+
+} // namespace NativeDetectDeviceListener

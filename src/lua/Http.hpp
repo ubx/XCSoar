@@ -21,23 +21,19 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_ANDROID_NATIVE_LE_SCAN_CALLBACK_HPP
-#define XCSOAR_ANDROID_NATIVE_LE_SCAN_CALLBACK_HPP
+#ifndef XCSOAR_LUA_HTTP_HPP
+#define XCSOAR_LUA_HTTP_HPP
 
-#include <jni.h>
+struct lua_State;
 
-class LeScanCallback;
+namespace Lua {
 
 /**
- * Glue code to use the Java class NativeLeScanCallback from C++.
+ * Provide the Lua class "http.request".
  */
-namespace NativeLeScanCallback {
+void
+InitHttp(lua_State *L);
 
-void Initialise(JNIEnv *env);
-void Deinitialise(JNIEnv *env);
-
-jobject Create(JNIEnv *env, LeScanCallback &cb);
-
-} // namespace NativeLeScanCallback
+}
 
 #endif

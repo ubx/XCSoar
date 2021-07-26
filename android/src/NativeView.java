@@ -44,6 +44,7 @@ import android.content.Intent;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.Configuration;
+import android.opengl.EGL14;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.webkit.MimeTypeMap;
@@ -121,21 +122,22 @@ class NativeView extends SurfaceView
     throws EGLException {
     int[] num_config = new int[1];
     int[] configSpec = new int[]{
-      EGL10.EGL_STENCIL_SIZE, 1,  /* Don't change this position in array! */
+      /* EGL_STENCIL_SIZE not listed here because we have a fallback
+         for configurations without stencil (but we prefer native
+         stencil) (maybe we can just require a stencil and get rid of
+         the complicated and slow fallback code eventually?) */
+
       EGL10.EGL_RED_SIZE, 4,
       EGL10.EGL_GREEN_SIZE, 4,
       EGL10.EGL_BLUE_SIZE, 4,
-      EGL10.EGL_ALPHA_SIZE, 0,
-      EGL10.EGL_DEPTH_SIZE, 0,
+
+      EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
+      EGL10.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
+
       EGL10.EGL_NONE
     };
 
     egl.eglChooseConfig(display, configSpec, null, 0, num_config);
-    if (num_config[0] == 0) {
-      /* fallback in case stencil buffer is not available */
-      configSpec[1] = 0;
-      egl.eglChooseConfig(display, configSpec, null, 0, num_config);
-    }
 
     int numConfigs = num_config[0];
     EGLConfig[] configs = new EGLConfig[numConfigs];
@@ -144,7 +146,7 @@ class NativeView extends SurfaceView
       throw new EGLException("eglChooseConfig() failed: " + egl.eglGetError());
 
     EGLConfig closestConfig = EGLUtil.findClosestConfig(egl, display, configs,
-                                                        4, 4, 4, 0, 0, 8);
+                                                        5, 6, 5, 0, 0, 1);
     if (closestConfig == null)
       throw new EGLException("eglChooseConfig() failed");
 
@@ -182,10 +184,9 @@ class NativeView extends SurfaceView
     /* initialize context and surface */
 
     if (context == EGL10.EGL_NO_CONTEXT) {
-      final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
       final int contextClientVersion = 2;
       final int[] contextAttribList = new int[]{
-        EGL_CONTEXT_CLIENT_VERSION, contextClientVersion,
+        EGL14.EGL_CONTEXT_CLIENT_VERSION, contextClientVersion,
         EGL10.EGL_NONE
       };
 

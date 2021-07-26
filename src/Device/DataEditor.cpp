@@ -21,27 +21,16 @@ Copyright_License {
 }
 */
 
-#ifndef NET_HTTP_RESPONSE_HANDLER_HPP
-#define NET_HTTP_RESPONSE_HANDLER_HPP
+#include "DataEditor.hpp"
+#include "Blackboard/DeviceBlackboard.hpp"
 
-#include "io/DataHandler.hpp"
+DeviceDataEditor::DeviceDataEditor(DeviceBlackboard &_blackboard,
+                                   std::size_t idx) noexcept
+  :blackboard(_blackboard), lock(blackboard.mutex),
+   basic(blackboard.SetRealState(idx)) {}
 
-#include <cstdint>
-
-namespace Net {
-
-class ResponseHandler : public DataHandler {
-public:
-  /**
-   * Response metadata (status and headers) has been received.
-   *
-   * @param content_length the total length of the response body or -1 if
-   * the server did not announce a length
-   * @return false if the handler wishes to receive no more data
-   */
-  virtual bool ResponseReceived(int64_t content_length) noexcept = 0;
-};
-
-} // namespace Net
-
-#endif
+void
+DeviceDataEditor::Commit() const noexcept
+{
+  blackboard.ScheduleMerge();
+}

@@ -22,9 +22,6 @@
 
 package org.xcsoar;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
 import java.io.IOException;
 
 import android.bluetooth.BluetoothDevice;
@@ -35,27 +32,17 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 /**
- * AndroidPort implementation for Bluetooth Low Energy devices using the
- * GATT protocol.
+ * An #AndroidPort implementation for connecting to a HM-10 (Bluetooth
+ * LE).
  */
-public class BluetoothGattClientPort
+public class HM10Port
     extends BluetoothGattCallback
     implements AndroidPort  {
   private static final String TAG = "XCSoar";
-
-  /**
-   * The HM-10 and compatible bluetooth modules use a GATT characteristic
-   * with this UUID for sending and receiving data.
-   */
-  private static final UUID RX_TX_CHARACTERISTIC_UUID =
-      UUID.fromString("0000FFE1-0000-1000-8000-00805F9B34FB");
-  private static final UUID DEVICE_NAME_CHARACTERISTIC_UUID =
-      UUID.fromString("00002A00-0000-1000-8000-00805F9B34FB");
-  private static final UUID RX_TX_DESCRIPTOR_UUID =
-      UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
   private static final int MAX_WRITE_CHUNK_SIZE = 20;
 
@@ -66,29 +53,26 @@ public class BluetoothGattClientPort
   private PortListener portListener;
   private volatile InputListener listener;
 
-  private final BluetoothDevice device;
-  private BluetoothGatt gatt;
+  private final BluetoothGatt gatt;
   private BluetoothGattCharacteristic dataCharacteristic;
   private BluetoothGattCharacteristic deviceNameCharacteristic;
   private volatile boolean shutdown = false;
 
-  private final Object writeChunksSync = new Object();
-  private byte[][] pendingWriteChunks = null;
-  private int nextWriteChunkIdx;
-  private boolean lastChunkWriteError;
+  private final HM10WriteBuffer writeBuffer = new HM10WriteBuffer();
 
   private volatile int portState = STATE_LIMBO;
 
   private final Object gattStateSync = new Object();
   private int gattState = BluetoothGatt.STATE_DISCONNECTED;
 
-  public BluetoothGattClientPort(BluetoothDevice _device) {
-    device = _device;
-  }
+  public HM10Port(Context context, BluetoothDevice device)
+    throws IOException
+  {
+    if (Build.VERSION.SDK_INT >= 23)
+      gatt = device.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE);
+    else
+      gatt = device.connectGatt(context, false, this);
 
-  public void startConnect(Context context) throws IOException {
-    shutdown = false;
-    gatt = device.connectGatt(context, false, this);
     if (gatt == null)
       throw new IOException("Bluetooth GATT connect failed");
   }
@@ -97,51 +81,21 @@ public class BluetoothGattClientPort
     dataCharacteristic = null;
     deviceNameCharacteristic = null;
 
-    List<BluetoothGattService> services = gatt.getServices();
-    if (services != null) {
-      for (BluetoothGattService gattService : services) {
-        for (BluetoothGattCharacteristic characteristic :
-               gattService.getCharacteristics()) {
-          if (RX_TX_CHARACTERISTIC_UUID.equals(
-                                               characteristic.getUuid())) {
-            dataCharacteristic = characteristic;
-          } else if (DEVICE_NAME_CHARACTERISTIC_UUID.equals(
-                                                            characteristic.getUuid())) {
-            deviceNameCharacteristic = characteristic;
-          }
-        }
-      }
+    BluetoothGattService service = gatt.getService(BluetoothUuids.HM10_SERVICE);
+    if (service != null) {
+      dataCharacteristic = service.getCharacteristic(BluetoothUuids.HM10_RX_TX_CHARACTERISTIC);
+    }
+
+    service = gatt.getService(BluetoothUuids.GENERIC_ACCESS_SERVICE);
+    if (service != null) {
+      deviceNameCharacteristic = service.getCharacteristic(BluetoothUuids.DEVICE_NAME_CHARACTERISTIC);
     }
 
     if (dataCharacteristic == null)
-      throw new Error("GATT data characteristic not found");
+      throw new Error("HM10 data characteristic not found");
 
     if (deviceNameCharacteristic == null)
       throw new Error("GATT device name characteristic not found");
-  }
-
-  private boolean beginWriteNextChunk() {
-    synchronized (writeChunksSync) {
-      if (pendingWriteChunks == null)
-        return false;
-      dataCharacteristic.setValue(pendingWriteChunks[nextWriteChunkIdx]);
-      if (!gatt.writeCharacteristic(dataCharacteristic)) {
-        Log.e(TAG, "GATT characteristic write request failed");
-        lastChunkWriteError = true;
-        pendingWriteChunks = null;
-        writeChunksSync.notifyAll();
-        return false;
-      }
-
-      ++nextWriteChunkIdx;
-      if (nextWriteChunkIdx >= pendingWriteChunks.length) {
-        /* writing is done */
-        pendingWriteChunks = null;
-        writeChunksSync.notifyAll();
-      }
-
-      return true;
-    }
   }
 
   @Override
@@ -165,10 +119,7 @@ public class BluetoothGattClientPort
         }
       }
     }
-    synchronized (writeChunksSync) {
-      pendingWriteChunks = null;
-      writeChunksSync.notifyAll();
-    }
+    writeBuffer.clear();
     portState = newPortState;
     stateChanged();
     synchronized (gattStateSync) {
@@ -190,7 +141,7 @@ public class BluetoothGattClientPort
         throw new Error("Could not enable GATT characteristic notification");
 
       BluetoothGattDescriptor descriptor =
-        dataCharacteristic.getDescriptor(RX_TX_DESCRIPTOR_UUID);
+        dataCharacteristic.getDescriptor(BluetoothUuids.CLIENT_CHARACTERISTIC_CONFIGURATION);
       descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
       gatt.writeDescriptor(descriptor);
       portState = STATE_READY;
@@ -206,22 +157,20 @@ public class BluetoothGattClientPort
   public void onCharacteristicRead(BluetoothGatt gatt,
       BluetoothGattCharacteristic characteristic, int status) {
     Log.e(TAG, "GATT characteristic read");
-    beginWriteNextChunk();
+    writeBuffer.beginWriteNextChunk(gatt, dataCharacteristic);
   }
 
   @Override
   public void onCharacteristicWrite(BluetoothGatt gatt,
       BluetoothGattCharacteristic characteristic, int status) {
-    synchronized (writeChunksSync) {
+    synchronized (writeBuffer) {
       if (BluetoothGatt.GATT_SUCCESS == status) {
-        beginWriteNextChunk();
+        writeBuffer.beginWriteNextChunk(gatt, dataCharacteristic);
+        writeBuffer.notifyAll();
       } else {
         Log.e(TAG, "GATT characteristic write failed");
-        lastChunkWriteError = true;
-        pendingWriteChunks = null;
+        writeBuffer.setError();
       }
-
-      writeChunksSync.notifyAll();
     }
   }
 
@@ -249,10 +198,7 @@ public class BluetoothGattClientPort
   @Override
   public void close() {
     shutdown = true;
-    synchronized (writeChunksSync) {
-      pendingWriteChunks = null;
-      writeChunksSync.notifyAll();
-    }
+    writeBuffer.clear();
     gatt.disconnect();
     synchronized (gattStateSync) {
       long waitUntil = System.currentTimeMillis() + DISCONNECT_TIMEOUT;
@@ -278,23 +224,7 @@ public class BluetoothGattClientPort
 
   @Override
   public boolean drain() {
-    final long TIMEOUT = 5000;
-    final long waitUntil = System.currentTimeMillis() + TIMEOUT;
-
-    synchronized (writeChunksSync) {
-      while (pendingWriteChunks != null) {
-        final long timeToWait = waitUntil - System.currentTimeMillis();
-        if (timeToWait <= 0)
-          return false;
-
-        try {
-          writeChunksSync.wait(timeToWait);
-        } catch (InterruptedException e) {
-          return false;
-        }
-      }
-      return true;
-    }
+    return writeBuffer.drain();
   }
 
   @Override
@@ -309,56 +239,12 @@ public class BluetoothGattClientPort
 
   @Override
   public int write(byte[] data, int length) {
-    final long TIMEOUT = 5000;
-
     if (0 == length)
       return 0;
 
-    synchronized (writeChunksSync) {
-      if ((dataCharacteristic == null) || (deviceNameCharacteristic == null))
-        return 0;
-      if ((pendingWriteChunks != null) && !drain())
-        return 0;
-
-      /* Workaround: To avoid a race condition when data is sent and received
-         at the same time, we place a read request for the device name
-         characteristic here. This way, we can place the actual write
-         operation in the read callback so that the write operation is performed
-         int the GATT event handling thread. */
-      if (!gatt.readCharacteristic(deviceNameCharacteristic)) {
-        Log.e(TAG, "GATT characteristic read request failed");
-        return 0;
-      }
-
-      /* Write data in 20 byte large chunks at maximun. Most GATT devices do
-         not support characteristic values which are larger than 20 bytes. */
-      int writeChunksCount = (length + MAX_WRITE_CHUNK_SIZE - 1)
-          / MAX_WRITE_CHUNK_SIZE;
-      pendingWriteChunks = new byte[writeChunksCount][];
-      nextWriteChunkIdx = 0;
-      lastChunkWriteError = false;
-      for (int i = 0; i < writeChunksCount; ++i) {
-        pendingWriteChunks[i] = Arrays.copyOfRange(data,
-            i * MAX_WRITE_CHUNK_SIZE, Math.min((i + 1) * MAX_WRITE_CHUNK_SIZE,
-            length));
-      }
-
-      try {
-        writeChunksSync.wait(TIMEOUT);
-      } catch (InterruptedException e) {
-        /* cancel the write on interruption */
-        pendingWriteChunks = null;
-        return 0;
-      }
-
-      if (pendingWriteChunks != null && nextWriteChunkIdx == 0) {
-        /* timeout */
-        pendingWriteChunks = null;
-        return 0;
-      }
-
-      return lastChunkWriteError ? 0 : length;
-    }
+    return writeBuffer.write(gatt, dataCharacteristic,
+                             deviceNameCharacteristic,
+                             data, length);
   }
 
   protected final void stateChanged() {

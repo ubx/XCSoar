@@ -24,15 +24,17 @@ Copyright_License {
 #include "Config.hpp"
 #include "Asset.hpp"
 #include "Language/Language.hpp"
+#include "util/Compiler.h"
 #include "util/StringCompare.hxx"
 
 #ifdef ANDROID
+#include "Android/Main.hpp"
 #include "Android/BluetoothHelper.hpp"
 #include "java/Global.hxx"
 #endif
 
 bool
-DeviceConfig::IsAvailable() const
+DeviceConfig::IsAvailable() const noexcept
 {
   if (!enabled)
     return false;
@@ -45,6 +47,8 @@ DeviceConfig::IsAvailable() const
     return true;
 
   case PortType::RFCOMM:
+  case PortType::BLE_HM10:
+  case PortType::BLE_SENSOR:
   case PortType::RFCOMM_SERVER:
   case PortType::GLIDER_LINK:
   case PortType::ANDROID_USB_SERIAL:
@@ -86,7 +90,7 @@ DeviceConfig::IsAvailable() const
 }
 
 bool
-DeviceConfig::ShouldReopenOnTimeout() const
+DeviceConfig::ShouldReopenOnTimeout() const noexcept
 {
   switch (port_type) {
   case PortType::DISABLED:
@@ -98,6 +102,8 @@ DeviceConfig::ShouldReopenOnTimeout() const
     return false;
 
   case PortType::RFCOMM:
+  case PortType::BLE_SENSOR:
+  case PortType::BLE_HM10:
   case PortType::RFCOMM_SERVER:
   case PortType::ANDROID_USB_SERIAL:
   case PortType::IOIOUART:
@@ -130,7 +136,7 @@ DeviceConfig::ShouldReopenOnTimeout() const
 }
 
 bool
-DeviceConfig::MaybeBluetooth(PortType port_type, const TCHAR *path)
+DeviceConfig::MaybeBluetooth(PortType port_type, const TCHAR *path) noexcept
 {
   /* note: RFCOMM_SERVER is not considered here because this
      function is used to check for the K6-Bt protocol, but the K6-Bt
@@ -148,7 +154,7 @@ DeviceConfig::MaybeBluetooth(PortType port_type, const TCHAR *path)
 }
 
 bool
-DeviceConfig::MaybeBluetooth() const
+DeviceConfig::MaybeBluetooth() const noexcept
 {
   /* note: RFCOMM_SERVER is not considered here because this
      function is used to check for the K6-Bt protocol, but the K6-Bt
@@ -166,14 +172,18 @@ DeviceConfig::MaybeBluetooth() const
 }
 
 bool
-DeviceConfig::BluetoothNameStartsWith(const char *prefix) const
+DeviceConfig::BluetoothNameStartsWith(const char *prefix) const noexcept
 {
 #ifdef ANDROID
   if (port_type != PortType::RFCOMM)
     return false;
 
+  if (bluetooth_helper == nullptr)
+    return false;
+
   const char *name =
-    BluetoothHelper::GetNameFromAddress(Java::GetEnv(), bluetooth_mac.c_str());
+    bluetooth_helper->GetNameFromAddress(Java::GetEnv(),
+                                         bluetooth_mac.c_str());
   return name != nullptr && StringStartsWith(name, prefix);
 #else
   return false;
@@ -181,7 +191,7 @@ DeviceConfig::BluetoothNameStartsWith(const char *prefix) const
 }
 
 void
-DeviceConfig::Clear()
+DeviceConfig::Clear() noexcept
 {
   port_type = PortType::DISABLED;
   baud_rate = 4800u;
@@ -204,7 +214,7 @@ DeviceConfig::Clear()
 }
 
 const TCHAR *
-DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const
+DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
 {
   switch (port_type) {
   case PortType::DISABLED:
@@ -213,13 +223,45 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const
   case PortType::SERIAL:
     return path.c_str();
 
+  case PortType::BLE_SENSOR: {
+    const TCHAR *name = bluetooth_mac.c_str();
+#ifdef ANDROID
+    if (bluetooth_helper != nullptr) {
+      const char *name2 =
+        bluetooth_helper->GetNameFromAddress(Java::GetEnv(), name);
+      if (name2 != nullptr)
+        name = name2;
+    }
+#endif
+
+    StringFormat(buffer, max_size, _T("BLE %s"), name);
+    return buffer;
+    }
+
+  case PortType::BLE_HM10: {
+    const TCHAR *name = bluetooth_mac.c_str();
+#ifdef ANDROID
+    if (bluetooth_helper != nullptr) {
+      const char *name2 =
+        bluetooth_helper->GetNameFromAddress(Java::GetEnv(), name);
+      if (name2 != nullptr)
+        name = name2;
+    }
+#endif
+
+    StringFormat(buffer, max_size, _T("HM10 %s"), name);
+    return buffer;
+    }
+
   case PortType::RFCOMM: {
     const TCHAR *name = bluetooth_mac.c_str();
 #ifdef ANDROID
-    const char *name2 =
-      BluetoothHelper::GetNameFromAddress(Java::GetEnv(), name);
-    if (name2 != nullptr)
-      name = name2;
+    if (bluetooth_helper != nullptr) {
+      const char *name2 =
+        bluetooth_helper->GetNameFromAddress(Java::GetEnv(), name);
+      if (name2 != nullptr)
+        name = name2;
+    }
 #endif
 
     StringFormat(buffer, max_size, _T("Bluetooth %s"), name);

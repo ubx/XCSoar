@@ -30,7 +30,7 @@
 #include "Form/Button.hpp"
 #include "Widget/ListWidget.hpp"
 #include "java/Global.hxx"
-#include "Android/LeScanCallback.hpp"
+#include "Android/DetectDeviceListener.hpp"
 #include "Android/BluetoothHelper.hpp"
 #include "Language/Language.hpp"
 #include "thread/Mutex.hxx"
@@ -38,18 +38,26 @@
 #include "util/StringCompare.hxx"
 
 #include <vector>
-#include <forward_list>
-#include <set>
 
 class ScanBluetoothLeWidget final
-  : public ListWidget, public LeScanCallback {
+  : public ListWidget, public DetectDeviceListener {
 
   struct Item {
     std::string address;
     std::string name;
 
-    Item(const char *_address, const char *_name)
-      :address(_address), name(_name) {}
+    uint64_t features = 0;
+
+    bool IsSame(const Item &other) const noexcept {
+      return address == other.address;
+    }
+
+    void Update(Item &&src) noexcept {
+      if (name.empty())
+        name = std::move(src.name);
+
+      features |= src.features;
+    }
   };
 
   WidgetDialog &dialog;
@@ -61,8 +69,7 @@ class ScanBluetoothLeWidget final
   TextRowRenderer row_renderer;
 
   Mutex mutex;
-  std::set<std::string> addresses;
-  std::forward_list<Item> new_items;
+  std::vector<Item> new_items;
 
   Button *select_button;
 
@@ -70,9 +77,11 @@ public:
   explicit ScanBluetoothLeWidget(WidgetDialog &_dialog)
     :dialog(_dialog) {}
 
-  gcc_pure
-  const auto &GetSelectedAddress() const {
-    return items[GetList().GetCursorIndex()].address;
+  [[gnu::pure]]
+  std::pair<std::string, bool> GetResult() && {
+    auto &i = items[GetList().GetCursorIndex()];
+    const bool is_hm10 = (i.features & DetectDeviceListener::FEATURE_HM10) != 0;
+    return {std::move(i.address), is_hm10};
   }
 
   void CreateButtons() {
@@ -85,6 +94,17 @@ public:
   }
 
 private:
+  void UpdateItem(std::vector<Item> &v, Item &&new_item) noexcept {
+    for (auto &i : v) {
+      if (i.IsSame(new_item)) {
+        i.Update(std::move(new_item));
+        return;
+      }
+    }
+
+    v.emplace_back(std::move(new_item));
+  }
+
   /* virtual methods from class Widget */
   void Prepare(ContainerWindow &parent, const PixelRect &rc) noexcept override;
 
@@ -101,20 +121,18 @@ private:
     dialog.SetModalResult(mrOK);
   }
 
-  /* virtual methods from class LeScanCallback */
-  void OnLeScan(const char *address, const char *name) override {
-    {
-      std::string address2(address);
-      if (addresses.find(address2) != addresses.end())
-        /* already in the list */
-        return;
+  /* virtual methods from class DetectDeviceListener */
+  void OnDeviceDetected(Type type, const char *address,
+                        const char *name,
+                        uint64_t features) noexcept override {
+    if (name == nullptr)
+      name = address;
 
-      addresses.emplace(std::move(address2));
-    }
+    Item item{address, name, features};
 
     {
       const std::lock_guard<Mutex> lock(mutex);
-      new_items.emplace_front(address, name);
+      UpdateItem(new_items, std::move(item));
     }
 
     le_scan_notify.SendNotification();
@@ -129,13 +147,14 @@ private:
       if (new_items.empty())
         return;
 
-      do {
-        items.emplace_back(std::move(new_items.front()));
-        new_items.pop_front();
-      } while (!new_items.empty());
+      for (auto &i : new_items)
+        UpdateItem(items, std::move(i));
+
+      new_items.clear();
     }
 
     GetList().SetLength(items.size());
+    GetList().Invalidate();
 
     if (was_empty)
       /* the list has just become non-empty, so allow pressing the
@@ -165,10 +184,20 @@ ScanBluetoothLeWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
     name = item.address.c_str();
 
   row_renderer.DrawTextRow(canvas, rc, name);
+
+  // TODO: properly render this, consider all feature flags
+  if (item.features & DetectDeviceListener::FEATURE_HM10)
+    row_renderer.DrawRightColumn(canvas, rc, _T("HM10"));
+  else if (item.features & DetectDeviceListener::FEATURE_HEART_RATE)
+    row_renderer.DrawRightColumn(canvas, rc, _T("HR"));
+  else if (item.features & DetectDeviceListener::FEATURE_FLYTEC_SENSBOX)
+    row_renderer.DrawRightColumn(canvas, rc, _T("Sensbox"));
+  else
+    row_renderer.DrawRightColumn(canvas, rc, _("Unsupported"));
 }
 
-std::string
-ScanBluetoothLeDialog() noexcept
+std::pair<std::string, bool>
+ScanBluetoothLeDialog(BluetoothHelper &bluetooth_helper) noexcept
 {
   TWidgetDialog<ScanBluetoothLeWidget>
     dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
@@ -176,22 +205,17 @@ ScanBluetoothLeDialog() noexcept
   dialog.SetWidget(dialog);
 
   const auto env = Java::GetEnv();
-  const auto callback = BluetoothHelper::StartLeScan(env, dialog.GetWidget());
-  if (callback == nullptr) {
-    const TCHAR *message =
-      _("Bluetooth LE is not available on this device.");
-    ShowMessageBox(message, _("Bluetooth LE"), MB_OK);
-    return {};
-  }
+  const auto listener =
+    bluetooth_helper.AddDetectDeviceListener(env, dialog.GetWidget());
 
   dialog.GetWidget().CreateButtons();
   dialog.AddButton(_("Cancel"), mrCancel);
 
   int result = dialog.ShowModal();
-  BluetoothHelper::StopLeScan(env, callback);
+  bluetooth_helper.RemoveDetectDeviceListener(env, listener);
 
   if (result != mrOK)
-    return {};
+    return {{}, false};
 
-  return dialog.GetWidget().GetSelectedAddress();
+  return std::move(dialog.GetWidget()).GetResult();
 }

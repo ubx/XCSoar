@@ -43,8 +43,6 @@ struct Point2D {
   constexpr Point2D(scalar_type _x, scalar_type _y) noexcept
     :x(_x), y(_y) {}
 
-  constexpr Point2D(const Point2D &) noexcept = default;
-
   /**
    * This constructor allows casting from a different Point2D
    * template instantiation.
@@ -101,12 +99,7 @@ struct UnsignedPoint2D : Point2D<unsigned> {
 
 static_assert(std::is_trivial<UnsignedPoint2D>::value, "type is not trivial");
 
-struct IntPoint2D : Point2D<int> {
-  IntPoint2D() = default;
-  using Point2D::Point2D;
-};
-
-static_assert(std::is_trivial<IntPoint2D>::value, "type is not trivial");
+using IntPoint2D = Point2D<int>;
 
 struct DoublePoint2D : Point2D<double> {
   DoublePoint2D() = default;

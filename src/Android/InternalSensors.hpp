@@ -32,6 +32,7 @@ Copyright_License {
 #include <vector>
 
 class Context;
+class SensorListener;
 
 /**
  * Consolidated class for handling Java objects that work with Android GPS
@@ -62,7 +63,8 @@ public:
   Java::GlobalObject obj_NonGPSSensors_;
   std::vector<int> subscribable_sensors_;
 
-  InternalSensors(JNIEnv* env, jobject gps_obj, jobject sensors_obj);
+  InternalSensors(const Java::LocalObject &gps_obj,
+                  const Java::LocalObject &sensors_obj) noexcept;
   void getSubscribableSensors(JNIEnv* env, jobject sensors_obj);
  public:
   ~InternalSensors();
@@ -88,7 +90,7 @@ public:
 
   gcc_malloc
   static InternalSensors *create(JNIEnv* env, Context* native_view,
-                                 unsigned int index);
+                                 SensorListener &listener);
 };
 
 #endif

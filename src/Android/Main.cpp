@@ -33,9 +33,10 @@ Copyright_License {
 #include "PortBridge.hpp"
 #include "BluetoothHelper.hpp"
 #include "UsbSerialHelper.hpp"
-#include "NativeLeScanCallback.hpp"
+#include "NativeDetectDeviceListener.hpp"
 #include "NativePortListener.hpp"
 #include "NativeInputListener.hpp"
+#include "NativeSensorListener.hpp"
 #include "TextUtil.hpp"
 #include "Product.hpp"
 #include "Nook.hpp"
@@ -59,6 +60,7 @@ Copyright_License {
 #include "java/File.hxx"
 #include "java/InputStream.hxx"
 #include "java/URL.hxx"
+#include "java/Closeable.hxx"
 #include "util/Compiler.h"
 #include "org_xcsoar_NativeView.h"
 #include "io/async/GlobalAsioThread.hpp"
@@ -96,6 +98,7 @@ NativeView *native_view;
 Vibrator *vibrator;
 bool os_haptic_feedback_enabled;
 
+BluetoothHelper *bluetooth_helper;
 IOIOHelper *ioio_helper;
 
 gcc_visibility_default
@@ -118,20 +121,22 @@ try {
   Java::Object::Initialise(env);
   Java::File::Initialise(env);
   Java::InputStream::Initialise(env);
+  Java::InitialiseCloseable(env);
   Java::URL::Initialise(env);
   Java::URLConnection::Initialise(env);
 
   NativeView::Initialise(env);
   Environment::Initialise(env);
   AndroidBitmap::Initialise(env);
+  NativeSensorListener::Initialise(env);
   InternalSensors::Initialise(env);
   GliderLink::Initialise(env);
   NativePortListener::Initialise(env);
   NativeInputListener::Initialise(env);
   PortBridge::Initialise(env);
-  BluetoothHelper::Initialise(env);
+  const bool have_bluetooth = BluetoothHelper::Initialise(env);
   UsbSerialHelper::Initialise(env);
-  NativeLeScanCallback::Initialise(env);
+  NativeDetectDeviceListener::Initialise(env);
   const bool have_ioio = IOIOHelper::Initialise(env);
   NativeBMP085Listener::Initialise(env);
   BMP085Device::Initialise(env);
@@ -163,6 +168,14 @@ try {
   SoundUtil::Initialise(env);
   Vibrator::Initialise(env);
   vibrator = Vibrator::Create(env, *context);
+
+  if (have_bluetooth) {
+    try {
+      bluetooth_helper = new BluetoothHelper(env, *context);
+    } catch (...) {
+      LogError(std::current_exception(), "Failed to initialise Bluetooth");
+    }
+  }
 
   if (have_ioio) {
     try {
@@ -229,6 +242,9 @@ Java_org_xcsoar_NativeView_deinitializeNative(JNIEnv *env, jobject obj)
   delete ioio_helper;
   ioio_helper = nullptr;
 
+  delete bluetooth_helper;
+  bluetooth_helper = nullptr;
+
   delete vibrator;
   vibrator = nullptr;
 
@@ -255,12 +271,13 @@ Java_org_xcsoar_NativeView_deinitializeNative(JNIEnv *env, jobject obj)
   VoltageDevice::Deinitialise(env);
   NativeVoltageListener::Deinitialise(env);
   IOIOHelper::Deinitialise(env);
-  NativeLeScanCallback::Deinitialise(env);
+  NativeDetectDeviceListener::Deinitialise(env);
   UsbSerialHelper::Deinitialise(env);
   BluetoothHelper::Deinitialise(env);
   NativeInputListener::Deinitialise(env);
   NativePortListener::Deinitialise(env);
   InternalSensors::Deinitialise(env);
+  NativeSensorListener::Deinitialise(env);
   GliderLink::Deinitialise(env);
   AndroidBitmap::Deinitialise(env);
   Environment::Deinitialise(env);

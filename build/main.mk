@@ -138,6 +138,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/KnobTextEntry.cpp \
 	$(SRC)/Dialogs/TouchTextEntry.cpp \
 	$(SRC)/Dialogs/TimeEntry.cpp \
+	$(SRC)/Dialogs/DateEntry.cpp \
 	$(SRC)/Dialogs/GeoPointEntry.cpp \
 	$(SRC)/Dialogs/Weather/WeatherDialog.cpp \
 	$(SRC)/Dialogs/Weather/RASPDialog.cpp \
@@ -672,6 +673,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Device/MultipleDevices.cpp \
 	$(SRC)/Device/device.cpp \
 	$(SRC)/Device/Port/ConfiguredPort.cpp \
+	$(SRC)/Device/DataEditor.cpp \
 	$(SRC)/Device/Descriptor.cpp \
 	$(SRC)/Device/Dispatcher.cpp \
 	$(SRC)/Device/Parser.cpp \
@@ -715,6 +717,8 @@ XCSOAR_SOURCES += \
 	$(SRC)/java/Path.cxx \
 	$(SRC)/java/InputStream.cxx \
 	$(SRC)/java/URL.cxx \
+	$(SRC)/java/Closeable.cxx \
+	$(SRC)/Device/AndroidSensors.cpp \
 	$(SRC)/Device/Port/AndroidPort.cpp \
 	$(SRC)/Device/Port/AndroidBluetoothPort.cpp \
 	$(SRC)/Device/Port/AndroidIOIOUartPort.cpp \
@@ -732,7 +736,8 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/NativeInputListener.cpp \
 	$(SRC)/Android/PortBridge.cpp \
 	$(SRC)/Android/BluetoothHelper.cpp \
-	$(SRC)/Android/NativeLeScanCallback.cpp \
+	$(SRC)/Android/NativeDetectDeviceListener.cpp \
+	$(SRC)/Android/NativeSensorListener.cpp \
 	$(SRC)/Android/Battery.cpp \
 	$(SRC)/Android/GliderLink.cpp \
 	$(SRC)/Android/DownloadManager.cpp \
