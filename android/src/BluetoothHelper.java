@@ -26,11 +26,13 @@ package org.xcsoar;
 import java.util.UUID;
 import java.util.Set;
 import java.util.Collection;
+import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 import java.io.IOException;
 
+import android.os.ParcelUuid;
 import android.util.Log;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothAdapter;
@@ -38,6 +40,10 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothSocket;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanRecord;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
@@ -45,8 +51,9 @@ import android.content.pm.PackageManager;
  * A library that constructs Bluetooth ports.  It is called by C++
  * code.
  */
-final class BluetoothHelper implements BluetoothAdapter.LeScanCallback,
-                                       BluetoothIdentify.Listener {
+final class BluetoothHelper
+  extends ScanCallback
+{
   private static final String TAG = "XCSoar";
   private static final UUID THE_UUID =
         UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -55,6 +62,8 @@ final class BluetoothHelper implements BluetoothAdapter.LeScanCallback,
 
   private final BluetoothAdapter adapter;
 
+  private BluetoothLeScanner scanner;
+
   /**
    * Does this device support Bluetooth Low Energy?
    */
@@ -62,9 +71,6 @@ final class BluetoothHelper implements BluetoothAdapter.LeScanCallback,
 
   private final Collection<DetectDeviceListener> detectListeners =
     new LinkedList<DetectDeviceListener>();
-
-  private final Map<String, BluetoothIdentify> identify =
-    new TreeMap<String, BluetoothIdentify>();
 
   BluetoothHelper(Context context) throws Exception {
     this.context = context;
@@ -111,37 +117,28 @@ final class BluetoothHelper implements BluetoothAdapter.LeScanCallback,
     }
   }
 
-  public String[] list() {
-    Set<BluetoothDevice> devices = adapter.getBondedDevices();
-    if (devices == null)
-      return null;
-
-    String[] addresses = new String[devices.size() * 3];
-    int n = 0;
-    for (BluetoothDevice device: devices) {
-      addresses[n++] = device.getAddress();
-      addresses[n++] = device.getName();
-      addresses[n++] = BluetoothDevice.DEVICE_TYPE_LE == device.getType() ? "BLE" : "CLASSIC";
-    }
-
-    return addresses;
-  }
-
   public synchronized void addDetectDeviceListener(DetectDeviceListener l) {
-    boolean wasEmpty = detectListeners.isEmpty();
     detectListeners.add(l);
 
-    /* TODO: remove list() and enable this code:
     Set<BluetoothDevice> devices = adapter.getBondedDevices();
     if (devices != null)
       for (BluetoothDevice device : devices)
-        l.onDeviceDetected(DetectDeviceListener.TYPE_BLUETOOTH_CLASSIC,
+        l.onDeviceDetected(device.getType() == BluetoothDevice.DEVICE_TYPE_LE
+                           ? DetectDeviceListener.TYPE_BLUETOOTH_LE
+                           : DetectDeviceListener.TYPE_BLUETOOTH_CLASSIC,
                            device.getAddress(), device.getName(),
                            0);
-    */
 
-    if (wasEmpty && hasLe)
-      adapter.startLeScan(this);
+    if (hasLe && scanner == null) {
+      try {
+        scanner = adapter.getBluetoothLeScanner();
+        if (scanner != null)
+          scanner.startScan(this);
+      } catch (Exception e) {
+        Log.e(TAG, "Bluetooth LE scan failed", e);
+        scanner = null;
+      }
+    }
   }
 
   public synchronized void removeDetectDeviceListener(DetectDeviceListener l) {
@@ -150,12 +147,10 @@ final class BluetoothHelper implements BluetoothAdapter.LeScanCallback,
     if (!detectListeners.isEmpty())
       return;
 
-    if (hasLe)
-      adapter.stopLeScan(this);
-
-    for (BluetoothIdentify i : identify.values())
-      i.close();
-    identify.clear();
+    if (scanner != null) {
+      scanner.stopScan(this);
+      scanner = null;
+    }
   }
 
   public BluetoothSensor connectSensor(String address, SensorListener listener)
@@ -200,29 +195,63 @@ final class BluetoothHelper implements BluetoothAdapter.LeScanCallback,
     return new BluetoothServerPort(adapter, THE_UUID);
   }
 
-  @Override
-  public synchronized void onLeScan(BluetoothDevice device, int rssi,
-                                    byte[] scanRecord) {
-    if (!identify.containsKey(device.getAddress()))
-      identify.put(device.getAddress(),
-                   new BluetoothIdentify(context, device, this));
+  /**
+   * Identify the detected service UUIDs and convert it to a feature
+   * flag bit set.
+   */
+  private static long getFeatures(Collection<ParcelUuid> serviceUuids) {
+    long features = 0;
 
-    for (DetectDeviceListener l : detectListeners)
-      l.onDeviceDetected(DetectDeviceListener.TYPE_BLUETOOTH_LE,
-                         device.getAddress(), device.getName(),
-                         0);
+    for (ParcelUuid puuid : serviceUuids) {
+      UUID uuid = puuid.getUuid();
+      if (BluetoothUuids.HM10_SERVICE.equals(uuid))
+        features |= DetectDeviceListener.FEATURE_HM10;
+      else if (BluetoothUuids.HEART_RATE_SERVICE.equals(uuid))
+        features |= DetectDeviceListener.FEATURE_HEART_RATE;
+      else if (BluetoothUuids.FLYTEC_SENSBOX_SERVICE.equals(uuid))
+        features |= DetectDeviceListener.FEATURE_FLYTEC_SENSBOX;
+    }
+
+    return features;
   }
 
-  public synchronized void onBluetoothIdentifySuccess(BluetoothDevice device,
-                                                      long features) {
+  private static long getFeatures(ScanRecord record) {
+    Collection<ParcelUuid> serviceUuids = record.getServiceUuids();
+    return serviceUuids != null
+      ? getFeatures(serviceUuids)
+      : 0;
+  }
+
+  private static long getFeatures(ScanResult result) {
+    ScanRecord record = result.getScanRecord();
+    return record != null
+      ? getFeatures(record)
+      : 0;
+  }
+
+  private synchronized void broadcastScanResult(ScanResult result) {
+    BluetoothDevice device = result.getDevice();
+    long features = getFeatures(result);
+
     for (DetectDeviceListener l : detectListeners)
       l.onDeviceDetected(DetectDeviceListener.TYPE_BLUETOOTH_LE,
                          device.getAddress(), device.getName(),
                          features);
   }
 
-  public synchronized void onBluetoothIdentifyError(BluetoothDevice device,
-                                                    String msg) {
-    // TODO: report to DetectDeviceListener
+  @Override
+  public void onScanResult(int callbackType, ScanResult result) {
+    broadcastScanResult(result);
+  }
+
+  @Override
+  public void onBatchScanResults(List<ScanResult> results) {
+    for (ScanResult r : results)
+      broadcastScanResult(r);
+  }
+
+  @Override
+  public void onScanFailed(int errorCode) {
+    Log.e(TAG, "Bluetooth LE scan failed with error code " + errorCode);
   }
 }

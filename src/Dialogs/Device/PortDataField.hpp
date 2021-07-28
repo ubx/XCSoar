@@ -1,5 +1,5 @@
 /*
-Copyright_License {
+  Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
   Copyright (C) 2000-2021 The XCSoar Project
@@ -21,15 +21,32 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_ANDROID_I2CBARO_LISTENER_HPP
-#define XCSOAR_ANDROID_I2CBARO_LISTENER_HPP
+#pragma once
 
-class AtmosphericPressure;
+#include "Device/Config.hpp"
 
-class I2CbaroListener {
-public:
-  virtual void onI2CbaroValues(unsigned sensor, AtmosphericPressure pressure) = 0;
-  virtual void onI2CbaroError() = 0;
-};
+#include <tchar.h>
 
-#endif
+class DataFieldEnum;
+
+void
+FillPorts(DataFieldEnum &df, const DeviceConfig &config) noexcept;
+
+void
+UpdatePortEntry(DataFieldEnum &df, DeviceConfig::PortType type,
+                const TCHAR *value, const TCHAR *name) noexcept;
+
+void
+SetPort(DataFieldEnum &df, DeviceConfig::PortType type,
+        const TCHAR *value) noexcept;
+
+void
+SetBluetoothPort(DataFieldEnum &df, DeviceConfig::PortType type,
+                 const TCHAR *bluetooth_mac) noexcept;
+
+void
+SetPort(DataFieldEnum &df, const DeviceConfig &config) noexcept;
+
+[[gnu::pure]]
+DeviceConfig::PortType
+GetPortType(const DataFieldEnum &df) noexcept;

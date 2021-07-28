@@ -22,6 +22,12 @@
 
 package org.xcsoar;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -35,17 +41,11 @@ import android.util.Log;
 
 import com.felhr.usbserial.UsbSerialDevice;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
 public class UsbSerialHelper extends BroadcastReceiver {
 
   private static final String TAG = "UsbSerialHelper";
   public static final String ACTION_USB_PERMISSION = "org.xcsoar.otg.action.USB_PERMISSION";
-
-  private static UsbSerialHelper _instance;
 
   private final Context context;
   private final UsbManager usbmanager;
@@ -53,30 +53,8 @@ public class UsbSerialHelper extends BroadcastReceiver {
   private HashMap<String, UsbDevice> _AvailableDevices = new HashMap<>();
   private HashMap<UsbDevice, UsbSerialPort> _PendingConnection = new HashMap<>();
 
-  static synchronized void Initialise(Context context) {
-    _instance = new UsbSerialHelper(context);
-  }
-
-  static synchronized void Deinitialise(Context context) {
-    if (_instance != null) {
-      _instance.close();
-      _instance = null;
-    }
-  }
-
-  public static boolean isEnabled() {
-    return (_instance != null);
-  }
-
-  static AndroidPort connect(String name,int baud) {
-    assert(_instance != null);
-    return _instance.connectDevice(name,baud);
-  }
-
-  static String[] list() {
-    assert(_instance != null);
-    return _instance.listDevices();
-  }
+  private final Collection<DetectDeviceListener> detectListeners =
+    new LinkedList<DetectDeviceListener>();
 
   private static final long[] supported_ids = createTable(
     createDevice(0x16D0, 0x0BA9), // GPSBip
@@ -137,7 +115,7 @@ public class UsbSerialHelper extends BroadcastReceiver {
     }
   }
 
-  private void AddAvailable(UsbDevice device) {
+  private synchronized void AddAvailable(UsbDevice device) {
     if (device != null && UsbSerialDevice.isSupported(device)) {
       int vid = device.getVendorId();
       int pid = device.getProductId();
@@ -145,13 +123,14 @@ public class UsbSerialHelper extends BroadcastReceiver {
       if (exists(supported_ids, vid, pid)) {
         Log.v(TAG, "UsbDevice Found : " + device);
         _AvailableDevices.put(device.getDeviceName(), device);
+        broadcastDetectedDevice(device);
       } else {
         Log.v(TAG, "Unsupported UsbDevice : " + device);
       }
     }
   }
 
-  private UsbDevice GetAvailable(String name) {
+  private synchronized UsbDevice GetAvailable(String name) {
     for (Map.Entry<String, UsbDevice> entry : _AvailableDevices.entrySet()) {
       if(name.contentEquals(getDeviceId(entry.getValue()))) {
         return entry.getValue();
@@ -160,7 +139,7 @@ public class UsbSerialHelper extends BroadcastReceiver {
     return null;
   }
 
-  private void RemoveAvailable(UsbDevice device) {
+  private synchronized void RemoveAvailable(UsbDevice device) {
     Log.v(TAG,"UsbDevice disconnected : " + device);
     _AvailableDevices.remove(device.getDeviceName());
   }
@@ -199,7 +178,7 @@ public class UsbSerialHelper extends BroadcastReceiver {
     context.unregisterReceiver(this);
   }
 
-  private AndroidPort connectDevice (String name , int baud) {
+  private synchronized AndroidPort connect(String name, int baud) {
     if (usbmanager == null)
       return null;
 
@@ -219,16 +198,26 @@ public class UsbSerialHelper extends BroadcastReceiver {
     return port;
   }
 
-  public String[] listDevices() {
+  private synchronized void broadcastDetectedDevice(UsbDevice device) {
+    if (detectListeners.isEmpty())
+      return;
 
-    String[] device_names = new String[_AvailableDevices.size() * 2];
-    int n = 0;
-    for (Map.Entry<String, UsbDevice> entry : _AvailableDevices.entrySet()) {
-      UsbDevice device = entry.getValue();
-      device_names[n++] = getDeviceId(device);
-      device_names[n++] = getDeviceDisplayName(device);
-    }
-    return device_names;
+    final String id = getDeviceId(device);
+    final String name = getDeviceDisplayName(device);
+
+    for (DetectDeviceListener l : detectListeners)
+      l.onDeviceDetected(DetectDeviceListener.TYPE_USB_SERIAL, id, name, 0);
+  }
+
+  public synchronized void addDetectDeviceListener(DetectDeviceListener l) {
+    detectListeners.add(l);
+
+    for (Map.Entry<String, UsbDevice> entry : _AvailableDevices.entrySet())
+      broadcastDetectedDevice(entry.getValue());
+  }
+
+  public synchronized void removeDetectDeviceListener(DetectDeviceListener l) {
+    detectListeners.remove(l);
   }
 
   static String getDeviceId(UsbDevice device) {

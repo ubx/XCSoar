@@ -14,6 +14,8 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/JobDialog.cpp \
 	$(SRC)/Dialogs/WidgetDialog.cpp \
 	$(SRC)/Dialogs/FileManager.cpp \
+	$(SRC)/Dialogs/Device/PortDataField.cpp \
+	$(SRC)/Dialogs/Device/PortPicker.cpp \
 	$(SRC)/Dialogs/Device/DeviceEditWidget.cpp \
 	$(SRC)/Dialogs/Device/DeviceListDialog.cpp \
 	$(SRC)/Dialogs/Device/PortMonitor.cpp \
@@ -709,7 +711,6 @@ endif
 
 ifeq ($(TARGET),ANDROID)
 XCSOAR_SOURCES += \
-	$(SRC)/Dialogs/Device/ScanBluetoothLeDialog.cpp \
 	$(SRC)/java/Global.cxx \
 	$(SRC)/java/Object.cxx \
 	$(SRC)/java/String.cxx \
@@ -745,7 +746,6 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/Vibrator.cpp \
 	$(SRC)/Android/Context.cpp \
 	$(SRC)/Android/BMP085Device.cpp \
-	$(SRC)/Android/NativeI2CbaroListener.cpp \
 	$(SRC)/Android/I2CbaroDevice.cpp \
 	$(SRC)/Android/NunchuckDevice.cpp \
 	$(SRC)/Android/VoltageDevice.cpp \

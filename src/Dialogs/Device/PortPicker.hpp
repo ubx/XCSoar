@@ -1,5 +1,5 @@
 /*
-Copyright_License {
+  Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
   Copyright (C) 2000-2021 The XCSoar Project
@@ -21,20 +21,11 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_ANDROID_NATIVE_I2CBARO_LISTENER_HPP
-#define XCSOAR_ANDROID_NATIVE_I2CBARO_LISTENER_HPP
+#pragma once
 
-#include <jni.h>
+class DataFieldEnum;
 
-class I2CbaroListener;
+#include <tchar.h>
 
-namespace NativeI2CbaroListener {
-
-void Initialise(JNIEnv *env);
-void Deinitialise(JNIEnv *env);
-
-jobject Create(JNIEnv *env, I2CbaroListener &listener);
-
-} // namespace NativeI2CbaroListener
-
-#endif
+bool
+PortPicker(DataFieldEnum &df, const TCHAR *caption) noexcept;
