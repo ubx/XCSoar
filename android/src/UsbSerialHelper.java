@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.io.IOException;
 
 import android.annotation.TargetApi;
 import android.app.PendingIntent;
@@ -107,7 +108,7 @@ public class UsbSerialHelper extends BroadcastReceiver {
 
           UsbSerialPort port = _PendingConnection.get(device);
           _PendingConnection.remove(device);
-          if (port != null && usbmanager != null) {
+          if (port != null) {
             port.open(usbmanager);
           }
         }
@@ -116,7 +117,7 @@ public class UsbSerialHelper extends BroadcastReceiver {
   }
 
   private synchronized void AddAvailable(UsbDevice device) {
-    if (device != null && UsbSerialDevice.isSupported(device)) {
+    if (UsbSerialDevice.isSupported(device)) {
       int vid = device.getVendorId();
       int pid = device.getProductId();
 
@@ -144,26 +145,22 @@ public class UsbSerialHelper extends BroadcastReceiver {
     _AvailableDevices.remove(device.getDeviceName());
   }
 
-  private UsbSerialHelper(Context context) {
-    Log.v(TAG, "onCreate()");
+  private UsbSerialHelper(Context context) throws IOException {
     this.context = context;
+
     usbmanager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
-    if(usbmanager != null) {
-      try {
-        HashMap<String, UsbDevice> devices = usbmanager.getDeviceList();
-        for (Map.Entry<String, UsbDevice> entry : devices.entrySet()) {
-          AddAvailable(entry.getValue());
-        }
-      } catch (NullPointerException e) {
-        Log.e(TAG, "onCreate()", e);
-      }
+    if (usbmanager == null)
+      throw new IOException("No USB service");
+
+    HashMap<String, UsbDevice> devices = usbmanager.getDeviceList();
+    for (Map.Entry<String, UsbDevice> entry : devices.entrySet()) {
+      AddAvailable(entry.getValue());
     }
 
     registerReceiver();
   }
 
   private void close() {
-    Log.v(TAG, "onDestroy()");
     unregisterReceiver();
   }
 
@@ -178,13 +175,12 @@ public class UsbSerialHelper extends BroadcastReceiver {
     context.unregisterReceiver(this);
   }
 
-  private synchronized AndroidPort connect(String name, int baud) {
-    if (usbmanager == null)
-      return null;
-
+  private synchronized AndroidPort connect(String name, int baud)
+    throws IOException
+  {
     UsbDevice device = GetAvailable(name);
     if (device == null)
-      return null;
+      throw new IOException("USB serial device not found");
 
     UsbSerialPort port = new UsbSerialPort(device,baud);
     if (usbmanager.hasPermission(device)) {

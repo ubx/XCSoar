@@ -22,7 +22,6 @@
 
 package org.xcsoar;
 
-import java.io.Closeable;
 import java.io.IOException;
 
 import android.bluetooth.BluetoothDevice;
@@ -41,13 +40,13 @@ import android.os.Build;
  */
 public final class BluetoothSensor
   extends BluetoothGattCallback
-  implements Closeable
+  implements AndroidSensor
 {
   private final SensorListener listener;
 
   private final BluetoothGatt gatt;
-  private BluetoothGattCharacteristic dataCharacteristic;
-  private BluetoothGattCharacteristic deviceNameCharacteristic;
+
+  private int state = STATE_LIMBO;
 
   public BluetoothSensor(Context context, BluetoothDevice device,
                          SensorListener listener)
@@ -56,9 +55,9 @@ public final class BluetoothSensor
     this.listener = listener;
 
     if (Build.VERSION.SDK_INT >= 23)
-      gatt = device.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE);
+      gatt = device.connectGatt(context, true, this, BluetoothDevice.TRANSPORT_LE);
     else
-      gatt = device.connectGatt(context, false, this);
+      gatt = device.connectGatt(context, true, this);
 
     if (gatt == null)
       throw new IOException("Bluetooth GATT connect failed");
@@ -69,7 +68,13 @@ public final class BluetoothSensor
     gatt.close();
   }
 
+  @Override
+  public int getState() {
+    return state;
+  }
+
   private void submitError(String msg) {
+    state = STATE_FAILED;
     listener.onSensorError(msg);
   }
 
@@ -150,14 +155,15 @@ public final class BluetoothSensor
       return;
     }
 
-    long features = 0;
-
     BluetoothGattService service = gatt.getService(BluetoothUuids.HEART_RATE_SERVICE);
     if (service != null) {
       BluetoothGattCharacteristic c =
         service.getCharacteristic(BluetoothUuids.HEART_RATE_MEASUREMENT_CHARACTERISTIC);
-      if (c != null)
+      if (c != null) {
+        state = STATE_READY;
+        listener.onSensorStateChanged();
         enableNotification(c);
+      }
     }
 
     /* enable notifications for Flytec Sensbox */
@@ -169,8 +175,14 @@ public final class BluetoothSensor
         enableNotification(c);
 
       c = service.getCharacteristic(BluetoothUuids.FLYTEC_SENSBOX_MOVEMENT_SENSOR_CHARACTERISTIC);
-      if (c != null)
+      if (c != null) {
+        state = STATE_READY;
+        listener.onSensorStateChanged();
         enableNotification(c);
+      }
     }
+
+    if (state == STATE_LIMBO)
+      submitError("Unsupported Bluetooth device");
   }
 }

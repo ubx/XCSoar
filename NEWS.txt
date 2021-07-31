@@ -1,4 +1,6 @@
-Version 7.11 - not yet released
+Version 7.12 - not yet released
+
+Version 7.11 - 2021/07/30
 * fix crash bug in pc_met viewer
 * user interface
   - new vario gauge background
@@ -13,6 +15,8 @@ Version 7.11 - not yet released
   - add DroidSoar/I2C calibration dialog
   - fix reconnect to Bluetooth LE devices
   - fix distorted colors on some devices
+  - detect USB serial adapter disconnect
+  - support baud rate switching on USB serial adapters
 * Polars
   - new Wassmer WA 26 P Squale polar
 

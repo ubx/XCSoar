@@ -22,8 +22,6 @@
 
 package org.xcsoar;
 
-import java.io.Closeable;
-
 import android.os.Handler;
 import android.os.Bundle;
 import android.content.Context;
@@ -48,7 +46,8 @@ import java.lang.Math;
  * Code to support the internal GPS receiver via #LocationManager.
  */
 public class InternalGPS
-  implements LocationListener, SensorEventListener, Runnable, Closeable {
+  implements LocationListener, SensorEventListener, Runnable, AndroidSensor
+{
   private static final String TAG = "XCSoar";
 
   private static Handler handler;
@@ -74,6 +73,8 @@ public class InternalGPS
   private Sensor accelerometer;
   private double acceleration;
   private static boolean queriedLocationSettings = false;
+
+  private int state = STATE_LIMBO;
 
   private final SafeDestruct safeDestruct = new SafeDestruct();
 
@@ -159,6 +160,11 @@ public class InternalGPS
     safeDestruct.finishShutdown();
   }
 
+  @Override
+  public int getState() {
+    return state;
+  }
+
   private void sendLocation(Location location) {
     Bundle extras = location.getExtras();
 
@@ -211,14 +217,20 @@ public class InternalGPS
                                         Bundle extras) {
     switch (status) {
     case LocationProvider.OUT_OF_SERVICE:
+      state = STATE_FAILED;
       setConnectedSafe(0); // not connected
+      listener.onSensorStateChanged();
       break;
 
     case LocationProvider.TEMPORARILY_UNAVAILABLE:
+      state = STATE_LIMBO;
       setConnectedSafe(1); // waiting for fix
+      listener.onSensorStateChanged();
       break;
 
     case LocationProvider.AVAILABLE:
+      state = STATE_READY;
+      listener.onSensorStateChanged();
       break;
     }
   }

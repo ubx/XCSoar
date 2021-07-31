@@ -57,10 +57,10 @@ Copyright_License {
 #include "Android/Main.hpp"
 #include "Android/Product.hpp"
 #include "Android/IOIOHelper.hpp"
-#include "Android/BMP085Device.hpp"
 #include "Android/I2CbaroDevice.hpp"
 #include "Android/NunchuckDevice.hpp"
 #include "Android/VoltageDevice.hpp"
+#include "Android/Sensor.hpp"
 #endif
 
 #ifdef __APPLE__
@@ -159,29 +159,9 @@ DeviceDescriptor::GetState() const
   if (port != nullptr)
     return port->GetState();
 
-#ifdef HAVE_INTERNAL_GPS
-  if (internal_sensors != nullptr)
-    return PortState::READY;
-#endif
-
 #ifdef ANDROID
-  if (droidsoar_v2 != nullptr)
-    return PortState::READY;
-
-  if (i2cbaro.front() != nullptr)
-    return PortState::READY;
-
-  if (nunchuck != nullptr)
-    return PortState::READY;
-
-  if (voltage != nullptr)
-    return PortState::READY;
-
-  if (glider_link != nullptr)
-    return PortState::READY;
-
   if (java_sensor != nullptr)
-    return PortState::READY;
+    return AndroidSensor::GetState(Java::GetEnv(), *java_sensor);
 #endif
 
   return PortState::FAILED;
@@ -326,21 +306,24 @@ DeviceDescriptor::OpenDroidSoarV2()
   /* we use different values for the I2C Kalman filter */
   kalman_filter = {KF_I2C_MAX_DT, KF_I2C_VAR_ACCEL};
 
-  i2cbaro[0] = new I2CbaroDevice(Java::GetEnv(),
-                                 ioio_helper->GetHolder(),
-                                 0,
-                                 2 + (0x77 << 8) + (27 << 16), 0,	// bus, address
-                                 5,                               // update freq.
-                                 0,                               // flags
-                                 *this);
+  auto i2c = I2CbaroDevice::Create(Java::GetEnv(),
+                                   ioio_helper->GetHolder(),
+                                   0,
+                                   2 + (0x77 << 8) + (27 << 16), 0,	// bus, address
+                                   5,                               // update freq.
+                                   0,                               // flags
+                                   *this);
+  java_sensor = new Java::GlobalCloseable(i2c);
 
-  i2cbaro[1] = new I2CbaroDevice(Java::GetEnv(),
-                                 ioio_helper->GetHolder(),
-                                 1,
-                                 1 + (0x77 << 8) + (46 << 16), 0 ,
-                                 5,
-                                 0,
-                                 *this);
+  i2c = I2CbaroDevice::Create(Java::GetEnv(),
+                              ioio_helper->GetHolder(),
+                              1,
+                              1 + (0x77 << 8) + (46 << 16), 0 ,
+                              5,
+                              0,
+                              *this);
+  second_java_sensor = new Java::GlobalCloseable(i2c);
+
   return true;
 #else
   return false;
@@ -360,13 +343,15 @@ DeviceDescriptor::OpenI2Cbaro()
   /* we use different values for the I2C Kalman filter */
   kalman_filter = {KF_I2C_MAX_DT, KF_I2C_VAR_ACCEL};
 
-  i2cbaro.front() = new I2CbaroDevice(Java::GetEnv(),
-                                      ioio_helper->GetHolder(),
-                                      0,
-                                      config.i2c_bus, config.i2c_addr,
-                                      config.press_use == DeviceConfig::PressureUse::TEK_PRESSURE ? 20 : 5,
-                                      0, // called flags, actually reserved for future use.
-                                      *this);
+  auto i2c = I2CbaroDevice::Create(Java::GetEnv(),
+                                   ioio_helper->GetHolder(),
+                                   0,
+                                   config.i2c_bus, config.i2c_addr,
+                                   config.press_use == DeviceConfig::PressureUse::TEK_PRESSURE ? 20 : 5,
+                                   0, // called flags, actually reserved for future use.
+                                   *this);
+  java_sensor = new Java::GlobalCloseable(i2c);
+
   return true;
 #else
   return false;
@@ -385,10 +370,11 @@ DeviceDescriptor::OpenNunchuck()
 
   joy_state_x = joy_state_y = 0;
 
-  nunchuck = new NunchuckDevice(Java::GetEnv(),
-                                ioio_helper->GetHolder(),
-                                config.i2c_bus, 5, // twi, sample_rate
-                                *this);
+  auto nunchuk = NunchuckDevice::Create(Java::GetEnv(),
+                                        ioio_helper->GetHolder(),
+                                        config.i2c_bus, 5, // twi, sample_rate
+                                        *this);
+  java_sensor = new Java::GlobalCloseable(nunchuk);
   return true;
 #else
   return false;
@@ -412,10 +398,11 @@ DeviceDescriptor::OpenVoltage()
     i.Reset();
   temperature_filter.Reset();
 
-  voltage = new VoltageDevice(Java::GetEnv(),
-                              ioio_helper->GetHolder(),
-                              60, // sample_rate per minute
-                              *this);
+  auto voltage = VoltageDevice::Create(Java::GetEnv(),
+                                       ioio_helper->GetHolder(),
+                                       60, // sample_rate per minute
+                                       *this);
+  java_sensor = new Java::GlobalCloseable(voltage);
   return true;
 #else
   return false;
@@ -429,8 +416,8 @@ DeviceDescriptor::OpenGliderLink()
   if (is_simulator())
     return true;
 
-  glider_link = new GliderLink(Java::GetEnv(), *context, GetIndex());
-
+  java_sensor = new Java::GlobalCloseable(GliderLink::Create(Java::GetEnv(),
+                                                             *context, *this));
   return true;
 #else
   return false;
@@ -599,21 +586,8 @@ DeviceDescriptor::Close()
 #endif
 
 #ifdef ANDROID
-  delete droidsoar_v2;
-  droidsoar_v2 = nullptr;
-
-  for (auto &i : i2cbaro) {
-    delete i;
-    i = nullptr;
-  }
-  delete nunchuck;
-  nunchuck = nullptr;
-
-  delete voltage;
-  voltage = nullptr;
-
-  delete glider_link;
-  glider_link = nullptr;
+  delete second_java_sensor;
+  second_java_sensor = nullptr;
 
   delete java_sensor;
   java_sensor = nullptr;
@@ -1188,6 +1162,12 @@ DeviceDescriptor::OnSysTicker()
 
   if (port != nullptr && port->GetState() == PortState::FAILED)
     has_failed = true;
+
+#ifdef ANDROID
+  if (java_sensor != nullptr &&
+      AndroidSensor::GetState(Java::GetEnv(), *java_sensor) == PortState::FAILED)
+    has_failed = true;
+#endif
 
   if (has_failed && !IsOccupied())
     Close();

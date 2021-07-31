@@ -26,7 +26,6 @@ import android.annotation.TargetApi;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
-import android.util.Log;
 import android.os.Build;
 
 import com.felhr.usbserial.UsbSerialDevice;
@@ -36,9 +35,9 @@ import java.util.Arrays;
 
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR1)
-public final class UsbSerialPort implements AndroidPort {
-  private static final String TAG = "UsbSerialPort";
-
+public final class UsbSerialPort
+  implements AndroidPort, UsbSerialInterface.UsbReadCallback
+{
   public UsbSerialPort(UsbDevice device,int baud) {
     _UsbDevice = device;
     _baudRate = baud;
@@ -50,30 +49,37 @@ public final class UsbSerialPort implements AndroidPort {
   private PortListener portListener;
   private InputListener inputListener;
   private int _baudRate;
+  private int state = STATE_LIMBO;
 
   public synchronized void open(UsbManager manager) {
-    Log.v(TAG, "open()");
-
     _UsbConnection = manager.openDevice(_UsbDevice);
-    if (_UsbConnection != null) {
-      _SerialPort = UsbSerialDevice.createUsbSerialDevice(_UsbDevice, _UsbConnection);
-      if (_SerialPort != null) {
-        if (_SerialPort.open()) {
-          _SerialPort.setBaudRate(getBaudRate());
-          _SerialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
-          _SerialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
-          _SerialPort.setParity(UsbSerialInterface.PARITY_NONE);
-          _SerialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
-          _SerialPort.read(_ReadCallback);
-        }
-        stateChanged();
-      }
+    if (_UsbConnection == null) {
+      setState(STATE_FAILED);
+      return;
     }
+
+    _SerialPort = UsbSerialDevice.createUsbSerialDevice(_UsbDevice, _UsbConnection);
+    if (_SerialPort == null) {
+      setState(STATE_FAILED);
+      return;
+    }
+
+    if (!_SerialPort.open()) {
+      setState(STATE_FAILED);
+      return;
+    }
+
+    _SerialPort.setBaudRate(getBaudRate());
+    _SerialPort.setDataBits(UsbSerialInterface.DATA_BITS_8);
+    _SerialPort.setStopBits(UsbSerialInterface.STOP_BITS_1);
+    _SerialPort.setParity(UsbSerialInterface.PARITY_NONE);
+    _SerialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
+    _SerialPort.read(this);
+
+    setState(STATE_READY);
   }
 
-
   public synchronized void close() {
-    Log.v(TAG, "close()");
     if( _SerialPort != null) {
       _SerialPort.close();
       _SerialPort = null;
@@ -83,8 +89,6 @@ public final class UsbSerialPort implements AndroidPort {
       _UsbConnection.close();
       _UsbConnection = null;
     }
-
-    stateChanged();
   }
 
   @Override
@@ -99,7 +103,7 @@ public final class UsbSerialPort implements AndroidPort {
 
   @Override
   public int getState() {
-    return (_SerialPort != null) ? STATE_READY : STATE_LIMBO;
+    return state;
   }
 
   @Override
@@ -114,6 +118,7 @@ public final class UsbSerialPort implements AndroidPort {
 
   @Override
   public boolean setBaudRate(int baud) {
+    _SerialPort.setBaudRate(baud);
     _baudRate =  baud;
     return true;
   }
@@ -124,22 +129,37 @@ public final class UsbSerialPort implements AndroidPort {
     return length;
   }
 
-  private UsbSerialInterface.UsbReadCallback _ReadCallback = new UsbSerialInterface.UsbReadCallback() {
-      @Override
-      public void onReceivedData(byte[] arg0) {
-        if (arg0.length == 0)
-          return;
+  @Override
+  public void onReceivedData(byte[] arg0) {
+    if (arg0.length == 0) {
+      error("Disconnected");
+      return;
+    }
 
-        InputListener listner = inputListener;
-        if(listner != null) {
-          listner.dataReceived(arg0, arg0.length);
-        }
-      }
-    };
+    InputListener listener = inputListener;
+    if (listener != null)
+      listener.dataReceived(arg0, arg0.length);
+  }
 
   protected final void stateChanged() {
     PortListener portListener = this.portListener;
     if (portListener != null)
       portListener.portStateChanged();
+  }
+
+  protected void setState(int newState) {
+    if (newState == state)
+      return;
+
+    state = newState;
+    stateChanged();
+  }
+
+  protected void error(String msg) {
+    state = STATE_FAILED;
+
+    PortListener portListener = this.portListener;
+    if (portListener != null)
+      portListener.portError(msg);
   }
 }

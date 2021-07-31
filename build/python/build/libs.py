@@ -178,9 +178,9 @@ cares = CmakeProject(
 )
 
 curl = CmakeProject(
-    'https://curl.se/download/curl-7.76.1.tar.xz',
-    'https://github.com/curl/curl/releases/download/curl-7_76_1/curl-7.76.1.tar.xz',
-    '64bb5288c39f0840c07d077e30d9052e1cbb9fa6c2dc52523824cc859e679145',
+    'https://curl.se/download/curl-7.78.0.tar.xz',
+    'https://github.com/curl/curl/releases/download/curl-7_78_0/curl-7.78.0.tar.xz',
+    'be42766d5664a739c3974ee3dfbbcbe978a4ccb1fe628bb1d9b59ac79e445fb5',
     'lib/libcurl.a',
     [
         '-DBUILD_CURL_EXE=OFF',
@@ -234,9 +234,9 @@ libpng = AutotoolsProject(
 )
 
 libjpeg = AutotoolsProject(
-    'http://downloads.sourceforge.net/project/libjpeg-turbo/1.5.2/libjpeg-turbo-1.5.2.tar.gz',
-    'http://sourceforge.mirrorservice.org/l/li/libjpeg-turbo/1.5.2/libjpeg-turbo-1.5.2.tar.gz',
-    '9098943b270388727ae61de82adec73cf9f0dbb240b3bc8b172595ebf405b528',
+    'http://downloads.sourceforge.net/project/libjpeg-turbo/1.5.3/libjpeg-turbo-1.5.3.tar.gz',
+    'http://sourceforge.mirrorservice.org/l/li/libjpeg-turbo/1.5.3/libjpeg-turbo-1.5.3.tar.gz',
+    'b24890e2bb46e12e72a79f7e965f409f4e16466d00e1dd15d93d73ee6b592523',
     'lib/libjpeg.a',
     [
         '--disable-shared', '--enable-static',

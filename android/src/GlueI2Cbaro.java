@@ -23,20 +23,20 @@
 
 package org.xcsoar;
 
-import java.io.Closeable;
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
 
 /**
  * A driver for the I2C pressure sensors, connected via IOIO.
  */
-final class GlueI2Cbaro implements Closeable, IOIOConnectionListener {
+final class GlueI2Cbaro implements AndroidSensor, IOIOConnectionListener {
   private IOIOConnectionHolder holder;
   private final int index;
   private final int twiNum, i2c_addr, sample_rate, flags;
   private final SensorListener listener;
 
   private I2Cbaro instance;
+  private int state = STATE_LIMBO;
 
   GlueI2Cbaro(IOIOConnectionHolder _holder, int index,
               int _twiNum, int _i2c_addr, int _sample_rate, int _flags,
@@ -64,12 +64,20 @@ final class GlueI2Cbaro implements Closeable, IOIOConnectionListener {
       holder.removeListener(this);
   }
 
+  @Override
+  public int getState() {
+    return state;
+  }
+
   @Override public void onIOIOConnect(IOIO ioio)
     throws ConnectionLostException, InterruptedException {
     try {
       instance = new I2Cbaro(ioio, index, twiNum, i2c_addr, sample_rate, flags,
                              listener);
+      state = STATE_READY;
+      listener.onSensorStateChanged();
     } catch (Exception e) {
+      state = STATE_FAILED;
       listener.onSensorError(e.getMessage());
     }
   }
@@ -80,5 +88,8 @@ final class GlueI2Cbaro implements Closeable, IOIOConnectionListener {
 
     instance.close();
     instance = null;
+
+    state = STATE_LIMBO;
+    listener.onSensorStateChanged();
   }
 }

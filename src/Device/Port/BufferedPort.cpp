@@ -28,25 +28,6 @@ Copyright_License {
 
 #include <cassert>
 
-BufferedPort::BufferedPort(PortListener *_listener, DataHandler &_handler)
-  :Port(_listener, _handler),
-   running(false), closing(false)
-{
-}
-
-void
-BufferedPort::BeginClose()
-{
-  std::lock_guard<Mutex> lock(mutex);
-  closing = true;
-  cond.notify_one();
-}
-
-void
-BufferedPort::EndClose()
-{
-}
-
 void
 BufferedPort::Flush()
 {
@@ -80,7 +61,6 @@ BufferedPort::StartRxThread()
 int
 BufferedPort::Read(void *dest, size_t length)
 {
-  assert(!closing);
   assert(!running);
 
   std::lock_guard<Mutex> lock(mutex);

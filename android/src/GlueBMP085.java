@@ -23,20 +23,19 @@
 
 package org.xcsoar;
 
-import java.io.Closeable;
-
 import ioio.lib.api.IOIO;
 import ioio.lib.api.exception.ConnectionLostException;
 
 /**
  * A driver for the BMP085 pressure sensor, connected via IOIO.
  */
-final class GlueBMP085 implements IOIOConnectionListener, Closeable {
+final class GlueBMP085 implements AndroidSensor, IOIOConnectionListener {
   private IOIOConnectionHolder holder;
   private final int twiNum, eocPin, oversampling;
   private final SensorListener listener;
 
   private BMP085 instance;
+  private int state = STATE_LIMBO;
 
   GlueBMP085(IOIOConnectionHolder _holder,
              int _twiNum, int _eocPin, int _oversampling,
@@ -62,9 +61,16 @@ final class GlueBMP085 implements IOIOConnectionListener, Closeable {
       holder.removeListener(this);
   }
 
+  @Override
+  public int getState() {
+    return state;
+  }
+
   @Override public void onIOIOConnect(IOIO ioio)
     throws ConnectionLostException, InterruptedException {
     instance = new BMP085(ioio, twiNum, eocPin, oversampling, listener);
+    state = STATE_READY;
+    listener.onSensorStateChanged();
   }
 
   @Override public void onIOIODisconnect(IOIO ioio) {
@@ -73,5 +79,8 @@ final class GlueBMP085 implements IOIOConnectionListener, Closeable {
 
     instance.close();
     instance = null;
+
+    state = STATE_LIMBO;
+    listener.onSensorStateChanged();
   }
 }

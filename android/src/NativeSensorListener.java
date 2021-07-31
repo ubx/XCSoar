@@ -85,5 +85,15 @@ final class NativeSensorListener implements SensorListener {
                                      int switches);
 
   @Override
+  public native void onGliderLinkTraffic(long gid, String callsign,
+                                         double longitude, double latitude,
+                                         double altitude,
+                                         double gspeed, double vspeed,
+                                         double bearing);
+
+  @Override
+  public native void onSensorStateChanged();
+
+  @Override
   public native void onSensorError(String msg);
 }

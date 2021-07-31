@@ -39,7 +39,6 @@ Copyright_License {
 #include "thread/Debug.hpp"
 #include "util/tstring.hpp"
 #include "util/StaticFifoBuffer.hxx"
-#include "Android/GliderLink.hpp"
 
 #ifdef ANDROID
 #include "Android/SensorListener.hpp"
@@ -71,10 +70,6 @@ class Device;
 class AtmosphericPressure;
 struct DeviceRegister;
 class InternalSensors;
-class BMP085Device;
-class I2CbaroDevice;
-class NunchuckDevice;
-class VoltageDevice;
 class RecordedFlightList;
 struct RecordedFlightInfo;
 class OperationEnvironment;
@@ -183,12 +178,8 @@ class DeviceDescriptor final
 #endif
 
 #ifdef ANDROID
-  BMP085Device *droidsoar_v2 = nullptr;
-  std::array<I2CbaroDevice *, 3> i2cbaro{nullptr, nullptr, nullptr}; // static, pitot, tek; in any order
-  NunchuckDevice *nunchuck = nullptr;
-  VoltageDevice *voltage = nullptr;
-  GliderLink *glider_link = nullptr;
   Java::GlobalCloseable *java_sensor = nullptr;
+  Java::GlobalCloseable *second_java_sensor = nullptr;
 
   /* We use a Kalman filter to smooth Android device pressure sensor
      noise.  The filter requires two parameters: the first is the
@@ -641,6 +632,11 @@ private:
   void OnNunchukValues(int joy_x, int joy_y,
                        int acc_x, int acc_y, int acc_z,
                        int switches) noexcept final;
+  void OnGliderLinkTraffic(GliderLinkId id, const char *callsign,
+                           GeoPoint location, double altitude,
+                           double gspeed, double vspeed,
+                           unsigned bearing) noexcept override;
+  void OnSensorStateChanged() noexcept override;
   void OnSensorError(const char *msg) noexcept override;
 #endif // ANDROID
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2010-2021 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,43 +27,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef GUNZIP_READER_HXX
-#define GUNZIP_READER_HXX
+#include "Sensor.hpp"
+#include "java/Class.hxx"
 
-#include "Reader.hxx"
-#include "util/StaticFifoBuffer.hxx"
+namespace AndroidSensor {
 
-#include <zlib.h>
+static jmethodID getState_method;
 
-/**
- * A filter that decompresses data using zlib.
- */
-class GunzipReader final : public Reader {
-	Reader &next;
+void
+Initialise(JNIEnv *env) noexcept
+{
+	Java::Class cls(env, "org/xcsoar/AndroidSensor");
+	getState_method = env->GetMethodID(cls, "getState", "()I");
+}
 
-	bool eof = false;
+PortState
+GetState(JNIEnv *env, jobject object) noexcept
+{
+	return (PortState)env->CallIntMethod(object, getState_method);
+}
 
-	z_stream z;
-
-	StaticFifoBuffer<Bytef, 65536> buffer;
-
-public:
-	/**
-	 * Construct the filter.
-	 *
-	 * Throws on error.
-	 */
-	explicit GunzipReader(Reader &_next);
-
-	~GunzipReader() noexcept {
-		inflateEnd(&z);
-	}
-
-	/* virtual methods from class Reader */
-	std::size_t Read(void *data, std::size_t size) override;
-
-private:
-	bool FillBuffer();
-};
-
-#endif
+} // namespace Java

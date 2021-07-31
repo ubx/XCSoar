@@ -21,36 +21,22 @@ Copyright_License {
 }
 */
 
-#include "GliderLink.hpp"
-#include "NativeSensorListener.hpp"
-#include "java/Class.hxx"
-#include "java/Env.hxx"
-#include "Context.hpp"
+#pragma once
 
-static Java::TrivialClass gl_cls;
-static jmethodID gl_ctor_id;
+#include "Device/Port/State.hpp"
 
-void
-GliderLink::Initialise(JNIEnv *env) noexcept
-{
-  assert(!gl_cls.IsDefined());
-  assert(env != nullptr);
+#include <jni.h>
 
-  gl_cls.Find(env, "org/xcsoar/GliderLinkReceiver");
-
-  gl_ctor_id = env->GetMethodID(gl_cls, "<init>",
-                                 "(Landroid/content/Context;Lorg/xcsoar/SensorListener;)V");
-}
+/**
+ * Support for the #AndroidSensor Java class.
+ */
+namespace AndroidSensor {
 
 void
-GliderLink::Deinitialise(JNIEnv *env) noexcept
-{
-  gl_cls.Clear(env);
-}
+Initialise(JNIEnv *env) noexcept;
 
-Java::LocalObject
-GliderLink::Create(JNIEnv *env, Context &context, SensorListener &listener)
-{
-  return Java::NewObjectRethrow(env, gl_cls, gl_ctor_id, context.Get(),
-                                NativeSensorListener::Create(env, listener).Get());
-}
+[[gnu::pure]]
+PortState
+GetState(JNIEnv *env, jobject object) noexcept;
+
+} // namespace AndroidSensor

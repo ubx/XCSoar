@@ -69,9 +69,9 @@ public class HM10Port
     throws IOException
   {
     if (Build.VERSION.SDK_INT >= 23)
-      gatt = device.connectGatt(context, false, this, BluetoothDevice.TRANSPORT_LE);
+      gatt = device.connectGatt(context, true, this, BluetoothDevice.TRANSPORT_LE);
     else
-      gatt = device.connectGatt(context, false, this);
+      gatt = device.connectGatt(context, true, this);
 
     if (gatt == null)
       throw new IOException("Bluetooth GATT connect failed");
@@ -102,25 +102,25 @@ public class HM10Port
   public void onConnectionStateChange(BluetoothGatt gatt,
       int status,
       int newState) {
-    int newPortState = STATE_LIMBO;
-    if (BluetoothProfile.STATE_CONNECTED == newState) {
-      if (!gatt.discoverServices()) {
-        Log.e(TAG, "Discovering GATT services request failed");
-        newPortState = STATE_FAILED;
+    try {
+      if (BluetoothProfile.STATE_CONNECTED == newState) {
+        if (!gatt.discoverServices())
+          throw new Error("Discovering GATT services request failed");
+      } else {
+        dataCharacteristic = null;
+        deviceNameCharacteristic = null;
+
+        if ((BluetoothProfile.STATE_DISCONNECTED == newState) && !shutdown &&
+            !gatt.connect())
+          throw new Error("Received GATT disconnected event, and reconnect attempt failed");
       }
-    } else {
-      dataCharacteristic = null;
-      deviceNameCharacteristic = null;
-      if ((BluetoothProfile.STATE_DISCONNECTED == newState) && !shutdown) {
-        if (!gatt.connect()) {
-          Log.w(TAG,
-              "Received GATT disconnected event, and reconnect attempt failed");
-          newPortState = STATE_FAILED;
-        }
-      }
+
+      portState = STATE_LIMBO;
+    } catch (Error e) {
+      error(e.getMessage());
     }
+
     writeBuffer.clear();
-    portState = newPortState;
     stateChanged();
     synchronized (gattStateSync) {
       gattState = newState;
@@ -147,7 +147,6 @@ public class HM10Port
       portState = STATE_READY;
     } catch (Error e) {
       error(e.getMessage());
-      portState = STATE_FAILED;
     } finally {
       stateChanged();
     }
@@ -156,7 +155,6 @@ public class HM10Port
   @Override
   public void onCharacteristicRead(BluetoothGatt gatt,
       BluetoothGattCharacteristic characteristic, int status) {
-    Log.e(TAG, "GATT characteristic read");
     writeBuffer.beginWriteNextChunk(gatt, dataCharacteristic);
   }
 
@@ -254,6 +252,8 @@ public class HM10Port
   }
 
   protected void error(String msg) {
+    portState = STATE_FAILED;
+
     PortListener portListener = this.portListener;
     if (portListener != null)
       portListener.portError(msg);

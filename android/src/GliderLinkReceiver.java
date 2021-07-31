@@ -22,8 +22,6 @@
 
 package org.xcsoar;
 
-import java.io.Closeable;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.BroadcastReceiver;
@@ -35,19 +33,20 @@ import org.json.JSONObject;
 import android.content.Context;
 import android.os.Handler;
 
-class GliderLinkReceiver extends BroadcastReceiver implements Closeable {
+class GliderLinkReceiver
+  extends BroadcastReceiver
+  implements AndroidSensor
+{
   private static final String TAG = "XCSoar";
   public static final String ACTION = "link.glider.gliderlink.target_position";
 
   private final Context context;
 
-  /**
-   * Index of this device in the global list. This value is extracted directly
-   * from this object by the C++ wrapper code.
-   */
-  private final int index;
+  private final SensorListener listener;
 
   private static Handler handler;
+
+  private int state = STATE_LIMBO;
 
   /**
    * Global initialization of the class.  Must be called from the main
@@ -58,9 +57,9 @@ class GliderLinkReceiver extends BroadcastReceiver implements Closeable {
     handler = new Handler();
   }
 
-  public GliderLinkReceiver(final Context context, int index) {
+  public GliderLinkReceiver(final Context context, SensorListener listener) {
     this.context = context;
-    this.index = index;
+    this.listener = listener;
 
     handler.post(new Runnable() {
       @Override
@@ -80,14 +79,20 @@ class GliderLinkReceiver extends BroadcastReceiver implements Closeable {
     });
   }
 
-  private static native void setGliderLinkInfo(int deviceId, long gid, String callsign,
-          double latitude, double longitude, double altitude,
-          double gspeed, double vspeed, int bearing);
+  @Override
+  public int getState() {
+    return state;
+  }
 
   @Override
   public void onReceive(Context context, Intent intent) {
     try {
       JSONObject json = new JSONObject(intent.getStringExtra("json"));
+
+      if (state != STATE_READY) {
+        state = STATE_READY;
+        listener.onSensorStateChanged();
+      }
 
       JSONObject pos = json.getJSONObject("position");
       
@@ -109,9 +114,14 @@ class GliderLinkReceiver extends BroadcastReceiver implements Closeable {
              }
       */
 
-      setGliderLinkInfo(index, pos.getLong("gid"), pos.getString("callsign"), pos.getDouble("latitude"),
-              pos.getDouble("longitude"), pos.getDouble("altitude"), pos.getDouble("gspeed"), pos.getDouble("vspeed"),
-              pos.getInt("bearing"));
+      listener.onGliderLinkTraffic(pos.getLong("gid"),
+                                   pos.getString("callsign"),
+                                   pos.getDouble("latitude"),
+                                   pos.getDouble("longitude"),
+                                   pos.getDouble("altitude"),
+                                   pos.getDouble("gspeed"),
+                                   pos.getDouble("vspeed"),
+                                   pos.getInt("bearing"));
     } catch (JSONException e) {
       Log.e(TAG, e.getLocalizedMessage(), e);
     }
