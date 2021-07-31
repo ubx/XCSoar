@@ -62,14 +62,10 @@ CANPort::CANPort(EventLoop &event_loop, const TCHAR *port_name,
 
 CANPort::~CANPort()
 {
-  BufferedPort::BeginClose();
-
   BlockingCall(GetEventLoop(), [this]()
   {
     socket.Close();
   });
-
-  BufferedPort::EndClose();
 }
 
 PortState
