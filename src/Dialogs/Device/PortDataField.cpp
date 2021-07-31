@@ -284,6 +284,10 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config) noexcept
     buffer.UnsafeFormat(_T("%d"), config.ioio_uart_id);
     df.Set(buffer);
     return;
+
+  case DeviceConfig::PortType::CAN:
+    SetPort(df, config.port_type, config.can_port_name);
+    return;
   }
 
   for (unsigned i = 0; port_types[i].label != nullptr; i++) {

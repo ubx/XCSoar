@@ -342,7 +342,7 @@ struct DeviceConfig {
     case PortType::PTY:
     case PortType::UDP_LISTENER:
     case PortType::ANDROID_USB_SERIAL:
-      case PortType::CAN:
+    case PortType::CAN:
       return true;
     }
 
