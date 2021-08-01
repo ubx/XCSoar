@@ -195,7 +195,6 @@ DeviceConfig::Clear() noexcept
 {
   port_type = PortType::DISABLED;
   baud_rate = 4800u;
-  can_baud_rate = 1000000u;
   bulk_baud_rate = 0u;
   tcp_port = 4353u;
   i2c_bus = 2u;

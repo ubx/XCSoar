@@ -224,9 +224,6 @@ Profile::GetDeviceConfig(const ProfileMap &map, unsigned n,
   map.Get(buffer, config.can_port_name);
 
   MakeDeviceSettingName(buffer, "Port", n, "CANPortBaudRate");
-  map.Get(buffer, config.can_baud_rate);
-  if (!map.Get(buffer, config.can_baud_rate))
-    config.can_baud_rate = 1000000;
 }
 
 static const char *
@@ -326,7 +323,4 @@ Profile::SetDeviceConfig(ProfileMap &map,
 
   MakeDeviceSettingName(buffer, "Port", n, "CANPortName");
   map.Set(buffer, config.can_port_name);
-
-  MakeDeviceSettingName(buffer, "Port", n, "CANPortBaudRate");
-  map.Set(buffer, config.can_baud_rate);
 }

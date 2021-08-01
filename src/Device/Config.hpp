@@ -142,11 +142,6 @@ struct DeviceConfig {
   unsigned baud_rate;
 
   /**
-   * The baud rate of the CAN device.
-   */
-  unsigned can_baud_rate;
-
-  /**
    * The baud rate of the device for bulk transfer (e.g. task
    * declaration, flight download).  Not used by all drivers, see
    * Driver::SupportsBulkBaudRate().
