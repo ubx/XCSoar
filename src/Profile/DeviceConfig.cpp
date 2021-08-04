@@ -221,7 +221,7 @@ Profile::GetDeviceConfig(const ProfileMap &map, unsigned n,
   map.Get(buffer, config.driver2_name);
 
   MakeDeviceSettingName(buffer, "Port", n, "CANPortName");
-  map.Get(buffer, config.can_port_name);
+  map.Get(buffer, config.can_interface);
 
   MakeDeviceSettingName(buffer, "Port", n, "CANPortBaudRate");
 }
@@ -322,5 +322,5 @@ Profile::SetDeviceConfig(ProfileMap &map,
   map.Set(buffer, config.driver2_name);
 
   MakeDeviceSettingName(buffer, "Port", n, "CANPortName");
-  map.Set(buffer, config.can_port_name);
+  map.Set(buffer, config.can_interface);
 }

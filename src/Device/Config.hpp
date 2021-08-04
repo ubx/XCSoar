@@ -121,9 +121,9 @@ struct DeviceConfig {
     GLIDER_LINK,
 
     /**
-     * CAN port, , i.e. canx / vcanx
+     * CAN interface, i.e. canx / vcanx
      */
-    CAN,
+    CAN_INTERFACE,
 
     /**
      * USB serial port on Android.
@@ -223,7 +223,7 @@ struct DeviceConfig {
   /*
    * The CAN port name like "can0" or "vcan0" for a virtual port.
    */
-  StaticString<6> can_port_name;
+  StaticString<6> can_interface;
 
   /**
    * Is this device currently enabled?  This flag can be used to
@@ -337,7 +337,7 @@ struct DeviceConfig {
     case PortType::PTY:
     case PortType::UDP_LISTENER:
     case PortType::ANDROID_USB_SERIAL:
-    case PortType::CAN:
+    case PortType::CAN_INTERFACE:
       return true;
     }
 
@@ -377,7 +377,7 @@ struct DeviceConfig {
    * Does this port type use a can port?
    */
   static bool UsesCANPort(PortType port_type) {
-    return port_type == PortType::CAN;
+    return port_type == PortType::CAN_INTERFACE;
   }
 
   bool UsesCANPort() const {

@@ -57,7 +57,7 @@ public:
 
   PortTerminalBridge(TerminalWindow &_terminal, DeviceDescriptor &_device)
     :terminal(_terminal) {
-      hexOutput = _device.GetConfig().port_type == DeviceConfig::PortType::CAN;
+      hexOutput = _device.GetConfig().port_type == DeviceConfig::PortType::CAN_INTERFACE;
   }
   virtual ~PortTerminalBridge() {}
 

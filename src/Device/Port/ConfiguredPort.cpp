@@ -181,8 +181,8 @@ OpenPortInternal(EventLoop &event_loop, Cares::Channel &cares,
                                      listener, handler);
 
 #ifdef HAVE_CAN
-       case DeviceConfig::PortType::CAN:
-            return std::make_unique<CANPort>(event_loop, config.can_port_name,
+       case DeviceConfig::PortType::CAN_INTERFACE:
+            return std::make_unique<CANPort>(event_loop, config.can_interface,
                                              listener, handler);
 #endif
 

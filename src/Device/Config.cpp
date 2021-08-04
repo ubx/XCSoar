@@ -74,7 +74,7 @@ DeviceConfig::IsAvailable() const noexcept
   case PortType::UDP_LISTENER:
     return true;
 
-  case PortType::CAN: 
+  case PortType::CAN_INTERFACE:
     return IsLinux();
 
   case PortType::PTY:
@@ -121,7 +121,7 @@ DeviceConfig::ShouldReopenOnTimeout() const noexcept
 
   case PortType::TCP_LISTENER:
   case PortType::UDP_LISTENER:
-  case PortType::CAN:
+  case PortType::CAN_INTERFACE:
     /* this is a server, and if no data gets received, this can just
        mean that nobody connected to it, but reopening it periodically
        doesn't help */
@@ -310,8 +310,8 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
     StringFormat(buffer, max_size, _T("UDP port %d"), tcp_port);
     return buffer;
 
-  case PortType::CAN:
-    StringFormat(buffer, max_size, _T("CAN port %s"), can_port_name.c_str());
+  case PortType::CAN_INTERFACE:
+    StringFormat(buffer, max_size, _T("CAN port %s"), can_interface.c_str());
     return buffer;
 
   case PortType::PTY:

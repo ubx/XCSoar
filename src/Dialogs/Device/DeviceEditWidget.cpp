@@ -21,6 +21,7 @@
 }
 */
 
+#include <iostream>
 #include "DeviceEditWidget.hpp"
 #include "PortDataField.hpp"
 #include "PortPicker.hpp"
@@ -41,7 +42,7 @@ enum ControlIndex {
   TCPPort,
   I2CBus, I2CAddr, PressureUsage, Driver, UseSecondDriver, SecondDriver,
   SyncFromDevice, SyncToDevice,
-  K6Bt,
+  K6Bt, CAN_INTERFACE,
 };
 
 static void
@@ -98,6 +99,13 @@ FillPress(DataFieldEnum &dfe) noexcept
   dfe.addEnumText(_T("Pitot (airspeed)"), (unsigned)DeviceConfig::PressureUse::PITOT);
 }
 
+static void
+FillCANDevices(DataFieldEnum &dfe) noexcept
+{
+  dfe.addEnumText(_T("can0"), 0U);
+  dfe.addEnumText(_T("vcan0"), 1U);
+}
+
 static bool
 EditPortCallback(const TCHAR *caption, DataField &df,
                  const TCHAR *help_text) noexcept
@@ -143,9 +151,15 @@ DeviceEditWidget::SetConfig(const DeviceConfig &_config) noexcept
 
   WndProperty &tcp_port_control = GetControl(TCPPort);
   DataFieldEnum &tcp_port_df = *(DataFieldEnum *)
-    tcp_port_control.GetDataField();
+  tcp_port_control.GetDataField();
   tcp_port_df.Set(config.tcp_port);
   tcp_port_control.RefreshDisplay();
+
+  WndProperty &can_port_control = GetControl(CAN_INTERFACE);
+  DataFieldEnum &can_port_df = *(DataFieldEnum *)
+  can_port_control.GetDataField();
+  can_port_df.Set(config.can_interface);
+  can_port_control.RefreshDisplay();
 
   WndProperty &i2c_bus_control = GetControl(I2CBus);
   DataFieldEnum &i2c_bus_df = *(DataFieldEnum *)
@@ -256,36 +270,41 @@ DeviceEditWidget::UpdateVisibilities() noexcept
 {
   const auto &port_df = (const DataFieldEnum &)GetDataField(Port);
   const DeviceConfig::PortType type = GetPortType(port_df);
-  const bool maybe_bluetooth =
+    const bool maybe_bluetooth =
     DeviceConfig::MaybeBluetooth(type, port_df.GetAsString());
-  const bool k6bt = maybe_bluetooth && GetValueBoolean(K6Bt);
-  const bool uses_speed = DeviceConfig::UsesSpeed(type) || k6bt;
+    const bool k6bt = maybe_bluetooth && GetValueBoolean(K6Bt);
+    const bool uses_speed = DeviceConfig::UsesSpeed(type) || k6bt;
+    const bool uses_can = DeviceConfig::UsesCANPort(type);
 
-  SetRowAvailable(BaudRate, uses_speed);
-  SetRowAvailable(BulkBaudRate, uses_speed &&
-                  DeviceConfig::UsesDriver(type));
-  SetRowVisible(BulkBaudRate, uses_speed &&
-                DeviceConfig::UsesDriver(type) &&
-                SupportsBulkBaudRate(GetDataField(Driver)));
-  SetRowAvailable(IP_ADDRESS, DeviceConfig::UsesIPAddress(type));
-  SetRowAvailable(TCPPort, DeviceConfig::UsesTCPPort(type));
-  SetRowAvailable(I2CBus, DeviceConfig::UsesI2C(type));
-  SetRowAvailable(I2CAddr, DeviceConfig::UsesI2C(type) &&
-                type != DeviceConfig::PortType::NUNCHUCK);
-  SetRowAvailable(PressureUsage, DeviceConfig::IsPressureSensor(type));
-  SetRowVisible(Driver, DeviceConfig::UsesDriver(type));
+    SetRowAvailable(BaudRate, uses_speed);
+    SetRowAvailable(BulkBaudRate, uses_speed &&
+    DeviceConfig::UsesDriver(type));
+    SetRowVisible(BulkBaudRate, uses_speed &&
+    DeviceConfig::UsesDriver(type) &&
+    SupportsBulkBaudRate(GetDataField(Driver)));
+    SetRowAvailable(IP_ADDRESS, DeviceConfig::UsesIPAddress(type));
+    SetRowAvailable(TCPPort, DeviceConfig::UsesTCPPort(type));
 
-  SetRowVisible(UseSecondDriver, DeviceConfig::UsesDriver(type)
-                && CanPassThrough(GetDataField(Driver)));
-  SetRowVisible(SecondDriver, DeviceConfig::UsesDriver(type)
-                && CanPassThrough(GetDataField(Driver))
-                && GetValueBoolean(UseSecondDriver));
 
-  SetRowVisible(SyncFromDevice, DeviceConfig::UsesDriver(type) &&
-                CanReceiveSettings(GetDataField(Driver)));
-  SetRowVisible(SyncToDevice, DeviceConfig::UsesDriver(type) &&
-                CanSendSettings(GetDataField(Driver)));
-  SetRowAvailable(K6Bt, maybe_bluetooth);
+    SetRowAvailable(I2CBus, DeviceConfig::UsesI2C(type));
+    SetRowAvailable(I2CAddr, DeviceConfig::UsesI2C(type) &&
+    type != DeviceConfig::PortType::NUNCHUCK);
+    SetRowAvailable(PressureUsage, DeviceConfig::IsPressureSensor(type));
+    SetRowVisible(Driver, DeviceConfig::UsesDriver(type));
+
+    SetRowVisible(UseSecondDriver, DeviceConfig::UsesDriver(type)
+    && CanPassThrough(GetDataField(Driver)));
+    SetRowVisible(SecondDriver, DeviceConfig::UsesDriver(type)
+    && CanPassThrough(GetDataField(Driver))
+    && GetValueBoolean(UseSecondDriver));
+
+    SetRowVisible(SyncFromDevice, DeviceConfig::UsesDriver(type) &&
+    CanReceiveSettings(GetDataField(Driver)));
+    SetRowVisible(SyncToDevice, DeviceConfig::UsesDriver(type) &&
+    CanSendSettings(GetDataField(Driver)));
+    SetRowAvailable(K6Bt, maybe_bluetooth);
+
+    SetRowVisible(CAN_INTERFACE, uses_can);
 }
 
 void
@@ -386,7 +405,12 @@ DeviceEditWidget::Prepare(ContainerWindow &parent,
              config.k6bt, this);
   SetExpertRow(K6Bt);
 
-  UpdateVisibilities();
+  DataFieldEnum *can_port_df = new DataFieldEnum(this);
+  FillCANDevices(*can_port_df);
+  can_port_df->Set(config.can_interface);
+  Add(_("interface"), nullptr, can_port_df);
+
+ UpdateVisibilities();
 }
 
 /**
@@ -455,13 +479,15 @@ FinishPortField(DeviceConfig &config, const DataFieldEnum &df) noexcept
     config.ioio_uart_id = (unsigned)ParseUnsigned(df.GetAsString());
     return true;
 
-  case DeviceConfig::PortType::CAN:
+  case DeviceConfig::PortType::CAN_INTERFACE:
     if (new_type == config.port_type &&
-        StringIsEqual(config.can_port_name, df.GetAsString()))
+        StringIsEqual(config.can_interface, df.GetAsString()))
       return false;
 
     config.port_type = new_type;
-    config.can_port_name = df.GetAsString();
+    //config.can_interface = df.GetAsString(); // todo -- fix this!!
+    std::cout << "CAN_INTERFACE=" << df.GetAsString() << std::endl;
+    config.can_interface = _T("can0");
     return true;
 
   }
