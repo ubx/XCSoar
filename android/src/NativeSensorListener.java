@@ -42,12 +42,15 @@ final class NativeSensorListener implements SensorListener {
   @Override
   public native void onLocationSensor(long time, int n_satellites,
                                       double longitude, double latitude,
-                                      boolean hasAltitude, double altitude,
+                                      boolean hasAltitude,
+                                      boolean geoidAltitude,
+                                      double altitude,
                                       boolean hasBearing, double bearing,
                                       boolean hasSpeed, double speed,
-                                      boolean hasAccuracy, double accuracy,
-                                      boolean hasAcceleration,
-                                      double acceleration);
+                                      boolean hasAccuracy, double accuracy);
+
+  @Override
+  public native void onAccelerationSensor1(double acceleration);
 
   @Override
   public native void onAccelerationSensor(float ddx, float ddy, float ddz);
@@ -90,6 +93,12 @@ final class NativeSensorListener implements SensorListener {
                                          double altitude,
                                          double gspeed, double vspeed,
                                          double bearing);
+
+  @Override
+  public native void onTemperature(double temperature_kelvin);
+
+  @Override
+  public native void onBatteryPercent(double battery_percent);
 
   @Override
   public native void onSensorStateChanged();

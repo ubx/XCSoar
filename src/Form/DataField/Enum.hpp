@@ -27,6 +27,7 @@ Copyright_License {
 #include "Base.hpp"
 #include "util/StaticArray.hxx"
 
+#include <type_traits>
 #include <utility>
 
 /**
@@ -104,10 +105,10 @@ public:
   DataFieldEnum(DataFieldListener *listener=nullptr) noexcept
     :DataField(Type::ENUM, true, listener) {}
 
-  gcc_pure
+  [[gnu::pure]]
   unsigned GetValue() const noexcept;
 
-  gcc_pure
+  [[gnu::pure]]
   bool Exists(const TCHAR *text) const noexcept {
     return Find(text) >= 0;
   }
@@ -160,7 +161,12 @@ public:
     item_help_enabled = value;
   }
 
-  void Set(unsigned Value) noexcept;
+  void SetValue(unsigned Value) noexcept;
+
+  template<typename T, typename=std::enable_if_t<std::is_enum_v<T>>>
+  void SetValue(T value) noexcept {
+    SetValue(unsigned(value));
+  }
 
   /**
    * Select the item with the specified text (not display string).
@@ -169,7 +175,16 @@ public:
    * @return false if an item with the specified text was not found,
    * and therefore the value was not changed
    */
-  bool Set(const TCHAR *text) noexcept;
+  bool SetValue(const TCHAR *text) noexcept;
+
+  bool ModifyValue(unsigned new_value) noexcept;
+
+  template<typename T, typename=std::enable_if_t<std::is_enum_v<T>>>
+  bool ModifyValue(T value) noexcept {
+    return ModifyValue(unsigned(value));
+  }
+
+  bool ModifyValue(const TCHAR *text) noexcept;
 
   /**
    * Set the value to the specified string.  If there is no choice
@@ -181,7 +196,7 @@ public:
 
   void Sort(std::size_t startindex = 0) noexcept;
 
-  gcc_pure
+  [[gnu::pure]]
   std::size_t Count() const noexcept {
     return entries.size();
   }
@@ -204,10 +219,10 @@ protected:
   /**
    * Finds an entry with the specified text.  Returns -1 if not found.
    */
-  gcc_pure
+  [[gnu::pure]]
   int Find(const TCHAR *text) const noexcept;
 
-  gcc_pure
+  [[gnu::pure]]
   int Find(unsigned id) const noexcept;
 
   void SetIndex(std::size_t new_value, bool invoke_callback) noexcept;

@@ -37,11 +37,15 @@ Copyright_License {
 #include "ui/event/Notify.hpp"
 #include "thread/Mutex.hxx"
 #include "thread/Debug.hpp"
+#include "time/FloatDuration.hxx"
 #include "util/tstring.hpp"
 #include "util/StaticFifoBuffer.hxx"
 
+#ifdef HAVE_INTERNAL_GPS
+#include "SensorListener.hpp"
+#endif
+
 #ifdef ANDROID
-#include "Android/SensorListener.hpp"
 #include "Math/SelfTimingKalmanFilter1d.hpp"
 #include "Math/WindowFilter.hpp"
 #endif
@@ -78,7 +82,7 @@ class DeviceDataEditor;
 
 class DeviceDescriptor final
   : PortListener,
-#ifdef ANDROID
+#ifdef HAVE_INTERNAL_GPS
     SensorListener,
 #endif
     PortLineSplitter {
@@ -193,9 +197,11 @@ class DeviceDescriptor final
      normal distribution, probably because glider pilots usually
      experience fairly constant pressure change most of the time. */
   static constexpr double KF_VAR_ACCEL = 0.0075;
-  static constexpr double KF_MAX_DT = 60;
+  static constexpr SelfTimingKalmanFilter1d::Duration KF_MAX_DT =
+    std::chrono::minutes{1};
 
-  static constexpr double KF_I2C_MAX_DT = 5;
+  static constexpr SelfTimingKalmanFilter1d::Duration KF_I2C_MAX_DT =
+    std::chrono::seconds{5};
   static constexpr double KF_I2C_VAR_ACCEL = 0.3;
   static constexpr double KF_I2C_VAR_ACCEL_85 = KF_VAR_ACCEL;
 
@@ -514,7 +520,7 @@ public:
   bool IsAlive() const;
 
   [[gnu::pure]]
-  double GetClock() const noexcept;
+  TimeStamp GetClock() const noexcept;
 
   /**
    * Return a copy of the device's current data.
@@ -604,17 +610,20 @@ private:
   /* virtual methods from PortLineHandler */
   bool LineReceived(const char *line) noexcept override;
 
-#ifdef ANDROID
+#ifdef HAVE_INTERNAL_GPS
   /* methods from SensorListener */
   void OnConnected(int connected) noexcept override;
-  void OnLocationSensor(long time, int n_satellites,
-                        double longitude, double latitude,
-                        bool hasAltitude, double altitude,
+  void OnLocationSensor(std::chrono::system_clock::time_point time,
+                        int n_satellites,
+                        GeoPoint location,
+                        bool hasAltitude, bool geoid_altitude,
+                        double altitude,
                         bool hasBearing, double bearing,
                         bool hasSpeed, double speed,
-                        bool hasAccuracy, double accuracy,
-                        bool hasAcceleration,
-                        double acceleration) noexcept override;
+                        bool hasAccuracy, double accuracy) noexcept override;
+
+#ifdef ANDROID
+  void OnAccelerationSensor(double acceleration) noexcept override;
   void OnAccelerationSensor(float ddx, float ddy,
                             float ddz) noexcept override;
   void OnRotationSensor(float dtheta_x, float dtheta_y,
@@ -636,9 +645,12 @@ private:
                            GeoPoint location, double altitude,
                            double gspeed, double vspeed,
                            unsigned bearing) noexcept override;
+  void OnTemperature(Temperature temperature) noexcept override;
+  void OnBatteryPercent(double battery_percent) noexcept override;
   void OnSensorStateChanged() noexcept override;
   void OnSensorError(const char *msg) noexcept override;
 #endif // ANDROID
+#endif // HAVE_INTERNAL_GPS
 };
 
 #endif

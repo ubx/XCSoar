@@ -28,14 +28,19 @@ package org.xcsoar;
 public interface SensorListener {
   void onConnected(int connected);
 
+  /**
+   * @param geoidAltitude is the GPS altitude above Geoid (true) or
+   * above the WGS84 ellipsoid (false)?
+   */
   void onLocationSensor(long time, int n_satellites,
                         double longitude, double latitude,
-                        boolean hasAltitude, double altitude,
+                        boolean hasAltitude, boolean geoidAltitude,
+                        double altitude,
                         boolean hasBearing, double bearing,
                         boolean hasSpeed, double speed,
-                        boolean hasAccuracy, double accuracy,
-                        boolean hasAcceleration, double acceleration);
+                        boolean hasAccuracy, double accuracy);
 
+  void onAccelerationSensor1(double acceleration);
   void onAccelerationSensor(float ddx, float ddy, float ddz);
   void onRotationSensor(float dtheta_x, float dtheta_y, float dtheta_z);
   void onMagneticFieldSensor(float h_x, float h_y, float h_z);
@@ -55,6 +60,10 @@ public interface SensorListener {
                            double longitude, double latitude, double altitude,
                            double gspeed, double vspeed,
                            double bearing);
+
+  void onTemperature(double temperature_kelvin);
+
+  void onBatteryPercent(double battery_percent);
 
   /**
    * The state has changed, and AndroidSensor.getState() will provide

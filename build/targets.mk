@@ -3,7 +3,7 @@ TARGETS = PC WIN64 \
 	WAYLAND \
 	FUZZER \
 	PI PI2 CUBIE KOBO NEON \
-	ANDROID ANDROID7 ANDROID7NEON ANDROID86 \
+	ANDROID ANDROID7 ANDROID86 \
 	ANDROIDAARCH64 ANDROIDX64 \
 	ANDROIDFAT \
 	OSX64 IOS32 IOS64
@@ -71,15 +71,11 @@ ifeq ($(TARGET),ANDROID)
   override TARGET = ANDROID7
 endif
 
-ifeq ($(TARGET),ANDROID7NEON)
-  NEON := y
-  override TARGET = ANDROID7
-endif
-
 ifeq ($(TARGET),ANDROID7)
   TARGET_IS_ARM = y
   TARGET_IS_ARMHF = y
   ARMV7 := y
+  NEON := y
   override TARGET = ANDROID
 endif
 
@@ -321,7 +317,7 @@ ifeq ($(TARGET),UNIX)
 endif
 
 ifeq ($(TARGET),ANDROID)
-  ANDROID_NDK ?= $(HOME)/opt/android-ndk-r22b
+  ANDROID_NDK ?= $(HOME)/opt/android-ndk-r23
 
   ANDROID_SDK_PLATFORM = android-29
   ANDROID_NDK_API = 21
@@ -333,40 +329,34 @@ ifeq ($(TARGET),ANDROID)
   # LLVM_TARGET: Open the appropriate compiler script in $ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin,
   #   e.g. aarch64-linux-android21-clang++ for AARCH64, NDK level 21, 
   #   and transcribe the value of the option "--target". 
-  # HOST_TRIPLET = $(ANDROID_NDK_GCC_TOOLCHAIN_ABI)
   # ANDROID_APK_LIB_ABI: See https://developer.android.com/ndk/guides/abis#sa for valid names.
 
   # Default is ARM V7a
-  ANDROID_NDK_GCC_TOOLCHAIN_ABI = arm-linux-androideabi
   ANDROID_APK_LIB_ABI           = armeabi-v7a
   LLVM_TARGET                  := armv7a-linux-androideabi
-  HOST_TRIPLET                  = arm-linux-androideabi
 
   ifeq ($(X86),y)
     ANDROID_APK_LIB_ABI           = x86
     LLVM_TARGET                  := i686-linux-android
-    HOST_TRIPLET                  = i686-linux-android
   endif
 
   ifeq ($(AARCH64),y)
     ANDROID_APK_LIB_ABI           = arm64-v8a
     LLVM_TARGET                  := aarch64-linux-android
-    HOST_TRIPLET                  = aarch64-linux-android
   endif
 
   ifeq ($(X64),y)
     ANDROID_APK_LIB_ABI           = x86_64
     LLVM_TARGET                  := x86_64-linux-android
-    HOST_TRIPLET                  = x86_64-linux-android
   endif
+
+  HOST_TRIPLET := $(LLVM_TARGET)
 
   # Like in the clang compiler scripts in the NDK add the NDK level to the LLVM target
   LLVM_TARGET := $(LLVM_TARGET)$(ANDROID_NDK_API)
 
   # clang is the mandatory compiler on Android
   override CLANG = y
-
-  ANDROID_TOOLCHAIN_NAME = llvm
   override LIBCXX = y
 
   ifeq ($(HOST_IS_DARWIN),y)
@@ -383,20 +373,11 @@ ifeq ($(TARGET),ANDROID)
     ANDROID_HOST_TAG = linux-x86
   endif
 
-  ANDROID_TOOLCHAIN = $(ANDROID_NDK)/toolchains/$(ANDROID_TOOLCHAIN_NAME)/prebuilt/$(ANDROID_HOST_TAG)
-
-  TCPREFIX = $(ANDROID_TOOLCHAIN)/bin/$(HOST_TRIPLET)-
-  LLVM_PREFIX = $(ANDROID_TOOLCHAIN)/bin/
-
+  LLVM_PREFIX = $(ANDROID_NDK)/toolchains/llvm/prebuilt/$(ANDROID_HOST_TAG)/bin/
+  TCPREFIX = $(LLVM_PREFIX)/llvm-
 
   ifeq ($(ARMV7),y)
-    TARGET_ARCH += -march=armv7-a -mfloat-abi=softfp
-
-    ifeq ($(NEON),y)
-      TARGET_ARCH += -mfpu=neon
-    else
-      TARGET_ARCH += -mfpu=vfpv3-d16
-    endif
+    TARGET_ARCH += -mfloat-abi=softfp -mfpu=neon
   endif
 
   TARGET_ARCH += -fpic -funwind-tables

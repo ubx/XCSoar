@@ -23,9 +23,12 @@ Copyright_License {
 
 #pragma once
 
+#include <chrono>
+
 struct GeoPoint;
 class AtmosphericPressure;
 class GliderLinkId;
+class Temperature;
 
 /**
  * C++ wrapper for the Java interface SensorListener.
@@ -34,15 +37,21 @@ class SensorListener {
 public:
   virtual void OnConnected(int connected) noexcept = 0;
 
-  virtual void OnLocationSensor(long time, int n_satellites,
-                                double longitude, double latitude,
-                                bool hasAltitude, double altitude,
+  /**
+   * @param geoid_altitude is the GPS altitude above Geoid (true) or
+   * above the WGS84 ellipsoid (false)?
+   */
+  virtual void OnLocationSensor(std::chrono::system_clock::time_point time,
+                                int n_satellites,
+                                GeoPoint location,
+                                bool hasAltitude, bool geoid_altitude,
+                                double altitude,
                                 bool hasBearing, double bearing,
                                 bool hasSpeed, double ground_speed,
-                                bool hasAccuracy, double accuracy,
-                                bool hasAcceleration,
-                                double acceleration) noexcept = 0;
+                                bool hasAccuracy, double accuracy) noexcept = 0;
 
+#ifdef ANDROID
+  virtual void OnAccelerationSensor(double acceleration) noexcept = 0;
   virtual void OnAccelerationSensor(float ddx, float ddy,
                                     float ddz) noexcept = 0;
   virtual void OnRotationSensor(float dtheta_x, float dtheta_y,
@@ -68,6 +77,11 @@ public:
                                    double gspeed, double vspeed,
                                    unsigned bearing) noexcept = 0;
 
+  virtual void OnTemperature(Temperature temperature) noexcept = 0;
+
+  virtual void OnBatteryPercent(double battery_percent) noexcept = 0;
+
   virtual void OnSensorStateChanged() noexcept = 0;
   virtual void OnSensorError(const char *msg) noexcept = 0;
+#endif // ANDROID
 };

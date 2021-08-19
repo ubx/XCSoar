@@ -286,7 +286,7 @@ DeviceDescriptor::OpenInternalSensors()
     return true;
   }
 #elif defined(__APPLE__)
-  internal_sensors = InternalSensors::Create(GetIndex());
+  internal_sensors = new InternalSensors(*this);
   return (internal_sensors != nullptr);
 #endif
 #endif
@@ -765,7 +765,7 @@ DeviceDescriptor::IsAlive() const
   return device_blackboard->RealState(index).alive;
 }
 
-double
+TimeStamp
 DeviceDescriptor::GetClock() const noexcept
 {
   const std::lock_guard<Mutex> lock(device_blackboard->mutex);

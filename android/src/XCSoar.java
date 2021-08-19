@@ -55,7 +55,7 @@ public class XCSoar extends Activity {
    * Hack: this is set by onCreate(), to support the "testing"
    * package.
    */
-  protected static Class<?> serviceClass;
+  public static Class<?> serviceClass;
 
   private static NativeView nativeView;
 
@@ -96,20 +96,7 @@ public class XCSoar extends Activity {
 
     IOIOHelper.onCreateContext(this);
 
-    // fullscreen mode
-    requestWindowFeature(Window.FEATURE_NO_TITLE);
-    getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN|
-                         WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-    /* Workaround for layout problems in Android KitKat with immersive full
-       screen mode: Sometimes the content view was not initialized with the
-       correct size, which caused graphics artifacts. */
-    getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN|
-                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS|
-                         WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR|
-                         WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-
-    enableImmersiveModeIfSupported();
+    enterFullScreenMode();
 
     TextView tv = new TextView(this);
     tv.setText("Loading XCSoar...");
@@ -130,9 +117,6 @@ public class XCSoar extends Activity {
     Log.d(TAG, "in quit()");
 
     nativeView = null;
-
-    Log.d(TAG, "stopping service");
-    stopService(new Intent(this, serviceClass));
 
     TextView tv = new TextView(XCSoar.this);
     tv.setText("Shutting down XCSoar...");
@@ -213,9 +197,30 @@ public class XCSoar extends Activity {
       nativeView.setHapticFeedback(hapticFeedbackEnabled);
   }
 
-  private void enableImmersiveModeIfSupported() {
-    // Set / Reset the System UI visibility flags for Immersive Full Screen Mode, if supported
-    ImmersiveFullScreenMode.enable(getWindow().getDecorView());
+  private void enterFullScreenMode() {
+    // fullscreen mode
+    requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+    Window window = getWindow();
+    window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN|
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+    /* Workaround for layout problems in Android KitKat with immersive full
+       screen mode: Sometimes the content view was not initialized with the
+       correct size, which caused graphics artifacts. */
+    window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN|
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS|
+                    WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR|
+                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+
+    // Set / Reset the System UI visibility flags for Immersive Full Screen Mode
+    View decorView = window.getDecorView();
+    decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN|
+                                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|
+                                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY|
+                                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|
+                                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION|
+                                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
   }
 
   private static final String[] NEEDED_PERMISSIONS = new String[] {
@@ -257,16 +262,6 @@ public class XCSoar extends Activity {
 
     if (!Loader.loaded)
       return;
-
-    try {
-      startService(new Intent(this, serviceClass));
-    } catch (IllegalStateException e) {
-      /* we get crash reports on this all the time, but I don't know
-         why - Android docs say "the application is in a state where
-         the service can not be started (such as not in the foreground
-         in a state when services are allowed)", but we're about to be
-         resumed, which means we're in foreground... */
-    }
 
     if (nativeView != null)
       nativeView.onResume();
@@ -322,12 +317,6 @@ public class XCSoar extends Activity {
       return true;
     } else
       return super.onKeyUp(keyCode, event);
-  }
-
-  @Override public void onWindowFocusChanged(boolean hasFocus) {
-    if (Loader.loaded)
-      enableImmersiveModeIfSupported();
-    super.onWindowFocusChanged(hasFocus);
   }
 
   @Override public boolean dispatchTouchEvent(final MotionEvent ev) {

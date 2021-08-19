@@ -27,11 +27,13 @@ Copyright_License {
 #include "Form/DataField/RoughTime.hpp"
 #include "Form/DataField/Prefix.hpp"
 #include "Form/DataField/Date.hpp"
+#include "Form/DataField/Integer.hpp"
 #include "ComboPicker.hpp"
 #include "Dialogs/TextEntry.hpp"
 #include "Dialogs/TimeEntry.hpp"
 #include "Dialogs/GeoPointEntry.hpp"
 #include "Dialogs/DateEntry.hpp"
+#include "Dialogs/NumberEntry.hpp"
 
 bool
 EditDataFieldDialog(const TCHAR *caption, DataField &df,
@@ -67,6 +69,29 @@ EditDataFieldDialog(const TCHAR *caption, DataField &df,
 
     dfd.SetValue(date);
     return true;
+  } else if (df.GetType() == DataField::Type::INTEGER) {
+    auto &dfi = static_cast<DataFieldInteger &>(df);
+
+    // signed or unsigned depends on min if value >= 0 or < 0...
+    if (dfi.GetMin() >= 0) {
+      unsigned value = dfi.GetValue(); // min is >= 0!
+      if (!NumberEntryDialog(caption, value,
+          log10(dfi.GetMax()) + 1))
+        return false;
+
+      dfi.ModifyValue(value); // SetAsInteger with unsigned!
+      return true;
+    } else {
+      /* with signed range has to avoid the length of negative AND
+      * positiv numbers */
+      int value = dfi.GetValue();  // min is < 0!
+      unsigned max = std::max(abs(dfi.GetMax()), abs(dfi.GetMin()));
+      if (!NumberEntryDialog(caption, value, log10(max) + 1))
+        return false;
+
+      dfi.ModifyValue(value);  // SetAsInteger with signed!
+      return true;
+    }
   } else {
     const TCHAR *value = df.GetAsString();
     if (value == NULL)

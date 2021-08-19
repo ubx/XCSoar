@@ -1,4 +1,5 @@
-/* Copyright_License {
+/*
+Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
   Copyright (C) 2000-2021 The XCSoar Project
@@ -20,21 +21,36 @@
 }
 */
 
-package org.xcsoar;
+#pragma once
 
-import android.view.View;
+#include "Util.hxx"
+#include "time/FloatDuration.hxx"
+#include "time/Stamp.hpp"
 
-class ImmersiveFullScreenMode {
-  /**
-   * Set / Reset the System UI visibility flags for Immersive Full
-   * Screen Mode.  Requires API level 19 (Android 4.4 "KitKat").
-   */
-  public static void enable(View decorView) {
-    decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN|
-                                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|
-                                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY|
-                                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|
-                                    View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION|
-                                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-  }
+struct lua_State;
+
+namespace Lua {
+
+static inline void
+Push(lua_State *L, FloatDuration value) noexcept
+{
+  Push(L, value.count());
 }
+
+template<class Rep, class Period>
+static inline void
+Push(lua_State *L, std::chrono::duration<Rep,Period> value) noexcept
+{
+  Push(L, std::chrono::duration_cast<FloatDuration>(value));
+}
+
+static inline void
+Push(lua_State *L, TimeStamp value) noexcept
+{
+  if (value.IsDefined())
+    Push(L, value.ToDuration());
+  else
+    lua_pushnil(L);
+}
+
+} // namespace Lua

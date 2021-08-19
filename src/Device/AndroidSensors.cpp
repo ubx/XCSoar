@@ -25,7 +25,9 @@ Copyright_License {
 #include "DataEditor.hpp"
 #include "NMEA/Info.hpp"
 #include "Geo/Geoid.hpp"
-#include "system/Clock.hpp"
+#include "time/FloatDuration.hxx"
+
+using namespace std::chrono;
 
 void
 DeviceDescriptor::OnConnected(int connected) noexcept
@@ -41,13 +43,13 @@ DeviceDescriptor::OnConnected(int connected) noexcept
     break;
 
   case 1: /* waiting for fix */
-    basic.alive.Update(MonotonicClockFloat());
+    basic.alive.Update(basic.clock);
     basic.gps.nonexpiring_internal_gps = true;
     basic.location_available.Clear();
     break;
 
   case 2: /* connected */
-    basic.alive.Update(MonotonicClockFloat());
+    basic.alive.Update(basic.clock);
     basic.gps.nonexpiring_internal_gps = true;
     break;
   }
@@ -56,31 +58,24 @@ DeviceDescriptor::OnConnected(int connected) noexcept
 }
 
 void
-DeviceDescriptor::OnLocationSensor(long time, int n_satellites,
-                                   double longitude, double latitude,
-                                   bool hasAltitude, double altitude,
+DeviceDescriptor::OnLocationSensor(std::chrono::system_clock::time_point time,
+                                   int n_satellites,
+                                   GeoPoint location,
+                                   bool hasAltitude, bool geoid_altitude,
+                                   double altitude,
                                    bool hasBearing, double bearing,
                                    bool hasSpeed, double ground_speed,
-                                   bool hasAccuracy, double accuracy,
-                                   bool hasAcceleration,
-                                   double acceleration) noexcept
+                                   bool hasAccuracy, double accuracy) noexcept
 {
   const auto e = BeginEdit();
   NMEAInfo &basic = *e;
   basic.UpdateClock();
   basic.alive.Update(basic.clock);
 
-  BrokenDateTime date_time = BrokenDateTime::FromUnixTimeUTC(time / 1000);
-  double second_of_day = date_time.GetSecondOfDay() +
-    /* add the millisecond fraction of the original timestamp for
-       better accuracy */
-    unsigned(time % 1000) / 1000.;
-
-  if (second_of_day < basic.time &&
-      basic.date_time_utc.IsDatePlausible() &&
-      (BrokenDate)date_time > (BrokenDate)basic.date_time_utc)
-    /* don't wrap around when going past midnight in UTC */
-    second_of_day += 24u * 3600u;
+  const BrokenDateTime date_time{time};
+  const BrokenDateTime midnight = date_time.AtMidnight();
+  TimeStamp second_of_day{
+    duration_cast<FloatDuration>(time - midnight.ToTimePoint())};
 
   basic.time = second_of_day;
   basic.time_available.Update(basic.clock);
@@ -90,12 +85,13 @@ DeviceDescriptor::OnLocationSensor(long time, int n_satellites,
   basic.gps.satellites_used_available.Update(basic.clock);
   basic.gps.real = true;
   basic.gps.nonexpiring_internal_gps = true;
-  basic.location = GeoPoint(Angle::Degrees(longitude),
-                            Angle::Degrees(latitude));
+  basic.location = location;
   basic.location_available.Update(basic.clock);
 
   if (hasAltitude) {
-    auto GeoidSeparation = EGM96::LookupSeparation(basic.location);
+    auto GeoidSeparation = geoid_altitude
+      ? 0.
+      : EGM96::LookupSeparation(basic.location);
     basic.gps_altitude = altitude - GeoidSeparation;
     basic.gps_altitude_available.Update(basic.clock);
   } else
@@ -114,12 +110,23 @@ DeviceDescriptor::OnLocationSensor(long time, int n_satellites,
 
   basic.gps.hdop = hasAccuracy ? accuracy : -1;
 
-  if (hasAcceleration)
-    basic.acceleration.ProvideGLoad(acceleration, true);
-
   e.Commit();
 }
 
+#ifdef ANDROID
+
+void
+DeviceDescriptor::OnAccelerationSensor(double acceleration) noexcept
+{
+  const auto e = BeginEdit();
+  NMEAInfo &basic = *e;
+  basic.UpdateClock();
+  basic.alive.Update(basic.clock);
+
+  basic.acceleration.ProvideGLoad(acceleration);
+
+  e.Commit();
+}
 
 void
 DeviceDescriptor::OnAccelerationSensor(float ddx, float ddy,
@@ -179,6 +186,7 @@ DeviceDescriptor::OnBarometricPressureSensor(float pressure,
   NMEAInfo &basic = *e;
 
   basic.UpdateClock();
+  basic.alive.Update(basic.clock);
   basic.ProvideNoncompVario(ComputeNoncompVario(kalman_filter.GetXAbs(),
                                                 kalman_filter.GetXVel()));
   basic.ProvideStaticPressure(
@@ -349,7 +357,7 @@ DeviceDescriptor::OnNunchukValues(int joy_x, int joy_y,
       const auto e = BeginEdit();
       NMEAInfo &basic = *e;
       basic.UpdateClock();
-      basic.acceleration.ProvideGLoad(acc_z / 1000., true);
+      basic.acceleration.ProvideGLoad(acc_z / 1000.);
       e.Commit();
     }
 
@@ -440,6 +448,34 @@ DeviceDescriptor::OnGliderLinkTraffic(GliderLinkId id, const char *callsign,
 }
 
 void
+DeviceDescriptor::OnTemperature(Temperature temperature) noexcept
+{
+  const auto e = BeginEdit();
+  NMEAInfo &basic = *e;
+  basic.UpdateClock();
+  basic.alive.Update(basic.clock);
+
+  basic.temperature = temperature;
+  basic.temperature_available = true;
+
+  e.Commit();
+}
+
+void
+DeviceDescriptor::OnBatteryPercent(double battery_percent) noexcept
+{
+  const auto e = BeginEdit();
+  NMEAInfo &basic = *e;
+  basic.UpdateClock();
+  basic.alive.Update(basic.clock);
+
+  basic.battery_level = battery_percent;
+  basic.battery_level_available.Update(basic.clock);
+
+  e.Commit();
+}
+
+void
 DeviceDescriptor::OnSensorStateChanged() noexcept
 {
   PortStateChanged();
@@ -450,3 +486,5 @@ DeviceDescriptor::OnSensorError(const char *msg) noexcept
 {
   PortError(msg);
 }
+
+#endif

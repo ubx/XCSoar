@@ -22,6 +22,8 @@
 
 package org.xcsoar;
 
+import java.util.Queue;
+import java.util.LinkedList;
 import java.io.IOException;
 
 import android.bluetooth.BluetoothDevice;
@@ -47,6 +49,14 @@ public final class BluetoothSensor
   private final BluetoothGatt gatt;
 
   private int state = STATE_LIMBO;
+
+  private BluetoothGattCharacteristic currentEnableNotification;
+  private final Queue<BluetoothGattCharacteristic> enableNotificationQueue =
+    new LinkedList<BluetoothGattCharacteristic>();
+
+  private boolean haveFlytecMovement = false;
+  private double flytecGroundSpeed, flytecTrack;
+  private int flytecSatellites = 0;
 
   public BluetoothSensor(Context context, BluetoothDevice device,
                          SensorListener listener)
@@ -74,18 +84,31 @@ public final class BluetoothSensor
   }
 
   private void submitError(String msg) {
+    haveFlytecMovement = false;
+    flytecSatellites = 0;
     state = STATE_FAILED;
     listener.onSensorError(msg);
   }
 
-  private void enableNotification(BluetoothGattCharacteristic c) {
+  private boolean doEnableNotification(BluetoothGattCharacteristic c) {
     BluetoothGattDescriptor d = c.getDescriptor(BluetoothUuids.CLIENT_CHARACTERISTIC_CONFIGURATION);
     if (d == null)
-      return;
+      return false;
 
     gatt.setCharacteristicNotification(c, true);
     d.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-    gatt.writeDescriptor(d);
+    return gatt.writeDescriptor(d);
+  }
+
+  private void enableNotification(BluetoothGattCharacteristic c) {
+    synchronized(enableNotificationQueue) {
+      if (currentEnableNotification == null) {
+        currentEnableNotification = c;
+        if (!doEnableNotification(c))
+          currentEnableNotification = null;
+      } else
+        enableNotificationQueue.add(c);
+    }
   }
 
   private void readHeartRateMeasurement(BluetoothGattCharacteristic c) {
@@ -114,20 +137,41 @@ public final class BluetoothSensor
 
       if (BluetoothUuids.FLYTEC_SENSBOX_SERVICE.equals(c.getService().getUuid())) {
         if (BluetoothUuids.FLYTEC_SENSBOX_NAVIGATION_SENSOR_CHARACTERISTIC.equals(c.getUuid())) {
-          listener.onLocationSensor(c.getIntValue(c.FORMAT_UINT32, 0),
-                                    -1,
+          /* protocol documentation:
+             https://github.com/flytec/SensBoxLib_iOS/blob/master/_SensBox%20Documentation/SensorBox%20BLE%20Protocol.pdf */
+          final int gps_status = c.getIntValue(c.FORMAT_UINT8, 18) & 0x7;
+          final boolean hasAltitude = (gps_status == 2 || gps_status == 4);
+
+          final long time = 1000 *
+            Integer.toUnsignedLong(c.getIntValue(c.FORMAT_UINT32, 0));
+
+          listener.onLocationSensor(time,
+                                    flytecSatellites,
                                     c.getIntValue(c.FORMAT_SINT32, 8) / 10000000.,
                                     c.getIntValue(c.FORMAT_SINT32, 4) / 10000000.,
-                                    false, 0,
-                                    false, 0,
-                                    false, 0,
-                                    false, 0,
+                                    hasAltitude, true,
+                                    c.getIntValue(c.FORMAT_SINT16, 12),
+                                    haveFlytecMovement, flytecTrack,
+                                    haveFlytecMovement, flytecGroundSpeed,
                                     false, 0);
 
-          listener.onPressureAltitudeSensor(c.getIntValue(c.FORMAT_SINT16, 12));
-          listener.onVarioSensor(c.getIntValue(c.FORMAT_SINT16, 16) / 10.f);
+          listener.onPressureAltitudeSensor(c.getIntValue(c.FORMAT_SINT16, 14));
+        } else if (BluetoothUuids.FLYTEC_SENSBOX_MOVEMENT_SENSOR_CHARACTERISTIC.equals(c.getUuid())) {
+          flytecGroundSpeed = c.getIntValue(c.FORMAT_SINT16, 6) / 10.;
+          flytecTrack = c.getIntValue(c.FORMAT_SINT16, 8) / 10.;
 
-          //c.getIntValue(c.FORMAT_SINT16, 14), // ??
+          listener.onVarioSensor(c.getIntValue(c.FORMAT_SINT16, 4) / 100.f);
+          listener.onAccelerationSensor1(c.getIntValue(c.FORMAT_UINT16, 16) / 10.);
+
+          haveFlytecMovement = true;
+        } else if (BluetoothUuids.FLYTEC_SENSBOX_SECOND_GPS_CHARACTERISTIC.equals(c.getUuid())) {
+          flytecSatellites = c.getIntValue(c.FORMAT_UINT8, 6);
+        } else if (BluetoothUuids.FLYTEC_SENSBOX_SYSTEM_CHARACTERISTIC.equals(c.getUuid())) {
+          listener.onBatteryPercent(c.getIntValue(c.FORMAT_UINT8, 4));
+
+          final double CELSIUS_OFFSET = 273.15;
+          double temperatureCelsius = c.getIntValue(c.FORMAT_SINT16, 6) / 10.;
+          listener.onTemperature(CELSIUS_OFFSET + temperatureCelsius);
         }
       }
     } catch (NullPointerException e) {
@@ -144,6 +188,19 @@ public final class BluetoothSensor
       }
     } else {
       submitError("GATT disconnected");
+    }
+  }
+
+  @Override
+  public void onDescriptorWrite(BluetoothGatt gatt,
+                                BluetoothGattDescriptor descriptor,
+                                int status) {
+    synchronized(enableNotificationQueue) {
+      currentEnableNotification = enableNotificationQueue.poll();
+      if (currentEnableNotification != null) {
+        if (!doEnableNotification(currentEnableNotification))
+          currentEnableNotification = null;
+      }
     }
   }
 
@@ -171,15 +228,23 @@ public final class BluetoothSensor
     if (service != null) {
       BluetoothGattCharacteristic c =
         service.getCharacteristic(BluetoothUuids.FLYTEC_SENSBOX_NAVIGATION_SENSOR_CHARACTERISTIC);
-      if (c != null)
-        enableNotification(c);
-
-      c = service.getCharacteristic(BluetoothUuids.FLYTEC_SENSBOX_MOVEMENT_SENSOR_CHARACTERISTIC);
       if (c != null) {
         state = STATE_READY;
         listener.onSensorStateChanged();
         enableNotification(c);
       }
+
+      c = service.getCharacteristic(BluetoothUuids.FLYTEC_SENSBOX_MOVEMENT_SENSOR_CHARACTERISTIC);
+      if (c != null)
+        enableNotification(c);
+
+      c = service.getCharacteristic(BluetoothUuids.FLYTEC_SENSBOX_SECOND_GPS_CHARACTERISTIC);
+      if (c != null)
+        enableNotification(c);
+
+      c = service.getCharacteristic(BluetoothUuids.FLYTEC_SENSBOX_SYSTEM_CHARACTERISTIC);
+      if (c != null)
+        enableNotification(c);
     }
 
     if (state == STATE_LIMBO)

@@ -22,44 +22,37 @@ Copyright_License {
 */
 
 #include "NMEA/Info.hpp"
-#include "system/Clock.hpp"
 #include "Atmosphere/AirDensity.hpp"
+#include "time/Cast.hxx"
 
 void
 NMEAInfo::UpdateClock()
 {
-  clock = MonotonicClockFloat();
+  clock = TimeStamp{std::chrono::steady_clock::now().time_since_epoch()};
 }
 
 BrokenDateTime
-NMEAInfo::GetDateTimeAt(double other_time) const
+NMEAInfo::GetDateTimeAt(TimeStamp other_time) const noexcept
 {
-  if (other_time < 0)
+  if (!other_time.IsDefined())
     return BrokenDateTime::Invalid();
 
   if (!time_available || !date_time_utc.IsDatePlausible())
     return BrokenDateTime(BrokenDate::Invalid(),
-                          BrokenTime::FromSecondOfDayChecked(int(other_time)));
+                          BrokenTime::FromSinceMidnightChecked(other_time.ToDuration()));
 
-  return date_time_utc + int(other_time - time);
+  return date_time_utc + std::chrono::duration_cast<std::chrono::system_clock::duration>(FloatDuration{other_time - time});
 }
 
 void
-NMEAInfo::ProvideTime(double _time)
+NMEAInfo::ProvideTime(TimeStamp _time) noexcept
 {
-  assert(_time >= 0);
+  assert(_time.IsDefined());
 
   time = _time;
   time_available.Update(clock);
 
-  unsigned t = (unsigned)_time;
-  date_time_utc.second = t % 60;
-  t /= 60;
-
-  date_time_utc.minute = t % 60;
-  t /= 60;
-
-  date_time_utc.hour = t % 24;
+  (BrokenTime &)date_time_utc = BrokenTime::FromSinceMidnightChecked(time.ToDuration());
 }
 
 void
@@ -93,8 +86,8 @@ NMEAInfo::ProvideTrueAirspeed(double tas)
 {
   auto any_altitude = GetAnyAltitude();
 
-  if (any_altitude.first)
-    ProvideTrueAirspeedWithAltitude(tas, any_altitude.second);
+  if (any_altitude)
+    ProvideTrueAirspeedWithAltitude(tas, *any_altitude);
   else
     /* no altitude; dirty fallback */
     ProvideBothAirspeeds(tas, tas);
@@ -105,8 +98,8 @@ NMEAInfo::ProvideIndicatedAirspeed(double ias)
 {
   auto any_altitude = GetAnyAltitude();
 
-  if (any_altitude.first)
-    ProvideIndicatedAirspeedWithAltitude(ias, any_altitude.second);
+  if (*any_altitude)
+    ProvideIndicatedAirspeedWithAltitude(ias, *any_altitude);
   else
     /* no altitude; dirty fallback */
     ProvideBothAirspeeds(ias, ias);
@@ -149,7 +142,7 @@ NMEAInfo::Reset()
   pressure_altitude = 0;
 
   time_available.Clear();
-  time = 0;
+  time = {};
 
   date_time_utc = BrokenDateTime::Invalid();
 

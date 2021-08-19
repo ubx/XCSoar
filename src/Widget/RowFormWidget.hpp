@@ -28,6 +28,7 @@ Copyright_License {
 #include "Form/Edit.hpp"
 #include "Form/DataField/Base.hpp"
 #include "time/BrokenDate.hpp"
+#include "time/FloatDuration.hxx"
 #include "Repository/FileType.hpp"
 #include "util/EnumCast.hpp"
 #include "Units/Group.hpp"
@@ -35,9 +36,11 @@ Copyright_License {
 #include <boost/container/static_vector.hpp>
 
 #include <cassert>
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <type_traits>
 
 struct DialogLook;
 struct StaticEnumChoice;
@@ -410,10 +413,26 @@ public:
   WndProperty *AddPassword(const TCHAR *label, const TCHAR *help,
                            const TCHAR *content) noexcept;
 
-  WndProperty *AddTime(const TCHAR *label, const TCHAR *help,
-                       int min_value, int max_value, unsigned step,
-                       int value, unsigned max_tokens = 2,
-                       DataFieldListener *listener=nullptr) noexcept;
+  WndProperty *AddDuration(const TCHAR *label, const TCHAR *help,
+                           std::chrono::seconds min_value,
+                           std::chrono::seconds max_value,
+                           std::chrono::seconds step,
+                           std::chrono::seconds value,
+                           unsigned max_tokens = 2,
+                           DataFieldListener *listener=nullptr) noexcept;
+
+  template<class Rep, class Period>
+  WndProperty *AddDuration(const TCHAR *label, const TCHAR *help,
+                           std::chrono::seconds min_value,
+                           std::chrono::seconds max_value,
+                           std::chrono::seconds step,
+                           const std::chrono::duration<Rep,Period> &value,
+                           unsigned max_tokens = 2,
+                           DataFieldListener *listener=nullptr) noexcept {
+    return AddDuration(label, help, min_value, max_value, step,
+                       std::chrono::round<std::chrono::seconds>(value),
+                       max_tokens, listener);
+  }
 
   WndProperty *AddDate(const TCHAR *label, const TCHAR *help,
                        BrokenDate date,
@@ -550,9 +569,10 @@ public:
 
   void LoadValue(unsigned i, int value) noexcept;
   void LoadValue(unsigned i, bool value) noexcept;
+  void LoadValueEnum(unsigned i, const TCHAR *text) noexcept;
   void LoadValueEnum(unsigned i, unsigned value) noexcept;
 
-  template<typename T>
+  template<typename T, typename=std::enable_if_t<std::is_enum_v<T>>>
   void LoadValueEnum(unsigned i, T value) noexcept {
     LoadValueEnum(i, unsigned(value));
   }
@@ -566,9 +586,9 @@ public:
   void LoadValue(unsigned i, RoughTime value) noexcept;
 
   /**
-   * Load a value into a control created by AddTime().
+   * Load a value into a control created by AddDuration().
    */
-  void LoadValueTime(unsigned i, int value) noexcept;
+  void LoadValueDuration(unsigned i, std::chrono::seconds value) noexcept;
 
   /**
    * Clear the value of the specified row.  This bypasses the
@@ -595,6 +615,9 @@ public:
   unsigned GetValueIntegerAngle(unsigned i) const noexcept;
 
   [[gnu::pure]]
+  std::chrono::seconds GetValueTime(unsigned i) const noexcept;
+
+  [[gnu::pure]]
   RoughTime GetValueRoughTime(unsigned i) const noexcept;
 
   [[gnu::pure]]
@@ -608,6 +631,19 @@ public:
   bool SaveValue(unsigned i, uint16_t &value) const noexcept;
   bool SaveValue(unsigned i, double &value) const noexcept;
   bool SaveValue(unsigned i, Angle &value_r) const noexcept;
+  bool SaveValue(unsigned i, std::chrono::seconds &value) const noexcept;
+
+  template<class Rep, class Period>
+  bool SaveValue(unsigned i,
+                 std::chrono::duration<Rep,Period> &value_r) const noexcept {
+    auto value = std::chrono::round<std::chrono::seconds>(value_r);
+    if (!SaveValue(i, value))
+      return false;
+
+    value_r = std::chrono::duration_cast<std::chrono::duration<Rep,Period>>(value);
+    return true;
+  }
+
   bool SaveValue(unsigned i, RoughTime &value_r) const noexcept;
   bool SaveValue(unsigned i, TCHAR *string, size_t max_size) const noexcept;
 
@@ -636,6 +672,19 @@ public:
   bool SaveValue(unsigned i, const char *profile_key, uint16_t &value) const noexcept;
   bool SaveValue(unsigned i, const char *profile_key, double &value) const noexcept;
   bool SaveValue(unsigned i, const char *profile_key, BrokenDate &value) const noexcept;
+  bool SaveValue(unsigned i, const char *profile_key,
+                 std::chrono::seconds &value) const noexcept;
+
+  template<class Rep, class Period>
+  bool SaveValue(unsigned i, const char *profile_key,
+                 std::chrono::duration<Rep,Period> &value_r) const noexcept {
+    auto value = std::chrono::round<std::chrono::seconds>(value_r);
+    if (!SaveValue(i, profile_key, value))
+      return false;
+
+    value_r = std::chrono::duration_cast<std::chrono::duration<Rep,Period>>(value);
+    return true;
+  }
 
   bool SaveValue(unsigned i, const char *registry_key,
                  unsigned &value) const noexcept {

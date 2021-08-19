@@ -22,12 +22,14 @@ Copyright_License {
 */
 
 #include "NativeSensorListener.hpp"
-#include "SensorListener.hpp"
+#include "Device/SensorListener.hpp"
 #include "Geo/GeoPoint.hpp"
 #include "Atmosphere/Pressure.hpp"
+#include "Atmosphere/Temperature.hpp"
 #include "GliderLink/GliderLinkId.hpp"
 #include "java/Class.hxx"
 #include "java/String.hxx"
+#include "time/SystemClock.hxx"
 #include "org_xcsoar_NativeSensorListener.h"
 
 namespace NativeSensorListener {
@@ -75,23 +77,39 @@ JNIEXPORT void JNICALL
 Java_org_xcsoar_NativeSensorListener_onLocationSensor(JNIEnv *env, jobject obj,
                                                       jlong time, jint n_satellites,
                                                       jdouble longitude, jdouble latitude,
-                                                      jboolean hasAltitude, jdouble altitude,
+                                                      jboolean hasAltitude,
+                                                      jboolean geoidAltitude,
+                                                      jdouble altitude,
                                                       jboolean hasBearing, jdouble bearing,
                                                       jboolean hasSpeed, jdouble ground_speed,
-                                                      jboolean hasAccuracy, jdouble accuracy,
-                                                      jboolean hasAcceleration, jdouble acceleration)
+                                                      jboolean hasAccuracy, jdouble accuracy)
 {
   jlong ptr = env->GetLongField(obj, NativeSensorListener::ptr_field);
   if (ptr == 0)
     return;
 
   auto &listener = *(SensorListener *)ptr;
-  listener.OnLocationSensor(time, n_satellites, longitude, latitude,
-                            hasAltitude, altitude,
+  listener.OnLocationSensor(TimePointAfterUnixEpoch(std::chrono::milliseconds{time}),
+                            n_satellites,
+                            GeoPoint(Angle::Degrees(longitude),
+                                     Angle::Degrees(latitude)),
+                            hasAltitude, geoidAltitude, altitude,
                             hasBearing, bearing,
                             hasSpeed, ground_speed,
-                            hasAccuracy, accuracy,
-                            hasAcceleration, acceleration);
+                            hasAccuracy, accuracy);
+}
+
+gcc_visibility_default
+JNIEXPORT void JNICALL
+Java_org_xcsoar_NativeSensorListener_onAccelerationSensor1(JNIEnv *env, jobject obj,
+                                                           jdouble acceleration)
+{
+  jlong ptr = env->GetLongField(obj, NativeSensorListener::ptr_field);
+  if (ptr == 0)
+    return;
+
+  auto &listener = *(SensorListener *)ptr;
+  listener.OnAccelerationSensor(acceleration);
 }
 
 gcc_visibility_default
@@ -262,6 +280,34 @@ Java_org_xcsoar_NativeSensorListener_setGliderLinkInfo(JNIEnv *env,
                                         Angle::Degrees(latitude)),
                                altitude, gspeed, vspeed,
                                bearing);
+}
+
+gcc_visibility_default
+JNIEXPORT void JNICALL
+Java_org_xcsoar_NativeSensorListener_onTemperature(JNIEnv *env,
+                                                   jobject obj,
+                                                   jdouble temperature_kelvin)
+{
+  jlong ptr = env->GetLongField(obj, NativeSensorListener::ptr_field);
+  if (ptr == 0)
+    return;
+
+  auto &listener = *(SensorListener *)ptr;
+  listener.OnTemperature(Temperature::FromKelvin(temperature_kelvin));
+}
+
+gcc_visibility_default
+JNIEXPORT void JNICALL
+Java_org_xcsoar_NativeSensorListener_onBatteryPercent(JNIEnv *env,
+                                                      jobject obj,
+                                                      jdouble battery_percent)
+{
+  jlong ptr = env->GetLongField(obj, NativeSensorListener::ptr_field);
+  if (ptr == 0)
+    return;
+
+  auto &listener = *(SensorListener *)ptr;
+  listener.OnBatteryPercent(battery_percent);
 }
 
 gcc_visibility_default

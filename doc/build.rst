@@ -101,6 +101,8 @@ similar operating systems:
 
 -  `zlib <http://www.zlib.net/>`__
 
+- `c-ares <https://c-ares.haxx.se/`__
+
 -  `CURL <http://curl.haxx.se/>`__
 
 -  `Lua <http://www.lua.org/>`__
@@ -129,6 +131,7 @@ The following command installs these on Debian::
       libfreetype6-dev \
       libpng-dev libjpeg-dev \
       libtiff5-dev libgeotiff-dev \
+      libc-ares-dev \
       libcurl4-openssl-dev \
       libc-ares-dev \
       liblua5.2-dev lua5.2-dev \
@@ -160,7 +163,7 @@ For Android, you need:
 
 - `Android SDK level 26 <http://developer.android.com/sdk/>`__
 
-- `Android NDK r22b <http://developer.android.com/sdk/ndk/>`__
+- `Android NDK r23 <http://developer.android.com/sdk/ndk/>`__
 
 - `Ogg Vorbis <http://www.vorbis.com/>`__
 
@@ -183,7 +186,7 @@ tools/bin/sdkmanager  "build-tools;28.0.3"  "platforms;android-26"
 
 The ``Makefile`` assumes that the Android SDK is installed in
 ``~/opt/android-sdk-linux`` and the NDK is installed in
-``~/opt/android-ndk-r22b``. You can use the options ``ANDROID_SDK`` and
+``~/opt/android-ndk-r23``. You can use the options ``ANDROID_SDK`` and
 ``ANDROID_NDK`` to override these paths.
 
 Load/update the IOIO source code::
@@ -196,22 +199,24 @@ To compile, run::
 
 Use one of the following targets:
 
-+------------------+--------------------------------------------------+
-| ``ANDROID``      | for ARM CPUs (same as ``ANDROID7``)              |
-+------------------+--------------------------------------------------+
-| ``ANDROID7``     | for ARMv7 CPUs                                   |
-+------------------+--------------------------------------------------+
-| ``ANDROID7NEON`` | with                                             |
-|                  | `NEON <http://www.arm.c                          |
-|                  | om/products/processors/technologies/neon.php>`__ |
-|                  | extension                                        |
-+------------------+--------------------------------------------------+
-| ``ANDROID86``    | for x86 CPUs                                     |
-+------------------+--------------------------------------------------+
-| ``ANDROIDMIPS``  | for MIPS CPUs                                    |
-+------------------+--------------------------------------------------+
-| ``ANDROIDFAT``   | “fat” package for all supported CPUs             |
-+------------------+--------------------------------------------------+
+.. list-table::
+ :widths: 20 80
+ :header-rows: 1
+
+ * - Name
+   - Description
+ * - ``ANDROID``
+   - for ARM CPUs (same as ``ANDROID7``)
+ * - ``ANDROID7``
+   - for ARMv7 CPUs (32 bit)
+ * - ``ANDROIDAARCH64``
+   - for 64 bit ARM CPUs
+ * - ``ANDROID86``
+   - for x86-32 CPUs
+ * - ``ANDROIDX64``
+   - for x86-64 CPUs
+ * - ``ANDROIDFAT``
+   - "fat" package for all supported CPUs
 
 Compiling for Windows
 ~~~~~~~~~~~~~~~~~~~~~
@@ -265,7 +270,7 @@ Compiling for macOS (with Homebrew)
 
 Install the required Homebrew packages::
 
-  brew install automake autoconf libtool  imagemagick ffmpeg \
+  brew install automake autoconf libtool imagemagick ffmpeg \
       librsvg quilt pkg-config
 
 Then compile::

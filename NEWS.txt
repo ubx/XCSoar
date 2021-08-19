@@ -1,4 +1,29 @@
-Version 7.12 - not yet released
+Version 7.13 - not yet released
+* fix freeze bug
+* fix terrain cache file bug
+* task management
+  - Use task defaults for start and finish height ref (MSL or AGL) when loading
+    tasks from soarscore.com
+* Kobo
+  - fix crash in Kobo menu
+* Android
+  - fix GPS time from the Flytec Sensbox
+  - support speed, track and acceleration from Flytec Sensbox
+  - don't apply Geoid separation to Flytec Sensbox GPS altitude
+  - use the 8 Hz vario from Flytec Sensbox GPS altitude instead of 1 Hz
+
+Version 7.12 - 2021/08/13
+* calculations
+  - fix the "Height above takeoff" InfoBox
+* devices
+  - send Pilot Event (PEV) to LXNAV S10x/S8x devices (requires firmware 8.01 or newer)
+  - correct Pilot Event (PEV) message for PowerFLARM devices
+* Android
+  - fix broken GPS date/time from internal GPS
+  - various fixes for the Flytec Sensbox driver
+* Kobo
+  - throttle sensor-triggered screen updates
+  - improve performance of graphical InfoBoxes
 
 Version 7.11 - 2021/07/30
 * fix crash bug in pc_met viewer
