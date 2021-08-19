@@ -108,7 +108,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                 info.date_time_utc.hour = canasMessage.data.container.CHAR4[0];
                 info.date_time_utc.minute = canasMessage.data.container.CHAR4[1];
                 info.date_time_utc.second = canasMessage.data.container.CHAR4[2];
-                info.time = TimeLocal(info.date_time_utc.GetSecondOfDay(), RoughTimeDelta()); // todo -- verify !!
+                info.time = TimeStamp{info.date_time_utc.DurationSinceMidnight()};
                 info.time_available.Update(info.clock);
                 return true;
             }
