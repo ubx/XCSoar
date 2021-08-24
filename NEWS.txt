@@ -1,4 +1,20 @@
-Version 7.13 - not yet released
+Version 7.15 - 2021/08/23
+* user interface
+  - fix crash in Config/System
+  - fix overlapping axes labels in cross section
+  - fix graphics error (vertical black lines) in cross section
+  - fix missing labels in cross section on high-resolution screens
+  - draw small tick every 10 minutes in analysis dialog (instead of 6)
+* Android
+  - fix crash on Android 5 and 6
+
+Version 7.14 - 2021/08/20
+* Android
+  - keep screen on, even if not in full-screen mode
+  - fix bottom bar background in non-full-screen mode
+  - fix touch position in non-full-screen mode
+
+Version 7.13 - 2021/08/19
 * fix freeze bug
 * fix terrain cache file bug
 * task management
@@ -11,6 +27,9 @@ Version 7.13 - not yet released
   - support speed, track and acceleration from Flytec Sensbox
   - don't apply Geoid separation to Flytec Sensbox GPS altitude
   - use the 8 Hz vario from Flytec Sensbox GPS altitude instead of 1 Hz
+  - restore full-screen mode properly after returning to XCSoar
+  - disable full-screen mode in multi-window mode
+  - make full-screen mode optional
 
 Version 7.12 - 2021/08/13
 * calculations

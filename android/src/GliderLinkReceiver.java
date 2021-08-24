@@ -43,24 +43,17 @@ class GliderLinkReceiver
   private final Context context;
 
   private final SensorListener listener;
+  private final SafeDestruct safeDestruct = new SafeDestruct();
 
-  private static Handler handler;
+  private final Handler handler;
 
   private int state = STATE_LIMBO;
-
-  /**
-   * Global initialization of the class.  Must be called from the main
-   * event thread, because the Handler object must be bound to that
-   * thread.
-   */
-  public static void Initialize() {
-    handler = new Handler();
-  }
 
   public GliderLinkReceiver(final Context context, SensorListener listener) {
     this.context = context;
     this.listener = listener;
 
+    handler = new Handler(context.getMainLooper());
     handler.post(new Runnable() {
       @Override
       public void run() {
@@ -71,12 +64,16 @@ class GliderLinkReceiver
 
   @Override
   public void close() {
+    safeDestruct.beginShutdown();
+
     handler.post(new Runnable() {
       @Override
       public void run() {
         context.unregisterReceiver(GliderLinkReceiver.this);
       }
     });
+
+    safeDestruct.finishShutdown();
   }
 
   @Override
@@ -86,6 +83,9 @@ class GliderLinkReceiver
 
   @Override
   public void onReceive(Context context, Intent intent) {
+    if (!safeDestruct.increment())
+      return;
+
     try {
       JSONObject json = new JSONObject(intent.getStringExtra("json"));
 
@@ -124,6 +124,8 @@ class GliderLinkReceiver
                                    pos.getInt("bearing"));
     } catch (JSONException e) {
       Log.e(TAG, e.getLocalizedMessage(), e);
+    } finally {
+      safeDestruct.decrement();
     }
   }
 }

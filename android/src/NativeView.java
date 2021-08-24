@@ -37,6 +37,8 @@ import android.view.MotionEvent;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
+import android.view.View;
+import android.view.ViewParent;
 import android.os.Build;
 import android.os.Handler;
 import android.net.Uri;
@@ -64,7 +66,7 @@ class NativeView extends SurfaceView
   implements SurfaceHolder.Callback, Runnable {
   private static final String TAG = "XCSoar";
 
-  final Handler quitHandler, errorHandler;
+  final Handler quitHandler, wakelockhandler, fullScreenHandler, errorHandler;
 
   Resources resources;
 
@@ -97,18 +99,20 @@ class NativeView extends SurfaceView
   Thread thread;
 
   public NativeView(Activity context, Handler _quitHandler,
+                    Handler _wakeLockHandler,
+                    Handler _fullScreenHandler,
                     Handler _errorHandler) {
     super(context);
 
     quitHandler = _quitHandler;
+    wakelockhandler = _wakeLockHandler;
+    fullScreenHandler = _fullScreenHandler;
     errorHandler = _errorHandler;
 
     resources = context.getResources();
 
     hasKeyboard = resources.getConfiguration().keyboard !=
       Configuration.KEYBOARD_NOKEYS;
-
-    touchInput = DifferentTouchInput.getInstance();
 
     SurfaceHolder holder = getHolder();
     holder.addCallback(this);
@@ -185,7 +189,8 @@ class NativeView extends SurfaceView
 
     /* initialize context and surface */
 
-    if (context == EGL10.EGL_NO_CONTEXT) {
+    boolean hadContext = context != EGL10.EGL_NO_CONTEXT;
+    if (!hadContext) {
       final int contextClientVersion = 2;
       final int[] contextAttribList = new int[]{
         EGL14.EGL_CONTEXT_CLIENT_VERSION, contextClientVersion,
@@ -208,11 +213,13 @@ class NativeView extends SurfaceView
     if (!egl.eglMakeCurrent(display, surface, surface, context))
       throw new EGLException("eglMakeCurrent() failed: " + egl.eglGetError());
 
-    GL10 gl = (GL10)context.getGL();
-    Log.d(TAG, "OpenGL vendor: " + gl.glGetString(GL10.GL_VENDOR));
-    Log.d(TAG, "OpenGL version: " + gl.glGetString(GL10.GL_VERSION));
-    Log.d(TAG, "OpenGL renderer: " + gl.glGetString(GL10.GL_RENDERER));
-    Log.d(TAG, "OpenGL extensions: " + gl.glGetString(GL10.GL_EXTENSIONS));
+    if (!hadContext) {
+      GL10 gl = (GL10)context.getGL();
+      Log.d(TAG, "OpenGL vendor: " + gl.glGetString(GL10.GL_VENDOR));
+      Log.d(TAG, "OpenGL version: " + gl.glGetString(GL10.GL_VERSION));
+      Log.d(TAG, "OpenGL renderer: " + gl.glGetString(GL10.GL_RENDERER));
+      Log.d(TAG, "OpenGL extensions: " + gl.glGetString(GL10.GL_EXTENSIONS));
+    }
   }
 
   /**
@@ -272,6 +279,20 @@ class NativeView extends SurfaceView
     }
 
     config = null;
+  }
+
+  /**
+   * Called from native code.
+   */
+  void acquireWakeLock() {
+    wakelockhandler.sendEmptyMessage(0);
+  }
+
+  /**
+   * Called from native code.
+   */
+  void setFullScreen(boolean fullScreen) {
+    fullScreenHandler.sendEmptyMessage(fullScreen ? 1 : 0);
   }
 
   private boolean setRequestedOrientation(int requestedOrientation) {
@@ -349,11 +370,8 @@ class NativeView extends SurfaceView
       return;
     }
 
-    Log.d(TAG, "deinitializeNative()");
     deinitializeNative();
-
-    Log.d(TAG, "sending message to quitHandler");
-    quitHandler.sendMessage(quitHandler.obtainMessage());
+    quitHandler.sendEmptyMessage(0);
   }
 
   protected native boolean initializeNative(Context context,
@@ -471,7 +489,45 @@ class NativeView extends SurfaceView
 
   @Override public boolean onTouchEvent(final MotionEvent event)
   {
-    touchInput.process(event);
+    /* the MotionEvent coordinates are supposed to be relative to this
+       View, but in fact they are not: they seem to be relative to
+       this app's Window; to work around this, we apply an offset;
+       this.getXY() (which is usually 0) plus getParent().getXY()
+       (which is a FrameLayout with non-zero coordinates unless we're
+       in full-screen mode) */
+    float offsetX = getX(), offsetY = getY();
+    ViewParent _p = getParent();
+    if (_p instanceof View) {
+      View p = (View)_p;
+      offsetX += p.getX();
+      offsetY += p.getY();
+    }
+
+    final int x = (int)(event.getX() - offsetX);
+    final int y = (int)(event.getY() - offsetY);
+
+    switch (event.getActionMasked()) {
+    case MotionEvent.ACTION_DOWN:
+      EventBridge.onMouseDown(x, y);
+      break;
+
+    case MotionEvent.ACTION_UP:
+      EventBridge.onMouseUp(x, y);
+      break;
+
+    case MotionEvent.ACTION_MOVE:
+      EventBridge.onMouseMove(x, y);
+      break;
+
+    case MotionEvent.ACTION_POINTER_DOWN:
+      EventBridge.onPointerDown();
+      break;
+
+    case MotionEvent.ACTION_POINTER_UP:
+      EventBridge.onPointerUp();
+      break;
+    }
+
     return true;
   }
 
@@ -481,9 +537,6 @@ class NativeView extends SurfaceView
 
   public void onPause() {
     pauseNative();
-  }
-
-  public void exitApp() {
   }
 
   private final int translateKeyCode(int keyCode) {
@@ -512,6 +565,4 @@ class NativeView extends SurfaceView
     EventBridge.onKeyUp(translateKeyCode(keyCode));
     return true;
   }
-
-  DifferentTouchInput touchInput = null;
 }

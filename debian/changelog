@@ -1,10 +1,22 @@
+xcsoar (7.15) unstable; urgency=medium
+
+  * new release
+
+ -- Max Kellermann <max.kellermann@gmail.com>  Mon, 23 Aug 2021 17:54:49 +0200
+
+xcsoar (7.14) unstable; urgency=medium
+
+  * new release
+
+ -- Max Kellermann <max.kellermann@gmail.com>  Fri, 20 Aug 2021 17:37:01 +0200
+
 xcsoar (7.13) unstable; urgency=medium
 
   * new release
   * remove -doc package
   * use debhelper 12
 
- --
+ -- Max Kellermann <max.kellermann@gmail.com>  Thu, 19 Aug 2021 18:03:49 +0200
 
 xcsoar (7.12) unstable; urgency=medium
 

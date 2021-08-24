@@ -27,50 +27,25 @@ import android.os.Bundle;
 import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
-import android.location.GpsSatellite;
-import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.view.WindowManager;
-import android.view.Surface;
-import android.util.Log;
-import java.lang.Math;
 
 /**
  * Code to support the internal GPS receiver via #LocationManager.
  */
 public class InternalGPS
-  implements LocationListener, SensorEventListener, Runnable, AndroidSensor
+  implements LocationListener, Runnable, AndroidSensor
 {
-  private static final String TAG = "XCSoar";
-
-  private static Handler handler;
+  private final Handler handler;
 
   private final SensorListener listener;
 
-  /**
-   * Global initialization of the class.  Must be called from the main
-   * event thread, because the Handler object must be bound to that
-   * thread.
-   */
-  public static void Initialize() {
-    handler = new Handler();
-  }
-
   /** the name of the currently selected location provider */
-  String locationProvider = LocationManager.GPS_PROVIDER;
-  //String locationProvider = LocationManager.NETWORK_PROVIDER;
+  static final String locationProvider = LocationManager.GPS_PROVIDER;
 
-  private LocationManager locationManager;
-  private SensorManager sensorManager;
-  private WindowManager windowManager;
-  private Sensor accelerometer;
+  private final LocationManager locationManager;
   private static boolean queriedLocationSettings = false;
 
   private int state = STATE_LIMBO;
@@ -78,6 +53,7 @@ public class InternalGPS
   private final SafeDestruct safeDestruct = new SafeDestruct();
 
   InternalGPS(Context context, SensorListener listener) {
+    handler = new Handler(context.getMainLooper());
     this.listener = listener;
 
     locationManager = (LocationManager)context.getSystemService(Context.LOCATION_SERVICE);
@@ -88,7 +64,7 @@ public class InternalGPS
          safe, therefore we're first checking the latter; if the
          device does have a GPS, it returns non-null even when the
          user has disabled GPS */
-      locationProvider = null;
+      return;
     } else if (!locationManager.isProviderEnabled(locationProvider) &&
         !queriedLocationSettings) {
       // Let user turn on GPS, XCSoar is not allowed to.
@@ -97,11 +73,7 @@ public class InternalGPS
       queriedLocationSettings = true;
     }
 
-    windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-    sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-    accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
-    update();
+    handler.post(this);
   }
 
   /**
@@ -109,58 +81,47 @@ public class InternalGPS
    * LocationManager subscription inside the main thread.
    */
   @Override public void run() {
-    Log.d(TAG, "Updating GPS subscription...");
-    locationManager.removeUpdates(this);
-    sensorManager.unregisterListener(this);
-
-    if (locationProvider != null) {
-      Log.d(TAG, "Subscribing to GPS updates.");
-      try {
-        locationManager.requestLocationUpdates(locationProvider,
-                                               1000, 0, this);
-      } catch (IllegalArgumentException e) {
-        /* this exception was recorded on the Android Market, message
-           was: "provider=gps" - no idea what that means */
-        setConnectedSafe(0);
-        return;
-      }
-
-      sensorManager.registerListener(this, accelerometer,
-                                     sensorManager.SENSOR_DELAY_NORMAL);
-
-      setConnectedSafe(1); // waiting for fix
-    } else {
-      Log.d(TAG, "Unsubscribing from GPS updates.");
-      setConnectedSafe(0); // not connected
+    try {
+      locationManager.requestLocationUpdates(locationProvider,
+                                             1000, 0, this);
+    } catch (IllegalArgumentException e) {
+      /* this exception was recorded on the Android Market, message
+         was: "provider=gps" - no idea what that means */
     }
-    Log.d(TAG, "Done updating GPS subscription...");
-  }
-
-  /**
-   * Update the LocationManager subscription.  May be called from any
-   * thread.
-   */
-  private void update() {
-    Log.d(TAG, "Triggering GPS subscription update...");
-    handler.removeCallbacks(this);
-    handler.post(this);
-  }
-
-  public void setLocationProvider(String _locationProvider) {
-    locationProvider = _locationProvider;
-    update();
   }
 
   @Override
   public void close() {
     safeDestruct.beginShutdown();
-    setLocationProvider(null);
+
+    handler.removeCallbacks(this);
+    handler.post(new Runnable() {
+        @Override public void run() {
+          locationManager.removeUpdates(InternalGPS.this);
+        }
+      });
+
     safeDestruct.finishShutdown();
   }
 
   @Override
   public int getState() {
     return state;
+  }
+
+  private void setStateSafe(int _state) {
+    if (_state == state)
+      return;
+
+    state = _state;
+
+    if (!safeDestruct.increment()) {
+      try {
+        listener.onSensorStateChanged();
+      } finally {
+        safeDestruct.decrement();
+      }
+    }
   }
 
   private void sendLocation(Location location) {
@@ -177,26 +138,26 @@ public class InternalGPS
   }
 
   private void setConnectedSafe(int connected) {
-    if (!safeDestruct.Increment())
+    if (!safeDestruct.increment())
       return;
 
     try {
       listener.onConnected(connected);
     } finally {
-      safeDestruct.Decrement();
+      safeDestruct.decrement();
     }
   }
 
   /** from LocationListener */
   @Override public void onLocationChanged(Location newLocation) {
-    if (!safeDestruct.Increment())
+    if (!safeDestruct.increment())
       return;
 
     try {
       listener.onConnected(2); // fix found
       sendLocation(newLocation);
     } finally {
-      safeDestruct.Decrement();
+      safeDestruct.decrement();
     }
   }
 
@@ -215,51 +176,19 @@ public class InternalGPS
                                         Bundle extras) {
     switch (status) {
     case LocationProvider.OUT_OF_SERVICE:
-      state = STATE_FAILED;
       setConnectedSafe(0); // not connected
-      listener.onSensorStateChanged();
+      setStateSafe(STATE_FAILED);
       break;
 
     case LocationProvider.TEMPORARILY_UNAVAILABLE:
-      state = STATE_LIMBO;
       setConnectedSafe(1); // waiting for fix
-      listener.onSensorStateChanged();
+      setStateSafe(STATE_LIMBO);
       break;
 
     case LocationProvider.AVAILABLE:
-      state = STATE_READY;
       listener.onSensorStateChanged();
+      setStateSafe(STATE_READY);
       break;
     }
-  }
-
-  /** from sensorEventListener */
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
-  }
-
-  /** from sensorEventListener */
-  public void onSensorChanged(SensorEvent event) {
-    double acceleration;
-    acceleration = Math.sqrt((double) event.values[0]*event.values[0] +
-                             (double) event.values[1]*event.values[1] +
-                             (double) event.values[2]*event.values[2]) /
-                   SensorManager.GRAVITY_EARTH;
-    switch (windowManager.getDefaultDisplay().getOrientation()) {
-      case Surface.ROTATION_0:   // g = -y
-        acceleration *= Math.signum(event.values[1]);
-        break;
-      case Surface.ROTATION_90:  // g = -x
-        acceleration *= Math.signum(event.values[0]);
-        break;
-      case Surface.ROTATION_180:  // g = y
-        acceleration *= Math.signum(-event.values[1]);
-        break;
-      case Surface.ROTATION_270:  // g = x
-        acceleration *= Math.signum(-event.values[0]);
-        break;
-    }
-    // TODO: do lowpass filtering to remove vibrations?!?
-
-    listener.onAccelerationSensor1(acceleration);
   }
 }
