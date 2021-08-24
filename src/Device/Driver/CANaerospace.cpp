@@ -48,7 +48,7 @@ public:
 
 std::map<int, double> canId2clock;
 auto last_fix = GeoPoint::Invalid();
-
+SpeedVector last_wind = SpeedVector::Zero();
 static FlarmState flarmState;
 static FlarmMostImportantObjectData objectData;
 static FlarmObjectData flarmObjectData;
@@ -193,7 +193,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-        case BARO_ALT_CORR_ID:  // todo -- implement
+        case BARO_ALT_CORR_ID:  // todo -- verify
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 switch (canasMessage.service_code & 0x0f) {
                 case 0: /* QNH */
@@ -209,7 +209,23 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                    break;
                 }
             }
-        break;
+            break;
+
+            case WIND_SPEED_ID:
+                if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                    last_wind.norm = canasMessage.data.container.FLOAT;
+                    info.ProvideExternalWind(last_wind.Reciprocal());
+                    return true;
+               }
+            break;
+
+            case WIND_DIRECTION_ID:
+                if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                    last_wind.bearing = Angle::Degrees(canasMessage.data.container.FLOAT);
+                    info.ProvideExternalWind(last_wind.Reciprocal());
+                    return true;
+                }
+            break;
 
         case FLARM_STATE_ID:  // Flarm messages: PFLAU
             // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>
