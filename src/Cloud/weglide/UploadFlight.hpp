@@ -23,22 +23,23 @@ Copyright_License {
 
 #pragma once
 
+#include "co/Task.hxx"
+
+#include <boost/json/fwd.hpp>
+
+#include <cstdint>
+
+struct WeGlideSettings;
+class Path;
 class CurlGlobal;
-class CurlEasy;
-class OutputStream;
-class OperationEnvironment;
+class ProgressListener;
 
-namespace Net {
+namespace WeGlide {
 
-void
-DownloadToStream(CurlGlobal &curl, CurlEasy easy,
-                 OutputStream &out,
-                 OperationEnvironment &env);
+Co::Task<boost::json::value>
+UploadFlight(CurlGlobal &curl, const WeGlideSettings &settings,
+             uint_least32_t glider_type,
+             Path igc_path,
+             ProgressListener &progress);
 
-void
-DownloadToStream(CurlGlobal &curl, const char *url,
-                 const char *username, const char *password,
-                 OutputStream &out,
-                 OperationEnvironment &env);
-
-} // namespace Net
+} // namespace WeGlide

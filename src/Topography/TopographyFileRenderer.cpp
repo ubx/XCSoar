@@ -53,7 +53,7 @@ Copyright_License {
 #include <set>
 
 TopographyFileRenderer::TopographyFileRenderer(const TopographyFile &_file,
-                                               const TopographyLook &_look)
+                                               const TopographyLook &_look) noexcept
   :file(_file), look(_look),
    pen(Layout::ScaleFinePenWidth(file.GetPenWidth()), file.GetColor()),
 #ifdef ENABLE_OPENGL
@@ -67,7 +67,7 @@ TopographyFileRenderer::TopographyFileRenderer(const TopographyFile &_file,
     icon.LoadResource(icon_ID, file.GetBigIcon());
 }
 
-TopographyFileRenderer::~TopographyFileRenderer()
+TopographyFileRenderer::~TopographyFileRenderer() noexcept
 {
 #ifdef ENABLE_OPENGL
   delete array_buffer;
@@ -75,7 +75,7 @@ TopographyFileRenderer::~TopographyFileRenderer()
 }
 
 void
-TopographyFileRenderer::UpdateVisibleShapes(const WindowProjection &projection)
+TopographyFileRenderer::UpdateVisibleShapes(const WindowProjection &projection) noexcept
 {
   if (file.GetSerial() == visible_serial &&
       visible_bounds.IsInside(projection.GetScreenBounds()) &&
@@ -86,14 +86,31 @@ TopographyFileRenderer::UpdateVisibleShapes(const WindowProjection &projection)
   visible_serial = file.GetSerial();
   visible_bounds = projection.GetScreenBounds().Scale(1.2);
   visible_shapes.clear();
+  visible_points.clear();
   visible_labels.clear();
 
   for (const XShape &shape : file) {
     if (!visible_bounds.Overlaps(shape.get_bounds()))
       continue;
 
-    if (shape.get_type() != MS_SHAPE_NULL)
-      visible_shapes.push_back(&shape);
+    if (shape.get_type() != MS_SHAPE_NULL) {
+      if (shape.get_type() == MS_SHAPE_POINT) {
+        if (icon.IsDefined()) {
+          const auto *points = shape.GetPoints();
+          for (const unsigned line_size : shape.GetLines()) {
+            const auto *end = points + line_size;
+            for (; points < end; ++points) {
+#ifdef ENABLE_OPENGL
+              visible_points.push_back(file.ToGeoPoint(*points));
+#else
+              visible_points.push_back(*points);
+#endif
+            }
+          }
+        }
+      } else
+        visible_shapes.push_back(&shape);
+    }
 
     if (shape.GetLabel() != nullptr)
       visible_labels.push_back(&shape);
@@ -103,7 +120,7 @@ TopographyFileRenderer::UpdateVisibleShapes(const WindowProjection &projection)
 #ifdef ENABLE_OPENGL
 
 inline void
-TopographyFileRenderer::UpdateArrayBuffer()
+TopographyFileRenderer::UpdateArrayBuffer() noexcept
 {
   if (array_buffer == nullptr)
     array_buffer = new GLArrayBuffer();
@@ -136,56 +153,21 @@ TopographyFileRenderer::UpdateArrayBuffer()
   array_buffer->CommitWrite(n * sizeof(*p), p - n);
 }
 
-inline void
-TopographyFileRenderer::PaintPoint(Canvas &canvas,
-                                   const WindowProjection &projection,
-                                   const XShape &shape,
-                                   const float *opengl_matrix) const
-{
-  if (!icon.IsDefined())
-    return;
-
-  // TODO: for now i assume there is only one point for point-XShapes
-
-  if (auto p = projection.GeoToScreenIfVisible(file.ToGeoPoint(shape.GetPoints()[0]))) {
-#ifndef HAVE_GLES
-    glPushMatrix();
-    glLoadMatrixf(opengl_matrix);
 #endif
-
-    icon.Draw(canvas, *p);
-#ifndef HAVE_GLES
-    glPopMatrix();
-#endif
-  }
-}
-
-#else
 
 inline void
-TopographyFileRenderer::PaintPoint(Canvas &canvas,
-                                   const WindowProjection &projection,
-                                   const unsigned short *lines,
-                                   const unsigned short *end_lines,
-                                   const GeoPoint *points) const
+TopographyFileRenderer::PaintPoints(Canvas &canvas,
+                                    const WindowProjection &projection) noexcept
 {
-  if (!icon.IsDefined())
-    return;
-
-  for (; lines < end_lines; ++lines) {
-    const GeoPoint *end = points + *lines;
-    for (; points < end; ++points) {
-      if (auto p = projection.GeoToScreenIfVisible(*points))
-        icon.Draw(canvas, *p);
-    }
+  for (const auto &point : visible_points) {
+    if (auto p = projection.GeoToScreenIfVisible(point))
+      icon.Draw(canvas, *p);
   }
 }
-
-#endif
 
 void
 TopographyFileRenderer::Paint(Canvas &canvas,
-                              const WindowProjection &projection)
+                              const WindowProjection &projection) noexcept
 {
   const std::lock_guard<Mutex> lock(file.mutex);
 
@@ -197,6 +179,7 @@ TopographyFileRenderer::Paint(Canvas &canvas,
     return;
 
   UpdateVisibleShapes(projection);
+  PaintPoints(canvas, projection);
 
   if (visible_shapes.empty())
     return;
@@ -225,13 +208,6 @@ TopographyFileRenderer::Paint(Canvas &canvas,
   const ShapeScalar min_distance =
     ShapeScalar(file.GetMinimumPointDistance(level))
     / (Layout::Scale(1) * FAISphere::REARTH);
-
-#ifdef HAVE_GLES
-  const float *const opengl_matrix = nullptr;
-#else
-  float opengl_matrix[16];
-  glGetFloatv(GL_MODELVIEW_MATRIX, opengl_matrix);
-#endif
 
   glUniformMatrix4fv(OpenGL::solid_modelview, 1, GL_FALSE,
                      glm::value_ptr(ToGLM(projection, file.GetCenter())));
@@ -263,22 +239,7 @@ TopographyFileRenderer::Paint(Canvas &canvas,
 
     switch (shape.get_type()) {
     case MS_SHAPE_NULL:
-      break;
-
     case MS_SHAPE_POINT:
-#ifdef ENABLE_OPENGL
-      /* disable the ScopeVertexPointer instance because PaintPoint()
-         uses that attribute */
-      glDisableVertexAttribArray(OpenGL::Attribute::POSITION);
-
-      PaintPoint(canvas, projection, shape, opengl_matrix);
-
-      /* reenable the ScopeVertexPointer instance because PaintPoint()
-         left it disabled */
-      glEnableVertexAttribArray(OpenGL::Attribute::POSITION);
-#else // !ENABLE_OPENGL
-      PaintPoint(canvas, projection, lines.begin(), lines.end(), points);
-#endif
       break;
 
     case MS_SHAPE_LINE:
@@ -416,7 +377,7 @@ TopographyFileRenderer::Paint(Canvas &canvas,
 void
 TopographyFileRenderer::PaintLabels(Canvas &canvas,
                                     const WindowProjection &projection,
-                                    LabelBlock &label_block)
+                                    LabelBlock &label_block) noexcept
 {
   const std::lock_guard<Mutex> lock(file.mutex);
 

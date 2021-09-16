@@ -114,4 +114,12 @@ ContractLocalPath(Path src) noexcept;
 
 void VisitDataFiles(const TCHAR* filter, File::Visitor &visitor);
 
+[[gnu::pure]]
+Path
+GetCachePath() noexcept;
+
+[[gnu::pure]]
+AllocatedPath
+MakeCacheDirectory(const TCHAR *name) noexcept;
+
 #endif

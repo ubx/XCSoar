@@ -27,7 +27,7 @@ Copyright_License {
 #include <curl/system.h>
 
 class CurlEasy;
-class OperationEnvironment;
+class ProgressListener;
 
 namespace Net {
 
@@ -36,14 +36,14 @@ namespace Net {
  * #OperationEnvironment instance.
  */
 class ProgressAdapter {
-  OperationEnvironment &env;
+  ProgressListener &listener;
 
 public:
   /**
    * Register as "xferinfo" callback with the given #CurlEasy and keep
    * reporting progress to the #OperationEnvironment instance.
    */
-  ProgressAdapter(CurlEasy &curl, OperationEnvironment &env);
+  ProgressAdapter(CurlEasy &curl, ProgressListener &listener);
 
 private:
   void Callback(curl_off_t dltotal, curl_off_t dlnow,

@@ -21,14 +21,11 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_CONSOLE_JOB_RUNNER_HPP
-#define XCSOAR_CONSOLE_JOB_RUNNER_HPP
+#pragma once
 
-#include "Job/Runner.hpp"
+#include <memory>
 
-class ConsoleJobRunner : public JobRunner {
-public:
-  virtual bool Run(Job &job);
-};
+class Widget;
 
-#endif
+std::unique_ptr<Widget>
+CreateWeGlideConfigPanel() noexcept;

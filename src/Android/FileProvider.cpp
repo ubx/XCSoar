@@ -21,41 +21,33 @@ Copyright_License {
 }
 */
 
-#include "ToFile.hpp"
-#include "ToStream.hpp"
-#include "io/FileOutputStream.hxx"
-#include "Crypto/SHA256.hxx"
-#include "Crypto/DigestOutputStream.hxx"
+#include "org_xcsoar_FileProvider.h"
+#include "Engine/Waypoint/Waypoints.hpp"
+#include "system/Path.hpp"
+#include "java/String.hxx"
+#include "Components.hpp"
+#include "LocalPath.hpp"
 
 #include <cassert>
-#include <optional>
 
-void
-Net::DownloadToFile(CurlGlobal &curl, const char *url,
-                    const char *username, const char *password,
-                    Path path, std::array<std::byte, 32> *sha256,
-                    OperationEnvironment &env)
+JNIEXPORT jstring JNICALL
+Java_org_xcsoar_FileProvider_getWaypointFileForUri(JNIEnv *env, jclass,
+                                                   jint id, jstring _filename)
 {
-  assert(url != nullptr);
-  assert(path != nullptr);
+  auto w = way_points.LookupId(id);
+  if (!w)
+    return nullptr;
 
-  FileOutputStream file(path);
-  OutputStream *os = &file;
+  const auto filename = Java::String::GetUTFChars(env, _filename);
 
-  std::optional<DigestOutputStream<SHA256State>> digest;
-  if (sha256 != nullptr)
-    os = &digest.emplace(*os);
+  /* check if the given file really exists; refuse access to other
+     files not specified in the waypoint details file */
+  for (const auto &i : w->files_external) {
+    if (i == filename.c_str()) {
+      auto path = LocalPath(filename.c_str());
+      return env->NewStringUTF(path.c_str());
+    }
+  }
 
-  DownloadToStream(curl, url, username, password,
-                   *os, env);
-  file.Commit();
-
-  if (sha256 != nullptr)
-    digest->Final(sha256);
-}
-
-void
-Net::DownloadToFileJob::Run(OperationEnvironment &env)
-{
-  DownloadToFile(curl, url, username, password, path, nullptr, env);
+  return nullptr;
 }

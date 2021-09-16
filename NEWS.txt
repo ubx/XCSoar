@@ -1,3 +1,40 @@
+Version 7.18 - 2021/09/10
+* data files
+  - load terrain while XCSoar is running
+* devices
+  - TCP Client: fix crash bug
+* tracking
+  - SkyLines: fix "Show nearby traffic" setting
+* user interface
+  - add 3x5 InfoBoxes layout
+* Android
+  - fix opening waypoint pictures
+
+Version 7.17 - 2021/09/04
+* map display
+  - fix airspace display bug
+* user interface
+  - add 8x3 InfoBoxes portrait layout
+* weather
+  - update RASP provider list
+* task management
+  - add option to score start on entry
+* Android
+  - fix startup crash bug
+  - use native text entry dialog
+* Linux text mode console
+  - fix program termination for some DRI drivers, e.g. VMWare
+    in full-screen mode without Window manager.
+* Cubieboard
+  - Mali: Support for old Linux-Sunxi EGL headers, and new Bootlin EGL headers
+  - Support for KMS/DRI and Lima instead of closed source Mali blob.
+
+Version 7.16 - 2021/08/27
+* user interface
+  - don't draw "---" over graphical InfoBoxes
+* Android
+  - fix deadlock bug with Bluetooth sensors and the internal GPS
+
 Version 7.15 - 2021/08/23
 * user interface
   - fix crash in Config/System

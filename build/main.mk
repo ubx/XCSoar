@@ -11,6 +11,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Error.cpp \
 	$(SRC)/Dialogs/ListPicker.cpp \
 	$(SRC)/Dialogs/ProgressDialog.cpp \
+	$(SRC)/Dialogs/CoDialog.cpp \
 	$(SRC)/Dialogs/JobDialog.cpp \
 	$(SRC)/Dialogs/WidgetDialog.cpp \
 	$(SRC)/Dialogs/FileManager.cpp \
@@ -113,6 +114,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Settings/Panels/TrackingConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/CloudConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/WeatherConfigPanel.cpp \
+	$(SRC)/Dialogs/Settings/Panels/WeGlideConfigPanel.cpp \
 	\
 	$(SRC)/Dialogs/Task/Widgets/ObservationZoneEditWidget.cpp \
 	$(SRC)/Dialogs/Task/Widgets/CylinderZoneEditWidget.cpp \
@@ -219,16 +221,13 @@ XCSOAR_SOURCES := \
 	$(SRC)/Renderer/AirspaceRendererSettings.cpp \
 	$(SRC)/Renderer/GeoBitmapRenderer.cpp \
 	\
-	$(SRC)/Operation/Operation.cpp \
-	$(SRC)/Operation/ProxyOperationEnvironment.cpp \
-	$(SRC)/Operation/NoCancelOperationEnvironment.cpp \
 	$(SRC)/Operation/PopupOperationEnvironment.cpp \
 	$(SRC)/Operation/MessageOperationEnvironment.cpp \
-	$(SRC)/Operation/ThreadedOperationEnvironment.cpp \
 	$(SRC)/Operation/VerboseOperationEnvironment.cpp \
 	$(SRC)/Atmosphere/Pressure.cpp \
 	$(SRC)/Atmosphere/AirDensity.cpp \
 	$(SRC)/Atmosphere/CuSonde.cpp \
+	$(SRC)/Cloud/weglide/WeGlideSettings.cpp \
 	$(SRC)/Plane/PlaneGlue.cpp \
 	$(SRC)/Plane/PlaneFileGlue.cpp \
 	$(SRC)/FLARM/FlarmId.cpp \
@@ -626,6 +625,8 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/VoltageDevice.cpp \
 	$(SRC)/Android/IOIOHelper.cpp \
 	$(SRC)/Android/UsbSerialHelper.cpp \
+	$(SRC)/Android/TextEntryDialog.cpp \
+	$(SRC)/Android/FileProvider.cpp \
 	$(SRC)/Android/Main.cpp
 
 else
@@ -654,7 +655,9 @@ XCSOAR_SOURCES += \
 	$(SRC)/Weather/NOAAUpdater.cpp
 
 XCSOAR_SOURCES += \
-	$(SRC)/Tracking/LiveTrack24.cpp
+	$(SRC)/Tracking/LiveTrack24/SessionID.cpp \
+	$(SRC)/Tracking/LiveTrack24/Glue.cpp \
+	$(SRC)/Tracking/LiveTrack24/Client.cpp
 endif
 
 XCSOAR_SOURCES += \
@@ -681,9 +684,10 @@ XCSOAR_DEPENDS = \
 	DRIVER PORT \
 	LIBCOMPUTER \
 	LIBNMEA \
-	LIBHTTP IO ASYNC TASK CONTEST ROUTE GLIDE WAYPOINT AIRSPACE \
+	LIBHTTP CO IO ASYNC TASK CONTEST ROUTE GLIDE WAYPOINT AIRSPACE \
 	LUA \
 	SHAPELIB ZZIP \
+	OPERATION \
 	LIBNET TIME OS THREAD \
 	UTIL GEO MATH
 

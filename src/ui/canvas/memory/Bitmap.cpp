@@ -29,9 +29,15 @@ Copyright_License {
 #include <cassert>
 
 Bitmap::Bitmap(Bitmap &&src) noexcept
-  :buffer(src.buffer)
+  :buffer(std::exchange(src.buffer, WritableImageBuffer<BitmapPixelTraits>::Empty()))
 {
-  src.buffer = {};
+}
+
+Bitmap &Bitmap::operator=(Bitmap &&src) noexcept
+{
+  using std::swap;
+  swap(buffer, src.buffer);
+  return *this;
 }
 
 bool

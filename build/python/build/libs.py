@@ -11,11 +11,12 @@ from build.gcc import BinutilsProject, GccProject, GccBootstrapProject
 from build.linux import SabotageLinuxHeadersProject
 from build.sdl2 import SDL2Project
 from build.lua import LuaProject
+from .musl import MuslProject
 
 binutils = BinutilsProject(
-    'https://ftp.gnu.org/gnu/binutils/binutils-2.36.1.tar.xz',
-    'http://mirrors.ibiblio.org/gnu/ftp/gnu/binutils/binutils-2.36.1.tar.xz',
-    'e81d9edf373f193af428a0f256674aea62a9d74dfe93f65192d4eae030b0f3b0',
+    'https://ftp.gnu.org/gnu/binutils/binutils-2.37.tar.xz',
+    'http://mirrors.ibiblio.org/gnu/ftp/gnu/binutils/binutils-2.37.tar.xz',
+    '820d9724f020a3e69cb337893a0b63c2db161dadcb0e06fc11dc29eb1e84a32c',
     'bin/as',
     [
         '--with-system-zlib',
@@ -35,9 +36,9 @@ linux_headers = SabotageLinuxHeadersProject(
 )
 
 gcc = GccProject(
-    'https://ftp.gnu.org/gnu/gcc/gcc-11.1.0/gcc-11.1.0.tar.xz',
-    'http://mirrors.ibiblio.org/gnu/ftp/gnu/gcc/gcc-11.1.0/gcc-11.1.0.tar.xz',
-    '4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf',
+    'https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz',
+    'http://mirrors.ibiblio.org/gnu/ftp/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz',
+    'd08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b',
     'lib/libstdc++.a',
     [
         # GCC fails to build if we disable the shared libstdc++
@@ -85,7 +86,7 @@ gcc_bootstrap = GccBootstrapProject(
     use_actual_arch=True,
 )
 
-musl = AutotoolsProject(
+musl = MuslProject(
     'https://www.musl-libc.org/releases/musl-1.1.18.tar.gz',
     'https://fossies.org/linux/misc/musl-1.1.18.tar.gz',
     'd017ee5d01aec0c522a1330fdff06b1e428cb409e1db819cc4935d5da4a5a118',
@@ -97,9 +98,9 @@ musl = AutotoolsProject(
 )
 
 openssl = OpenSSLProject(
-    'https://www.openssl.org/source/openssl-3.0.0-beta1.tar.gz',
-    'ftp://ftp.cert.dfn.de/pub/tools/net/openssl/source/openssl-3.0.0-beta1.tar.gz',
-    '7bfedc9a1062cbd2aabc294acc93cbd5259e6e7bd5bbe38e454cc6a32564029f',
+    'https://www.openssl.org/source/openssl-3.0.0.tar.gz',
+    'ftp://ftp.cert.dfn.de/pub/tools/net/openssl/source/openssl-3.0.0.tar.gz',
+    '59eedfcb46c25214c9bd37ed6078297b4df01d012267fe9e9eee31f61bc70536',
     'include/openssl/ossl_typ.h',
 )
 
@@ -173,8 +174,6 @@ cares = CmakeProject(
         '-DCARES_BUILD_TOOLS=OFF',
     ],
     patches=abspath('lib/c-ares/patches'),
-    #autogen=True,
-    #subdirs=['include', 'src/lib'],
 )
 
 curl = CmakeProject(
@@ -210,26 +209,33 @@ curl = CmakeProject(
     patches=abspath('lib/curl/patches'),
 )
 
-proj = AutotoolsProject(
-    'http://download.osgeo.org/proj/proj-5.1.0.tar.gz',
-    'https://fossies.org/linux/privat/proj-5.1.0.tar.gz',
-    '6b1379a53317d9b5b8c723c1dc7bf2e3a8eb22ceb46b8807a1ce48ef65685bb3',
+proj = CmakeProject(
+    'http://download.osgeo.org/proj/proj-5.2.0.tar.gz',
+    'https://fossies.org/linux/privat/proj-5.2.0.tar.gz',
+    'ef919499ffbc62a4aae2659a55e2b25ff09cccbbe230656ba71c6224056c7e60',
     'lib/libproj.a',
     [
-        '--disable-shared', '--enable-static',
-        '--without-mutex',
+        '-DPROJ_TESTS=OFF',
+        '-DBUILD_CCT=OFF',
+        '-DBUILD_CS2CS=OFF',
+        '-DBUILD_GEOD=OFF',
+        '-DBUILD_GIE=OFF',
+        '-DBUILD_NAD2BIN=OFF',
+        '-DBUILD_PROJ=OFF',
+        '-DBUILD_LIBPROJ_SHARED=OFF',
+        '-DUSE_THREAD=OFF',
     ],
     patches=abspath('lib/proj/patches'),
-    autogen=True,
 )
 
-libpng = AutotoolsProject(
+libpng = CmakeProject(
     'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.37.tar.xz',
     'http://downloads.sourceforge.net/project/libpng/libpng16/1.6.37/libpng-1.6.37.tar.xz',
     '505e70834d35383537b6491e7ae8641f1a4bed1876dbfe361201fc80868d88ca',
     'lib/libpng.a',
     [
-        '--disable-shared', '--enable-static',
+        '-DPNG_SHARED=OFF',
+        '-DPNG_TESTS=OFF',
     ]
 )
 
@@ -240,6 +246,7 @@ libjpeg = AutotoolsProject(
     'lib/libjpeg.a',
     [
         '--disable-shared', '--enable-static',
+        '--without-turbojpeg',
     ]
 )
 
@@ -262,51 +269,51 @@ simple_usbmodeswitch = AutotoolsProject(
     ldflags='-pthread',
 )
 
-libtiff = AutotoolsProject(
-    'http://download.osgeo.org/libtiff/tiff-4.0.10.tar.gz',
-    'http://ftp.lfs-matrix.net/pub/blfs/conglomeration/tiff/tiff-4.0.10.tar.gz',
-    '2c52d11ccaf767457db0c46795d9c7d1a8d8f76f68b0b800a3dfe45786b996e4',
+libtiff = CmakeProject(
+    'http://download.osgeo.org/libtiff/tiff-4.3.0.tar.gz',
+    'https://fossies.org/linux/misc/tiff-4.3.0.tar.gz',
+    '0e46e5acb087ce7d1ac53cf4f56a09b221537fc86dfc5daaad1c2e89e1b37ac8',
     'lib/libtiff.a',
     [
-        '--disable-shared', '--enable-static',
-        '--disable-largefile',
-        '--disable-cxx',
-        '--disable-ccitt',
-        '--disable-packbits',
-        '--disable-lzw',
-        '--disable-thunder',
-        '--disable-next',
-        '--disable-logluv',
-        '--disable-mdi',
-        '--disable-pixarlog',
-        '--disable-jpeg',
-        '--disable-old-jpeg',
-        '--disable-jbig',
-        '--disable-lzma',
-        '--disable-zstd',
-        '--disable-webp',
-        '--disable-strip-chopping',
-        '--disable-extrasample-as-alpha',
+        '-DBUILD_SHARED_LIBS=OFF',
+        '-Dld-version-script=OFF',
+        '-Dccitt=OFF',
+        '-Dpackbits=OFF',
+        '-Dlzw=OFF',
+        '-Dthunder=OFF',
+        '-Dnext=OFF',
+        '-Dlogluv=OFF',
+        '-Dmdi=OFF',
+        '-Dpixarlog=OFF',
+        '-Djpeg=OFF',
+        '-Dold-jpeg=OFF',
+        '-Djbig=OFF',
+        '-Dlzma=OFF',
+        '-Dzstd=OFF',
+        '-Dlerc=OFF',
+        '-Dwebp=OFF',
+        '-Dcxx=OFF',
+        '-Dstrip-chopping=OFF',
+        '-Dextrasample-as-alpha=OFF',
+
+        # workaround for build failure with -Dstrip-chopping=OFF
+        '-DSTRIP_SIZE_DEFAULT=8192',
+
+        '-DCMAKE_EXE_LINKER_FLAGS=-lm',
     ],
     patches=abspath('lib/libtiff/patches'),
-    autogen=True,
 )
 
-libgeotiff = AutotoolsProject(
-    'http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.4.2.tar.gz',
-    'https://fossies.org/linux/privat/libgeotiff-1.4.2.tar.gz',
-    '96ab80e0d4eff7820579957245d844f8',
+libgeotiff = CmakeProject(
+    'http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.4.3.tar.gz',
+    'https://fossies.org/linux/privat/libgeotiff-1.4.3.tar.gz',
+    'b8510d9b968b5ee899282cdd5bef13fd02d5a4c19f664553f81e31127bc47265',
     'lib/libgeotiff.a',
     [
-        '--disable-shared', '--enable-static',
-        '--disable-doxygen-doc',
-        '--disable-doxygen-dot',
-        '--disable-doxygen-man',
-        '--disable-doxygen-html',
+        '-DWITH_UTILITIES=OFF',
+        '-DBUILD_SHARED_LIBS=OFF',
     ],
     patches=abspath('lib/libgeotiff/patches'),
-    autogen=True,
-    libs='-lz',
 )
 
 sdl2 = SDL2Project(
@@ -321,9 +328,9 @@ sdl2 = SDL2Project(
 )
 
 lua = LuaProject(
-    'http://www.lua.org/ftp/lua-5.3.5.tar.gz',
-    'https://github.com/lua/lua/releases/download/v5-3-5/lua-5.3.5.tar.gz',
-    '0c2eed3f960446e1a3e4b9a1ca2f3ff893b6ce41942cf54d5dd59ab4b3b058ac',
+    'http://www.lua.org/ftp/lua-5.4.3.tar.gz',
+    'https://github.com/lua/lua/releases/download/v5-3-5/lua-5.4.3.tar.gz',
+    '1dda2ef23a9828492b4595c0197766de6e784bc7',
     'lib/liblua.a',
     patches=abspath('lib/lua/patches'),
 )

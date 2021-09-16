@@ -1,4 +1,4 @@
-import os, shutil
+import os, fcntl, shutil
 import re
 
 from build.download import download_and_verify
@@ -33,6 +33,8 @@ class Project:
 
         self.patches = patches
 
+        self.__unpack_lockfile = None
+
     def download(self, toolchain):
         return download_and_verify(self.url, self.alternative_url, self.md5, toolchain.tarball_path)
 
@@ -50,6 +52,12 @@ class Project:
             parent_path = toolchain.src_path
         else:
             parent_path = toolchain.build_path
+
+        # protect concurrent builds by holding an exclusive lock
+        os.makedirs(parent_path, exist_ok=True)
+        self.__unpack_lockfile = open(os.path.join(parent_path, 'lock.' + self.base), 'w')
+        fcntl.flock(self.__unpack_lockfile.fileno(), fcntl.LOCK_EX)
+
         path = untar(self.download(toolchain), parent_path, self.base,
                      lazy=out_of_tree and self.patches is None)
         if self.patches is not None:
@@ -66,3 +74,11 @@ class Project:
             pass
         os.makedirs(path, exist_ok=True)
         return path
+
+    def build(self, toolchain):
+        try:
+            self._build(toolchain)
+        finally:
+            if self.__unpack_lockfile:
+                self.__unpack_lockfile.close()
+                self.__unpack_lockfile = None

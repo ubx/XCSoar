@@ -64,8 +64,8 @@ The following is needed for all targets:
 
 -  GNU make
 
--  GNU compiler collection (``gcc``), version 6 or later or clang/LLVM
-   4.0 (with "make CLANG=y")
+-  GNU compiler collection (``gcc``), version 10 or later or clang/LLVM
+   10 (with "make CLANG=y")
 
 -  GNU gettext
 
@@ -134,7 +134,7 @@ The following command installs these on Debian::
       libc-ares-dev \
       libcurl4-openssl-dev \
       libc-ares-dev \
-      liblua5.2-dev lua5.2-dev \
+      liblua5.4-dev \
       libxml-parser-perl \
       libasound2-dev \
       librsvg2-bin xsltproc \

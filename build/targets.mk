@@ -50,6 +50,7 @@ TARGET_IS_PI4 := n
 TARGET_IS_PI32 := n
 TARGET_IS_PI64 := n
 TARGET_IS_KOBO := n
+TARGET_IS_CUBIE := n
 HAVE_POSIX := n
 HAVE_WIN32 := y
 HAVE_MSVCRT := y
@@ -77,26 +78,31 @@ ifeq ($(TARGET),ANDROID7)
   ARMV7 := y
   NEON := y
   override TARGET = ANDROID
+  override TARGET_FLAVOR = ANDROID
 endif
 
 ifeq ($(TARGET),ANDROID86)
   X86 := y
   override TARGET = ANDROID
+  override TARGET_FLAVOR = ANDROID
 endif
 
 ifeq ($(TARGET),ANDROIDAARCH64)
   AARCH64 := y
   override TARGET = ANDROID
+  override TARGET_FLAVOR = ANDROID
 endif
 
 ifeq ($(TARGET),ANDROIDX64)
   X64 := y
   override TARGET = ANDROID
+  override TARGET_FLAVOR = ANDROID
 endif
 
 ifeq ($(TARGET),ANDROIDFAT)
   FAT_BINARY := y
   override TARGET = ANDROID
+  override TARGET_FLAVOR = ANDROID
 endif
 
 # real targets
@@ -195,7 +201,16 @@ ifeq ($(TARGET),CUBIE)
   # cross-crompiling for Cubieboard
   override TARGET = NEON
   CUBIE ?= /opt/cubie/root
-  TARGET_HAS_MALI = y
+  TARGET_IS_CUBIE=y
+  # Open-source Lima driver is available and usable with XCSoar
+  # in current mainline kernels, 
+  # and in MESA included in recent distributions
+  ifeq ($(ENABLE_MESA_KMS),y)
+    OPENGL = y
+    GLES2 = y
+  else
+    TARGET_HAS_MALI = y
+  endif
 endif
 
 ifeq ($(TARGET),KOBO)
@@ -350,6 +365,8 @@ ifeq ($(TARGET),ANDROID)
     LLVM_TARGET                  := x86_64-linux-android
   endif
 
+  XCSOAR_ARCH_SUBDIR = /$(ANDROID_APK_LIB_ABI)
+
   HOST_TRIPLET := $(LLVM_TARGET)
 
   # Like in the clang compiler scripts in the NDK add the NDK level to the LLVM target
@@ -418,8 +435,6 @@ endif
 
 ifeq ($(HAVE_POSIX),y)
   TARGET_CPPFLAGS += -DHAVE_POSIX
-  TARGET_CPPFLAGS += -DHAVE_STDINT_H
-  TARGET_CPPFLAGS += -DHAVE_UNISTD_H
   TARGET_CPPFLAGS += -DHAVE_VASPRINTF
 endif
 
@@ -445,7 +460,7 @@ ifeq ($(TARGET_IS_PI),y)
   endif
 endif
 
-ifeq ($(HOST_IS_ARM)$(TARGET_HAS_MALI),ny)
+ifeq ($(HOST_IS_ARM)$(TARGET_IS_CUBIE),ny)
   # cross-crompiling for Cubieboard
   TARGET_CPPFLAGS += --sysroot=$(CUBIE) -isystem $(CUBIE)/usr/include/arm-linux-gnueabihf
   TARGET_CPPFLAGS += -isystem $(CUBIE)/usr/local/stow/sunxi-mali/include
@@ -552,9 +567,9 @@ ifeq ($(HOST_IS_PI)$(TARGET_IS_PI),ny)
   TARGET_LDFLAGS += --sysroot=$(PI) -L$(PI)/usr/lib/arm-linux-gnueabihf
 endif
 
-ifeq ($(HOST_IS_ARM)$(TARGET_HAS_MALI),ny)
+ifeq ($(HOST_IS_ARM)$(TARGET_IS_CUBIE),ny)
   # cross-crompiling for Cubieboard
-  TARGET_LDFLAGS += --sysroot=$(CUBIE)
+  TARGET_LDFLAGS += -L/usr/arm-linux-gnueabihf/lib --sysroot=$(CUBIE)
   TARGET_LDFLAGS += -L$(CUBIE)/lib/arm-linux-gnueabihf
   TARGET_LDFLAGS += -L$(CUBIE)/usr/lib/arm-linux-gnueabihf
   TARGET_LDFLAGS += -L$(CUBIE)/usr/local/stow/sunxi-mali/lib

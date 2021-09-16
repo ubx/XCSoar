@@ -32,7 +32,9 @@ Copyright_License {
 #include "system/FileUtil.hpp"
 
 #ifdef ANDROID
+#include "Android/Context.hpp"
 #include "Android/Environment.hpp"
+#include "Android/Main.hpp"
 #endif
 
 #ifdef _WIN32
@@ -66,12 +68,13 @@ Copyright_License {
 /**
  * The absolute location of the XCSoarData directory.
  */
-static AllocatedPath data_path = AllocatedPath(nullptr);
+static AllocatedPath data_path;
+static AllocatedPath cache_path;
 
 Path
 GetPrimaryDataPath() noexcept
 {
-  assert(!data_path.IsNull());
+  assert(data_path != nullptr);
 
   return data_path;
 }
@@ -79,17 +82,21 @@ GetPrimaryDataPath() noexcept
 void
 SetPrimaryDataPath(Path path) noexcept
 {
-  assert(!path.IsNull());
+  assert(path != nullptr);
   assert(!path.IsEmpty());
 
   data_path = path;
+
+#ifndef ANDROID
+  cache_path = LocalPath(_T("cache"));
+#endif
 }
 
 AllocatedPath
 LocalPath(Path file) noexcept
 {
-  assert(!data_path.IsNull());
-  assert(!file.IsNull());
+  assert(data_path != nullptr);
+  assert(file != nullptr);
 
   return AllocatedPath::Build(data_path, file);
 }
@@ -111,7 +118,7 @@ MakeLocalPath(const TCHAR *name)
 Path
 RelativePath(Path path) noexcept
 {
-  assert(!data_path.IsNull());
+  assert(data_path != nullptr);
 
   return path.RelativeTo(data_path);
 }
@@ -159,7 +166,7 @@ ContractLocalPath(Path src) noexcept
 {
   // Get the relative file name and location (ptr)
   const Path relative = RelativePath(src);
-  if (relative.IsNull())
+  if (relative == nullptr)
     return nullptr;
 
   // Replace the full local path by the code "%LOCAL_PATH%\\" (output)
@@ -315,12 +322,37 @@ VisitDataFiles(const TCHAR* filter, File::Visitor &visitor)
     Directory::VisitSpecificFiles(home_path, filter, visitor, true);
 }
 
+Path
+GetCachePath() noexcept
+{
+  return cache_path;
+}
+
+AllocatedPath
+MakeCacheDirectory(const TCHAR *name) noexcept
+{
+  Directory::Create(cache_path);
+  auto path = AllocatedPath::Build(cache_path, Path(name));
+  Directory::Create(path);
+  return path;
+}
+
 bool
 InitialiseDataPath()
 {
   data_path = FindDataPath();
   if (data_path == nullptr)
     return false;
+
+#ifdef ANDROID
+    cache_path = context->GetExternalCacheDir(Java::GetEnv());
+    if (cache_path == nullptr)
+      throw std::runtime_error("No Android cache directory");
+
+    // TODO: delete the old cache directory in XCSoarData?
+#else
+    cache_path = LocalPath(_T("cache"));
+#endif
 
   return true;
 }
