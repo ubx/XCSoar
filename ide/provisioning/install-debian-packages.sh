@@ -44,6 +44,7 @@ apt-get install ${APTOPTS[*]} make g++ \
   libxml-parser-perl \
   libasound2-dev \
   libsdl2-dev \
+  libglm-dev \
   librsvg2-bin xsltproc \
   imagemagick gettext \
   mesa-common-dev libgl1-mesa-dev libegl1-mesa-dev \
@@ -60,7 +61,7 @@ echo Installing dependencies for creating Debian package
 echo
 
 echo Installing dependencies for compiling targets which need SocketCan...
-apt-get install $APTOPTS libsocketcan-dev
+apt-get install ${APTOPTS[*]} libsocketcan-dev
 echo
 
 echo Installing dependencies for compiling with LLVM / Clang...
