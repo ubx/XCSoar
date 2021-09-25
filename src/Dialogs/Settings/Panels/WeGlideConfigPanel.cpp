@@ -46,10 +46,10 @@ enum ControlIndex {
 class WeGlideConfigPanel final
   : public RowFormWidget, DataFieldListener {
 public:
-  WeGlideConfigPanel()
+  WeGlideConfigPanel() noexcept
     :RowFormWidget(UIGlobals::GetDialogLook()) {}
 
-  void SetEnabled(bool enabled);
+  void SetEnabled(bool enabled) noexcept;
 
   /* virtual methods from class Widget */
   void Prepare(ContainerWindow &parent, const PixelRect &rc) noexcept override;
@@ -61,8 +61,9 @@ private:
 };
 
 void
-WeGlideConfigPanel::SetEnabled(bool enabled)
+WeGlideConfigPanel::SetEnabled(bool enabled) noexcept
 {
+  SetRowEnabled(WeGlideAutomaticUpload, enabled);
   SetRowEnabled(WeGlidePilotBirthDate, enabled);
   SetRowEnabled(WeGlidePilotID, enabled);
 }
@@ -84,12 +85,11 @@ WeGlideConfigPanel::Prepare(ContainerWindow &parent,
 
   RowFormWidget::Prepare(parent, rc);
 
-  AddBoolean(_("Enable"),
-             _("This enabled the communication with the WeGlide server."),
+  AddBoolean(_("Enable"), nullptr,
              weglide.enabled, this);
 
   AddBoolean(_("Automatic Upload"),
-             _("This transmits the IGC file after download from logger/data recorder to WeGlide automatically ."),
+             _("Uploads flights automatically after download from logger?"),
              weglide.automatic_upload, this);
 
   AddInteger(_("Pilot"),

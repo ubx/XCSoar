@@ -803,6 +803,7 @@ DEBUG_PROGRAM_NAMES += DownloadFile \
 	RunDownloadToFile \
 	UploadFile \
 	RunWeGlideUploadFlight \
+	RunTimClient \
 	RunNOAADownloader RunSkyLinesTracking RunLiveTrack24
 endif
 
@@ -966,6 +967,13 @@ UPLOAD_FILE_SOURCES = \
 UPLOAD_FILE_DEPENDS = LIBHTTP ASYNC OS LIBNET OS IO UTIL
 $(eval $(call link-program,UploadFile,UPLOAD_FILE))
 
+RUN_TIM_CLIENT_SOURCES = \
+	$(SRC)/Version.cpp \
+	$(SRC)/net/client/tim/Client.cpp \
+	$(TEST_SRC_DIR)/RunTimClient.cpp
+RUN_TIM_CLIENT_DEPENDS = JSON LIBHTTP ASYNC OS LIBNET IO UTIL
+$(eval $(call link-program,RunTimClient,RUN_TIM_CLIENT))
+
 RUN_WEGLIDE_UPLOAD_FLIGHT_SOURCES = \
 	$(SRC)/Version.cpp \
 	$(SRC)/Cloud/weglide/UploadFlight.cpp \
@@ -1128,6 +1136,7 @@ LOAD_TOPOGRAPHY_SOURCES = \
 	$(SRC)/Topography/XShape.cpp \
 	$(SRC)/Projection/Projection.cpp \
 	$(SRC)/Projection/WindowProjection.cpp \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/LoadTopography.cpp
 ifeq ($(OPENGL),y)
 LOAD_TOPOGRAPHY_SOURCES += \
@@ -1138,6 +1147,7 @@ LOAD_TOPOGRAPHY_CPPFLAGS = $(SCREEN_CPPFLAGS)
 $(eval $(call link-program,LoadTopography,LOAD_TOPOGRAPHY))
 
 LOAD_TERRAIN_SOURCES = \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/LoadTerrain.cpp
 LOAD_TERRAIN_CPPFLAGS = $(SCREEN_CPPFLAGS)
 LOAD_TERRAIN_DEPENDS = TERRAIN OPERATION GEO MATH OS IO ZZIP UTIL
@@ -1146,6 +1156,7 @@ $(eval $(call link-program,LoadTerrain,LOAD_TERRAIN))
 RUN_HEIGHT_MATRIX_SOURCES = \
 	$(SRC)/Projection/Projection.cpp \
 	$(SRC)/Projection/WindowProjection.cpp \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/RunHeightMatrix.cpp
 RUN_HEIGHT_MATRIX_CPPFLAGS = $(SCREEN_CPPFLAGS)
 RUN_HEIGHT_MATRIX_DEPENDS = TERRAIN OPERATION GEO MATH IO OS ZZIP UTIL
@@ -1177,6 +1188,7 @@ RUN_WAY_POINT_PARSER_SOURCES = \
 	$(SRC)/Units/System.cpp \
 	$(SRC)/Compatibility/fmode.c \
 	$(SRC)/RadioFrequency.cpp \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/FakeTerrain.cpp \
 	$(TEST_SRC_DIR)/RunWaypointParser.cpp
 RUN_WAY_POINT_PARSER_LDADD = $(FAKE_LIBS)
@@ -1198,6 +1210,7 @@ NEAREST_WAYPOINTS_SOURCES = \
 	$(SRC)/Units/System.cpp \
 	$(SRC)/Compatibility/fmode.c \
 	$(SRC)/RadioFrequency.cpp \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/FakeTerrain.cpp \
 	$(TEST_SRC_DIR)/NearestWaypoints.cpp
 NEAREST_WAYPOINTS_LDADD = $(FAKE_LIBS)
@@ -1216,6 +1229,7 @@ RUN_AIRSPACE_PARSER_SOURCES = \
 	$(SRC)/Units/Descriptor.cpp \
 	$(SRC)/Units/System.cpp \
 	$(SRC)/Atmosphere/Pressure.cpp \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/FakeTerrain.cpp \
 	$(TEST_SRC_DIR)/FakeLanguage.cpp \
 	$(TEST_SRC_DIR)/RunAirspaceParser.cpp
@@ -1791,6 +1805,7 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/RadioFrequency.cpp \
 	$(SRC)/Atmosphere/Pressure.cpp \
 	$(SRC)/Atmosphere/AirDensity.cpp \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/Fonts.cpp \
 	$(TEST_SRC_DIR)/FakeAsset.cpp \
 	$(TEST_SRC_DIR)/FakeDialogs.cpp \
@@ -2210,6 +2225,7 @@ RUN_ANALYSIS_SOURCES = \
 	$(SRC)/Math/SunEphemeris.cpp \
 	$(IO_SRC_DIR)/MapFile.cpp \
 	$(SRC)/io/ConfiguredFile.cpp \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/FakeAsset.cpp \
 	$(TEST_SRC_DIR)/FakeDialogs.cpp \
 	$(TEST_SRC_DIR)/FakeListPicker.cpp \
@@ -2261,6 +2277,7 @@ RUN_AIRSPACE_WARNING_DIALOG_SOURCES = \
 	$(SRC)/Atmosphere/Pressure.cpp \
 	$(IO_SRC_DIR)/MapFile.cpp \
 	$(IO_SRC_DIR)/ConfiguredFile.cpp \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/FakeAsset.cpp \
 	$(TEST_SRC_DIR)/FakeDialogs.cpp \
 	$(TEST_SRC_DIR)/FakeHelpDialog.cpp \
