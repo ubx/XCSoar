@@ -136,18 +136,14 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
         case INDICATED_AIRSPEED:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.indicated_airspeed = canasMessage.data.container.FLOAT;
-                info.airspeed_available.Update(info.clock);
-                info.airspeed_real = true;
+                info.ProvideIndicatedAirspeed(canasMessage.data.container.FLOAT);
                 return true;
             }
             break;
 
         case TRUE_AIRSPEED:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.true_airspeed = canasMessage.data.container.FLOAT;
-                info.airspeed_available.Update(info.clock);
-                info.airspeed_real = true;
+                info.ProvideTrueAirspeed(canasMessage.data.container.FLOAT);
                 return true;
             }
             break;
