@@ -40,6 +40,7 @@ typedef enum {
 } CanasMessageTypeID;
 
 typedef enum {
+    BODY_NORM_ACC_ID = 302,    /* body normal acceleration */
     INDICATED_AIRSPEED = 315,
     TRUE_AIRSPEED = 316,
     BARO_CORRECTION_ID = 319,    /* barometric correction (QNH) */

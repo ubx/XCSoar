@@ -35,6 +35,7 @@ Copyright_License {
 #include <time/LocalTime.hpp>
 #include <Device/Port/CANPort.hpp>
 #include <Device/Driver/FLARM/flarmPropagated.hpp>
+#include <Geo/Gravity.hpp>
 
 class CANaerospaceDevice : public AbstractDevice {
 //  Port &port;
@@ -207,21 +208,28 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-            case WIND_SPEED_ID:
-                if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                    last_wind.norm = canasMessage.data.container.FLOAT;
-                    info.ProvideExternalWind(last_wind.Reciprocal());
-                    return true;
-               }
+        case BODY_NORM_ACC_ID:  // todo -- verify
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.acceleration.ProvideGLoad(canasMessage.data.container.FLOAT / -GRAVITY);
+                return true;
+            }
             break;
 
-            case WIND_DIRECTION_ID:
-                if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                    last_wind.bearing = Angle::Degrees(canasMessage.data.container.FLOAT);
-                    info.ProvideExternalWind(last_wind.Reciprocal());
-                    return true;
-                }
-            break;
+        case WIND_SPEED_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                last_wind.norm = canasMessage.data.container.FLOAT;
+                info.ProvideExternalWind(last_wind.Reciprocal());
+                return true;
+           }
+           break;
+
+        case WIND_DIRECTION_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                last_wind.bearing = Angle::Degrees(canasMessage.data.container.FLOAT);
+                info.ProvideExternalWind(last_wind.Reciprocal());
+                return true;
+            }
+        break;
 
         case FLARM_STATE_ID:  // Flarm messages: PFLAU
             // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>
