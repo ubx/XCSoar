@@ -77,6 +77,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
     static double qnh_corr = 0.0;
     static double last_body_long_acc = 0.0;
     static double last_body_lat_acc = 0.0;
+    static double last_body_norm_acc = 0.0;
 
     info.alive.Update(info.clock);
 
@@ -213,6 +214,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
         case BODY_LAT_ACC_ID:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 last_body_lat_acc = canasMessage.data.container.FLOAT;
+                info.acceleration.ProvideGLoad(SpaceDiagonal(last_body_lat_acc, last_body_long_acc, last_body_norm_acc) / GRAVITY);
                 return true;
             }
             break;
@@ -220,13 +222,15 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
         case BODY_LONG_ACC_ID:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 last_body_long_acc = canasMessage.data.container.FLOAT;
+                info.acceleration.ProvideGLoad(SpaceDiagonal(last_body_lat_acc, last_body_long_acc, last_body_norm_acc) / GRAVITY);
                 return true;
             }
             break;
 
         case BODY_NORM_ACC_ID:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.acceleration.ProvideGLoad(SpaceDiagonal(last_body_lat_acc, last_body_long_acc, canasMessage.data.container.FLOAT) / GRAVITY);
+                last_body_norm_acc = canasMessage.data.container.FLOAT;
+                info.acceleration.ProvideGLoad(SpaceDiagonal(last_body_lat_acc, last_body_long_acc, last_body_norm_acc) / GRAVITY);
                 return true;
             }
             break;
