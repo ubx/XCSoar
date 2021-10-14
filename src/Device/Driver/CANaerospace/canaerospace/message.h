@@ -40,6 +40,8 @@ typedef enum {
 } CanasMessageTypeID;
 
 typedef enum {
+    BODY_LONG_ACC_ID = 300,    /* body longitudinal acceleration */
+    BODY_LAT_ACC_ID = 301,    /* body lateral acceleration */
     BODY_NORM_ACC_ID = 302,    /* body normal acceleration */
     INDICATED_AIRSPEED = 315,
     TRUE_AIRSPEED = 316,

@@ -75,6 +75,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
     canasMessage.service_code = cm->service_code;
 
     static double qnh_corr = 0.0;
+    static double last_body_long_acc = 0.0;
+    static double last_body_lat_acc = 0.0;
 
     info.alive.Update(info.clock);
 
@@ -208,9 +210,23 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-        case BODY_NORM_ACC_ID:  // todo -- verify
+        case BODY_LAT_ACC_ID:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.acceleration.ProvideGLoad(canasMessage.data.container.FLOAT / -GRAVITY);
+                last_body_lat_acc = canasMessage.data.container.FLOAT;
+                return true;
+            }
+            break;
+
+        case BODY_LONG_ACC_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                last_body_long_acc = canasMessage.data.container.FLOAT;
+                return true;
+            }
+            break;
+
+        case BODY_NORM_ACC_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.acceleration.ProvideGLoad(SpaceDiagonal(last_body_lat_acc, last_body_long_acc, canasMessage.data.container.FLOAT) / GRAVITY);
                 return true;
             }
             break;
@@ -220,8 +236,8 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                 last_wind.norm = canasMessage.data.container.FLOAT;
                 info.ProvideExternalWind(last_wind.Reciprocal());
                 return true;
-           }
-           break;
+            }
+            break;
 
         case WIND_DIRECTION_ID:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
@@ -229,20 +245,20 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                 info.ProvideExternalWind(last_wind.Reciprocal());
                 return true;
             }
-        break;
+            break;
 
         case FLARM_STATE_ID:  // Flarm messages: PFLAU
             // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>
             switch (canasMessage.service_code) {
                 case 2:
                     if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_USHORT2) == 0) return false;
-                    break;
+                       break;
                 case 3:
                     if (canasNetworkToHost(&canasMessage.data, canData, 2, CANAS_DATATYPE_SHORT) == 0) return false;
-                    break;
+                       break;
                 default:
                     if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_UCHAR4) == 0) return false;
-            }
+              }
             if (canasFlarmStatePropagated(&canasMessage, info.gps_altitude, &objectData, &flarmState)) {
                 info.flarm.status.available.Update(info.clock);
                 info.flarm.status.rx = flarmState.RxDevicesCount;
@@ -336,7 +352,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
         default:
             // std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;
             break;
-    }
+      }
     return false;
 }
 
