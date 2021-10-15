@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2021 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,31 +29,44 @@
 
 #pragma once
 
-constexpr bool
-IsLeapYear(unsigned y) noexcept
-{
-	return (y % 4) == 0 && ((y % 100) != 0 || (y % 400) == 0);
-}
+#include <cassert>
+#include <cstdint>
+#include <optional>
 
-constexpr unsigned
-DaysInFebruary(unsigned year) noexcept
-{
-	return IsLeapYear(year) ? 29 : 28;
-}
+/**
+ * An optional value in the range 0..100.  This is similar to
+ * std::optional, but packs everything in one byte.
+ */
+class OptionalPercent {
+	static constexpr uint_least8_t INVALID = ~uint_least8_t{};
 
-constexpr unsigned
-DaysInMonth(unsigned month, unsigned year) noexcept
-{
-	if (month == 4 || month == 6 || month == 9 || month == 11)
-		return 30;
-	else if (month != 2)
-		return 31;
-	else
-		return DaysInFebruary(year);
-}
+	uint_least8_t value;
 
-constexpr unsigned
-DaysInYear(unsigned year) noexcept
-{
-	return IsLeapYear(year) ? 366 : 365;
-}
+public:
+	constexpr OptionalPercent() noexcept = default;
+
+	constexpr OptionalPercent(std::nullopt_t) noexcept
+		:value(INVALID) {}
+
+	constexpr OptionalPercent(uint_least8_t _value) noexcept
+		:value(_value) {}
+
+	constexpr operator bool() const noexcept {
+		return value != INVALID;
+	}
+
+	constexpr uint_least8_t operator*() const noexcept {
+		assert(*this);
+
+		return value;
+	}
+
+	auto &operator=(uint_least8_t _value) noexcept {
+		value = _value;
+		return *this;
+	}
+
+	constexpr void reset() noexcept {
+		value = INVALID;
+	}
+};

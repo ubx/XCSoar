@@ -21,30 +21,13 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_V7_CONFIG_WIDGET_HPP
-#define XCSOAR_V7_CONFIG_WIDGET_HPP
+#include "PowerGlobal.hpp"
 
-#include "Widget/RowFormWidget.hpp"
+#ifdef HAVE_BATTERY
+#include "PowerInfo.hpp"
 
-class LXDevice;
+namespace Power {
+Info global_info;
+} // namespace Power
 
-class V7ConfigWidget final : public RowFormWidget {
-  enum Controls {
-    BRGPS,
-    BRPDA
-  };
-
-  LXDevice &device;
-
-  unsigned brgps, brpda;
-
-public:
-  V7ConfigWidget(const DialogLook &look, LXDevice &_device)
-    :RowFormWidget(look), device(_device) {}
-
-  /* virtual methods from Widget */
-  void Prepare(ContainerWindow &parent, const PixelRect &rc) noexcept override;
-  bool Save(bool &changed) noexcept override;
-};
-
-#endif
+#endif // HAVE_BATTERY

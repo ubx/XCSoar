@@ -21,29 +21,31 @@ Copyright_License {
 }
 */
 
-#include "Hardware/PowerGlobal.hpp"
-#include "Hardware/PowerInfo.hpp"
-#include "org_xcsoar_BatteryReceiver.h"
-#include "util/Compiler.h"
+#pragma once
 
-gcc_visibility_default
-JNIEXPORT void JNICALL
-Java_org_xcsoar_BatteryReceiver_setBatteryPercent(JNIEnv *env, jclass cls,
-                                                  jint value, jint plugged)
-{
-  auto &info = Power::global_info;
-  auto &battery = info.battery;
-  auto &external = info.external;
+#include "util/OptionalPercent.hxx"
 
-  battery.remaining_percent = value;
+#include <cstdint>
 
-  switch (plugged) {
-  case 0:
-    external.status = Power::ExternalInfo::Status::OFF;
-    break;
+namespace Power {
 
-  default:
-    external.status = Power::ExternalInfo::Status::ON;
-    break;
-  }
-}
+struct BatteryInfo {
+  OptionalPercent remaining_percent = std::nullopt;
+};
+
+struct ExternalInfo {
+  enum class Status : uint_least8_t {
+    UNKNOWN,
+    OFF,
+    ON,
+  };
+
+  Status status = Status::UNKNOWN;
+};
+
+struct Info {
+  BatteryInfo battery;
+  ExternalInfo external;
+};
+
+} // namespace Power

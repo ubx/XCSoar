@@ -65,12 +65,12 @@ class XShape {
    * All points of all lines.
    */
 #ifdef ENABLE_OPENGL
-  ShapePoint *points;
+  ShapePoint *points = nullptr;
 
   /**
    * Indices of polygon triangles or lines with reduced number of vertices.
    */
-  uint16_t *indices[THINNING_LEVELS];
+  uint16_t *indices[THINNING_LEVELS]{};
 
   /**
    * For polygons this will contain the total number of triangle vertices
@@ -78,7 +78,7 @@ class XShape {
    * For lines there will be an array of size num_lines for each thinning
    * level, which contains the number of points for each line.
    */
-  uint16_t *index_count[THINNING_LEVELS];
+  uint16_t *index_count[THINNING_LEVELS]{};
 
   /**
    * The start offset in the #GLArrayBuffer (vertex buffer object).
@@ -86,7 +86,7 @@ class XShape {
    */
   mutable unsigned offset;
 #else // !ENABLE_OPENGL
-  GeoPoint *points;
+  GeoPoint *points = nullptr;
 #endif
 
   BasicAllocatedString<TCHAR> label;
@@ -97,47 +97,53 @@ public:
 
   XShape(const XShape &) = delete;
 
-  ~XShape();
+  ~XShape() noexcept;
 
 #ifdef ENABLE_OPENGL
-  void SetOffset(unsigned _offset) const {
+  void SetOffset(unsigned _offset) const noexcept {
     offset = _offset;
   }
 
-  unsigned GetOffset() const {
+  unsigned GetOffset() const noexcept {
     return offset;
   }
 
 protected:
-  bool BuildIndices(unsigned thinning_level, ShapeScalar min_distance);
+  bool BuildIndices(unsigned thinning_level,
+                    ShapeScalar min_distance) noexcept;
 
 public:
-  const uint16_t *GetIndices(int thinning_level,
-                             ShapeScalar min_distance,
-                             const uint16_t *&count) const;
+  struct Indices {
+    const uint16_t *indices;
+    const uint16_t *count;
+  };
+
+  [[gnu::pure]]
+  Indices GetIndices(int thinning_level,
+                     ShapeScalar min_distance) const noexcept;
 #endif
 
-  const GeoBounds &get_bounds() const {
+  const GeoBounds &get_bounds() const noexcept {
     return bounds;
   }
 
-  MS_SHAPE_TYPE get_type() const {
+  MS_SHAPE_TYPE get_type() const noexcept {
     return (MS_SHAPE_TYPE)type;
   }
 
-  ConstBuffer<uint16_t> GetLines() const {
+  ConstBuffer<uint16_t> GetLines() const noexcept {
     return { lines, num_lines };
   }
 
 #ifdef ENABLE_OPENGL
-  const ShapePoint *GetPoints() const {
+  const ShapePoint *GetPoints() const noexcept {
 #else
-  const GeoPoint *GetPoints() const {
+  const GeoPoint *GetPoints() const noexcept {
 #endif
     return points;
   }
 
-  const TCHAR *GetLabel() const {
+  const TCHAR *GetLabel() const noexcept {
     return label.c_str();
   }
 };

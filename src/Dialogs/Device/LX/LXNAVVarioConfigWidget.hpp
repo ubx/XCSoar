@@ -21,29 +21,30 @@ Copyright_License {
 }
 */
 
-#include "Hardware/PowerGlobal.hpp"
-#include "Hardware/PowerInfo.hpp"
-#include "org_xcsoar_BatteryReceiver.h"
-#include "util/Compiler.h"
+#ifndef XCSOAR_LX_VARIO_CONFIG_WIDGET_HPP
+#define XCSOAR_LX_VARIO_CONFIG_WIDGET_HPP
 
-gcc_visibility_default
-JNIEXPORT void JNICALL
-Java_org_xcsoar_BatteryReceiver_setBatteryPercent(JNIEnv *env, jclass cls,
-                                                  jint value, jint plugged)
-{
-  auto &info = Power::global_info;
-  auto &battery = info.battery;
-  auto &external = info.external;
+#include "Widget/RowFormWidget.hpp"
 
-  battery.remaining_percent = value;
+class LXDevice;
 
-  switch (plugged) {
-  case 0:
-    external.status = Power::ExternalInfo::Status::OFF;
-    break;
+class LXNAVVarioConfigWidget final : public RowFormWidget {
+  enum Controls {
+    BRGPS,
+    BRPDA
+  };
 
-  default:
-    external.status = Power::ExternalInfo::Status::ON;
-    break;
-  }
-}
+  LXDevice &device;
+
+  unsigned brgps, brpda;
+
+public:
+  LXNAVVarioConfigWidget(const DialogLook &look, LXDevice &_device)
+    :RowFormWidget(look), device(_device) {}
+
+  /* virtual methods from Widget */
+  void Prepare(ContainerWindow &parent, const PixelRect &rc) noexcept override;
+  bool Save(bool &changed) noexcept override;
+};
+
+#endif

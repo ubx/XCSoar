@@ -42,7 +42,7 @@ Copyright_License {
 #include <tchar.h>
 
 static BasicAllocatedString<TCHAR>
-ImportLabel(const char *src)
+ImportLabel(const char *src) noexcept
 {
   if (src == nullptr)
     return nullptr;
@@ -67,9 +67,8 @@ ImportLabel(const char *src)
  * Returns the minimum number of points for each line of this shape
  * type.  Returns -1 if the shape type is not supported.
  */
-gcc_const
-static unsigned
-GetMinPointsForShapeType(int shapelib_type)
+static constexpr int
+GetMinPointsForShapeType(int shapelib_type) noexcept
 {
   switch (shapelib_type) {
   case MS_SHAPE_POINT:
@@ -89,13 +88,7 @@ GetMinPointsForShapeType(int shapelib_type)
 
 XShape::XShape(shapefileObj *shpfile, const GeoPoint &file_center, int i,
                int label_field)
-  :label(nullptr)
 {
-#ifdef ENABLE_OPENGL
-  std::fill_n(index_count, THINNING_LEVELS, nullptr);
-  std::fill_n(indices, THINNING_LEVELS, nullptr);
-#endif
-
   shapeObj shape;
   msInitShape(&shape);
   AtScopeExit(&shape) { msFreeShape(&shape); };
@@ -104,7 +97,6 @@ XShape::XShape(shapefileObj *shpfile, const GeoPoint &file_center, int i,
   bounds = ImportRect(shape.bounds);
   if (!bounds.Check()) {
     /* malformed bounds */
-    points = nullptr;
     return;
   }
 
@@ -115,7 +107,6 @@ XShape::XShape(shapefileObj *shpfile, const GeoPoint &file_center, int i,
   const int min_points = GetMinPointsForShapeType(shape.type);
   if (min_points < 0) {
     /* not supported, leave an empty XShape object */
-    points = nullptr;
     return;
   }
 
@@ -167,20 +158,20 @@ XShape::XShape(shapefileObj *shpfile, const GeoPoint &file_center, int i,
   }
 }
 
-XShape::~XShape()
+XShape::~XShape() noexcept
 {
   delete[] points;
 #ifdef ENABLE_OPENGL
   // Note: index_count and indices share one buffer
-  for (unsigned i = 0; i < THINNING_LEVELS; i++)
-    delete[] index_count[i];
+  for (auto *i : index_count)
+    delete[] i;
 #endif
 }
 
 #ifdef ENABLE_OPENGL
 
 bool
-XShape::BuildIndices(unsigned thinning_level, ShapeScalar min_distance)
+XShape::BuildIndices(unsigned thinning_level, ShapeScalar min_distance) noexcept
 {
   assert(indices[thinning_level] == nullptr);
 
@@ -249,18 +240,16 @@ XShape::BuildIndices(unsigned thinning_level, ShapeScalar min_distance)
   }
 }
 
-const uint16_t *
-XShape::GetIndices(int thinning_level, ShapeScalar min_distance,
-                   const uint16_t *&count) const
+XShape::Indices
+XShape::GetIndices(int thinning_level, ShapeScalar min_distance) const noexcept
 {
   if (indices[thinning_level] == nullptr) {
     XShape &deconst = const_cast<XShape &>(*this);
     if (!deconst.BuildIndices(thinning_level, min_distance))
-      return nullptr;
+      return {};
   }
 
-  count = index_count[thinning_level];
-  return indices[thinning_level];
+  return {indices[thinning_level], index_count[thinning_level]};
 }
 
 #endif // ENABLE_OPENGL

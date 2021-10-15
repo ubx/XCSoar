@@ -28,7 +28,7 @@ Copyright_License {
 #include "ManageI2CPitotDialog.hpp"
 #include "ManageCAI302Dialog.hpp"
 #include "ManageFlarmDialog.hpp"
-#include "LX/ManageV7Dialog.hpp"
+#include "LX/ManageLXNAVVarioDialog.hpp"
 #include "LX/ManageNanoDialog.hpp"
 #include "LX/ManageLX16xxDialog.hpp"
 #include "PortMonitor.hpp"
@@ -669,8 +669,8 @@ DeviceListWidget::ManageCurrent()
     }
 
     LXDevice &lx_device = *(LXDevice *)device;
-    if (lx_device.IsV7())
-      ManageV7Dialog(lx_device, info, secondary_info);
+    if (lx_device.IsLXNAVVario())
+      ManageLXNAVVarioDialog(lx_device, info, secondary_info);
     else if (lx_device.IsNano())
       ManageNanoDialog(lx_device, info);
     else if (lx_device.IsLX16xx())

@@ -21,14 +21,16 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_MANAGE_V7_DIALOG_HPP
-#define XCSOAR_MANAGE_V7_DIALOG_HPP
+#pragma once
 
-class Device;
-struct DeviceInfo;
-
-void
-ManageV7Dialog(Device &device, const DeviceInfo &info,
-               const DeviceInfo &secondary_info);
-
-#endif
+/**
+ * A constexpr wrapper for std::isfinite().  This uses the
+ * non-standard __builtin_isfinite() function (specific to GCC and
+ * clang) because the C++ standard library is not "constexpr".
+ */
+template<typename T>
+constexpr bool
+IsFinite(T value) noexcept
+{
+  return __builtin_isfinite(value);
+}

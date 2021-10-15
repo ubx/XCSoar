@@ -25,11 +25,15 @@ Copyright_License {
 #include "InfoBoxes/Data.hpp"
 #include "Interface.hpp"
 #include "Renderer/HorizonRenderer.hpp"
-#include "Hardware/Battery.hpp"
+#include "Hardware/PowerGlobal.hpp"
 #include "system/SystemLoad.hpp"
 #include "Language/Language.hpp"
 #include "UIGlobals.hpp"
 #include "Look/Look.hpp"
+
+#ifdef HAVE_BATTERY
+#include "Hardware/PowerInfo.hpp"
+#endif
 
 #include <tchar.h>
 
@@ -62,56 +66,47 @@ void
 UpdateInfoBoxBattery(InfoBoxData &data) noexcept
 {
 #ifdef HAVE_BATTERY
+  const auto &info = Power::global_info;
+  const auto &battery = info.battery;
+  const auto &external = info.external;
+
   bool DisplaySupplyVoltageAsValue=false;
-  switch (Power::External::Status) {
-    case Power::External::OFF:
-      if (CommonInterface::Basic().battery_level_available)
-        data.UnsafeFormatComment(_T("%s; %d%%"),
-                                 _("AC Off"),
-                                 (int)CommonInterface::Basic().battery_level);
-      else
-        data.SetComment(_("AC Off"));
-      break;
-    case Power::External::ON:
-      if (!CommonInterface::Basic().voltage_available)
-        data.SetComment(_("AC ON"));
-      else{
-        DisplaySupplyVoltageAsValue = true;
-        data.SetValueFromVoltage(CommonInterface::Basic().voltage);
-      }
-      break;
-    case Power::External::UNKNOWN:
-    default:
+  switch (external.status) {
+  case Power::ExternalInfo::Status::OFF:
+    if (CommonInterface::Basic().battery_level_available)
+      data.UnsafeFormatComment(_T("%s; %d%%"),
+                               _("AC Off"),
+                               (int)CommonInterface::Basic().battery_level);
+    else
+      data.SetComment(_("AC Off"));
+    break;
+
+  case Power::ExternalInfo::Status::ON:
+    if (!CommonInterface::Basic().voltage_available)
+      data.SetComment(_("AC ON"));
+    else{
+      DisplaySupplyVoltageAsValue = true;
+      data.SetValueFromVoltage(CommonInterface::Basic().voltage);
+    }
+    break;
+
+  case Power::ExternalInfo::Status::UNKNOWN:
+  default:
+    data.SetCommentInvalid();
+  }
+
+  if (battery.remaining_percent) {
+    if (!DisplaySupplyVoltageAsValue)
+      data.SetValueFromPercent(*battery.remaining_percent);
+    else
+      data.SetCommentFromPercent(* battery.remaining_percent);
+  } else {
+    if (!DisplaySupplyVoltageAsValue)
+      data.SetValueInvalid();
+    else
       data.SetCommentInvalid();
   }
-#ifndef ANDROID
-  switch (Power::Battery::Status){
-    case Power::Battery::HIGH:
-    case Power::Battery::LOW:
-    case Power::Battery::CRITICAL:
-    case Power::Battery::CHARGING:
-      if (Power::Battery::RemainingPercentValid){
-#endif
-        if (!DisplaySupplyVoltageAsValue)
-          data.SetValueFromPercent(Power::Battery::RemainingPercent);
-        else
-          data.SetCommentFromPercent(Power::Battery::RemainingPercent);
-#ifndef ANDROID
-      }
-      else
-        if (!DisplaySupplyVoltageAsValue)
-          data.SetValueInvalid();
-        else
-          data.SetCommentInvalid();
-      break;
-    case Power::Battery::NOBATTERY:
-    case Power::Battery::UNKNOWN:
-      if (!DisplaySupplyVoltageAsValue)
-        data.SetValueInvalid();
-      else
-        data.SetCommentInvalid();
-  }
-#endif
+
   return;
 
 #endif
@@ -144,9 +139,9 @@ UpdateInfoBoxExperimental2(InfoBoxData &data) noexcept
 void
 UpdateInfoBoxCPULoad(InfoBoxData &data) noexcept
 {
-  unsigned percent_load = SystemLoadCPU();
-  if (percent_load <= 100) {
-    data.SetValueFromPercent(percent_load);
+  const auto percent_load = SystemLoadCPU();
+  if (percent_load) {
+    data.SetValueFromPercent(*percent_load);
   } else {
     data.SetInvalid();
   }

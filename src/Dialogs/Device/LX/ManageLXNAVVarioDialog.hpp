@@ -21,29 +21,14 @@ Copyright_License {
 }
 */
 
-#include "Hardware/PowerGlobal.hpp"
-#include "Hardware/PowerInfo.hpp"
-#include "org_xcsoar_BatteryReceiver.h"
-#include "util/Compiler.h"
+#ifndef XCSOAR_MANAGE_LX_VARIO_DIALOG_HPP
+#define XCSOAR_MANAGE_LX_VARIO_DIALOG_HPP
 
-gcc_visibility_default
-JNIEXPORT void JNICALL
-Java_org_xcsoar_BatteryReceiver_setBatteryPercent(JNIEnv *env, jclass cls,
-                                                  jint value, jint plugged)
-{
-  auto &info = Power::global_info;
-  auto &battery = info.battery;
-  auto &external = info.external;
+class Device;
+struct DeviceInfo;
 
-  battery.remaining_percent = value;
+void
+ManageLXNAVVarioDialog(Device &device, const DeviceInfo &info,
+               const DeviceInfo &secondary_info);
 
-  switch (plugged) {
-  case 0:
-    external.status = Power::ExternalInfo::Status::OFF;
-    break;
-
-  default:
-    external.status = Power::ExternalInfo::Status::ON;
-    break;
-  }
-}
+#endif

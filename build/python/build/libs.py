@@ -177,9 +177,9 @@ cares = CmakeProject(
 )
 
 curl = CmakeProject(
-    'https://curl.se/download/curl-7.78.0.tar.xz',
-    'https://github.com/curl/curl/releases/download/curl-7_78_0/curl-7.78.0.tar.xz',
-    'be42766d5664a739c3974ee3dfbbcbe978a4ccb1fe628bb1d9b59ac79e445fb5',
+    'https://curl.se/download/curl-7.79.1.tar.xz',
+    'https://github.com/curl/curl/releases/download/curl-7_79_1/curl-7.79.1.tar.xz',
+    '0606f74b1182ab732a17c11613cbbaf7084f2e6cca432642d0e3ad7c224c3689',
     'lib/libcurl.a',
     [
         '-DBUILD_CURL_EXE=OFF',
@@ -337,7 +337,7 @@ lua = LuaProject(
 
 libsalsa = AutotoolsProject(
     'ftp://ftp.suse.com/pub/people/tiwai/salsa-lib/salsa-lib-0.1.6.tar.bz2',
-    'http://vesta.informatik.rwth-aachen.de/ftp/pub/Linux/suse/people/tiwai/salsa-lib/salsa-lib-0.1.6.tar.bz2',
+    'https://mirror.linux-ia64.org/ftp_suse_com/people/tiwai/salsa-lib/salsa-lib-0.1.6.tar.bz2',
     '08a6481cdbf4c79e05a9cba3b6c48375',
     'lib/libsalsa.a',
     [

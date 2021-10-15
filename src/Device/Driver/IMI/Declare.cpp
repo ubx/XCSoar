@@ -23,27 +23,33 @@ Copyright_License {
 
 #include "Internal.hpp"
 #include "Protocol/Protocol.hpp"
+#include "Protocol/Error.hpp"
 #include "Device/Port/Port.hpp"
 #include "Device/Declaration.hpp"
 #include "Operation/Operation.hpp"
+
+#include <stdexcept>
 
 bool
 IMIDevice::Declare(const Declaration &declaration,
                    gcc_unused const Waypoint *home,
                    OperationEnvironment &env)
-{
+try {
   // verify WP number
   unsigned size = declaration.Size();
-  if (size < 2 || size > 13)
-    return false;
+  if (size < 2)
+    throw std::runtime_error("Task is too small");
+
+  if (size > 13)
+    throw std::runtime_error("Task is too large");
 
   port.StopRxThread();
 
-  bool success = Connect(env) && !env.IsCancelled();
-  success = success && IMI::DeclarationWrite(port, declaration, env);
+  if (!Connect(env))
+    return false;
 
-  // disconnect
-  Disconnect(env);
-
-  return success;
+  IMI::DeclarationWrite(port, declaration, env);
+  return true;
+} catch (IMI::Cancelled) {
+  return false;
 }
