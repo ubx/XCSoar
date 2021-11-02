@@ -36,10 +36,6 @@ int
 compare_squared(int a, int b, int c) noexcept;
 
 [[gnu::const]]
-double
-thermal_recency_fn(unsigned x) noexcept;
-
-[[gnu::const]]
 unsigned
 isqrt4(unsigned val) noexcept;
 

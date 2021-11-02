@@ -24,9 +24,12 @@ Copyright_License {
 #ifndef THERMALLOCATOR_H
 #define THERMALLOCATOR_H
 
+#include "ThermalRecency.hpp"
 #include "Geo/GeoPoint.hpp"
 #include "Geo/Flat/FlatPoint.hpp"
 #include "time/Stamp.hpp"
+
+#include <array>
 
 struct SpeedVector;
 class FlatProjection;
@@ -39,7 +42,7 @@ struct ThermalLocatorInfo;
 class ThermalLocator {
 public:
   static constexpr unsigned TLOCATOR_NMIN = 5;
-  static constexpr unsigned TLOCATOR_NMAX = 60;
+  static constexpr unsigned TLOCATOR_NMAX = THERMALRECENCY_SIZE;
 
 private:
   /** Class used to hold thermal estimate samples */
@@ -71,7 +74,7 @@ private:
   };
 
   /** Circular buffer of points */
-  Point points[TLOCATOR_NMAX];
+  std::array<Point, TLOCATOR_NMAX> points;
 
   /** Index of next point to add */
   unsigned n_index;

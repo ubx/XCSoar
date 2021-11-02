@@ -21,36 +21,20 @@ Copyright_License {
 }
 */
 
-#include "ToneSynthesiser.hpp"
-#include "Math/FastTrig.hpp"
+#pragma once
 
-#include <cassert>
+#include <cmath>
 
-void
-ToneSynthesiser::SetTone(unsigned tone_hz)
+constexpr unsigned THERMALRECENCY_SIZE = 60;
+
+[[gnu::const]]
+static inline double
+thermal_fn(int x) noexcept
 {
-  increment = ISINETABLE.size() * tone_hz / sample_rate;
+  return std::exp((-0.2 / THERMALRECENCY_SIZE)
+                  * std::pow((double)x, 1.5));
 }
 
-void
-ToneSynthesiser::Synthesise(int16_t *buffer, size_t n)
-{
-  assert(angle < ISINETABLE.size());
-
-  for (int16_t *end = buffer + n; buffer != end; ++buffer) {
-    *buffer = ISINETABLE[angle] * (32767 / 1024) * (int)volume / 100;
-    angle = (angle + increment) & (ISINETABLE.size() - 1);
-  }
-}
-
-unsigned
-ToneSynthesiser::ToZero() const
-{
-  assert(angle < ISINETABLE.size());
-
-  if (angle < increment)
-    /* close enough */
-    return 0;
-
-  return (ISINETABLE.size() - angle) / increment;
-}
+[[gnu::const]]
+double
+thermal_recency_fn(unsigned x) noexcept;

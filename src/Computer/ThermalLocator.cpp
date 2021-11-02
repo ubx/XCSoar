@@ -22,10 +22,10 @@ Copyright_License {
 */
 
 #include "ThermalLocator.hpp"
+#include "ThermalRecency.hpp"
 #include "Geo/Math.hpp"
 #include "Geo/SpeedVector.hpp"
 #include "Geo/Flat/FlatProjection.hpp"
-#include "Math/FastMath.hpp"
 #include "NMEA/ThermalLocator.hpp"
 
 #include <algorithm>
@@ -66,9 +66,9 @@ ThermalLocator::AddPoint(const TimeStamp t, const GeoPoint &location,
   points[n_index].w = std::max(w, -0.1);
   // lift_weight and recency_weight are set by Drift()
 
-  n_index = (n_index + 1) % TLOCATOR_NMAX;
+  n_index = (n_index + 1) % points.size();
 
-  if (n_points < TLOCATOR_NMAX)
+  if (n_points < points.size())
     n_points++;
 }
 
