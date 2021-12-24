@@ -34,15 +34,21 @@ Copyright_License {
 #include "Topography/XShapePoint.hpp"
 #endif
 
-#include <tchar.h>
+#include <array>
+#include <cstddef>
 #include <cstdint>
+#include <memory>
+
+#include <tchar.h>
+
+#include <tchar.h>
 
 struct GeoPoint;
 
 class XShape {
-  static constexpr unsigned MAX_LINES = 32;
+  static constexpr std::size_t MAX_LINES = 32;
 #ifdef ENABLE_OPENGL
-  static constexpr unsigned THINNING_LEVELS = 4;
+  static constexpr std::size_t THINNING_LEVELS = 4;
 #endif
 
   GeoBounds bounds;
@@ -59,18 +65,18 @@ class XShape {
    * a fixed-size array to reduce the number of allocations at
    * runtime.
    */
-  uint16_t lines[MAX_LINES];
+  std::array<uint16_t, MAX_LINES> lines;
 
   /**
    * All points of all lines.
    */
 #ifdef ENABLE_OPENGL
-  ShapePoint *points = nullptr;
+  std::unique_ptr<ShapePoint[]> points;
 
   /**
    * Indices of polygon triangles or lines with reduced number of vertices.
    */
-  uint16_t *indices[THINNING_LEVELS]{};
+  std::array<uint16_t *, THINNING_LEVELS> indices{};
 
   /**
    * For polygons this will contain the total number of triangle vertices
@@ -78,7 +84,7 @@ class XShape {
    * For lines there will be an array of size num_lines for each thinning
    * level, which contains the number of points for each line.
    */
-  uint16_t *index_count[THINNING_LEVELS]{};
+  std::array<std::unique_ptr<uint16_t[]>, THINNING_LEVELS> index_count;
 
   /**
    * The start offset in the #GLArrayBuffer (vertex buffer object).
@@ -86,18 +92,22 @@ class XShape {
    */
   mutable unsigned offset;
 #else // !ENABLE_OPENGL
-  GeoPoint *points = nullptr;
+  std::unique_ptr<GeoPoint[]> points;
 #endif
 
   BasicAllocatedString<TCHAR> label;
 
 public:
-  XShape(shapefileObj *shpfile, const GeoPoint &file_center, int i,
-         int label_field=-1);
-
-  XShape(const XShape &) = delete;
+  /**
+   * Throws on error.
+   */
+  XShape(const shapeObj &shape, const GeoPoint &file_center,
+         const char *label);
 
   ~XShape() noexcept;
+
+  XShape(const XShape &) = delete;
+  XShape &operator=(const XShape &) = delete;
 
 #ifdef ENABLE_OPENGL
   void SetOffset(unsigned _offset) const noexcept {
@@ -132,7 +142,7 @@ public:
   }
 
   ConstBuffer<uint16_t> GetLines() const noexcept {
-    return { lines, num_lines };
+    return { lines.data(), num_lines };
   }
 
 #ifdef ENABLE_OPENGL
@@ -140,7 +150,7 @@ public:
 #else
   const GeoPoint *GetPoints() const noexcept {
 #endif
-    return points;
+    return points.get();
   }
 
   const TCHAR *GetLabel() const noexcept {

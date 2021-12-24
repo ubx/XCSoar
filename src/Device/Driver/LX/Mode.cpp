@@ -111,10 +111,8 @@ LXDevice::EnablePassThrough(OperationEnvironment &env)
   if (mode == Mode::PASS_THROUGH)
     return true;
 
-  if (is_v7 || use_pass_through) {
-    if (!LXNAVVario::ModeDirect(port, env))
-      return false;
-  }
+  if (is_v7 || use_pass_through)
+    LXNAVVario::ModeDirect(port, env);
 
   mode = Mode::PASS_THROUGH;
   return true;
@@ -125,7 +123,7 @@ LXDevice::EnableLoggerNMEA(OperationEnvironment &env)
 {
   return IsV7() || UsePassThrough()
     ? EnablePassThrough(env)
-    : LXNAVVario::ModeNormal(port, env);
+    : (LXNAVVario::ModeNormal(port, env), true);
 }
 
 bool
@@ -159,15 +157,19 @@ LXDevice::EnableCommandMode(OperationEnvironment &env)
          than enough */
       env.Sleep(std::chrono::milliseconds(100));
 
-      if (!port.SetBaudrate(bulk_baud_rate)) {
+      try {
+        port.SetBaudrate(bulk_baud_rate);
+      } catch (...) {
         mode = Mode::UNKNOWN;
-        return false;
+        throw;
       }
     }
   } else
     old_baud_rate = 0;
 
-  if (!LX::CommandMode(port, env)) {
+  try {
+    LX::CommandMode(port, env);
+  } catch (...) {
     if (old_baud_rate != 0) {
       port.SetBaudrate(old_baud_rate);
       old_baud_rate = 0;
@@ -175,7 +177,7 @@ LXDevice::EnableCommandMode(OperationEnvironment &env)
 
     std::lock_guard<Mutex> lock(mutex);
     mode = Mode::UNKNOWN;
-    return false;
+    throw;
   }
 
   busy = false;

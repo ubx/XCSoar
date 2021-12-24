@@ -44,9 +44,9 @@ class LXDevice: public AbstractDevice
 
   Port &port;
 
-  unsigned bulk_baud_rate;
+  const unsigned bulk_baud_rate;
 
-  std::atomic<bool> busy;
+  std::atomic<bool> busy{false};
 
   /**
    * Is this ia Colibri or LX20 or a similar "old" logger?  This is
@@ -60,17 +60,17 @@ class LXDevice: public AbstractDevice
   /*
    * Indicates whether pass-through mode should be used
    */
-  bool use_pass_through;
+  const bool use_pass_through;
 
   /**
    * Was a LXNAV V7 detected?
    */
-  bool is_v7;
+  bool is_v7 = false;
 
   /**
    * Was a LXNAV S series vario detected?
    */
-  bool is_sVario;
+  bool is_sVario = false;
 
   /**
    * Was a LXNAV Nano detected?
@@ -85,12 +85,12 @@ class LXDevice: public AbstractDevice
   /**
    * Was a LXNavigation LX1600/1606 vario detected?
    */
-  bool is_lx16xx;
+  bool is_lx16xx = false;
 
   /**
    * Was a vario with a Nano on the GPS port detected?
    */
-  bool is_forwarded_nano;
+  bool is_forwarded_nano = false;
 
   /**
    * Settings that were received in PLXV0 (LXNAV Vario) sentences.
@@ -103,77 +103,74 @@ class LXDevice: public AbstractDevice
   DeviceSettingsMap<std::string> nano_settings;
 
   Mutex mutex;
-  Mode mode;
-  unsigned old_baud_rate;
+  Mode mode = Mode::UNKNOWN;
+  unsigned old_baud_rate = 0;
 
 public:
   LXDevice(Port &_port, unsigned baud_rate, unsigned _bulk_baud_rate,
-           bool _use_pass_through, bool _port_is_nano=false)
+           bool _use_pass_through, bool _port_is_nano=false) noexcept
     :port(_port), bulk_baud_rate(_bulk_baud_rate),
-     busy(false),
      is_colibri(baud_rate == 4800), use_pass_through(_use_pass_through),
-     is_v7(false), is_nano(_port_is_nano), port_is_nano(_port_is_nano),
-     is_lx16xx(false), is_forwarded_nano(false),
-     mode(Mode::UNKNOWN), old_baud_rate(0) {}
+     is_nano(_port_is_nano), port_is_nano(_port_is_nano) {}
 
   /**
    * Was a LXNAV V7 detected?
    */
-  bool IsV7() const {
+  bool IsV7() const noexcept {
     return is_v7;
   }
 
   /**
    * Was a LXNAV S series vario detected?
    */
-  bool IsSVario() const {
+  bool IsSVario() const noexcept {
     return is_sVario;
   }
 
   /**
    * Was a LXNAV vario device detected?
    */
-  bool IsLXNAVVario() const {
+  bool IsLXNAVVario() const noexcept {
     return IsV7() || IsSVario();
   }
 
   /**
    * Was a LXNAV Nano detected?
    */
-  bool IsNano() const {
+  bool IsNano() const noexcept {
     return port_is_nano || is_nano || is_forwarded_nano;
   }
 
   /**
    * Was an LXNAV logger device detected?
    */
-  bool IsLXNAVLogger() const {
+  bool IsLXNAVLogger() const noexcept {
     return IsNano() || IsSVario();
   }
 
   /**
    * Was a LXNavigation LX1600/1606 vario detected?
    */
-  bool IsLX16xx() const {
+  bool IsLX16xx() const noexcept {
     return is_lx16xx;
   }
 
   /**
    * Can this device be managed by XCSoar?
    */
-  bool IsManageable() const {
+  bool IsManageable() const noexcept {
     return IsV7() || IsSVario() || IsNano() || IsLX16xx();
   }
 
-  bool UsePassThrough() {
+  bool UsePassThrough() const noexcept {
     return use_pass_through;
   }
 
-  void ResetDeviceDetection() {
+  void ResetDeviceDetection() noexcept {
     is_v7 = is_sVario = is_nano = is_lx16xx = is_forwarded_nano = false;
   }
 
-  void IdDeviceByName(NarrowString<16> productName)
+  void IdDeviceByName(NarrowString<16> productName) noexcept
   {
     is_v7 = productName.equals("V7");
     is_sVario = productName.equals("NINC") || productName.equals("S8x");
@@ -212,7 +209,7 @@ public:
    * returned.
    */
   gcc_pure
-  std::string GetLXNAVVarioSetting(const char *name) const;
+  std::string GetLXNAVVarioSetting(const char *name) const noexcept;
 
   /**
    * Write a setting to a LXNAV Nano.
@@ -245,7 +242,7 @@ public:
    * returned.
    */
   gcc_pure
-  std::string GetNanoSetting(const char *name) const;
+  std::string GetNanoSetting(const char *name) const noexcept;
 
 protected:
   /**

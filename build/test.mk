@@ -713,6 +713,9 @@ check: $(TESTS) | $(OUT)/test/dirstamp
 	@$(NQ)echo "  TEST    $(notdir $(patsubst %$(TARGET_EXEEXT),%,$^))"
 	$(Q)$(PERL) $(TEST_SRC_DIR)/testall.pl $(TESTS)
 
+check-no-build: $(OUT)/test/dirstamp
+	$(PERL) $(TEST_SRC_DIR)/testall.pl $(TESTS)
+
 DEBUG_PROGRAM_NAMES = \
 	test_reach \
 	test_route \
@@ -1134,16 +1137,19 @@ $(eval $(call link-program,KeyCodeDumper,KEY_CODE_DUMPER))
 LOAD_TOPOGRAPHY_SOURCES = \
 	$(SRC)/Topography/TopographyStore.cpp \
 	$(SRC)/Topography/TopographyFile.cpp \
+	$(SRC)/Topography/Index.cpp \
 	$(SRC)/Topography/XShape.cpp \
 	$(SRC)/Projection/Projection.cpp \
 	$(SRC)/Projection/WindowProjection.cpp \
 	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
+	$(SRC)/system/Path.cpp \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/LoadTopography.cpp
 ifeq ($(OPENGL),y)
 LOAD_TOPOGRAPHY_SOURCES += \
 	$(CANVAS_SRC_DIR)/opengl/Triangulate.cpp
 endif
-LOAD_TOPOGRAPHY_DEPENDS = OPERATION RESOURCE GEO MATH THREAD IO UTIL SHAPELIB ZZIP
+LOAD_TOPOGRAPHY_DEPENDS = OPERATION RESOURCE GEO MATH THREAD IO SYSTEM UTIL SHAPELIB ZZIP
 LOAD_TOPOGRAPHY_CPPFLAGS = $(SCREEN_CPPFLAGS)
 $(eval $(call link-program,LoadTopography,LOAD_TOPOGRAPHY))
 
@@ -1762,6 +1768,7 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/Topography/TopographyFileRenderer.cpp \
 	$(SRC)/Topography/TopographyRenderer.cpp \
 	$(SRC)/Topography/TopographyGlue.cpp \
+	$(SRC)/Topography/Index.cpp \
 	$(SRC)/Topography/XShape.cpp \
 	$(SRC)/Topography/CachedTopographyRenderer.cpp \
 	$(SRC)/Units/Units.cpp \

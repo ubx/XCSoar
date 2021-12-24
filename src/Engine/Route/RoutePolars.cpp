@@ -113,20 +113,20 @@ RoutePolars::CheckClearance(const RouteLink &e, const RasterMap* map,
   if (!config.IsTerrainEnabled())
     return true;
 
-  GeoPoint int_x;
-  int int_h;
   GeoPoint start = proj.Unproject(e.first);
   GeoPoint dest = proj.Unproject(e.second);
 
   assert(map);
 
-  if (!map->FirstIntersection(start, e.first.altitude, dest,
-                              e.second.altitude, CalcVHeight(e),
-                              climb_ceiling, GetSafetyHeight(),
-                              int_x, int_h))
+  const auto intersection =
+    map->FirstIntersection(start, e.first.altitude, dest,
+                           e.second.altitude, CalcVHeight(e),
+                           climb_ceiling, GetSafetyHeight());
+  if (!intersection)
     return true;
 
-  inp = RoutePoint(proj.ProjectInteger(int_x), int_h);
+  inp = RoutePoint(proj.ProjectInteger(intersection.location),
+                   intersection.height);
   return false;
 }
 
@@ -229,10 +229,10 @@ RoutePolars::Intersection(const AGeoPoint &origin,
   if (e.d <= 0)
     return GeoPoint::Invalid();
 
-  return map->Intersection(origin,
-                           origin.altitude - GetSafetyHeight(),
-                           CalcVHeight(e), destination,
-                           height_min_working);
+  return map->GroundIntersection(origin,
+                                 origin.altitude - GetSafetyHeight(),
+                                 CalcVHeight(e), destination,
+                                 height_min_working);
 }
 
 int
@@ -259,8 +259,8 @@ RoutePolars::ReachIntercept(const int index, const AFlatGeoPoint &flat_origin,
     return flat_dest;
 
   const GeoPoint dest = proj.Unproject(flat_dest);
-  const GeoPoint p = map->Intersection(origin, altitude,
-                                       altitude, dest, height_min_working);
+  const GeoPoint p = map->GroundIntersection(origin, altitude,
+                                             altitude, dest, height_min_working);
 
   if (!p.IsValid())
     return flat_dest;

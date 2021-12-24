@@ -23,14 +23,11 @@ Copyright_License {
 
 #pragma once
 
-namespace IMI {
+struct lua_State;
 
-/**
- * This class is thrown when the user has cancelled the operation via
- * OperationEnvironment::IsCancelled().  It will be caught by
- * top-level IMIDevice methods, and allows simplifying the
- * cancellation checks.
- */
-struct Cancelled {};
+namespace Lua {
 
-} // namespace IMI
+void
+InitAndroid(lua_State *L);
+
+}

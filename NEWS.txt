@@ -1,6 +1,23 @@
-Version 7.21 - not yet released
+Version 7.22 - not yet released
+* user interface
+  - add "Share" button to the status dialog
+* Polars
+  - add DG-800S
+* devices
+  - FLARM: send turn point names in task declaration
+* Android
+  - use app-specific data directory by default
+
+Version 7.21 - 2021/12/11
 * data files
-  - Support for AF/AR frequency fields in OpenAir 
+  - Support for AF/AR frequency fields in OpenAir
+* devices
+  - fix inverted cruise/circling mode in borgelt and xcvario driver
+* Kobo
+  - Add support for Clara HD
+  - Control backlight brightness of the Kobo Glo HD
+* Android
+  - re-enable background location and comply with Google Play Store policy
 
 Version 7.20 - 2021/10/22
 * map

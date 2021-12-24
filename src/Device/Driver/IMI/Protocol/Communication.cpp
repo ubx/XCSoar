@@ -24,10 +24,9 @@ Copyright_License {
 #include "Communication.hpp"
 #include "Protocol.hpp"
 #include "Checksum.hpp"
-#include "Error.hpp"
 #include "MessageParser.hpp"
+#include "Device/Error.hpp"
 #include "Device/Port/Port.hpp"
-#include "Operation/Operation.hpp"
 #include "time/TimeoutClock.hpp"
 #include "util/ByteOrder.hxx"
 #include "util/CRC.hpp"
@@ -39,20 +38,6 @@ Copyright_License {
 namespace IMI
 {
   extern IMIWORD _serialNumber;
-
-static void
-Write(Port &port, const void *data, std::size_t size,
-      OperationEnvironment &env,
-      std::chrono::steady_clock::duration timeout)
-{
-  if (!port.FullWrite(data, size, env, timeout)) {
-    if (env.IsCancelled())
-      throw Cancelled{};
-
-    throw std::runtime_error("Port write error");
-  }
-}
-
 }
 
 void
@@ -63,7 +48,7 @@ IMI::Send(Port &port, OperationEnvironment &env,
   Sync sync;
   sync.syncChar1 = IMICOMM_SYNC_CHAR1;
   sync.syncChar2 = IMICOMM_SYNC_CHAR2;
-  Write(port, &sync, sizeof(sync), env, std::chrono::seconds{1});
+  port.FullWrite(&sync, sizeof(sync), env, std::chrono::seconds{1});
 
   Header header;
   header.sn = _serialNumber;
@@ -76,15 +61,15 @@ IMI::Send(Port &port, OperationEnvironment &env,
   IMIWORD crc = 0xffff;
   crc = UpdateCRC16CCITT(&header, sizeof(header), crc);
 
-  Write(port, &header, sizeof(header), env, std::chrono::seconds{1});
+  port.FullWrite(&header, sizeof(header), env, std::chrono::seconds{1});
 
   if (payloadSize > 0) {
-    Write(port, payload, payloadSize, env, std::chrono::seconds{2});
+    port.FullWrite(payload, payloadSize, env, std::chrono::seconds{2});
     crc = UpdateCRC16CCITT(payload, payloadSize, crc);
   }
 
   crc = ToBE16(crc);
-  Write(port, &crc, sizeof(crc), env, std::chrono::seconds{1});
+  port.FullWrite(&crc, sizeof(crc), env, std::chrono::seconds{1});
 }
 
 static constexpr std::chrono::steady_clock::duration
@@ -97,7 +82,7 @@ CalcPayloadTimeout(std::size_t payload_size, unsigned baud_rate) noexcept
   return std::chrono::milliseconds(10000 * (payload_size + sizeof(IMI::IMICOMM_MSG_HEADER_SIZE) + 10) / baud_rate);
 }
 
-std::optional<IMI::TMsg>
+IMI::TMsg
 IMI::Receive(Port &port, OperationEnvironment &env,
              std::chrono::steady_clock::duration extra_timeout,
              unsigned expectedPayloadSize)
@@ -116,15 +101,11 @@ IMI::Receive(Port &port, OperationEnvironment &env,
     // read message
     IMIBYTE buffer[64];
     size_t bytesRead = port.WaitAndRead(buffer, sizeof(buffer), env, timeout);
-    if (env.IsCancelled())
-      throw Cancelled{};
-    if (bytesRead == 0)
-      return std::nullopt;
 
     // parse message
     if (auto msg = mp.Parse(buffer, bytesRead))
       // message received
-      return msg;
+      return *msg;
   }
 }
 
@@ -138,17 +119,20 @@ IMI::SendRet(Port &port, OperationEnvironment &env,
 {
   extra_timeout += CalcPayloadTimeout(payloadSize, port.GetBaudrate());
 
-  while (retry--) {
+  while (true) {
     Send(port, env, msgID, payload, payloadSize, parameter1, parameter2,
          parameter3);
 
-    auto msg = Receive(port, env, extra_timeout, retPayloadSize);
-    if (msg && msg->msgID == reMsgID &&
-        (retPayloadSize == (IMIWORD)-1 || msg->payloadSize == retPayloadSize))
-      return *msg;
+    try {
+      if (auto msg = Receive(port, env, extra_timeout, retPayloadSize);
+          msg.msgID == reMsgID &&
+          (retPayloadSize == (IMIWORD)-1 || msg.payloadSize == retPayloadSize))
+        return msg;
+    } catch (const DeviceTimeout &) {
+      if (retry-- == 0)
+        throw;
+    }
   }
-
-  throw std::runtime_error("No reply");
 }
 
 static bool

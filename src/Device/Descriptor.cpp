@@ -41,6 +41,7 @@ Copyright_License {
 #include "Logger/NMEALogger.hpp"
 #include "Language/Language.hpp"
 #include "Operation/Operation.hpp"
+#include "Operation/Cancelled.hpp"
 #include "system/Path.hpp"
 #include "../Simulator.hpp"
 #include "Input/InputQueue.hpp"
@@ -67,37 +68,14 @@ Copyright_License {
 #include "Apple/InternalSensors.hpp"
 #endif
 
-#ifdef _UNICODE
-#include <stringapiset.h> // for WideCharToMultiByte()
-#endif
-
 #include <cassert>
-
-/**
- * This scope class calls DeviceDescriptor::Return() and
- * DeviceDescriptor::EnableNMEA() when the caller leaves the current
- * scope.  The caller must have called DeviceDescriptor::Borrow()
- * successfully before constructing this class.
- */
-struct ScopeReturnDevice {
-  DeviceDescriptor &device;
-  OperationEnvironment &env;
-
-  ScopeReturnDevice(DeviceDescriptor &_device, OperationEnvironment &_env)
-    :device(_device), env(_env) {
-  }
-
-  ~ScopeReturnDevice() {
-    device.EnableNMEA(env);
-    device.Return();
-  }
-};
 
 class OpenDeviceJob final : public Job {
   DeviceDescriptor &device;
 
 public:
-  OpenDeviceJob(DeviceDescriptor &_device):device(_device) {}
+  explicit OpenDeviceJob(DeviceDescriptor &_device) noexcept
+    :device(_device) {}
 
   /* virtual methods from class Job */
   void Run(OperationEnvironment &env) override {
@@ -108,7 +86,7 @@ public:
 DeviceDescriptor::DeviceDescriptor(EventLoop &_event_loop,
                                    Cares::Channel &_cares,
                                    unsigned _index,
-                                   PortListener *_port_listener)
+                                   PortListener *_port_listener) noexcept
   :event_loop(_event_loop), cares(_cares), index(_index),
    port_listener(_port_listener)
 {
@@ -121,7 +99,7 @@ DeviceDescriptor::~DeviceDescriptor() noexcept
 }
 
 void
-DeviceDescriptor::SetConfig(const DeviceConfig &_config)
+DeviceDescriptor::SetConfig(const DeviceConfig &_config) noexcept
 {
   ResetFailureCounter();
 
@@ -142,13 +120,13 @@ DeviceDescriptor::SetConfig(const DeviceConfig &_config)
 }
 
 void
-DeviceDescriptor::ClearConfig()
+DeviceDescriptor::ClearConfig() noexcept
 {
   config.Clear();
 }
 
 PortState
-DeviceDescriptor::GetState() const
+DeviceDescriptor::GetState() const noexcept
 {
   if (has_failed)
     return PortState::FAILED;
@@ -168,13 +146,13 @@ DeviceDescriptor::GetState() const
 }
 
 bool
-DeviceDescriptor::IsDumpEnabled() const
+DeviceDescriptor::IsDumpEnabled() const noexcept
 {
   return port != nullptr && port->IsEnabled();
 }
 
 void
-DeviceDescriptor::DisableDump()
+DeviceDescriptor::DisableDump() noexcept
 {
   if (port != nullptr)
     port->Disable();
@@ -188,13 +166,13 @@ DeviceDescriptor::EnableDumpTemporarily(std::chrono::steady_clock::duration dura
 }
 
 bool
-DeviceDescriptor::ShouldReopenDriverOnTimeout() const
+DeviceDescriptor::ShouldReopenDriverOnTimeout() const noexcept
 {
   return driver == nullptr || driver->HasTimeout();
 }
 
 void
-DeviceDescriptor::CancelAsync()
+DeviceDescriptor::CancelAsync() noexcept
 {
   assert(InMainThread());
 
@@ -207,6 +185,7 @@ DeviceDescriptor::CancelAsync()
 
   try {
     async.Wait();
+  } catch (OperationCancelled) {
   } catch (...) {
     LogError(std::current_exception());
   }
@@ -217,7 +196,7 @@ DeviceDescriptor::CancelAsync()
 
 inline bool
 DeviceDescriptor::OpenOnPort(std::unique_ptr<DumpPort> &&_port, OperationEnvironment &env)
-{
+try {
   assert(port == nullptr);
   assert(device == nullptr);
   assert(second_device == nullptr);
@@ -257,17 +236,16 @@ DeviceDescriptor::OpenOnPort(std::unique_ptr<DumpPort> &&_port, OperationEnviron
 
   EnableNMEA(env);
 
-  if (env.IsCancelled()) {
-    /* the caller is responsible for freeing the port on error */
-    port = nullptr;
-    delete device;
-    device = nullptr;
-    delete second_device;
-    second_device = nullptr;
-    return false;
-  }
-
   return true;
+} catch (OperationCancelled) {
+  return false;
+} catch (...) {
+  port = nullptr;
+  delete device;
+  device = nullptr;
+  delete second_device;
+  second_device = nullptr;
+  throw;
 }
 
 bool
@@ -483,6 +461,8 @@ try {
   std::unique_ptr<Port> port;
   try {
     port = OpenPort(event_loop, cares, config, this, *this);
+  } catch (OperationCancelled) {
+    return false;
   } catch (...) {
     const auto e = std::current_exception();
 
@@ -518,9 +498,7 @@ try {
   }
 
   if (!port->WaitConnected(env)) {
-    if (!env.IsCancelled())
-      ++n_failures;
-
+    ++n_failures;
     return false;
   }
 
@@ -528,14 +506,14 @@ try {
   dump_port->Disable();
 
   if (!OpenOnPort(std::move(dump_port), env)) {
-    if (!env.IsCancelled())
-      ++n_failures;
-
+    ++n_failures;
     return false;
   }
 
   ResetFailureCounter();
   return true;
+} catch (OperationCancelled) {
+  return false;
 } catch (...) {
   const auto _msg = GetFullMessage(std::current_exception());
   const UTF8ToWideConverter msg(_msg.c_str());
@@ -577,7 +555,7 @@ DeviceDescriptor::Open(OperationEnvironment &env)
 }
 
 void
-DeviceDescriptor::Close()
+DeviceDescriptor::Close() noexcept
 {
   assert(InMainThread());
   assert(!IsBorrowed());
@@ -659,12 +637,19 @@ DeviceDescriptor::AutoReopen(OperationEnvironment &env)
 }
 
 bool
-DeviceDescriptor::EnableNMEA(OperationEnvironment &env)
+DeviceDescriptor::EnableNMEA(OperationEnvironment &env) noexcept
 {
   if (device == nullptr)
     return true;
 
-  bool success = device->EnableNMEA(env);
+  bool success = false;
+
+  try {
+    success = device->EnableNMEA(env);
+  } catch (OperationCancelled) {
+  } catch (...) {
+    LogError(std::current_exception(), "EnableNMEA() failed");
+  }
 
   if (port != nullptr)
     /* re-enable the NMEA handler if it has been disabled by the
@@ -675,7 +660,7 @@ DeviceDescriptor::EnableNMEA(OperationEnvironment &env)
 }
 
 const TCHAR *
-DeviceDescriptor::GetDisplayName() const
+DeviceDescriptor::GetDisplayName() const noexcept
 {
   return driver != nullptr
     ? driver->display_name
@@ -683,7 +668,7 @@ DeviceDescriptor::GetDisplayName() const
 }
 
 bool
-DeviceDescriptor::IsDriver(const TCHAR *name) const
+DeviceDescriptor::IsDriver(const TCHAR *name) const noexcept
 {
   return driver != nullptr
     ? StringIsEqual(driver->name, name)
@@ -691,7 +676,7 @@ DeviceDescriptor::IsDriver(const TCHAR *name) const
 }
 
 bool
-DeviceDescriptor::CanDeclare() const
+DeviceDescriptor::CanDeclare() const noexcept
 {
   return driver != nullptr &&
     (driver->CanDeclare() ||
@@ -699,19 +684,19 @@ DeviceDescriptor::CanDeclare() const
 }
 
 bool
-DeviceDescriptor::IsLogger() const
+DeviceDescriptor::IsLogger() const noexcept
 {
   return driver != nullptr && driver->IsLogger();
 }
 
 bool
-DeviceDescriptor::IsNMEAOut() const
+DeviceDescriptor::IsNMEAOut() const noexcept
 {
   return driver != nullptr && driver->IsNMEAOut();
 }
 
 bool
-DeviceDescriptor::IsManageable() const
+DeviceDescriptor::IsManageable() const noexcept
 {
   if (driver != nullptr) {
     if (driver->IsManageable())
@@ -735,7 +720,7 @@ DeviceDescriptor::IsManageable() const
 }
 
 bool
-DeviceDescriptor::Borrow()
+DeviceDescriptor::Borrow() noexcept
 {
   assert(InMainThread());
 
@@ -747,7 +732,7 @@ DeviceDescriptor::Borrow()
 }
 
 void
-DeviceDescriptor::Return()
+DeviceDescriptor::Return() noexcept
 {
   assert(InMainThread());
   assert(IsBorrowed());
@@ -763,7 +748,7 @@ DeviceDescriptor::Return()
 }
 
 bool
-DeviceDescriptor::IsAlive() const
+DeviceDescriptor::IsAlive() const noexcept
 {
   std::lock_guard<Mutex> lock(device_blackboard->mutex);
   return device_blackboard->RealState(index).alive;
@@ -791,7 +776,7 @@ DeviceDescriptor::BeginEdit() noexcept
 }
 
 bool
-DeviceDescriptor::ParseNMEA(const char *line, NMEAInfo &info)
+DeviceDescriptor::ParseNMEA(const char *line, NMEAInfo &info) noexcept
 {
   assert(line != nullptr);
 
@@ -841,33 +826,43 @@ DeviceDescriptor::ForwardLine(const char *line)
 }
 
 bool
-DeviceDescriptor::WriteNMEA(const char *line, OperationEnvironment &env)
+DeviceDescriptor::WriteNMEA(const char *line,
+                            OperationEnvironment &env) noexcept
 {
   assert(line != nullptr);
 
-  return port != nullptr && PortWriteNMEA(*port, line, env);
+  if (port != nullptr)
+      return false;
+
+  try {
+    PortWriteNMEA(*port, line, env);
+    return true;
+  } catch (OperationCancelled) {
+    return false;
+  } catch (...) {
+    env.SetError(std::current_exception());
+    return false;
+  }
 }
 
 #ifdef _UNICODE
 bool
-DeviceDescriptor::WriteNMEA(const TCHAR *line, OperationEnvironment &env)
+DeviceDescriptor::WriteNMEA(const TCHAR *line,
+                            OperationEnvironment &env) noexcept
 {
   assert(line != nullptr);
 
   if (port == nullptr)
     return false;
 
-  char buffer[4096];
-  if (::WideCharToMultiByte(CP_ACP, 0, line, -1, buffer, sizeof(buffer),
-                            nullptr, nullptr) <= 0)
-    return false;
-
-  return WriteNMEA(buffer, env);
+  WideToACPConverter narrow{line};
+  return narrow.IsValid() && WriteNMEA(narrow, env);
 }
 #endif
 
 bool
-DeviceDescriptor::PutMacCready(double value, OperationEnvironment &env)
+DeviceDescriptor::PutMacCready(double value,
+                               OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
 
@@ -880,8 +875,16 @@ DeviceDescriptor::PutMacCready(double value, OperationEnvironment &env)
     return false;
 
   ScopeReturnDevice restore(*this, env);
-  if (!device->PutMacCready(value, env))
+
+  try {
+    if (!device->PutMacCready(value, env))
+      return false;
+  } catch (OperationCancelled) {
     return false;
+  } catch (...) {
+    LogError(std::current_exception(), "PutMacCready() failed");
+    return false;
+  }
 
   settings_sent.mac_cready = value;
   settings_sent.mac_cready_available.Update(GetClock());
@@ -890,7 +893,7 @@ DeviceDescriptor::PutMacCready(double value, OperationEnvironment &env)
 }
 
 bool
-DeviceDescriptor::PutBugs(double value, OperationEnvironment &env)
+DeviceDescriptor::PutBugs(double value, OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
 
@@ -902,9 +905,16 @@ DeviceDescriptor::PutBugs(double value, OperationEnvironment &env)
     /* TODO: postpone until the borrowed device has been returned */
     return false;
 
-  ScopeReturnDevice restore(*this, env);
-  if (!device->PutBugs(value, env))
+  try {
+    const ScopeReturnDevice restore(*this, env);
+    if (!device->PutBugs(value, env))
+      return false;
+  } catch (OperationCancelled) {
     return false;
+  } catch (...) {
+    LogError(std::current_exception(), "PutBugs() failed");
+    return false;
+  }
 
   settings_sent.bugs = value;
   settings_sent.bugs_available.Update(GetClock());
@@ -914,7 +924,7 @@ DeviceDescriptor::PutBugs(double value, OperationEnvironment &env)
 
 bool
 DeviceDescriptor::PutBallast(double fraction, double overload,
-                             OperationEnvironment &env)
+                             OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
 
@@ -927,9 +937,16 @@ DeviceDescriptor::PutBallast(double fraction, double overload,
     /* TODO: postpone until the borrowed device has been returned */
     return false;
 
-  ScopeReturnDevice restore(*this, env);
-  if (!device->PutBallast(fraction, overload, env))
+  try {
+    const ScopeReturnDevice restore(*this, env);
+    if (!device->PutBallast(fraction, overload, env))
+      return false;
+  } catch (OperationCancelled) {
     return false;
+  } catch (...) {
+    LogError(std::current_exception(), "PutBallast() failed");
+    return false;
+  }
 
   const auto clock = GetClock();
   settings_sent.ballast_fraction = fraction;
@@ -941,7 +958,8 @@ DeviceDescriptor::PutBallast(double fraction, double overload,
 }
 
 bool
-DeviceDescriptor::PutVolume(unsigned volume, OperationEnvironment &env)
+DeviceDescriptor::PutVolume(unsigned volume,
+                            OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
 
@@ -952,12 +970,19 @@ DeviceDescriptor::PutVolume(unsigned volume, OperationEnvironment &env)
     /* TODO: postpone until the borrowed device has been returned */
     return false;
 
-  ScopeReturnDevice restore(*this, env);
-  return device->PutVolume(volume, env);
+  try {
+    ScopeReturnDevice restore(*this, env);
+    return device->PutVolume(volume, env);
+  } catch (OperationCancelled) {
+    return false;
+  } catch (...) {
+    LogError(std::current_exception(), "PutVolume() failed");
+    return false;
+  }
 }
 
 bool
-DeviceDescriptor::PutPilotEvent(OperationEnvironment &env)
+DeviceDescriptor::PutPilotEvent(OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
 
@@ -968,14 +993,21 @@ DeviceDescriptor::PutPilotEvent(OperationEnvironment &env)
     /* TODO: postpone until the borrowed device has been returned */
     return false;
 
-  ScopeReturnDevice restore(*this, env);
-  return device->PutPilotEvent(env);
+  try {
+    ScopeReturnDevice restore(*this, env);
+    return device->PutPilotEvent(env);
+  } catch (OperationCancelled) {
+    return false;
+  } catch (...) {
+    LogError(std::current_exception(), "PutPilotEvent() failed");
+    return false;
+  }
 }
 
 bool
 DeviceDescriptor::PutActiveFrequency(RadioFrequency frequency,
                                      const TCHAR *name,
-                                     OperationEnvironment &env)
+                                     OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
 
@@ -986,14 +1018,21 @@ DeviceDescriptor::PutActiveFrequency(RadioFrequency frequency,
     /* TODO: postpone until the borrowed device has been returned */
     return false;
 
-  ScopeReturnDevice restore(*this, env);
-  return device->PutActiveFrequency(frequency, name, env);
+  try {
+    ScopeReturnDevice restore(*this, env);
+    return device->PutActiveFrequency(frequency, name, env);
+  } catch (OperationCancelled) {
+    return false;
+  } catch (...) {
+    LogError(std::current_exception(), "PutActiveFrequency() failed");
+    return false;
+  }
 }
 
 bool
 DeviceDescriptor::PutStandbyFrequency(RadioFrequency frequency,
                                       const TCHAR *name,
-                                      OperationEnvironment &env)
+                                      OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
 
@@ -1004,13 +1043,20 @@ DeviceDescriptor::PutStandbyFrequency(RadioFrequency frequency,
     /* TODO: postpone until the borrowed device has been returned */
     return false;
 
-  ScopeReturnDevice restore(*this, env);
-  return device->PutStandbyFrequency(frequency, name, env);
+  try {
+    ScopeReturnDevice restore(*this, env);
+    return device->PutStandbyFrequency(frequency, name, env);
+  } catch (OperationCancelled) {
+    return false;
+  } catch (...) {
+    LogError(std::current_exception(), "PutStandbyFrequency() failed");
+    return false;
+  }
 }
 
 bool
 DeviceDescriptor::PutQNH(const AtmosphericPressure &value,
-                         OperationEnvironment &env)
+                         OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
 
@@ -1022,9 +1068,16 @@ DeviceDescriptor::PutQNH(const AtmosphericPressure &value,
     /* TODO: postpone until the borrowed device has been returned */
     return false;
 
-  ScopeReturnDevice restore(*this, env);
-  if (!device->PutQNH(value, env))
+  try {
+    ScopeReturnDevice restore(*this, env);
+    if (!device->PutQNH(value, env))
+      return false;
+  } catch (OperationCancelled) {
     return false;
+  } catch (...) {
+    LogError(std::current_exception(), "PutQNH() failed");
+    return false;
+  }
 
   settings_sent.qnh = value;
   settings_sent.qnh_available.Update(GetClock());
@@ -1160,7 +1213,7 @@ DeviceDescriptor::DownloadFlight(const RecordedFlightInfo &flight,
 }
 
 void
-DeviceDescriptor::OnSysTicker()
+DeviceDescriptor::OnSysTicker() noexcept
 {
   assert(InMainThread());
 
@@ -1182,7 +1235,11 @@ DeviceDescriptor::OnSysTicker()
   const bool now_alive = IsAlive();
   if (!now_alive && was_alive && !IsOccupied()) {
     /* connection was just lost */
-    device->LinkTimeout();
+    try {
+      device->LinkTimeout();
+    } catch (...) {
+      LogError(std::current_exception(), "LinkTimeout() failed");
+    }
 
     NullOperationEnvironment env;
     EnableNMEA(env);
@@ -1193,13 +1250,17 @@ DeviceDescriptor::OnSysTicker()
   if (now_alive || IsBorrowed()) {
     ticker = !ticker;
     if (ticker)
-      // write settings to vario every second
-      device->OnSysTicker();
+      try {
+        // write settings to vario every second
+        device->OnSysTicker();
+      } catch (...) {
+        LogError(std::current_exception(), "OnSysTicker() failed");
+      }
   }
 }
 
 void
-DeviceDescriptor::OnSensorUpdate(const MoreData &basic)
+DeviceDescriptor::OnSensorUpdate(const MoreData &basic) noexcept
 {
   /* must hold the mutex because this method may run in any thread,
      just in case the main thread deletes the Device while this method
@@ -1207,17 +1268,25 @@ DeviceDescriptor::OnSensorUpdate(const MoreData &basic)
   const std::lock_guard<Mutex> lock(mutex);
 
   if (device != nullptr)
-    device->OnSensorUpdate(basic);
+    try {
+      device->OnSensorUpdate(basic);
+    } catch (...) {
+      LogError(std::current_exception(), "OnSensorUpdate() failed");
+    }
 }
 
 void
 DeviceDescriptor::OnCalculatedUpdate(const MoreData &basic,
-                                     const DerivedInfo &calculated)
+                                     const DerivedInfo &calculated) noexcept
 {
   assert(InMainThread());
 
   if (device != nullptr)
-    device->OnCalculatedUpdate(basic, calculated);
+    try {
+      device->OnCalculatedUpdate(basic, calculated);
+    } catch (...) {
+      LogError(std::current_exception(), "OnCalculatedUpdate() failed");
+    }
 }
 
 void
@@ -1230,6 +1299,7 @@ DeviceDescriptor::OnJobFinished() noexcept
 
   try {
     async.Wait();
+  } catch (OperationCancelled) {
   } catch (...) {
     LogError(std::current_exception());
   }
@@ -1271,10 +1341,10 @@ DeviceDescriptor::PortError(const char *msg) noexcept
 }
 
 bool
-DeviceDescriptor::DataReceived(const void *data, size_t length) noexcept
+DeviceDescriptor::DataReceived(std::span<const std::byte> s) noexcept
 {
   if (monitor != nullptr)
-    monitor->DataReceived(data, length);
+    monitor->DataReceived(s);
 
   // Pass data directly to drivers that use binary data protocols
   if (driver != nullptr && device != nullptr && driver->UsesRawData()) {
@@ -1284,7 +1354,7 @@ DeviceDescriptor::DataReceived(const void *data, size_t length) noexcept
 
     /* call Device::DataReceived() without holding
        DeviceBlackboard::mutex to avoid blocking all other threads */
-    if (device->DataReceived(data, length, basic)) {
+    if (device->DataReceived(s, basic)) {
       if (!config.sync_from_device)
         basic.settings = old_settings;
 
@@ -1295,7 +1365,7 @@ DeviceDescriptor::DataReceived(const void *data, size_t length) noexcept
   }
 
   if (!IsNMEAOut())
-    PortLineSplitter::DataReceived(data, length);
+    PortLineSplitter::DataReceived(s);
 
   return true;
 }

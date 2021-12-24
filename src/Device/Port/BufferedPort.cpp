@@ -22,7 +22,9 @@ Copyright_License {
 */
 
 #include "BufferedPort.hpp"
+#include "Device/Error.hpp"
 #include "time/TimeoutClock.hpp"
+#include "Operation/Cancelled.hpp"
 
 #include <algorithm>
 
@@ -58,24 +60,21 @@ BufferedPort::StartRxThread()
   return true;
 }
 
-int
-BufferedPort::Read(void *dest, size_t length)
+std::size_t
+BufferedPort::Read(void *dest, std::size_t length)
 {
   assert(!running);
 
   std::lock_guard<Mutex> lock(mutex);
 
   auto r = buffer.Read();
-  if (r.size == 0)
-    return -1;
-
-  size_t nbytes = std::min(length, r.size);
-  std::copy_n(r.data, nbytes, (uint8_t *)dest);
+  std::size_t nbytes = std::min(length, r.size);
+  std::copy_n(r.data, nbytes, (std::byte *)dest);
   buffer.Consume(nbytes);
   return nbytes;
 }
 
-Port::WaitResult
+void
 BufferedPort::WaitRead(std::chrono::steady_clock::duration _timeout)
 {
   TimeoutClock timeout(_timeout);
@@ -83,26 +82,22 @@ BufferedPort::WaitRead(std::chrono::steady_clock::duration _timeout)
 
   while (buffer.empty()) {
     if (running)
-      return WaitResult::CANCELLED;
+      throw OperationCancelled{};
 
     auto remaining = timeout.GetRemainingSigned();
     if (remaining.count() <= 0)
-      return WaitResult::TIMEOUT;
+      throw DeviceTimeout{"Timeout"};
 
     cond.wait_for(lock, remaining);
   }
-
-  return WaitResult::READY;
 }
 
 bool
-BufferedPort::DataReceived(const void *data, size_t length) noexcept
+BufferedPort::DataReceived(std::span<const std::byte> s) noexcept
 {
   if (running) {
-    return handler.DataReceived(data, length);
+    return handler.DataReceived(s);
   } else {
-    const uint8_t *p = (const uint8_t *)data;
-
     std::lock_guard<Mutex> lock(mutex);
 
     buffer.Shift();
@@ -112,9 +107,9 @@ BufferedPort::DataReceived(const void *data, size_t length) noexcept
       return true;
 
     /* discard excess data */
-    size_t nbytes = std::min(length, r.size);
+    const std::size_t nbytes = std::min(s.size(), r.size);
 
-    std::copy_n(p, nbytes, r.data);
+    std::copy_n(s.data(), nbytes, r.data);
     buffer.Append(nbytes);
 
     cond.notify_all();

@@ -39,14 +39,14 @@ class AndroidPort : public BufferedPort
 public:
   AndroidPort(PortListener *_listener, DataHandler &_handler,
               PortBridge *bridge);
-  ~AndroidPort() override;
+  ~AndroidPort() noexcept override;
 
   /* virtual methods from class Port */
-  PortState GetState() const override;
+  PortState GetState() const noexcept override;
   bool Drain() override;
-  unsigned GetBaudrate() const override;
-  bool SetBaudrate(unsigned baud_rate) override;
-  size_t Write(const void *data, size_t length) override;
+  unsigned GetBaudrate() const noexcept override;
+  void SetBaudrate(unsigned baud_rate) override;
+  std::size_t Write(const void *data, std::size_t length) override;
 };
 
 #endif

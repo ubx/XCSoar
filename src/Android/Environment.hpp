@@ -32,10 +32,15 @@ class AllocatedPath;
 
 namespace Environment {
 
-void Initialise(JNIEnv *env);
-void Deinitialise(JNIEnv *env);
+void
+Initialise(JNIEnv *env) noexcept;
 
-AllocatedPath getExternalStoragePublicDirectory(const char *type) noexcept;
+void
+Deinitialise(JNIEnv *env) noexcept;
+
+AllocatedPath
+GetExternalStoragePublicDirectory(JNIEnv *env,
+                                  const char *type) noexcept;
 
 } // namespace Environment
 

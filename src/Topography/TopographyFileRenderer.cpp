@@ -55,11 +55,9 @@ Copyright_License {
 TopographyFileRenderer::TopographyFileRenderer(const TopographyFile &_file,
                                                const TopographyLook &_look) noexcept
   :file(_file), look(_look),
-   pen(Layout::ScaleFinePenWidth(file.GetPenWidth()), file.GetColor()),
-#ifdef ENABLE_OPENGL
-   array_buffer(nullptr)
-#else
-   brush(file.GetColor())
+   pen(Layout::ScaleFinePenWidth(file.GetPenWidth()), Color{file.GetColor()})
+#ifndef ENABLE_OPENGL
+  , brush(Color{file.GetColor()})
 #endif
 {
   ResourceId icon_ID = file.GetIcon();
@@ -67,12 +65,7 @@ TopographyFileRenderer::TopographyFileRenderer(const TopographyFile &_file,
     icon.LoadResource(icon_ID, file.GetBigIcon());
 }
 
-TopographyFileRenderer::~TopographyFileRenderer() noexcept
-{
-#ifdef ENABLE_OPENGL
-  delete array_buffer;
-#endif
-}
+TopographyFileRenderer::~TopographyFileRenderer() noexcept = default;
 
 void
 TopographyFileRenderer::UpdateVisibleShapes(const WindowProjection &projection) noexcept
@@ -123,7 +116,7 @@ inline void
 TopographyFileRenderer::UpdateArrayBuffer() noexcept
 {
   if (array_buffer == nullptr)
-    array_buffer = new GLArrayBuffer();
+    array_buffer = std::make_unique<GLArrayBuffer>();
   else if (file.GetSerial() == array_buffer_serial)
     return;
 
@@ -170,9 +163,6 @@ TopographyFileRenderer::Paint(Canvas &canvas,
                               const WindowProjection &projection) noexcept
 {
   const std::lock_guard<Mutex> lock(file.mutex);
-
-  if (file.IsEmpty())
-    return;
 
   const auto map_scale = projection.GetMapScale();
   if (!file.IsVisible(map_scale))
@@ -380,9 +370,6 @@ TopographyFileRenderer::PaintLabels(Canvas &canvas,
 {
   const std::lock_guard<Mutex> lock(file.mutex);
 
-  if (file.IsEmpty())
-    return;
-
   const auto map_scale = projection.GetMapScale();
   if (!file.IsVisible(map_scale) || !file.IsLabelVisible(map_scale))
     return;
@@ -414,21 +401,13 @@ TopographyFileRenderer::PaintLabels(Canvas &canvas,
     assert(label != nullptr);
 
     const auto lines = shape.GetLines();
-#ifdef ENABLE_OPENGL
-    const ShapePoint *points = shape.GetPoints();
-#else
-    const GeoPoint *points = shape.GetPoints();
-#endif
+    const auto *points = shape.GetPoints();
 
     for (const unsigned n : lines) {
       int minx = canvas.GetWidth();
       int miny = canvas.GetHeight();
 
-#ifdef ENABLE_OPENGL
-      const ShapePoint *end = points + n;
-#else
-      const GeoPoint *end = points + n;
-#endif
+      const auto *end = points + n;
       for (; points < end; points += iskip) {
 #ifdef ENABLE_OPENGL
         auto pt = projection.GeoToScreen(file.ToGeoPoint(*points));

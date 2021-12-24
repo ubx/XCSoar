@@ -1,5 +1,8 @@
 /*
- * Copyright 2011-2021 Max Kellermann <max.kellermann@gmail.com>
+ * Copyright 2007-2021 CM4all GmbH
+ * All rights reserved.
+ *
+ * author: Max Kellermann <mk@cm4all.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,43 +30,14 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Multi.hxx"
+#ifndef SHALLOW_COPY_HXX
+#define SHALLOW_COPY_HXX
 
-#include <cassert>
+/**
+ * A tag for overloading copying constructors, telling them to make
+ * shallow copies of source data (e.g. copy pointers instead of
+ * duplicating the referenced objects).
+ */
+struct ShallowCopy {};
 
-CurlMulti::~CurlMulti()
-{
-	assert(results.empty());
-
-	if (handle != nullptr)
-		curl_multi_cleanup(handle);
-}
-
-void
-CurlMulti::Remove(CURL *easy)
-{
-	auto i = results.find(easy);
-	if (i != results.end())
-		results.erase(i);
-
-	curl_multi_remove_handle(handle, easy);
-}
-
-CURLcode
-CurlMulti::InfoRead(const CURL *easy)
-{
-	auto i = results.find(easy);
-	if (i != results.end())
-		return i->second;
-
-	while (const CURLMsg *msg = InfoRead()) {
-		if (msg->msg == CURLMSG_DONE) {
-			if (msg->easy_handle == easy)
-				return msg->data.result;
-
-			results.insert(std::make_pair(easy, msg->data.result));
-		}
-	}
-
-	return CURLE_AGAIN;
-}
+#endif

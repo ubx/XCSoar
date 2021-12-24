@@ -30,21 +30,20 @@ RasterMap::GetHeight(const GeoPoint &location) const noexcept
 }
 
 GeoPoint
-RasterMap::Intersection(const GeoPoint& origin,
-                        const int h_origin,
-                        const int h_glide,
-                        const GeoPoint& destination,
-                        const int height_floor) const noexcept
+RasterMap::GroundIntersection(const GeoPoint &origin,
+                              const int h_origin,
+                              const int h_glide,
+                              const GeoPoint &destination,
+                              const int height_floor) const noexcept
 {
-  return GeoPoint(Angle::Zero(), Angle::Zero());
+  return GeoPoint::Invalid();
 }
 
-bool
+RasterMap::Intersection
 RasterMap::FirstIntersection(const GeoPoint &origin, const int h_origin,
                              const GeoPoint &destination, const int h_destination,
                              const int h_virt, const int h_ceiling,
-                             const int h_safety,
-                             GeoPoint& intx, int &h) const noexcept
+                             const int h_safety) const noexcept
 {
-  return false;
+  return Intersection::Invalid();
 }
