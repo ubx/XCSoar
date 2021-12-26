@@ -43,7 +43,7 @@ Copyright_License {
 class PortTerminalBridge final : public DataHandler {
   TerminalWindow &terminal;
   Mutex mutex;
-  StaticFifoBuffer<char, 1024> buffer;
+  StaticFifoBuffer<std::byte, 1024> buffer;
   bool hexOutput;
 
   UI::DelayedNotify notify{
@@ -57,32 +57,36 @@ public:
 
   PortTerminalBridge(TerminalWindow &_terminal, DeviceDescriptor &_device)
     :terminal(_terminal) {
-      hexOutput = _device.GetConfig().port_type == DeviceConfig::PortType::CAN_INTERFACE;
+        hexOutput = _device.GetConfig().port_type == DeviceConfig::PortType::CAN_INTERFACE;
   }
   virtual ~PortTerminalBridge() {}
 
-  bool DataReceived(const void *data, size_t length) noexcept {
-    {
-      const std::lock_guard<Mutex> lock(mutex);
-      buffer.Shift();
-      auto range = buffer.Write();
-      if (hexOutput) {
-          char *hex = bin2hex(static_cast<const unsigned char *>(data), &length);
-          if (range.size < length)
-              length = range.size;
-          memcpy(range.data, hex, length);
-          free(hex);
-      } else {
-          if (range.size < length)
-              length = range.size;
-          memcpy(range.data, data, length);
-      }
-      buffer.Append(length);
-    }
+    bool DataReceived(std::span<const std::byte> s) noexcept {
+        {
+            const std::lock_guard<Mutex> lock(mutex);
+            buffer.Shift();
+            auto range = buffer.Write();
+            if (hexOutput) {
+                // todo -- rework !!!!!
+                size_t length = s.size();
+                char *hex = bin2hex(reinterpret_cast<const unsigned char *>(s.data()),
+                                    reinterpret_cast<size_t *>(length));
+                if (range.size < length)
+                    memcpy(range.data, hex, length);
+                free(hex);
+            } else {
+                const std::lock_guard<Mutex> lock(mutex);
+                buffer.Shift();
+                auto range = buffer.Write();
+                const std::size_t nbytes = std::min(s.size(), range.size);
+                std::copy_n(s.data(), nbytes, range.data);
+                buffer.Append(nbytes);
+            }
+        }
 
-    notify.SendNotification();
-    return true;
-  }
+            notify.SendNotification();
+            return true;
+    }
 
 private:
   void OnNotification() noexcept {

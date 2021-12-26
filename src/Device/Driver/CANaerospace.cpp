@@ -37,14 +37,15 @@ Copyright_License {
 #include <Device/Driver/FLARM/flarmPropagated.hpp>
 #include <Geo/Gravity.hpp>
 
-class CANaerospaceDevice : public AbstractDevice {
+class CANaerospaceDevice final : public AbstractDevice {
 //  Port &port;
 
 public:
     CANaerospaceDevice(Port &_port) {
     }
 
-    bool DataReceived(const void *data, size_t length, NMEAInfo &info) override;
+    virtual bool DataReceived(std::span<const std::byte> s,
+                              struct NMEAInfo &info) noexcept override;
 };
 
 std::map<int, double> canId2clock;
@@ -60,13 +61,11 @@ CANaerospaceCreateOnPort(const DeviceConfig &config, Port &com_port) {
 }
 
 bool
-CANaerospaceDevice::DataReceived(const void *data, size_t length,
-                                 NMEAInfo &info) {
+CANaerospaceDevice::DataReceived(std::span<const std::byte> s,
+                         struct NMEAInfo &info) noexcept {
+    assert(!s.empty());
 
-    assert(data != nullptr);
-    assert(length > 0);
-
-    const can_frame *canFrame = (const can_frame *) data;   // Cast the adress to a can frame
+    const can_frame *canFrame = reinterpret_cast<const can_frame *>(s.data());
     const auto *canData = canFrame->data + 4;
     const CanasMessage *cm = (const CanasMessage *) canFrame->data;
 

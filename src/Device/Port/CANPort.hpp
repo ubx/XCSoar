@@ -55,20 +55,20 @@ public:
   }
 
   /* virtual methods from class Port */
-  PortState GetState() const override;
+  PortState GetState() const noexcept override;
 
-  bool Drain() override {
+
+    bool Drain() override {
     /* writes are synchronous */
     return true;
   }
 
-  bool SetBaudrate(unsigned baud_rate) override {
-    return true;
-  }
+  void SetBaudrate(unsigned baud_rate) {
+    }
 
-  unsigned GetBaudrate() const override {
-    return 0;
-  }
+  unsigned GetBaudrate() const noexcept{
+      return 0;
+    }
 
   size_t Write(const void *data, size_t length) override;
 

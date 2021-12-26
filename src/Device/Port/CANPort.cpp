@@ -60,7 +60,7 @@ CANPort::CANPort(EventLoop &event_loop, const TCHAR *port_name,
   });
 }
 
-CANPort::~CANPort()
+CANPort::~CANPort() noexcept
 {
   BlockingCall(GetEventLoop(), [this]()
   {
@@ -69,7 +69,7 @@ CANPort::~CANPort()
 }
 
 PortState
-CANPort::GetState() const
+CANPort::GetState() const noexcept
 {
   if (socket.IsDefined())
     return PortState::READY;
@@ -94,9 +94,9 @@ CANPort::Write(const void *data, size_t length)
 void
 CANPort::OnSocketReady(unsigned) noexcept
 try {
-  can_frame input;
+  std::byte input[sizeof(struct can_frame)];
   ssize_t nbytes;
-  nbytes = socket.GetSocket().Read(&input, sizeof(input));
+  nbytes = socket.GetSocket().Read(input, sizeof(input));
   if (nbytes < 0)
     throw MakeSocketError("Failed to receive");
 
@@ -106,7 +106,7 @@ try {
     return;
   }
 
-  DataReceived(&input, nbytes);
+  DataReceived({input, std::size_t(nbytes)});
 } catch (...) {
   socket.Close();
   StateChanged();
