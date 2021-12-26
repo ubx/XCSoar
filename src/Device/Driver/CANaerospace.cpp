@@ -35,8 +35,9 @@ Copyright_License {
 #include <time/LocalTime.hpp>
 #include <Device/Port/CANPort.hpp>
 #include <Device/Driver/FLARM/flarmPropagated.hpp>
+#include <Geo/Gravity.hpp>
 
-class CANaerospaceDevice : public AbstractDevice {
+class CANaerospaceDevice final : public AbstractDevice {
 //  Port &port;
 
 public:
@@ -48,7 +49,7 @@ public:
 
 std::map<int, double> canId2clock;
 auto last_fix = GeoPoint::Invalid();
-
+SpeedVector last_wind = SpeedVector::Zero();
 static FlarmState flarmState;
 static FlarmMostImportantObjectData objectData;
 static FlarmObjectData flarmObjectData;
@@ -74,6 +75,9 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
     canasMessage.service_code = cm->service_code;
 
     static double qnh_corr = 0.0;
+    static double last_body_long_acc = 0.0;
+    static double last_body_lat_acc = 0.0;
+    static double last_body_norm_acc = 0.0;
 
     info.alive.Update(info.clock);
 
@@ -136,18 +140,14 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
 
         case INDICATED_AIRSPEED:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.indicated_airspeed = canasMessage.data.container.FLOAT;
-                info.airspeed_available.Update(info.clock);
-                info.airspeed_real = true;
+                info.ProvideIndicatedAirspeed(canasMessage.data.container.FLOAT);
                 return true;
             }
             break;
 
         case TRUE_AIRSPEED:
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-                info.true_airspeed = canasMessage.data.container.FLOAT;
-                info.airspeed_available.Update(info.clock);
-                info.airspeed_real = true;
+                info.ProvideTrueAirspeed(canasMessage.data.container.FLOAT);
                 return true;
             }
             break;
@@ -193,7 +193,7 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
             }
             break;
 
-        case BARO_ALT_CORR_ID:  // todo -- implement
+        case BARO_ALT_CORR_ID:  // todo -- verify
             if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
                 switch (canasMessage.service_code & 0x0f) {
                 case 0: /* QNH */
@@ -210,6 +210,46 @@ CANaerospaceDevice::DataReceived(const void *data, size_t length,
                 }
             }
         break;
+
+        case BODY_LAT_ACC_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                last_body_lat_acc = canasMessage.data.container.FLOAT;
+                info.acceleration.ProvideGLoad(SpaceDiagonal(last_body_lat_acc, last_body_long_acc, last_body_norm_acc) / GRAVITY);
+                return true;
+            }
+            break;
+
+        case BODY_LONG_ACC_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                last_body_long_acc = canasMessage.data.container.FLOAT;
+                info.acceleration.ProvideGLoad(SpaceDiagonal(last_body_lat_acc, last_body_long_acc, last_body_norm_acc) / GRAVITY);
+                return true;
+            }
+            break;
+
+        case BODY_NORM_ACC_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                last_body_norm_acc = canasMessage.data.container.FLOAT;
+                info.acceleration.ProvideGLoad(SpaceDiagonal(last_body_lat_acc, last_body_long_acc, last_body_norm_acc) / GRAVITY);
+                return true;
+            }
+            break;
+
+        case WIND_SPEED_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                last_wind.norm = canasMessage.data.container.FLOAT;
+                info.ProvideExternalWind(last_wind.Reciprocal());
+                return true;
+            }
+            break;
+
+        case WIND_DIRECTION_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                last_wind.bearing = Angle::Degrees(canasMessage.data.container.FLOAT);
+                info.ProvideExternalWind(last_wind.Reciprocal());
+                return true;
+            }
+            break;
 
         case FLARM_STATE_ID:  // Flarm messages: PFLAU
             // PFLAU,<RX>,<TX>,<GPS>,<Power>,<AlarmLevel>,<RelativeBearing>,<AlarmType>, <RelativeVertical>,<RelativeDistance>

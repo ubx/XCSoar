@@ -40,12 +40,17 @@ typedef enum {
 } CanasMessageTypeID;
 
 typedef enum {
+    BODY_LONG_ACC_ID = 300,    /* body longitudinal acceleration */
+    BODY_LAT_ACC_ID = 301,    /* body lateral acceleration */
+    BODY_NORM_ACC_ID = 302,    /* body normal acceleration */
     INDICATED_AIRSPEED = 315,
     TRUE_AIRSPEED = 316,
     BARO_CORRECTION_ID = 319,    /* barometric correction (QNH) */
     HEADING_ANGLE = 321,
     STANDARD_ALTITUDE = 322,
     STATIC_PRESSURE = 326,
+    WIND_SPEED_ID  = 333,         /* wind speed in [m/s] */
+    WIND_DIRECTION_ID = 334,      /* wind direction in degrees */
     AIRMASS_SPEED_VERTICAL = 354, /* Vertical speed of the airmass earth NED (negative is lift)*/
     GPS_AIRCRAFT_LATITUDE = 1036,
     GPS_AIRCRAFT_LONGITUDE = 1037,
