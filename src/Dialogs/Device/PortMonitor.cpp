@@ -156,7 +156,7 @@ public:
     auto w = std::make_unique<TerminalWindow>(look);
     w->Create(parent, rc, style);
 
-    bridge = std::make_unique<PortTerminalBridge>(*w);
+    bridge = std::make_unique<PortTerminalBridge>(*w, device);
     device.SetMonitor(bridge.get());
 
     SetWindow(std::move(w));
