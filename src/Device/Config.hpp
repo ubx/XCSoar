@@ -376,15 +376,15 @@ struct DeviceConfig {
   /**
    * Does this port type use a can port?
    */
-  static bool UsesCANPort(PortType port_type) {
+  static bool UsesCANPort(PortType port_type) noexcept {
     return port_type == PortType::CAN_INTERFACE;
   }
 
-  bool UsesCANPort() const {
+  bool UsesCANPort() const noexcept {
     return UsesCANPort(port_type);
   }
 
-  constexpr bool IsDriver(const TCHAR *name) const {
+  constexpr bool IsDriver(const TCHAR *name) const noexcept {
     return UsesDriver() && driver_name.equals(name);
   }
 
