@@ -352,6 +352,14 @@ CANaerospaceDevice::DataReceived(std::span<const std::byte> s,
             }
         break;
 
+        case OUTSIDE_AIR_TEMP_ID:
+            if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
+                info.temperature_available = true;
+                info.temperature = Temperature::FromKelvin(canasMessage.data.container.FLOAT);
+                return true;
+            }
+        break;
+
         default:
             // std::cout << "not implemented can_id: " << canFrame->can_id << std::endl;
             break;
