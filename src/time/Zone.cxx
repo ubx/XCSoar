@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 CM4all GmbH
+ * Copyright 2007-2022 CM4all GmbH
  * All rights reserved.
  *
  * author: Max Kellermann <mk@cm4all.com>
@@ -30,41 +30,41 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "Zone.hxx"
 
-#include <utility>
+#ifdef _WIN32
+#include <profileapi.h>
+#include <sysinfoapi.h>
+#include <timezoneapi.h>
+#else
+#include <time.h>
+#endif
 
-#if defined(_LIBCPP_VERSION) && defined(__clang__) && __clang_major__ < 14
-/* libc++ until 14 has the coroutine definitions in the
-   std::experimental namespace */
+/**
+ * Determine the time zone offset in a portable way.
+ */
+[[gnu::const]]
+int
+GetTimeZoneOffset() noexcept
+{
+#ifdef _WIN32
+	TIME_ZONE_INFORMATION TimeZoneInformation;
+	DWORD tzi = GetTimeZoneInformation(&TimeZoneInformation);
 
-#include <experimental/coroutine>
+	int offset = -TimeZoneInformation.Bias * 60;
+	if (tzi == TIME_ZONE_ID_STANDARD)
+		offset -= TimeZoneInformation.StandardBias * 60;
 
-namespace std {
-using std::experimental::coroutine_handle;
-using std::experimental::suspend_never;
-using std::experimental::suspend_always;
-using std::experimental::noop_coroutine;
+	if (tzi == TIME_ZONE_ID_DAYLIGHT)
+		offset -= TimeZoneInformation.DaylightBias * 60;
+
+	return offset;
+#else
+	time_t t = 1234567890;
+	struct tm tm;
+	tm.tm_isdst = 0;
+	struct tm *p = &tm;
+	gmtime_r(&t, p);
+	return t - mktime(p);
+#endif
 }
-
-#else /* not clang */
-
-#if defined __GNUC__ && defined _WIN32
-#if __GNUC__ == 10
-namespace std {
-inline namespace __n4861 {
-/* workaround for Windows linker error "multiple definition of ..."
-   with GCC10: these two symbols are declared as "weak", but only
-   adding "inline" and "selectany" makes the linker failure go away */
-inline void __dummy_resume_destroy();
-extern struct __noop_coro_frame __noop_coro_fr __attribute__((selectany));
-}}
-#endif
-#endif
-
-#include <coroutine>
-#ifndef __cpp_impl_coroutine
-#error Need -fcoroutines
-#endif
-
-#endif /* not clang */

@@ -28,6 +28,7 @@ Copyright_License {
 #include "util/AllocatedString.hxx"
 
 #include <string>
+#include <string_view>
 
 #ifdef _UNICODE
 #include <wchar.h>
@@ -47,13 +48,13 @@ class AllocatedPath;
 class Path {
 public:
 #ifdef _UNICODE
-  typedef wchar_t char_type;
+  using char_type = wchar_t;
 #else
-  typedef char char_type;
+  using char_type = char;
 #endif
-  typedef StringPointer<char_type> value_type;
-  typedef value_type::const_pointer const_pointer;
-  typedef value_type::pointer pointer;
+  using value_type = StringPointer<char_type>;
+  using const_pointer = value_type::const_pointer;
+  using pointer = value_type::pointer;
 
   static constexpr auto SENTINEL = value_type::SENTINEL;
 
@@ -160,10 +161,11 @@ class AllocatedPath {
   friend class Path;
 
 public:
-  typedef Path::char_type char_type;
-  typedef Path::const_pointer const_pointer;
-  typedef Path::pointer pointer;
-  typedef BasicAllocatedString<char_type> value_type;
+  using char_type = Path::char_type;
+  using const_pointer = Path::const_pointer;
+  using pointer = Path::pointer;
+  using string_view = std::basic_string_view<char_type>;
+  using value_type = BasicAllocatedString<char_type>;
 
   static constexpr auto SENTINEL = value_type::SENTINEL;
 
@@ -196,7 +198,7 @@ public:
   }
 
   [[gnu::pure]]
-  static AllocatedPath Build(const_pointer a, const_pointer b) noexcept;
+  static AllocatedPath Build(string_view a, string_view b) noexcept;
 
   [[gnu::pure]]
   static AllocatedPath Build(Path a, const_pointer b) noexcept {

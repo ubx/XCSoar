@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 CM4all GmbH
+ * Copyright 2007-2022 CM4all GmbH
  * All rights reserved.
  *
  * author: Max Kellermann <mk@cm4all.com>
@@ -32,39 +32,9 @@
 
 #pragma once
 
-#include <utility>
-
-#if defined(_LIBCPP_VERSION) && defined(__clang__) && __clang_major__ < 14
-/* libc++ until 14 has the coroutine definitions in the
-   std::experimental namespace */
-
-#include <experimental/coroutine>
-
-namespace std {
-using std::experimental::coroutine_handle;
-using std::experimental::suspend_never;
-using std::experimental::suspend_always;
-using std::experimental::noop_coroutine;
-}
-
-#else /* not clang */
-
-#if defined __GNUC__ && defined _WIN32
-#if __GNUC__ == 10
-namespace std {
-inline namespace __n4861 {
-/* workaround for Windows linker error "multiple definition of ..."
-   with GCC10: these two symbols are declared as "weak", but only
-   adding "inline" and "selectany" makes the linker failure go away */
-inline void __dummy_resume_destroy();
-extern struct __noop_coro_frame __noop_coro_fr __attribute__((selectany));
-}}
-#endif
-#endif
-
-#include <coroutine>
-#ifndef __cpp_impl_coroutine
-#error Need -fcoroutines
-#endif
-
-#endif /* not clang */
+/**
+ * Determine the time zone offset in a portable way.
+ */
+[[gnu::const]]
+int
+GetTimeZoneOffset() noexcept;

@@ -1,12 +1,19 @@
 Version 7.22 - not yet released
 * user interface
+  - close the download dialog after successful download
   - add "Share" button to the status dialog
+* glide computer
+  - implement event "AIRSPACE_ENTER"
+  - add event "AIRSPACE_NEAR"
 * Polars
   - add DG-800S
 * devices
   - FLARM: send turn point names in task declaration
+* user interface
+  - add 3x6 InfoBoxes layout
 * Android
   - use app-specific data directory by default
+  - allow using all external storages
 
 Version 7.21 - 2021/12/11
 * data files

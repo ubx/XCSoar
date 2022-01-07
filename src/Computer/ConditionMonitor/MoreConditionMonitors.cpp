@@ -19,33 +19,14 @@ Copyright_License {
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 }
+
 */
 
-#include "system/Clock.hpp"
+#include "MoreConditionMonitors.hpp"
 
-#ifdef _WIN32
-#include <profileapi.h>
-#include <sysinfoapi.h>
-#include <timezoneapi.h>
-#endif /* !HAVE_POSIX */
-
-int
-GetSystemUTCOffset()
+void
+MoreConditionMonitors::Update(const NMEAInfo &basic, const DerivedInfo &calculated,
+                              const ComputerSettings &settings) noexcept
 {
-#ifdef HAVE_POSIX
-  // XXX implement
-  return 0;
-#else
-  TIME_ZONE_INFORMATION TimeZoneInformation;
-  DWORD tzi = GetTimeZoneInformation(&TimeZoneInformation);
-
-  int offset = -TimeZoneInformation.Bias * 60;
-  if (tzi == TIME_ZONE_ID_STANDARD)
-    offset -= TimeZoneInformation.StandardBias * 60;
-
-  if (tzi == TIME_ZONE_ID_DAYLIGHT)
-    offset -= TimeZoneInformation.DaylightBias * 60;
-
-  return offset;
-#endif
+  airspace_enter.Update(basic, calculated, settings);
 }
