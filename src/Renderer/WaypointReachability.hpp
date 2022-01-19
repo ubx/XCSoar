@@ -21,21 +21,29 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_AIRSPACE_GLUE_HPP
-#define XCSOAR_AIRSPACE_GLUE_HPP
+#pragma once
 
-class RasterTerrain;
-class AtmosphericPressure;
-class Airspaces;
-class OperationEnvironment;
+#include <cstdint>
 
-/**
- * Reads the airspace files into the memory
- */
-void
-ReadAirspace(Airspaces &airspaces,
-             RasterTerrain *terrain,
-             AtmosphericPressure press,
-             OperationEnvironment &operation);
+enum class WaypointReachability : uint8_t {
+  INVALID,
+  UNREACHABLE,
+  STRAIGHT,
+  TERRAIN,
+};
 
-#endif
+static constexpr bool
+IsReachable(WaypointReachability r) noexcept
+{
+  switch (r) {
+  case WaypointReachability::INVALID:
+  case WaypointReachability::UNREACHABLE:
+    break;
+
+  case WaypointReachability::STRAIGHT:
+  case WaypointReachability::TERRAIN:
+    return true;
+  }
+
+  return false;
+}
