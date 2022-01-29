@@ -21,37 +21,34 @@ Copyright_License {
 }
 */
 
-#include "../Init.hpp"
-#include "../PaintWindow.hpp"
-#include "../SingleWindow.hpp"
-#include "Screen/Debug.hpp"
-#include "ui/event/Globals.hpp"
-#include "ui/event/Queue.hpp"
-#include "ui/canvas/gdi/GdiPlusBitmap.hpp"
+#include "GraphicsTTY.hpp"
 
-#include <libloaderapi.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <linux/kd.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
-using namespace UI;
-
-ScreenGlobalInit::ScreenGlobalInit()
+LinuxGraphicsTTY::LinuxGraphicsTTY() noexcept
+  :fd(open(path, O_RDWR | O_NOCTTY | O_CLOEXEC))
 {
-  GdiStartup();
+  if (fd < 0) {
+    fprintf(stderr, "Warning: failed to open %s: %s\n",
+            path, strerror(errno));
+    return;
+  }
 
-  event_queue = new EventQueue();
-
-  HINSTANCE hInstance = ::GetModuleHandle(nullptr);
-  PaintWindow::register_class(hInstance);
-  SingleWindow::RegisterClass(hInstance);
-
-  ScreenInitialized();
+  if (ioctl(fd, KDSETMODE, KD_GRAPHICS) < 0)
+    fprintf(stderr, "Warning: failed to set graphics mode on %s: %s\n",
+            path, strerror(errno));
 }
 
-ScreenGlobalInit::~ScreenGlobalInit()
+LinuxGraphicsTTY::~LinuxGraphicsTTY() noexcept
 {
-  delete event_queue;
-  event_queue = nullptr;
-
-  GdiShutdown();
-
-  ScreenDeinitialized();
+  if (fd >= 0) {
+    ioctl(fd, KDSETMODE, KD_TEXT);
+    close(fd);
+  }
 }

@@ -1,3 +1,16 @@
+Version 7.23 - not yet released
+* support uploading IGC files to WeGlide
+* Linux
+  - fix command-line option "--datapath"
+* Raspberry Pi / Cubieboard
+  - probe both /dev/dri/card0 and /dev/dri/card1
+* Android
+  - add SoftRF Academy and ES into 'white list' of USB devices
+* Kobo
+  - fix broken button text background
+  - add OTG support (serial, sound, net) for Clara HD
+  - fix "Network failure" in Wifi dialog
+
 Version 7.22 - 2022/01/14
 * user interface
   - close the download dialog after successful download

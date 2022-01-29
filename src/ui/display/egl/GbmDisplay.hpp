@@ -21,23 +21,27 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_HARDWARE_DISPLAY_SIZE_HPP
-#define XCSOAR_HARDWARE_DISPLAY_SIZE_HPP
+#pragma once
 
-#include "util/Compiler.h"
+struct gbm_device;
+class FileDescriptor;
 
-struct PixelSize;
+namespace EGL {
 
-namespace Display {
+class GbmDisplay {
+  struct gbm_device *const device;
+
+public:
   /**
-   * Returns the pixel size of the whole display.
-   *
-   * @param fallback return this value on platforms that are
-   * fullscreen-only and where this function is not implemented; pass
-   * the main window size (which is usually full-screen)
+   * Throws on error.
    */
-  gcc_const
-  PixelSize GetSize(PixelSize fallback);
-}
+  explicit GbmDisplay(FileDescriptor dri_fd);
 
-#endif
+  ~GbmDisplay() noexcept;
+
+  auto *GetGbmDevice() const noexcept {
+    return device;
+  }
+};
+
+} // namespace EGL

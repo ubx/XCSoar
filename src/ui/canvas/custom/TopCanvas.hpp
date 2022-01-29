@@ -24,15 +24,11 @@ Copyright_License {
 #ifndef XCSOAR_SCREEN_TOP_CANVAS_HPP
 #define XCSOAR_SCREEN_TOP_CANVAS_HPP
 
-#include "util/Compiler.h"
-
 #ifdef USE_MEMORY_CANVAS
 #include "ui/canvas/memory/PixelTraits.hpp"
 #include "ui/canvas/memory/ActivePixelTraits.hpp"
 #include "ui/canvas/memory/Buffer.hpp"
 #include "ui/dim/Size.hpp"
-#else
-#include "ui/canvas/Canvas.hpp"
 #endif
 
 #ifdef ENABLE_OPENGL
@@ -42,16 +38,7 @@ Copyright_License {
 #ifdef USE_EGL
 #include "ui/egl/System.hpp"
 
-#ifdef HAVE_MALI_NATIVE_WINDOW
-// The old LINUX-SUNXI EGL headers define struct mali_native_window.
-// The new headers for mainline kernels from Bootlin typedef fbdev_window.
-// The struct content is identical.
-// typedef fbdev_window from struct mali_native_window for the old headers.
-typedef struct mali_native_window fbdev_window;
-#endif
-
 #ifdef MESA_KMS
-#include <drm.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #endif
@@ -89,66 +76,50 @@ struct SDL_Texture;
 class Canvas;
 struct PixelSize;
 struct PixelRect;
+namespace UI { class Display; }
 
-#if (defined(USE_FB) && !defined(KOBO)) || (defined USE_EGL && (defined(USE_VIDEOCORE) || defined(HAVE_MALI)))
+#if (defined(USE_FB) && !defined(KOBO)) || defined(USE_EGL)
 /* defined if we need to initialise /dev/tty to graphics mode, see
    TopCanvas::InitialiseTTY() */
 #define USE_TTY
+#include "ui/linux/GraphicsTTY.hpp"
 #endif
 
 class TopCanvas
-#ifndef USE_MEMORY_CANVAS
-  : public Canvas
-#endif
 {
+  UI::Display &display;
+
+#ifdef USE_TTY
+  const LinuxGraphicsTTY linux_graphics_tty;
+#endif
+
 #ifdef USE_EGL
-#if defined(USE_X11) || defined(USE_WAYLAND)
-#elif defined(USE_VIDEOCORE)
-  /* for Raspberry Pi */
-  DISPMANX_DISPLAY_HANDLE_T vc_display;
-  DISPMANX_UPDATE_HANDLE_T vc_update;
-  DISPMANX_ELEMENT_HANDLE_T vc_element;
-  EGL_DISPMANX_WINDOW_T vc_window;
-#elif defined(HAVE_MALI)
-  fbdev_window mali_native_window;
-#elif defined(MESA_KMS)
-  struct gbm_device *native_display;
-  struct gbm_surface *native_window;
 
-  int dri_fd;
-
-  struct gbm_bo *current_bo;
-
+#ifdef MESA_KMS
   drmEventContext evctx;
 
-  drmModeConnector *connector;
-  drmModeEncoder *encoder;
-  drmModeModeInfo mode;
+  struct gbm_surface *native_window;
 
-  drmModeCrtc* saved_crtc;
-#endif
+  struct gbm_bo *current_bo = nullptr;
 
-  EGLDisplay display;
-#ifndef ANDROID
-  EGLContext context;
-#endif
-  EGLSurface surface;
-#endif
+  drmModeCrtc *saved_crtc = nullptr;
+#endif // MESA_KMS
+
+  EGLSurface surface = EGL_NO_SURFACE;
+#endif // USE_EGL
 
 #ifdef USE_GLX
-  _XDisplay *x_display;
-  GLXContext glx_context;
   GLXWindow glx_window;
-#endif
+#endif // USE_GLX
 
 #ifdef ENABLE_SDL
-  SDL_Window *window;
+  SDL_Window *const window;
 
 #ifdef USE_MEMORY_CANVAS
   SDL_Renderer *renderer;
   SDL_Texture *texture;
-#endif
-#endif
+#endif // USE_MEMORY_CANVAS
+#endif // ENABLE_SDL
 
 #ifdef USE_MEMORY_CANVAS
 
@@ -164,15 +135,6 @@ class TopCanvas
 #endif /* !GREYSCALE */
 #endif /* USE_MEMORY_CANVAS */
 
-#ifdef USE_TTY
-  /**
-   * A file descriptor for /dev/tty, or -1 if /dev/tty could not be
-   * opened.  This is used on Linux to switch to graphics mode
-   * (KD_GRAPHICS) or restore text mode (KD_TEXT).
-   */
-  int tty_fd = -1;
-#endif
-
 #ifdef USE_FB
   int fd = -1;
 
@@ -180,7 +142,7 @@ class TopCanvas
   unsigned map_pitch, map_bpp;
 
   uint32_t epd_update_marker;
-#endif
+#endif // USE_FB
 
 #ifdef KOBO
   /**
@@ -194,57 +156,48 @@ class TopCanvas
    * this flag can be set true for don't wait eInk Update complete for faster responce time.
    */
   bool frame_sync = false;
-#endif
+#endif // KOBO
 
 public:
-#ifndef ANDROID
-  ~TopCanvas() {
-    Destroy();
-  }
-
-  void Destroy();
-#endif
-
-#ifdef USE_MEMORY_CANVAS
-  bool IsDefined() const {
 #ifdef ENABLE_SDL
-    return window != nullptr;
-#elif defined(USE_VFB)
-    return true;
-#else
-    return fd >= 0;
-#endif
-  }
-
-  gcc_pure
-  PixelRect GetRect() const;
-#endif
-
-#ifdef ENABLE_SDL
-  void Create(SDL_Window *_window);
+  TopCanvas(UI::Display &_display, SDL_Window *_window);
 #elif defined(USE_GLX)
-  void Create(_XDisplay *x_display,
-              X11Window x_window,
-              GLXFBConfig *fb_cfg) {
-    CreateGLX(x_display, x_window, fb_cfg);
-  }
+  TopCanvas(UI::Display &_display,
+            X11Window x_window);
 #elif defined(USE_X11) || defined(USE_WAYLAND)
-  void Create(EGLNativeDisplayType native_display,
-              EGLNativeWindowType native_window) {
-    CreateEGL(native_display, native_window);
+  TopCanvas(UI::Display &_display, EGLNativeWindowType native_window)
+    :display(_display)
+  {
+    CreateSurface(native_window);
   }
+#elif defined(USE_VFB)
+  TopCanvas(UI::Display &_display, PixelSize new_size);
 #else
-  void Create(PixelSize new_size,
-              bool full_screen, bool resizable);
+  explicit TopCanvas(UI::Display &_display);
 #endif
+
+  ~TopCanvas() noexcept;
+
+  /**
+   * Is this object ready for drawing?
+   */
+  bool IsReady() const noexcept {
+#ifdef USE_EGL
+    /* can't draw if there is no EGL surface (e.g. if the Android app
+       is paused) */
+    return surface != EGL_NO_SURFACE;
+#else
+    return true;
+#endif
+  }
 
 #if defined(USE_FB) || (defined(ENABLE_OPENGL) && (defined(USE_EGL) || defined(USE_GLX) || defined(ENABLE_SDL)))
   /**
    * Obtain the native (non-software-rotated) size of the OpenGL
    * drawable.
    */
-  gcc_pure
-  PixelSize GetNativeSize() const;
+  [[gnu::pure]]
+  PixelSize GetNativeSize() const noexcept;
 #endif
 
 #if defined(USE_MEMORY_CANVAS) || defined(ENABLE_OPENGL)
@@ -255,7 +208,7 @@ public:
    * windowing system library
    * @return true if the screen has been resized
    */
-  bool CheckResize(PixelSize new_native_size);
+  bool CheckResize(PixelSize new_native_size) noexcept;
 #endif
 
 #ifdef USE_FB
@@ -263,36 +216,50 @@ public:
    * Ask the kernel for the frame buffer's current physical size.
    * This is used by CheckResize().
    */
-  gcc_pure
-  PixelSize GetPhysicalSize() const;
+  [[gnu::pure]]
+  PixelSize GetPhysicalSize() const noexcept;
 
   /**
    * Check if the screen has been resized.
    *
    * @return true if the screen has been resized
    */
-  bool CheckResize();
+  bool CheckResize() noexcept;
 #endif
 
-#ifdef ENABLE_OPENGL
+#ifdef ANDROID
   /**
-   * Initialise the new OpenGL context.
+   * Create an EGL surface.
+   *
+   * Throws on error.
+   *
+   * @return true on success, false if no surface is available
+   * currently
    */
-  void Resume();
+  bool AcquireSurface();
+#endif
+
+#ifdef USE_EGL
+  void ReleaseSurface() noexcept;
 #endif
 
 #if defined(ENABLE_SDL) && defined(USE_MEMORY_CANVAS)
-  void OnResize(PixelSize new_size);
+  void OnResize(PixelSize new_size) noexcept;
 #endif
 
 #ifdef USE_MEMORY_CANVAS
-  PixelSize GetSize() const {
+  PixelSize GetSize() const noexcept {
     return PixelSize(buffer.width, buffer.height);
   }
+#endif
+
+#ifdef ENABLE_OPENGL
+  [[gnu::pure]]
+  PixelSize GetSize() const noexcept;
+#endif
 
   Canvas Lock();
-  void Unlock();
-#endif
+  void Unlock() noexcept;
 
   void Flip();
 
@@ -300,34 +267,25 @@ public:
   /**
    * Wait until the screen update is complete.
    */
-  void Wait();
+  void Wait() noexcept;
 
-  void SetEnableDither(bool _enable_dither) {
+  void SetEnableDither(bool _enable_dither) noexcept {
     enable_dither = _enable_dither;
   }
 #endif
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
-  void SetDisplayOrientation(DisplayOrientation orientation);
+  PixelSize SetDisplayOrientation(DisplayOrientation orientation) noexcept;
 #endif
 
 private:
 #ifdef ENABLE_OPENGL
-  void SetupViewport(PixelSize native_size);
+  PixelSize SetupViewport(PixelSize native_size) noexcept;
 #endif
 
-#ifdef USE_GLX
-  void InitGLX(_XDisplay *x_display);
-  void CreateGLX(_XDisplay *x_display,
-                 X11Window x_window,
-                 GLXFBConfig *fb_cfg);
-#elif defined(USE_EGL)
-  void CreateEGL(EGLNativeDisplayType native_display,
-                 EGLNativeWindowType native_window);
+#ifdef USE_EGL
+  void CreateSurface(EGLNativeWindowType native_window);
 #endif
-
-  void InitialiseTTY();
-  void DeinitialiseTTY();
 };
 
 #endif

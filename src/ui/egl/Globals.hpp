@@ -21,36 +21,22 @@ Copyright_License {
 }
 */
 
-#include "../Init.hpp"
-#include "ui/event/Globals.hpp"
-#include "ui/event/Queue.hpp"
-#include "Screen/Debug.hpp"
-#include "ui/canvas/Font.hpp"
-#include "ui/canvas/opengl/Init.hpp"
-#include "ui/canvas/freetype/Init.hpp"
+#pragma once
 
-using namespace UI;
+namespace EGL {
 
-ScreenGlobalInit::ScreenGlobalInit()
-{
-  OpenGL::Initialise();
+/**
+ * Initialize the global EGL context.
+ *
+ * Throws on error.
+ */
+void
+Initialise();
 
-  FreeType::Initialise();
-  Font::Initialise();
+/**
+ * Deinitialize the global EGL context.
+ */
+void
+Deinitialise() noexcept;
 
-  event_queue = new EventQueue();
-
-  ScreenInitialized();
-}
-
-ScreenGlobalInit::~ScreenGlobalInit()
-{
-  delete event_queue;
-  event_queue = nullptr;
-
-  OpenGL::Deinitialise();
-
-  FreeType::Deinitialise();
-
-  ScreenDeinitialized();
-}
+} // namespace EGL

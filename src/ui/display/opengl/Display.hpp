@@ -21,26 +21,14 @@ Copyright_License {
 }
 */
 
-#include "ui/canvas/custom/TopCanvas.hpp"
-#include "ui/canvas/opengl/Init.hpp"
-#include "ui/canvas/opengl/Globals.hpp"
-#include "Android/Main.hpp"
-#include "Android/NativeView.hpp"
-#include "LogFile.hpp"
+#pragma once
 
-void
-TopCanvas::Create(PixelSize new_size, bool full_screen, bool resizable)
-{
-  display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-  surface = eglGetCurrentSurface(EGL_DRAW);
+namespace OpenGL {
 
-  OpenGL::SetupContext();
-  SetupViewport(new_size);
-}
+class Display {
+public:
+  Display();
+  ~Display() noexcept;
+};
 
-void
-TopCanvas::Flip()
-{
-  if (!eglSwapBuffers(display, surface))
-    LogFormat("eglSwapBuffers() failed: 0x%x", eglGetError());
-}
+} // namespace OpenGL

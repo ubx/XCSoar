@@ -21,41 +21,54 @@ Copyright_License {
 }
 */
 
-#include "DisplaySize.hpp"
-#include "ui/dim/Size.hpp"
+#pragma once
 
-#ifdef _WIN32
-#include "ui/canvas/gdi/RootDC.hpp"
-#include <wingdi.h>
-#elif defined(USE_X11)
-#include "ui/event/Globals.hpp"
-#include "ui/event/Queue.hpp"
-#define Font X11Font
-#define Window X11Window
-#define Display X11Display
-#include <X11/Xlib.h>
-#undef Font
-#undef Window
-#undef Display
+struct _XDisplay;
+struct __GLXFBConfigRec;
+struct __GLXcontextRec;
+struct PixelSize;
+
+namespace X11 {
+
+class Display {
+  _XDisplay *const display;
+
+#ifdef USE_GLX
+  __GLXFBConfigRec **fb_cfg;
+
+  __GLXcontextRec *glx_context;
 #endif
 
-PixelSize
-Display::GetSize(PixelSize fallback)
-{
-#ifdef _WIN32
-  RootDC dc;
-  return PixelSize(GetDeviceCaps(dc, HORZRES),
-                   GetDeviceCaps(dc, VERTRES));
-#elif defined(USE_X11)
-  assert(UI::event_queue != nullptr);
+public:
+  /**
+   * Throws on error.
+   */
+  Display();
 
-  auto display = UI::event_queue->GetDisplay();
-  assert(display != nullptr);
+  ~Display() noexcept;
 
-  return PixelSize(DisplayWidth(display, 0), DisplayHeight(display, 0));
-#else
-  /* not implemented: fall back to the main window size (which is
-     correct when it's a full-screen window */
-  return fallback;
+  auto GetXDisplay() const noexcept {
+    return display;
+  }
+
+  [[gnu::pure]]
+  PixelSize GetSize() const noexcept;
+
+  /**
+   * Returns the display size in mm.
+   */
+  [[gnu::pure]]
+  PixelSize GetSizeMM() const noexcept;
+
+#ifdef USE_GLX
+  auto *GetFBConfig() const noexcept {
+    return *fb_cfg;
+  }
+
+  auto *GetGLXContext() const noexcept {
+    return glx_context;
+  }
 #endif
-}
+};
+
+} // namespace X11

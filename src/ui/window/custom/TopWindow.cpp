@@ -23,11 +23,8 @@ Copyright_License {
 
 #include "../TopWindow.hpp"
 #include "ui/canvas/custom/TopCanvas.hpp"
+#include "ui/canvas/Canvas.hpp"
 #include "Hardware/CPU.hpp"
-
-#ifdef USE_MEMORY_CANVAS
-#include "ui/canvas/memory/Canvas.hpp"
-#endif
 
 namespace UI {
 
@@ -47,26 +44,28 @@ TopWindow::Create(const TCHAR *text, PixelSize size,
 #endif
 
   delete screen;
-  screen = new TopCanvas();
+  screen = nullptr;
 
 #ifdef ENABLE_SDL
-  screen->Create(window);
+  screen = new TopCanvas(display, window);
 #elif defined(USE_GLX)
-  screen->Create(x_display, x_window, fb_cfg);
+  screen = new TopCanvas(display, x_window);
 #elif defined(USE_X11)
-  screen->Create(x_display, x_window);
+  screen = new TopCanvas(display, x_window);
 #elif defined(USE_WAYLAND)
-  screen->Create(native_display, native_window);
+  screen = new TopCanvas(display, native_window);
+#elif defined(USE_VFB)
+  screen = new TopCanvas(display, size);
 #else
-  screen->Create(size, style.GetFullScreen(), style.GetResizable());
+  screen = new TopCanvas(display);
 #endif
-
-  assert(screen->IsDefined());
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
-  screen->SetDisplayOrientation(style.GetInitialOrientation());
+  size = screen->SetDisplayOrientation(style.GetInitialOrientation());
+#elif defined(USE_MEMORY_CANVAS)
+  size = screen->GetSize();
 #endif
-  ContainerWindow::Create(nullptr, screen->GetRect(), style);
+  ContainerWindow::Create(nullptr, PixelRect{size}, style);
 }
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
@@ -75,10 +74,8 @@ void
 TopWindow::SetDisplayOrientation(DisplayOrientation orientation) noexcept
 {
   assert(screen != nullptr);
-  assert(screen->IsDefined());
 
-  screen->SetDisplayOrientation(orientation);
-  Resize(screen->GetSize());
+  Resize(screen->SetDisplayOrientation(orientation));
 }
 
 #endif
@@ -96,15 +93,10 @@ TopWindow::Expose() noexcept
   const ScopeLockCPU cpu;
 #endif
 
-#ifdef USE_MEMORY_CANVAS
-  Canvas canvas = screen->Lock();
-  if (canvas.IsDefined()) {
+  if (auto canvas = screen->Lock(); canvas.IsDefined()) {
     OnPaint(canvas);
     screen->Unlock();
   }
-#else
-  OnPaint(*screen);
-#endif
 
   screen->Flip();
 }

@@ -51,7 +51,7 @@ Copyright_License {
 #include <errno.h>
 
 static unsigned
-TranslateDimension(unsigned value)
+TranslateDimension(unsigned value) noexcept
 {
 #ifdef KOBO
   if (value == 1024 && DetectKoboModel() == KoboModel::AURA)
@@ -64,35 +64,30 @@ TranslateDimension(unsigned value)
 }
 
 static unsigned
-GetWidth(const struct fb_var_screeninfo &vinfo)
+GetWidth(const struct fb_var_screeninfo &vinfo) noexcept
 {
   return TranslateDimension(vinfo.xres);
 }
 
 static unsigned
-GetHeight(const struct fb_var_screeninfo &vinfo)
+GetHeight(const struct fb_var_screeninfo &vinfo) noexcept
 {
   return TranslateDimension(vinfo.yres);
 }
 
 static PixelSize
-GetSize(const struct fb_var_screeninfo &vinfo)
+GetSize(const struct fb_var_screeninfo &vinfo) noexcept
 {
   return PixelSize(GetWidth(vinfo), GetHeight(vinfo));
 }
 
 #endif
 
-void
-TopCanvas::Destroy()
+TopCanvas::~TopCanvas() noexcept
 {
   buffer.Free();
 
 #ifdef USE_FB
-#ifdef USE_TTY
-  DeinitialiseTTY();
-#endif
-
   if (fd >= 0) {
     close(fd);
     fd = -1;
@@ -100,24 +95,12 @@ TopCanvas::Destroy()
 #endif
 }
 
-PixelRect
-TopCanvas::GetRect() const
-{
-  assert(IsDefined());
-
-  return { 0, 0, int(buffer.width), int(buffer.height) };
-}
-
-void
-TopCanvas::Create(PixelSize new_size,
-                  bool full_screen, bool resizable)
-{
 #ifdef USE_FB
-  assert(fd < 0);
 
-#ifdef USE_TTY
-  InitialiseTTY();
-#endif
+TopCanvas::TopCanvas(UI::Display &_display)
+  :display(_display)
+{
+  assert(fd < 0);
 
   const char *path = "/dev/fb0";
   fd = open(path, O_RDWR | O_NOCTTY | O_CLOEXEC);
@@ -202,25 +185,17 @@ TopCanvas::Create(PixelSize new_size,
   };
 #endif
 
-  new_size = ::GetSize(vinfo);
+  const auto new_size = ::GetSize(vinfo);
 
   if (vinfo.width > 0 && vinfo.height > 0)
     Display::ProvideSizeMM(new_size.width, new_size.height,
                            vinfo.width, vinfo.height);
 
-#elif defined(USE_VFB)
-  /* allocate buffer as requested by caller */
-#else
-#error No implementation
-#endif
-
   buffer.Allocate(new_size.width, new_size.height);
 }
 
-#ifdef USE_FB
-
 inline PixelSize
-TopCanvas::GetNativeSize() const
+TopCanvas::GetNativeSize() const noexcept
 {
   struct fb_var_screeninfo vinfo;
   ioctl(fd, FBIOGET_VSCREENINFO, &vinfo);
@@ -228,15 +203,28 @@ TopCanvas::GetNativeSize() const
 }
 
 bool
-TopCanvas::CheckResize()
+TopCanvas::CheckResize() noexcept
 {
   return CheckResize(GetNativeSize());
 }
 
+#elif defined(USE_VFB)
+
+TopCanvas::TopCanvas(UI::Display &_display, PixelSize new_size)
+  :display(_display)
+{
+  buffer.Allocate(new_size.width, new_size.height);
+
+  // suppress -Wunused
+  (void)display;
+}
+
+#else
+#error No implementation
 #endif
 
 bool
-TopCanvas::CheckResize(const PixelSize new_native_size)
+TopCanvas::CheckResize(const PixelSize new_native_size) noexcept
 {
   const PixelSize new_size = new_native_size;
   if (new_size == GetSize())
@@ -264,7 +252,7 @@ TopCanvas::Lock()
 }
 
 void
-TopCanvas::Unlock()
+TopCanvas::Unlock() noexcept
 {
 }
 
@@ -322,7 +310,7 @@ TopCanvas::Flip()
 #ifdef KOBO
 
 void
-TopCanvas::Wait()
+TopCanvas::Wait() noexcept
 {
   ioctl(fd, MXCFB_WAIT_FOR_UPDATE_COMPLETE, &epd_update_marker);
 }

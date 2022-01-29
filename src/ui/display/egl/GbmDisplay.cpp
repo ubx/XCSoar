@@ -21,40 +21,25 @@ Copyright_License {
 }
 */
 
-#include "../Init.hpp"
-#include "ui/event/Globals.hpp"
-#include "ui/event/Queue.hpp"
-#include "Screen/Debug.hpp"
-#include "ui/canvas/Font.hpp"
-#include "DisplayOrientation.hpp"
-#include "Asset.hpp"
+#include "GbmDisplay.hpp"
+#include "io/FileDescriptor.hxx"
 
-#ifdef KOBO
-#include "Hardware/RotateDisplay.hpp"
-#endif
+#include <gbm.h>
 
-using namespace UI;
+#include <stdexcept>
 
-ScreenGlobalInit::ScreenGlobalInit()
+namespace EGL {
+
+GbmDisplay::GbmDisplay(FileDescriptor dri_fd)
+  :device(gbm_create_device(dri_fd.Get()))
 {
-  Font::Initialise();
-
-  event_queue = new EventQueue();
-
-#ifdef KOBO
-  Display::Rotate(DisplayOrientation::DEFAULT);
-  event_queue->SetDisplayOrientation(DisplayOrientation::DEFAULT);
-#endif
-
-  ScreenInitialized();
+  if (device == nullptr)
+    throw std::runtime_error("Could not create GBM device");
 }
 
-ScreenGlobalInit::~ScreenGlobalInit()
+GbmDisplay::~GbmDisplay() noexcept
 {
-  delete event_queue;
-  event_queue = nullptr;
-
-  Font::Deinitialise();
-
-  ScreenDeinitialized();
+  gbm_device_destroy(device);
 }
+
+} // namespace EGL
