@@ -16,6 +16,8 @@ Version 7.29 - not yet released
   - Add LS-5 polar
   - Add Silene E78 polar
 * fix exchange frequencies crash when no frequency was set
+ * WaypointDetails
+  - Add pan capability in image of waypoint details
 
 Version 7.28 - 2022/10/29
 * data files

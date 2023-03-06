@@ -116,6 +116,44 @@ WaypointExternalFileListHandler::OnPaintItem(Canvas &canvas,
 }
 #endif
 
+class DrawPanFrame : public WndOwnerDrawFrame {
+  protected:
+    PixelPoint start_point, offset, total_offset;
+    bool panning;
+    std::function<void(Canvas &canvas, const PixelRect &rc, const PixelPoint &offset)> mOnPaintCallback2;
+
+  public:
+    template<typename CB>
+    void Create(ContainerWindow &parent,
+                PixelRect rc, const WindowStyle style,
+                  CB &&_paint) {
+      mOnPaintCallback2 = std::move(_paint);
+      PaintWindow::Create(parent, rc, style);
+    }
+
+    void InitPan() {
+      offset. x = 0; offset.y = 0;
+      total_offset = offset;
+      panning = false;
+    }
+
+  protected:
+    /** from class Window */
+    bool OnMouseMove(PixelPoint p, unsigned keys) noexcept override;
+    bool OnMouseDown(PixelPoint p) noexcept override;
+    bool OnMouseUp(PixelPoint p) noexcept override;
+
+
+  void
+  OnPaint(Canvas &canvas) noexcept override
+  {
+    if (mOnPaintCallback2 == nullptr)
+      return;
+
+    mOnPaintCallback2(canvas, GetClientRect(), offset);
+  }
+};
+
 class WaypointDetailsWidget final
   : public NullWidget {
   struct Layout {
@@ -156,7 +194,7 @@ class WaypointDetailsWidget final
   ManagedWidget info_widget{new WaypointInfoWidget(look, waypoint)};
   PanelControl details_panel;
   ManagedWidget commands_widget;
-  WndOwnerDrawFrame image_window;
+  DrawPanFrame image_window;
 
 #ifdef HAVE_RUN_FILE
   ListControl file_list{look};
@@ -195,7 +233,7 @@ public:
 
   void OnGotoClicked();
 
-  void OnImagePaint(Canvas &canvas, const PixelRect &rc);
+  void OnImagePaint(Canvas &canvas, const PixelRect &rc, const PixelPoint &offset);
 
   /* virtual methods from class Widget */
   void Prepare(ContainerWindow &parent, const PixelRect &rc) noexcept override;
@@ -468,8 +506,8 @@ WaypointDetailsWidget::Prepare(ContainerWindow &parent,
 
   if (!images.empty())
     image_window.Create(parent, layout.main, dock_style,
-                        [this](Canvas &canvas, const PixelRect &rc){
-                          OnImagePaint(canvas, rc);
+                        [this](Canvas &canvas, const PixelRect &rc, PixelPoint offset) {
+                            OnImagePaint(canvas, rc, offset);
                         });
 
   last_page = 2 + images.size();
@@ -502,6 +540,8 @@ WaypointDetailsWidget::UpdateZoomControls()
 {
   magnify_button.SetEnabled(zoom < 5);
   shrink_button.SetEnabled(zoom > 0);
+  if (zoom == 0)
+    image_window.InitPan();
 }
 
 void
@@ -585,7 +625,8 @@ WaypointDetailsWidget::OnGotoClicked()
 
 void
 WaypointDetailsWidget::OnImagePaint([[maybe_unused]] Canvas &canvas,
-                                    [[maybe_unused]] const PixelRect &rc)
+                                    [[maybe_unused]] const PixelRect &rc,
+                                    const PixelPoint &offset)
 {
   canvas.ClearWhite();
   if (page >= 3 && page < 3 + (int)images.size()) {
@@ -623,8 +664,41 @@ WaypointDetailsWidget::OnImagePaint([[maybe_unused]] Canvas &canvas,
       screen_pos.y = 0;
       screen_size.height = canvas.GetHeight();
     }
+    if (zoom > 0) {
+      img_pos = img_pos + (offset / scale);
+      img_pos.x = std::max(img_pos.x, 0);
+      img_pos.y = std::max(img_pos.y, 0);
+      img_pos.x = std::min(img_pos.x, (int)screen_size.width);
+      img_pos.y = std::min(img_pos.y, (int)screen_size.height);
+    }
     canvas.Stretch(screen_pos, screen_size, img, img_pos, img_size);
   }
+}
+
+bool
+DrawPanFrame::OnMouseMove(PixelPoint p, [[maybe_unused]] unsigned keys) noexcept
+{
+  if (panning) {
+    offset = total_offset + start_point - p;
+    Invalidate();
+  }
+  return true;
+}
+
+bool
+DrawPanFrame::OnMouseDown(PixelPoint p) noexcept
+{
+  start_point = p;
+  panning = true;
+  return true;
+}
+
+bool
+DrawPanFrame::OnMouseUp([[maybe_unused]] PixelPoint p) noexcept
+{
+  total_offset = offset;
+  panning = false;
+  return true;
 }
 
 static void
