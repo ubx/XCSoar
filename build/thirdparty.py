@@ -198,6 +198,7 @@ else:
         libsalsa,
         libusb,
         simple_usbmodeswitch,
+        sdl2,
     ]
 
 # build the third-party libraries

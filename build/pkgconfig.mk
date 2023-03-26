@@ -30,11 +30,11 @@ define assign-check-error
 $(1) = $$($(2))$$(if $$(filter ERROR,$$($(2))),$$(error $(3)))
 endef
 
-ifeq ($(TARGET_IS_KOBO),y)
-# No -isystem on the Kobo because it may break our Musl sysroot
-pkg-config-cppflags-filter = $(1)
+ifeq ($(TARGET_IS_KOBO)$(TARGET_IS_COLIBR),nn)
+  pkg-config-cppflags-filter = $(patsubst -I%,-isystem %,$(1))
 else
-pkg-config-cppflags-filter = $(patsubst -I%,-isystem %,$(1))
+  # No -isystem on the Kobo and the Colibri because it may break our Musl sysroot
+  pkg-config-cppflags-filter = $(1)
 endif
 
 pkg-config-ldlibs-filter = $(1)

@@ -6,7 +6,8 @@ TARGETS = PC WIN64 \
 	ANDROID ANDROID7 ANDROID86 \
 	ANDROIDAARCH64 ANDROIDX64 \
 	ANDROIDFAT \
-	OSX64 IOS32 IOS64
+	OSX64 IOS32 IOS64 \
+	COLIBRI
 
 ifeq ($(TARGET),)
   ifeq ($(HOST_IS_UNIX),y)
@@ -49,6 +50,7 @@ TARGET_IS_PI := n
 TARGET_IS_PI32 := n
 TARGET_IS_PI64 := n
 TARGET_IS_KOBO := n
+TARGET_IS_COLIBRI := n
 TARGET_IS_CUBIE := n
 HAVE_POSIX := n
 HAVE_WIN32 := y
@@ -228,6 +230,27 @@ ifeq ($(TARGET),NEON)
   TARGET_IS_ARMHF = y
   ARMV7 := y
   NEON := y
+endif
+
+ifeq ($(TARGET),COLIBRI)
+  # Support for Toradex Colibri T20/T30
+  override TARGET = UNIX
+  TARGET_IS_COLIBRI = y
+  ifeq ($(USE_CROSSTOOL_NG),y)
+    HOST_TRIPLET ?= arm-unknown-linux-gnueabihf
+  else
+    HOST_TRIPLET ?= arm-linux-gnueabihf
+  endif
+  TCPREFIX ?= $(HOST_TRIPLET)-
+  ifeq ($(CLANG),n)
+    TARGET_ARCH += -mfpu=vfpv3-d16
+    TARGET_ARCH += -mhard-float
+    ###TARGET_ARCH += -D_NDK_MATH_NO_SOFTFP=1
+  endif
+  TARGET_IS_LINUX = y
+  TARGET_IS_ARM = y
+  TARGET_IS_ARMHF = y
+  ARMV7 := y
 endif
 
 ifeq ($(TARGET),OSX64)
@@ -491,6 +514,44 @@ ifeq ($(TARGET_IS_KOBO),y)
   endif
 endif
 
+ifeq ($(TARGET_IS_COLIBRI),y)
+  TARGET_CPPFLAGS += -DCOLIBRI
+
+  ifeq ($(CLANG),y)
+    # Always use -fomit-frame-pointer for now, to circumvent Clang bug #34165.
+    # https://bugs.llvm.org/show_bug.cgi?id=34165
+    # http://www.openwall.com/lists/musl/2017/10/07/3
+    TARGET_ARCH += -fomit-frame-pointer
+  endif
+
+  # We are using a GNU toolchain (triplet arm-linux-gnueabihf) by default, but
+  # the actual host triplet is different.
+
+  ## todo -- the line below does not compile:
+  ## ACTUAL_HOST_TRIPLET = arm-linux-gnueabihf
+  ##  /opt/xcsoar/output/COLIBRI/lib/build/gcc-12.2.0/arm-linux-gnueabihf/libstdc++-v3/include/arm-linux-gnueabihf/bits/os_defines.h:44:19: error: missing binary operator before token "("
+  ##     44 | #if __GLIBC_PREREQ(2,15) && defined(_GNU_SOURCE)
+
+  ACTUAL_HOST_TRIPLET = armv7a-a8neon-linux-musleabihf
+
+  ifeq ($(USE_CROSSTOOL_NG),y)
+    HOST_TRIPLET = $(ACTUAL_HOST_TRIPLET)
+    LLVM_TARGET = $(ACTUAL_HOST_TRIPLET)
+    COLIBRI_TOOLCHAIN = $(HOME)/x-tools/$(HOST_TRIPLET)
+    COLIBRI_SYSROOT = $(COLIBRI_TOOLCHAIN)/$(HOST_TRIPLET)/sysroot
+    TCPREFIX = $(COLIBRI_TOOLCHAIN)/bin/$(HOST_TRIPLET)-
+
+    ifeq ($(CLANG),y)
+      TARGET_CPPFLAGS += -B$(COLIBRI_TOOLCHAIN)
+      TARGET_CPPFLAGS += --sysroot=$(COLIBRI_SYSROOT)
+    endif
+  else
+    ###TARGET_CXXFLAGS += -Wno-psabi
+
+    TCPREFIX = $(abspath $(THIRDPARTY_LIBS_DIR))/bin/$(ACTUAL_HOST_TRIPLET)-
+  endif
+endif
+
 ifeq ($(TARGET),ANDROID)
   TARGET_CPPFLAGS += -DANDROID
   CXXFLAGS += -D__STDC_VERSION__=199901L
@@ -567,6 +628,18 @@ ifeq ($(TARGET_IS_KOBO),y)
      TARGET_LDFLAGS += -B$(KOBO_TOOLCHAIN)
      TARGET_LDFLAGS += -B$(KOBO_TOOLCHAIN)/bin
      TARGET_LDFLAGS += --sysroot=$(KOBO_SYSROOT)
+    endif
+  endif
+endif
+
+ifeq ($(TARGET_IS_COLIBRI),y)
+  TARGET_LDFLAGS += --static
+
+  ifeq ($(USE_CROSSTOOL_NG),y)
+    ifeq ($(CLANG),y)
+     TARGET_LDFLAGS += -B$(COLIBRI_TOOLCHAIN)
+     TARGET_LDFLAGS += -B$(COLIBRI_TOOLCHAIN)/bin
+     TARGET_LDFLAGS += --sysroot=$(COLIBRI_SYSROOT)
     endif
   endif
 endif
