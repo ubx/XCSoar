@@ -3,6 +3,7 @@ TARGETS = PC WIN64 \
 	WAYLAND \
 	FUZZER \
 	PI PI2 CUBIE KOBO NEON \
+	COLIBRI \
 	ANDROID ANDROID7 ANDROID86 \
 	ANDROIDAARCH64 ANDROIDX64 \
 	ANDROIDFAT \
@@ -225,6 +226,22 @@ ifeq ($(TARGET),NEON)
   TARGET_IS_ARMHF = y
   ARMV7 := y
   NEON := y
+endif
+
+ifeq ($(TARGET),COLIBRI)
+  # Target for Toradex Colibri T20 on Linux
+  #    https://developer-archives.toradex.com/products/colibri-t20
+  override TARGET = UNIX
+  TARGET_IS_COLIBRI = y
+  HOST_TRIPLET ?= arm-linux-gnueabihf
+  TCPREFIX ?= $(HOST_TRIPLET)-
+  ifeq ($(CLANG),n)
+    TARGET_ARCH += -mcpu=cortex-a8
+  endif
+  TARGET_IS_LINUX = y
+  TARGET_IS_ARM = y
+  TARGET_IS_ARMHF = y
+  ARMV7 := y
 endif
 
 ifeq ($(TARGET),OSX64)
@@ -498,6 +515,24 @@ ifeq ($(TARGET_IS_KOBO),y)
   TCPREFIX = $(abspath $(THIRDPARTY_LIBS_DIR))/bin/$(HOST_TRIPLET)-
 endif
 
+ifeq ($(TARGET_IS_COLIBRI),y)
+  TARGET_CPPFLAGS += -DCOLIBRI
+  TARGET_ARCH += -mthumb
+  TARGET_ARCH += -fno-PIE
+
+  ifeq ($(CLANG),y)
+    # Always use -fomit-frame-pointer for now, to circumvent Clang bug #34165.
+    # https://bugs.llvm.org/show_bug.cgi?id=34165
+    # http://www.openwall.com/lists/musl/2017/10/07/3
+    TARGET_ARCH += -fomit-frame-pointer
+  endif
+  ACTUAL_HOST_TRIPLET = armv7a-a8neon-linux-musleabihf
+
+  TARGET_CXXFLAGS += -Wno-psabi
+
+  TCPREFIX = $(abspath $(THIRDPARTY_LIBS_DIR))/bin/$(ACTUAL_HOST_TRIPLET)-
+endif
+
 ifeq ($(TARGET),ANDROID)
   TARGET_CPPFLAGS += -DANDROID
   CXXFLAGS += -D__STDC_VERSION__=199901L
@@ -579,6 +614,18 @@ ifeq ($(TARGET),ANDROID)
   endif
 endif
 
+ifeq ($(TARGET_IS_COLIBRI),y)
+  TARGET_LDFLAGS += --static
+  TARGET_LDFLAGS += -Wl,-u,pthread_cond_signal -Wl,-u,pthread_cond_broadcast -Wl,-u,pthread_cond_wait
+endif
+
+ifeq ($(TARGET),ANDROID)
+  TARGET_LDFLAGS += -Wl,--no-undefined
+
+  ifeq ($(ARMV7),y)
+    TARGET_LDFLAGS += -Wl,--fix-cortex-a8
+  endif
+endif
 ifeq ($(HAVE_WIN32),y)
   TARGET_LDLIBS += -lwinmm
 endif
