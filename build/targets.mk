@@ -233,7 +233,7 @@ ifeq ($(TARGET),COLIBRI)
   #    https://developer-archives.toradex.com/products/colibri-t20
   override TARGET = UNIX
   TARGET_IS_COLIBRI = y
-  HOST_TRIPLET ?= arm-linux-gnueabihf
+  HOST_TRIPLET = armv7a-colibri-linux-musleabihf
   TCPREFIX ?= $(HOST_TRIPLET)-
   ifeq ($(CLANG),n)
     TARGET_ARCH += -mcpu=cortex-a8
@@ -526,11 +526,10 @@ ifeq ($(TARGET_IS_COLIBRI),y)
     # http://www.openwall.com/lists/musl/2017/10/07/3
     TARGET_ARCH += -fomit-frame-pointer
   endif
-  ACTUAL_HOST_TRIPLET = armv7a-a8neon-linux-musleabihf
 
   TARGET_CXXFLAGS += -Wno-psabi
 
-  TCPREFIX = $(abspath $(THIRDPARTY_LIBS_DIR))/bin/$(ACTUAL_HOST_TRIPLET)-
+  TCPREFIX = $(abspath $(THIRDPARTY_LIBS_DIR))/bin/$(HOST_TRIPLET)-
 endif
 
 ifeq ($(TARGET),ANDROID)
@@ -606,14 +605,6 @@ ifeq ($(TARGET_IS_KOBO),y)
   TARGET_LDFLAGS += -Wl,-u,pthread_cond_signal -Wl,-u,pthread_cond_broadcast -Wl,-u,pthread_cond_wait
 endif
 
-ifeq ($(TARGET),ANDROID)
-  TARGET_LDFLAGS += -Wl,--no-undefined
-
-  ifeq ($(ARMV7),y)
-    TARGET_LDFLAGS += -Wl,--fix-cortex-a8
-  endif
-endif
-
 ifeq ($(TARGET_IS_COLIBRI),y)
   TARGET_LDFLAGS += --static
   TARGET_LDFLAGS += -Wl,-u,pthread_cond_signal -Wl,-u,pthread_cond_broadcast -Wl,-u,pthread_cond_wait
@@ -626,6 +617,7 @@ ifeq ($(TARGET),ANDROID)
     TARGET_LDFLAGS += -Wl,--fix-cortex-a8
   endif
 endif
+
 ifeq ($(HAVE_WIN32),y)
   TARGET_LDLIBS += -lwinmm
 endif
