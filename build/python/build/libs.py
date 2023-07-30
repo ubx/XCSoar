@@ -473,3 +473,28 @@ libsalsa = AutotoolsProject(
     ["--disable-4bit", "--disable-user-elem", "--enable-shared=no", "--enable-tlv"],
     patches=abspath("lib/salsa-lib/patches"),
 )
+
+libinput = MesonProject(
+    'https://gitlab.freedesktop.org/libinput/libinput/-/archive/1.23.0/libinput-1.23.0.tar.bz2',
+    'https://gitlab.freedesktop.org/libinput/libinput/-/archive/1.23.0/libinput-1.23.0.tar.bz2',
+    'dea612151f5792df73f01c49197b6b41',
+    'lib/libinput.a',
+    [
+        '-Ddocumentation=false',
+        '-Dtests=false',
+    ]
+)
+
+libudev = AutotoolsProject(
+    'https://github.com/eudev-project/eudev/releases/download/v3.2.12/eudev-3.2.12.tar.gz',
+    'https://github.com/eudev-project/eudev/releases/download/v3.2.12/eudev-3.2.12.tar.gz',
+    '6f1559ca7c27013ff68816e2732498a3',
+    'lib/libudev.a'
+)
+
+mtdev = AutotoolsProject(
+    'https://bitmath.org/code/mtdev/mtdev-1.1.6.tar.bz2',
+    'https://bitmath.org/code/mtdev/mtdev-1.1.6.tar.bz2',
+    'bf8ef2482e84a00b5db8fbd3ce00e249',
+    'lib/mtdev.a'
+)

@@ -8,7 +8,7 @@
 #include "ui/event/Queue.hpp"
 #endif
 
-#if (defined(USE_CONSOLE) && !defined(KOBO)) || defined(USE_WAYLAND)
+#if (defined(USE_CONSOLE) && !defined(KOBO) && !defined(COLIBRI)) || defined(USE_WAYLAND)
 
 bool
 HasPointer() noexcept

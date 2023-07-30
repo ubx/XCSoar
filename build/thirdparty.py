@@ -110,7 +110,6 @@ elif '-colibri-linux-' in host_triplet:
         gcc_bootstrap,
         musl,
         gcc,
-        sdl2,
         zlib,
         libfmt,
         libsodium,
@@ -121,13 +120,12 @@ elif '-colibri-linux-' in host_triplet:
         libpng,
         libjpeg,
         lua,
-        sqlite3,
         libsalsa,
         libusb,
         simple_usbmodeswitch,
-        libtiff,
-        proj,
-        sdl2,
+        mtdev,
+        libudev,
+        libinput,
     ]
 else:
     raise RuntimeError('Unrecognized target')
