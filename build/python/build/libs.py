@@ -482,22 +482,24 @@ libinput = MesonProject(
     [
         '-Ddocumentation=false',
         '-Dtests=false',
+        '-Dlibwacom=false',
+        '-Ddebug-gui=true',
+        '-Dtests=false',
+        '-Dinstall-tests=false',
     ]
 )
-
-# libudev = AutotoolsProject(
-#     'https://github.com/eudev-project/eudev/releases/download/v3.2.12/eudev-3.2.12.tar.gz',
-#     'https://github.com/eudev-project/eudev/releases/download/v3.2.12/eudev-3.2.12.tar.gz',
-#     '6f1559ca7c27013ff68816e2732498a3',
-#     'lib/libudev.a'
-# )
 
 libudev = AutotoolsProject(
     'https://github.com/eudev-project/eudev/releases/download/v3.2.12/eudev-3.2.12.tar.gz',
     'https://github.com/eudev-project/eudev/releases/download/v3.2.12/eudev-3.2.12.tar.gz',
     '6f1559ca7c27013ff68816e2732498a3',
-    'lib/libudev.a'
+    'lib/libudev.a',
+    [
+        '--disable-shared', '--enable-static',
+    ],
+    autogen=True,
 )
+
 libmtdev = AutotoolsProject(
     'https://bitmath.org/code/mtdev/mtdev-1.1.6.tar.bz2',
     'https://bitmath.org/code/mtdev/mtdev-1.1.6.tar.bz2',
@@ -520,28 +522,16 @@ libevdev = AutotoolsProject(
     autogen=True,
 )
 
-libwacom = MesonProject(
-    'https://github.com/linuxwacom/libwacom/releases/download/libwacom-2.7.0/libwacom-2.7.0.tar.xz',
-    'https://github.com/linuxwacom/libwacom/releases/download/libwacom-2.7.0/libwacom-2.7.0.tar.xz',
-    '853929bd73fba2064b12142dbbee4b3bf84509197ff46a4da559eddf62d32cdf',
-    'lib/libwacom.a',
-)
-
 libgudev = MesonProject(
     'https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz',
     'https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz',
-    '61266ab1afc9d73dbc60a8b2af73e99d2fdff47d99544d085760e4fa667b5dd1',
+    '46da30a1c69101c3a13fa660d9ab7b73',
     'lib/libgudev.a',
-)
-
-
-systemd = MesonProject(
-    'https://github.com/systemd/systemd/archive/v254/systemd-254.tar.gz',
-    'https://github.com/systemd/systemd/archive/v254/systemd-254.tar.gz',
-    '0d266e5361dc72097b6c18cfde1c0001',
-    'lib/systemd.a',
     [
-
+        '-Dintrospection=disabled',
+        '-Dtests=disabled',
+        '-Dvapi=disabled',
+        '-Dgtk_doc=false'
     ]
 )
 
@@ -550,6 +540,11 @@ glib = MesonProject(
     'https://gitlab.gnome.org/GNOME/glib/-/archive/2.77.1/glib-2.77.1.tar.bz2',
     'dce8d0c9e916d8c81a64436bd4ee4d6515a52dd3d157c994e1cdb9b3d6300a03',
     'lib/glib.a',
+    [
+        '-Dtests=false',
+        '-Dbsymbolic_functions=false',
+        '-Dglib_debug=disabled',
+    ]
 )
 
 libpcre2 =  CmakeProject(
@@ -557,4 +552,7 @@ libpcre2 =  CmakeProject(
     'https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.bz2',
     'a8e9ab2935d428a4807461f183034abe',
     'lib/libpcre2.a',
+    [
+        '-DBUILD_SHARED_LIBS=OFF',
+    ]
 )

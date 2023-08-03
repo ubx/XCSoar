@@ -129,8 +129,6 @@ elif '-colibri-linux-' in host_triplet:
         glib,
         libudev,
         libgudev,
-        libwacom,
-        # systemd,
         libinput,
     ]
 else:
