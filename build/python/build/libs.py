@@ -556,3 +556,28 @@ libpcre2 =  CmakeProject(
         '-DBUILD_SHARED_LIBS=OFF',
     ]
 )
+
+gtk = MesonProject(
+    'https://gitlab.gnome.org/GNOME/gtk/-/archive/4.11.4/gtk-4.11.4.tar.bz2',
+    'https://gitlab.gnome.org/GNOME/gtk/-/archive/4.11.4/gtk-4.11.4.tar.bz2',
+    'c0b454cbdf4633e08c0f133a752d3882',
+    'lib/gtk.a',
+    [
+        '-Dx11-backend=false',
+        '-Dwayland-backend=true',
+        '-Dbroadway-backend=false',
+        '-Dwin32-backend=false',
+        '-Dmacos-backend=false',
+        '-Dmedia-gstreamer=disabled',
+        '-Dprint-cups=disabled',
+        '-Df16c=disabled',
+        '-Dintrospection=disabled',
+        '-Dbuild-demos=false',
+        '-Ddemos=false',
+        '-Dbuild-testsuite=false',
+        '-Dbuild-examples=false',
+        '-Dbuild-tests=false',
+
+
+    ]
+)
