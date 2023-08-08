@@ -1,4 +1,5 @@
 from os.path import abspath
+from unittest.mock import patch
 
 from build.zlib import ZlibProject
 from build.autotools import AutotoolsProject
@@ -483,9 +484,10 @@ libinput = MesonProject(
         '-Ddocumentation=false',
         '-Dtests=false',
         '-Dlibwacom=false',
-        '-Ddebug-gui=true',
+        '-Ddebug-gui=false',
         '-Dtests=false',
         '-Dinstall-tests=false',
+        '--default-library=static',
     ]
 )
 
@@ -532,7 +534,8 @@ libgudev = MesonProject(
         '-Dtests=disabled',
         '-Dvapi=disabled',
         '-Dgtk_doc=false'
-    ]
+    ],
+    patches=abspath('lib/gudev/patches')
 )
 
 glib = MesonProject(
@@ -544,40 +547,22 @@ glib = MesonProject(
         '-Dtests=false',
         '-Dbsymbolic_functions=false',
         '-Dglib_debug=disabled',
+        '-Dmultiarch=true',
+        '-Dbsymbolic_functions=true',
     ]
 )
 
-libpcre2 =  CmakeProject(
+libpcre2 =  AutotoolsProject(
     'https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.bz2',
     'https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.bz2',
     'a8e9ab2935d428a4807461f183034abe',
     'lib/libpcre2.a',
     [
-        '-DBUILD_SHARED_LIBS=OFF',
-    ]
-)
-
-gtk = MesonProject(
-    'https://gitlab.gnome.org/GNOME/gtk/-/archive/4.11.4/gtk-4.11.4.tar.bz2',
-    'https://gitlab.gnome.org/GNOME/gtk/-/archive/4.11.4/gtk-4.11.4.tar.bz2',
-    'c0b454cbdf4633e08c0f133a752d3882',
-    'lib/gtk.a',
-    [
-        '-Dx11-backend=false',
-        '-Dwayland-backend=true',
-        '-Dbroadway-backend=false',
-        '-Dwin32-backend=false',
-        '-Dmacos-backend=false',
-        '-Dmedia-gstreamer=disabled',
-        '-Dprint-cups=disabled',
-        '-Df16c=disabled',
-        '-Dintrospection=disabled',
-        '-Dbuild-demos=false',
-        '-Ddemos=false',
-        '-Dbuild-testsuite=false',
-        '-Dbuild-examples=false',
-        '-Dbuild-tests=false',
-
-
-    ]
+        '--disable-shared', '--enable-static',
+        '--enable-pcre2-32',
+        '--disable-pcre2-16',
+        '--disable-pcre2-8',
+        '--with-pic=pic-only',
+    ],
+    autogen=True,
 )

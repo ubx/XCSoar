@@ -13,7 +13,7 @@ InputEventQueue::InputEventQueue(EventQueue &queue) noexcept
    keyboard(queue, merge_mouse),
    mouse(queue, merge_mouse)
 #else
-   libinput_handl
+   libinput_handler(queue)
 #endif
 {
 #if defined(KOBO) || defined(COLIBRI)
