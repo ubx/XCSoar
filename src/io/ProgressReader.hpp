@@ -32,11 +32,12 @@ public:
 
   std::size_t Read(std::span<std::byte> dest) override {
     std::size_t nbytes = next.Read(dest);
+    if (nbytes > 0) {
+      position += nbytes;
 
-    position += nbytes;
-
-    // TODO rate-limit SetProgressRange() calls?
-    progress_listener.SetProgressPosition(1024 * position / total);
+      // TODO rate-limit SetProgressRange() calls?
+      progress_listener.SetProgressPosition(1024 * position / total);
+    }
 
     return nbytes;
   }
