@@ -143,13 +143,13 @@ LogString(std::wstring_view s) noexcept
 }
 
 void
-LogFormat(const wchar_t *Str, ...) noexcept
+LogFormat(const wchar_t *fmt, ...) noexcept
 {
   wchar_t buf[MAX_PATH];
   va_list ap;
 
-  va_start(ap, Str);
-  std::vswprintf(buf, std::size(buf), Str, ap);
+  va_start(ap, fmt);
+  std::vswprintf(buf, std::size(buf), fmt, ap);
   va_end(ap);
 
   LogString(buf);
