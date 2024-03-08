@@ -46,6 +46,10 @@ LogFormat(const char *fmt, ...) noexcept
 void
 LogFormat(const wchar_t *fmt, ...) noexcept
 {
+  std::wstring wstr(fmt);
+  size_t pos = wstr.find(L"%s", 0);
+  if (pos != std::wstring::npos)
+    wstr.replace(pos, 3, L"%ls");
   va_list ap;
 
   va_start(ap, fmt);

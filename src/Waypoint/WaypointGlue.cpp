@@ -62,7 +62,7 @@ try {
                    progressg);
   return true;
 } catch (...) {
-  LogFormat(_T("Failed to read waypoint file: %s"), path);
+  LogFormat("Failed to read waypoint file: %s", path);
   LogError(std::current_exception());
   return false;
 }

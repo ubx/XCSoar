@@ -146,10 +146,14 @@ void
 LogFormat(const wchar_t *fmt, ...) noexcept
 {
   wchar_t buf[MAX_PATH];
+  std::wstring wstr(fmt);
+  size_t pos = wstr.find(_T("%s"), 0);
+  if (pos != std::wstring::npos)
+    wstr.replace(pos, 3, _T("%ls"));
   va_list ap;
 
   va_start(ap, fmt);
-  std::vswprintf(buf, std::size(buf), fmt, ap);
+  std::vswprintf(buf, std::size(buf), wstr.c_str(), ap);
   va_end(ap);
 
   LogString(buf);
