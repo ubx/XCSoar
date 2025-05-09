@@ -123,6 +123,7 @@ elif '-colibri-linux-' in host_triplet:
         libsalsa,
         libusb,
         simple_usbmodeswitch,
+        sdl2_at,
     ]
 else:
     raise RuntimeError('Unrecognized target')
