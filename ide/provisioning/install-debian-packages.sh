@@ -92,12 +92,21 @@ install_debian() {
     build-essential
   echo
 }
+    build-essential
+echo
 
 install_llvm() {
   echo Installing dependencies for compiling with LLVM / Clang...
   apt-get install ${APTOPTS[*]} llvm clang libc++-dev libc++abi-dev lld
   echo
 }
+echo Installing dependencies for compiling targets which need SocketCan...
+apt-get install $APTOPTS libsocketcan-dev
+echo
+
+echo Installing dependencies for compiling with LLVM / Clang...
+apt-get install ${APTOPTS[*]} llvm clang libc++-dev
+echo
 
 install_libinput_gbm() {
   echo Installing dependencies for compiling targets which need libinput or GBM...

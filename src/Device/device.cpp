@@ -64,6 +64,9 @@ DeviceConfigOverlaps(const DeviceConfig &a, const DeviceConfig &b)
   case DeviceConfig::PortType::TCP_LISTENER:
   case DeviceConfig::PortType::UDP_LISTENER:
     return a.tcp_port == b.tcp_port;
+
+  case DeviceConfig::PortType::CAN_INTERFACE:
+    return a.can_interface.equals(b.can_interface);
   }
 
   gcc_unreachable();

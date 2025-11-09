@@ -107,6 +107,20 @@ IsEmbedded() noexcept
 }
 
 /**
+ * Returns whether the application is running on a Linux system.
+ */
+constexpr
+static inline bool
+IsLinux()
+{
+#if defined(HAVE_POSIX) && !defined(ANDROID)
+  return true;
+#else
+  return false;
+#endif
+}
+
+/**
  * Returns whether the application is compiled with IOIOLib
  */
 constexpr

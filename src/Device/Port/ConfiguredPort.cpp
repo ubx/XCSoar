@@ -26,6 +26,10 @@
 #include "DumpPort.hpp"
 #endif
 
+#ifdef HAVE_CAN
+#include "CANPort.hpp"
+#endif
+
 #include <stdexcept>
 #include <system_error>
 
@@ -176,6 +180,14 @@ OpenPortInternal(EventLoop &event_loop, Cares::Channel &cares,
   case DeviceConfig::PortType::UDP_LISTENER:
     return std::make_unique<UDPPort>(event_loop, config.tcp_port,
                                      listener, handler);
+
+  case DeviceConfig::PortType::CAN_INTERFACE:
+#ifdef HAVE_CAN
+    return std::make_unique<CANPort>(event_loop, config.can_interface,
+                                             listener, handler);
+#else
+    throw std::runtime_error("CAN interface not available on this build");
+#endif
 
   case DeviceConfig::PortType::PTY: {
 #if defined(HAVE_POSIX) && !defined(ANDROID)

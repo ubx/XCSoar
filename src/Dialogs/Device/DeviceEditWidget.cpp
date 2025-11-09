@@ -21,7 +21,7 @@ enum ControlIndex {
   TCPPort,
   I2CBus, I2CAddr, PressureUsage, Driver, UseSecondDriver, SecondDriver,
   SyncFromDevice, SyncToDevice,
-  K6Bt,
+  K6Bt, CAN_INTERFACE,
 };
 
 static void
@@ -96,6 +96,13 @@ FillEngineType(DataFieldEnum &dfe) noexcept
   dfe.addEnumText(_T("4S1I"), static_cast<unsigned>(DeviceConfig::EngineType::FOUR_STROKE_1_IGN));
 }
 
+static void
+FillCANDevices(DataFieldEnum &dfe) noexcept
+{
+  dfe.addEnumText(_T("can0"), 0U);
+  dfe.addEnumText(_T("vcan0"), 1U);
+}
+
 static bool
 EditPortCallback(const TCHAR *caption, DataField &df,
                  [[maybe_unused]] const TCHAR *help_text) noexcept
@@ -134,6 +141,7 @@ DeviceEditWidget::SetConfig(const DeviceConfig &_config) noexcept
   LoadValue(SyncToDevice, config.sync_to_device);
   LoadValue(K6Bt, config.k6bt);
   LoadValueEnum(EngineTypes, config.engine_type);
+  LoadValue(CAN_INTERFACE, config.can_interface);
 
   UpdateVisibilities();
 }
@@ -208,6 +216,7 @@ DeviceEditWidget::UpdateVisibilities() noexcept
   const bool k6bt = maybe_bluetooth && GetValueBoolean(K6Bt);
   const bool uses_speed = DeviceConfig::UsesSpeed(type) || k6bt;
   const bool maybe_engine_sensor = type == DeviceConfig::PortType::BLE_SENSOR;
+  const bool uses_can = DeviceConfig::UsesCANPort(type);
 
   SetRowAvailable(BaudRate, uses_speed);
   SetRowAvailable(BulkBaudRate, uses_speed &&
@@ -235,6 +244,8 @@ DeviceEditWidget::UpdateVisibilities() noexcept
                 CanSendSettings(GetDataField(Driver)));
   SetRowAvailable(K6Bt, maybe_bluetooth);
   SetRowAvailable(EngineTypes, maybe_engine_sensor);
+
+  SetRowVisible(CAN_INTERFACE, uses_can);
 }
 
 void
@@ -340,6 +351,11 @@ DeviceEditWidget::Prepare(ContainerWindow &parent,
              config.k6bt, this);
   SetExpertRow(K6Bt);
 
+  DataFieldEnum *can_port_df = new DataFieldEnum(this);
+  FillCANDevices(*can_port_df);
+  can_port_df->SetValue(config.can_interface);
+  Add(_("interface"), nullptr, can_port_df);
+
   UpdateVisibilities();
 }
 
@@ -408,6 +424,17 @@ FinishPortField(DeviceConfig &config, const DataFieldEnum &df) noexcept
     config.port_type = new_type;
     config.ioio_uart_id = (unsigned)ParseUnsigned(df.GetAsString());
     return true;
+
+  case DeviceConfig::PortType::CAN_INTERFACE:
+    if (new_type == config.port_type &&
+        StringIsEqual(config.can_interface, df.GetAsString()))
+      return false;
+
+    config.port_type = new_type;
+    //config.can_interface = df.GetAsString(); // todo -- fix this!!
+    config.can_interface = _T("can0");
+    return true;
+
   }
 
   gcc_unreachable();

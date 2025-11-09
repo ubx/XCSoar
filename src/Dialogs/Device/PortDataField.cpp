@@ -6,6 +6,7 @@
 #include "Form/DataField/Enum.hpp"
 #include "Language/Language.hpp"
 #include "util/StringCompare.hxx"
+#include "../../Device/Config.hpp"
 
 #ifdef HAVE_POSIX
 #include "Device/Port/TTYEnumerator.hpp"
@@ -50,6 +51,8 @@ static constexpr struct {
      selection UI */
   { DeviceConfig::PortType::TCP_LISTENER, N_("TCP port") },
   { DeviceConfig::PortType::UDP_LISTENER, N_("UDP port") },
+
+  {DeviceConfig::PortType::CAN_INTERFACE, N_("CAN interface") },
 
   { DeviceConfig::PortType::SERIAL, nullptr } /* sentinel */
 };
@@ -317,6 +320,10 @@ SetPort(DataFieldEnum &df, const DeviceConfig &config) noexcept
     StaticString<16> buffer;
     buffer.UnsafeFormat(_T("%d"), config.ioio_uart_id);
     df.SetValue(buffer);
+    return;
+
+  case DeviceConfig::PortType::CAN_INTERFACE:
+    SetPort(df, config.port_type, config.can_interface);
     return;
   }
 

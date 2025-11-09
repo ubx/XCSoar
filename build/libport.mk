@@ -18,6 +18,12 @@ else
 PORT_SOURCES += $(SRC)/Device/Port/SerialPort.cpp
 endif
 
+ifeq ($(HAVE_CAN),y)
+PORT_SOURCES += \
+	$(SRC)/Device/Port/CANPort.cpp
+endif
+
+
 PORT_SOURCES += $(SRC)/Device/Port/TCPClientPort.cpp
 
 PORT_DEPENDS = FMT

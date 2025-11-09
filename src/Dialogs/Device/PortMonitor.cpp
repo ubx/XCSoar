@@ -23,6 +23,7 @@ class PortTerminalBridge final : public DataHandler {
   TerminalWindow &terminal;
   Mutex mutex;
   StaticFifoBuffer<std::byte, 1024> buffer;
+  bool hexOutput = false;
 
   UI::DelayedNotify notify{
     std::chrono::milliseconds(100),
@@ -32,6 +33,11 @@ class PortTerminalBridge final : public DataHandler {
 public:
   PortTerminalBridge(TerminalWindow &_terminal)
     :terminal(_terminal) {}
+
+  PortTerminalBridge(TerminalWindow &_terminal, DeviceDescriptor &_device)
+    :terminal(_terminal) {
+      hexOutput = _device.GetConfig().port_type == DeviceConfig::PortType::CAN_INTERFACE;
+  }
   virtual ~PortTerminalBridge() {}
 
   bool DataReceived(std::span<const std::byte> s) noexcept {
@@ -39,9 +45,39 @@ public:
       const std::lock_guard lock{mutex};
       buffer.Shift();
       auto range = buffer.Write();
-      const std::size_t nbytes = std::min(s.size(), range.size());
-      std::copy_n(s.begin(), nbytes, range.begin());
-      buffer.Append(nbytes);
+
+      if (range.empty())
+        return true; // buffer full; drop
+
+      if (hexOutput) {
+        // How many input bytes can we encode given the available space?
+        // Need 2 chars per byte, plus CRLF
+        const std::size_t cap = range.size();
+        if (cap < 2)
+          return true; // no space even for CRLF
+
+        const std::size_t max_in = (cap - 2) / 2;
+        const std::size_t in_n = std::min(s.size(), max_in);
+        auto out_it = range.begin();
+
+        static constexpr char tohex[] = "0123456789ABCDEF";
+        for (std::size_t i = 0; i < in_n; ++i) {
+          const unsigned char v = static_cast<unsigned char>(s[i]);
+          *out_it++ = static_cast<std::byte>(tohex[(v >> 4) & 0xF]);
+          *out_it++ = static_cast<std::byte>(tohex[v & 0xF]);
+        }
+        // Append CRLF
+        *out_it++ = static_cast<std::byte>('\r');
+        *out_it++ = static_cast<std::byte>('\n');
+
+        const std::size_t out_len = (in_n * 2) + 2;
+        buffer.Append(out_len);
+
+      } else {
+        const std::size_t nbytes = std::min(s.size(), range.size());
+        std::copy_n(s.begin(), nbytes, range.begin());
+        buffer.Append(nbytes);
+      }
     }
 
     notify.SendNotification();
@@ -68,6 +104,24 @@ private:
       terminal.Write((const char *)data.data(), length);
     }
   }
+
+  char *bin2hex(const unsigned char *bin, size_t *len) {
+      static const char *const tohex = "0123456789ABCDEF";
+      char *out;
+      size_t i;
+      if (bin == NULL || len == 0)
+          return NULL;
+      out = static_cast<char *>(malloc((*len * 2) + 2));
+      for (i = 0; i < *len; i++) {
+          out[i * 2] = tohex[bin[i] >> 4];
+          out[(i * 2) + 1] = tohex[bin[i] & 0x0F];
+      }
+      out[*len * 2] = '\r';
+      out[(*len * 2) + 1] = '\n';
+      *len = (*len * 2) + 2;
+      return out;
+  }
+
 };
 
 class PortMonitorWidget final : public WindowWidget {
@@ -102,7 +156,7 @@ public:
     auto w = std::make_unique<TerminalWindow>(look);
     w->Create(parent, rc, style);
 
-    bridge = std::make_unique<PortTerminalBridge>(*w);
+    bridge = std::make_unique<PortTerminalBridge>(*w, device);
     device.SetMonitor(bridge.get());
 
     SetWindow(std::move(w));

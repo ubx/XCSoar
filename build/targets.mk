@@ -54,6 +54,7 @@ TARGET_IS_CUBIE := n
 HAVE_POSIX := n
 HAVE_WIN32 := y
 HAVE_MSVCRT := y
+HAVE_CAN := n
 
 TARGET_ARCH :=
 
@@ -306,6 +307,10 @@ ifeq ($(TARGET),UNIX)
     TARGET_IS_LINUX := y
   endif
 
+  ifeq ($(TARGET_IS_KOBO),n)
+    HAVE_CAN := y
+  endif
+
   HAVE_POSIX := y
   HAVE_WIN32 := n
   HAVE_MSVCRT := n
@@ -461,6 +466,10 @@ ifeq ($(HAVE_POSIX),y)
   TARGET_CPPFLAGS += -DHAVE_VASPRINTF
 endif
 
+ifeq ($(HAVE_CAN),y)
+  TARGET_CPPFLAGS += -DHAVE_CAN
+endif
+
 ifeq ($(HAVE_MSVCRT),y)
   TARGET_CPPFLAGS += -DHAVE_MSVCRT
   TARGET_CPPFLAGS += -DUNICODE -D_UNICODE
@@ -486,6 +495,7 @@ ifeq ($(HOST_IS_ARM)$(TARGET_IS_CUBIE),ny)
 endif
 
 ifeq ($(TARGET_IS_KOBO),y)
+  HAVE_CAN := n
   TARGET_CPPFLAGS += -DKOBO
 
   # Use Thumb instructions (which is the default in Debian's arm-linux-gnueabihf
@@ -604,6 +614,13 @@ endif
 ifeq ($(TARGET),ANDROID)
   TARGET_LDLIBS += -llog -landroid
 endif
+
+# Linking against libsocketcan is not required for CAN raw socket usage.
+# Some environments (e.g. Wayland builds) may not have libsocketcan installed.
+# If you really need libsocketcan features, gate this with a dedicated flag.
+#ifeq ($(HAVE_CAN),y)
+#  TARGET_LDLIBS += -lsocketcan
+#endif
 
 ######## output files
 
