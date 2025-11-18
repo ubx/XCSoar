@@ -3,6 +3,7 @@
 
 #include "Device/Driver/CANaerospace.hpp"
 #include "Device/Driver.hpp"
+#include "Device/Config.hpp"
 #include "NMEA/Info.hpp"
 
 #include <linux/can.h>
@@ -33,9 +34,19 @@ SpeedVector last_wind = SpeedVector::Zero();
 static FlarmState flarmState;
 static FlarmMostImportantObjectData objectData;
 static FlarmObjectData flarmObjectData;
+static bool slcan_port = false;
 
 static Device *
-CANaerospaceCreateOnPort([[maybe_unused]] const DeviceConfig &config, Port &com_port) {
+CANaerospaceCreateOnPort([[maybe_unused]] const DeviceConfig &config, Port &com_port)
+{
+    slcan_port = config.port_type == DeviceConfig::PortType::ANDROID_USB_SERIAL;
+    if (slcan_port) {
+        com_port.Write("C\n");
+        com_port.Write("S6\n");
+        com_port.Write("O\n");
+        com_port.Drain();
+        slcan_port = true;
+    }
     return new CANaerospaceDevice(com_port);
 }
 
@@ -45,6 +56,14 @@ CANaerospaceDevice::DataReceived(std::span<const std::byte> s,
 
     if (s.size() < sizeof(can_frame))
         return false;
+    /*
+     * todo:
+     *  1. check if we receive a SLCAN message
+     *  2. parse SLCAN message and create a canFrame.
+     */
+    if (slcan_port) {
+      // todo -- implement parse SLCAN message and create a canFrame.
+    }
 
     const auto *canFrame = reinterpret_cast<const can_frame *>(s.data());   // Cast the address to a can frame
     const auto *canData = canFrame->data + 4;
