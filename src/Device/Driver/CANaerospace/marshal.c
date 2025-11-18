@@ -11,7 +11,13 @@
 
 #define IS_UDEF(type) ((type) >= CANAS_DATATYPE_UDEF_BEGIN_ && (type) <= CANAS_DATATYPE_UDEF_END_)
 
-#if __BYTE_ORDER__ == __BIG_ENDIAN
+/*
+ * Determine endianness in a portable, -Wundef-safe way.
+ * Avoid referencing undefined macros directly.
+ */
+#if (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || \
+    (defined(BYTE_ORDER) && (BYTE_ORDER == BIG_ENDIAN)) || \
+    defined(__BIG_ENDIAN__) || defined(_BIG_ENDIAN)
 #  define SWITCH(x)
 #else
 
