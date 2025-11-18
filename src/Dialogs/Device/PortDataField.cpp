@@ -51,9 +51,7 @@ static constexpr struct {
      selection UI */
   { DeviceConfig::PortType::TCP_LISTENER, N_("TCP port") },
   { DeviceConfig::PortType::UDP_LISTENER, N_("UDP port") },
-
-  {DeviceConfig::PortType::CAN_INTERFACE, N_("CAN interface") },
-
+  {DeviceConfig::PortType::CAN_INTERFACE, N_("CAN port") },
   { DeviceConfig::PortType::SERIAL, nullptr } /* sentinel */
 };
 
