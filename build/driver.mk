@@ -149,11 +149,10 @@ DRIVER_SOURCES = \
 
 DRIVER_DEPENDS = TIME LIBNMEA GEO OPERATION UNITS FMT PROFILE FLARM
 
-ifeq ($(HAVE_CAN),y)
+## Add CANaerospace sources
 DRIVER_SOURCES += \
 	$(DRIVER_SRC_DIR)/CANaerospace.cpp \
 	$(DRIVER_SRC_DIR)/FLARM/flarmPropagated.c \
 	$(CANAEROSPACE_SOURCES)
-endif
 
 $(eval $(call link-library,driver,DRIVER))
