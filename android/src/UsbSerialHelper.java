@@ -69,7 +69,8 @@ public final class UsbSerialHelper extends BroadcastReceiver {
     createDevice(0x1A86, 0x55D4), // CH9102
 
     createDevice(0x067B, 0x2303), // PL2303
-    createDevice(0x1546, 0x01A7)  // U-BLOX 7 USB GPS
+    createDevice(0x1546, 0x01A7), // U-BLOX 7 USB GPS
+    createDevice(0x16d0, 0x117e)  // MCS CANable2
   );
 
   private static String makeDeviceId(UsbDevice device,
