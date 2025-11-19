@@ -3,8 +3,7 @@
  * Pavel Kirienko, 2013 (pavel.kirienko@gmail.com)
  */
 
-#ifndef CANAEROSPACE_DRIVER_H_
-#define CANAEROSPACE_DRIVER_H_
+#pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -55,5 +54,4 @@ typedef struct
 
 #ifdef __cplusplus
 }
-#endif
 #endif

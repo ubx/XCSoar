@@ -3,8 +3,7 @@
  * Pavel Kirienko, 2013 (pavel.kirienko@gmail.com)
  */
 
-#ifndef CANAEROSPACE_MARSHAL_H_
-#define CANAEROSPACE_MARSHAL_H_
+#pragma once
 
 #include <stdbool.h>
 #include "canaerospace/canaerospace.h"
@@ -18,5 +17,4 @@ int canasNetworkToHost(CanasMessageData* phost, const uint8_t* pdata, uint8_t da
 
 #ifdef __cplusplus
 }
-#endif
 #endif

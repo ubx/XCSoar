@@ -3,8 +3,7 @@
  * Pavel Kirienko, 2013 (pavel.kirienko@gmail.com)
  */
 
-#ifndef CANAEROSPACE_H_
-#define CANAEROSPACE_H_
+#pragma once
 
 #include <stdint.h>
 #include "driver.h"
@@ -337,5 +336,4 @@ void canasFree(CanasInstance* pi, void* ptr);
 
 #ifdef __cplusplus
 }
-#endif
 #endif

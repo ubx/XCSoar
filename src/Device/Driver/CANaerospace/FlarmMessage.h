@@ -2,8 +2,7 @@
 // Created by andreas on 01.05.20.
 //
 
-#ifndef XCSOAR2_FLARMMESSAGE_H
-#define XCSOAR2_FLARMMESSAGE_H
+#pragma once
 
 typedef struct {
     unsigned flarmId;
@@ -49,5 +48,3 @@ struct FlarmObjectData {
         unsigned climbRate: 1;
     } valid;
 };
-
-#endif //XCSOAR2_FLARMMESSAGE_H

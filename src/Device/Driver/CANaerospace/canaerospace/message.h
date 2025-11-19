@@ -3,8 +3,7 @@
  * Pavel Kirienko, 2013 (pavel.kirienko@gmail.com)
  */
 
-#ifndef CANAEROSPACE_MESSAGE_H_
-#define CANAEROSPACE_MESSAGE_H_
+#pragma once
 
 #include <stdint.h>
 
@@ -201,5 +200,4 @@ typedef struct {
 
 #ifdef __cplusplus
 }
-#endif
 #endif
