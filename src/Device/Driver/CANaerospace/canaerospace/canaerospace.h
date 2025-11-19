@@ -6,12 +6,9 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "driver.h"
 #include "message.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * Broadcast Node ID can be used to perform network-wide service requests
@@ -330,10 +327,3 @@ char* canasDumpMessage(const CanasMessage* pmsg, char* pbuf);
 uint64_t canasTimestamp(CanasInstance* pi);
 void* canasMalloc(CanasInstance* pi, int size);
 void canasFree(CanasInstance* pi, void* ptr);
-/**
- * @}
- */
-
-#ifdef __cplusplus
-}
-#endif

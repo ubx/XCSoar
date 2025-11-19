@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include "canaerospace/canaerospace.h"
 
 #ifdef __cplusplus

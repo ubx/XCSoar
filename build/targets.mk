@@ -54,7 +54,7 @@ TARGET_IS_CUBIE := n
 HAVE_POSIX := n
 HAVE_WIN32 := y
 HAVE_MSVCRT := y
-HAVE_CAN := n
+HAVE_CAN := y
 
 TARGET_ARCH :=
 
@@ -63,11 +63,13 @@ TARGET_ARCH :=
 ifeq ($(TARGET),WIN64)
   X64 := y
   override TARGET = PC
+  HAVE_CAN := n
 endif
 
 ifeq ($(TARGET),ANDROID)
   # The default Android ABI is armeabi-v7a (ARMv7)
   override TARGET = ANDROID7
+  HAVE_CAN := y
 endif
 
 ifeq ($(TARGET),ANDROID7)
@@ -128,6 +130,7 @@ ifeq ($(TARGET),PC)
   endif
 
   WINVER = 0x0600
+  HAVE_CAN := n
 endif
 
 ifeq ($(TARGET),OPT)
@@ -152,6 +155,7 @@ ifeq ($(TARGET),FUZZER)
 
   # Debian builds libfuzzer with GCC's libstdc++ instead of LLVM's libc++
   LIBCXX = n
+  HAVE_CAN := n
 endif
 
 ifeq ($(TARGET),UNIX)
@@ -241,6 +245,7 @@ ifeq ($(TARGET),OSX64)
   LLVM_TARGET = $(HOST_TRIPLET)
   CLANG = y
   TARGET_ARCH += -mmacosx-version-min=$(OSX_MIN_SUPPORTED_VERSION)
+  HAVE_CAN := n
 endif
 
 ifeq ($(TARGET),MACOS)
@@ -256,6 +261,7 @@ ifeq ($(TARGET),MACOS)
   CLANG = y
   TARGET_ARCH += -mmacosx-version-min=$(OSX_MIN_SUPPORTED_VERSION)
   TARGET_IS_ARM = y
+  HAVE_CAN := n
 endif
 
 ifeq ($(TARGET),IOS32)
@@ -270,6 +276,7 @@ ifeq ($(TARGET),IOS32)
   endif
   CLANG = y
   TARGET_ARCH += -miphoneos-version-min=$(IOS_MIN_SUPPORTED_VERSION)
+  HAVE_CAN := n
 endif
 
 ifeq ($(TARGET),IOS64)
@@ -285,6 +292,7 @@ ifeq ($(TARGET),IOS64)
   CLANG = y
   TARGET_ARCH += -miphoneos-version-min=$(IOS_MIN_SUPPORTED_VERSION) -arch arm64
   ASFLAGS += -arch arm64
+  HAVE_CAN := n
 endif
 
 ifeq ($(TARGET),IOS64SIM)
@@ -300,15 +308,12 @@ ifeq ($(TARGET),IOS64SIM)
   CLANG = y
   TARGET_ARCH += -mios-simulator-version-min=$(IOS_MIN_SUPPORTED_VERSION) -arch arm64
   ASFLAGS += -arch arm64
+  HAVE_CAN := n
 endif
 
 ifeq ($(TARGET),UNIX)
   ifeq ($(HOST_IS_LINUX)$(TARGET_IS_DARWIN),yn)
     TARGET_IS_LINUX := y
-  endif
-
-  ifeq ($(TARGET_IS_KOBO),n)
-    HAVE_CAN := y
   endif
 
   HAVE_POSIX := y
@@ -495,7 +500,7 @@ ifeq ($(HOST_IS_ARM)$(TARGET_IS_CUBIE),ny)
 endif
 
 ifeq ($(TARGET_IS_KOBO),y)
-  HAVE_CAN := n
+  HAVE_CAN := y
   TARGET_CPPFLAGS += -DKOBO
 
   # Use Thumb instructions (which is the default in Debian's arm-linux-gnueabihf

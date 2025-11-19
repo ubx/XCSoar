@@ -91,7 +91,9 @@ static const struct DeviceRegister *const driver_list[] = {
   &condor3_driver,
   &lx_eos_driver,
   &stratux_driver,
+#ifdef HAVE_CAN
   &can_aerospace_driver,
+#endif
   nullptr
 };
 

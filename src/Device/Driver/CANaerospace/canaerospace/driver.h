@@ -6,11 +6,6 @@
 #pragma once
 
 #include <stdint.h>
-#include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /**
  * CAN ID masks
@@ -26,8 +21,9 @@ static const uint32_t CANAS_CAN_MASK_EXTID = ((uint32_t)0x1FFFFFFFu);
  * CAN flags, to be set on CAN ID
  * @{
  */
-static const uint32_t CANAS_CAN_FLAG_EFF = (1 << 31);  ///< Extended frame format
-static const uint32_t CANAS_CAN_FLAG_RTR = (1 << 30);  ///< Remote transmission request
+/* Use explicit 32-bit unsigned shifts to avoid signed-shift UB */
+static const uint32_t CANAS_CAN_FLAG_EFF = (UINT32_C(1) << 31);  ///< Extended frame format
+static const uint32_t CANAS_CAN_FLAG_RTR = (UINT32_C(1) << 30);  ///< Remote transmission request
 /**
  * @}
  */
@@ -51,7 +47,3 @@ typedef struct
     uint32_t id;
     uint32_t mask;
 } CanasCanFilterConfig;
-
-#ifdef __cplusplus
-}
-#endif
