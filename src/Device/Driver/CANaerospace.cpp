@@ -60,14 +60,18 @@ CANaerospaceDevice::DataReceived(std::span<const std::byte> s, NMEAInfo &info) n
   } else {
     // Raw CAN frame received; ensure payload is large enough
     if (s.size() < sizeof(can_frame)) return false;
-    canFrame = reinterpret_cast<const can_frame *>( s.data()); // Cast the address to a can frame
+    // Copy into a properly aligned local can_frame to avoid alignment/aliasing issues
+    static can_frame local_frame; // static to ensure lifetime until function end
+    std::memcpy(&local_frame, s.data(), sizeof(can_frame));
+    canFrame = &local_frame;
   }
   const auto *canData = canFrame->data + 4;
-  const CanasMessage *cm = reinterpret_cast<const CanasMessage *>(canFrame->data);
 
+  ///const CanasMessage *cm = reinterpret_cast<const CanasMessage *>(canFrame->data);
+  // Avoid alignment-unsafe cast: read header bytes directly
   static CanasMessage canasMessage;
-  canasMessage.message_code = cm->message_code;
-  canasMessage.service_code = cm->service_code;
+  canasMessage.message_code = canFrame->data[3];
+  canasMessage.service_code = canFrame->data[2];
 
   static double qnh_corr = 0.0;
   static double last_body_long_acc = 0.0;
