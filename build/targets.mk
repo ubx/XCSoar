@@ -217,6 +217,7 @@ ifeq ($(TARGET),KOBO)
   # Experimental target for Kobo Mini
   override TARGET = NEON
   TARGET_IS_KOBO = y
+  HAVE_CAN := n
 
   HOST_TRIPLET = armv7a-kobo-linux-musleabihf
 endif
@@ -500,7 +501,7 @@ ifeq ($(HOST_IS_ARM)$(TARGET_IS_CUBIE),ny)
 endif
 
 ifeq ($(TARGET_IS_KOBO),y)
-  HAVE_CAN := y
+  HAVE_CAN := n
   TARGET_CPPFLAGS += -DKOBO
 
   # Use Thumb instructions (which is the default in Debian's arm-linux-gnueabihf
