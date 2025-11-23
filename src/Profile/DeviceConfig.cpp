@@ -34,7 +34,6 @@ static const char *const port_type_strings[] = {
   "ble_hm10",
   "glider_link",
   "android_usb_serial",
-  "glider_link",
   "can",
   NULL
 };
