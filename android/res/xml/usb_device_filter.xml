@@ -34,4 +34,7 @@
   <usb-device vendor-id="1659" product-id="8963"/> <!-- PL2303 -->
 
   <usb-device vendor-id="5446" product-id="423"/> <!-- U-BLOX 7 USB GPS -->
+
+  <usb-device vendor-id="5840" product-id="4478"/> <!-- MCS CANable2 -->
+
 </resources>
