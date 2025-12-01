@@ -36,5 +36,6 @@
   <usb-device vendor-id="5446" product-id="423"/> <!-- U-BLOX 7 USB GPS -->
 
   <usb-device vendor-id="5840" product-id="4478"/> <!-- MCS CANable2 -->
+  <usb-device vendor-id="12346" product-id="16385"/> <!-- Espressif Device, ESP32-S3 -->
 
 </resources>
