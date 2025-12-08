@@ -6,11 +6,11 @@
 #include "net/if.h"
 #include "event/Call.hxx"
 #include "sys/socket.h"
+#include "system/Error.hxx"
 #include <sys/ioctl.h>
 #include <linux/can.h>
 #include <cstring>
 #include <cstdio>
-#include "system/Error.hxx"
 
 CANPort::CANPort(EventLoop &event_loop, const TCHAR *port_name,
                  PortListener *_listener, DataHandler &_handler)
@@ -31,7 +31,7 @@ CANPort::CANPort(EventLoop &event_loop, const TCHAR *port_name,
     throw MakeErrno(msg);
   }
 
-  struct sockaddr_can addr = {0};
+  sockaddr_can addr = {0};
   addr.can_family = AF_CAN;
   addr.can_ifindex = ifr.ifr_ifindex;
 
@@ -103,34 +103,3 @@ try {
   StateChanged();
   Error(std::current_exception());
 }
-
-//    // todo -- temporary, to be moved to CANaerospace.cpp!
-//    const std::vector<uint32_t> can_ids{
-//            INDICATED_AIRSPEED, TRUE_AIRSPEED,
-//            HEADING_ANGLE,
-//            STANDARD_ALTITUDE,
-//            STATIC_PRESSURE,
-//            AIRMASS_SPEED_VERTICAL,
-//            GPS_AIRCRAFT_LATITUDE,
-//            GPS_AIRCRAFT_LONGITUDE,
-//            GPS_AIRCRAFT_HEIGHTABOVE_ELLIPSOID,
-//            GPS_GROUND_SPEED,
-//            GPS_TRUE_TRACK,
-//            UTC,
-//            FLARM_STATE_ID,
-//            FLARM_OBJECT_AL3_ID,
-//            FLARM_OBJECT_AL2_ID,
-//            FLARM_OBJECT_AL1_ID,
-//            FLARM_OBJECT_AL0_ID
-//    };
-//    ret = SetFilter(can_ids);
-
-//int
-//CANPort::SetFilter(const std::vector<uint32_t> &can_ids) {
-//    can_filter rfilter[can_ids.size()];
-//    for (size_t i = 0; i < can_ids.size(); i++) {
-//        rfilter[i].can_id = can_ids[i];
-//        rfilter[i].can_mask = CAN_SFF_MASK;
-//    }
-//    return setsockopt(uniqueSocketDescriptor.Get() , SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
-//}
