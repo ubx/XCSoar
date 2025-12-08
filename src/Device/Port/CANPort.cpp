@@ -72,9 +72,12 @@ CANPort::Write(std::span<const std::byte> src)
   if (!socket.IsDefined())
     return 0;
 
+  // Expect full CAN frame writes; reject unexpected sizes to avoid partial/invalid frames
+  if (src.size() != sizeof(struct can_frame))
+    return 0;
+
   ssize_t nbytes = socket.GetSocket().Write(src);
   if (nbytes < 0)
-    // TODO check EAGAIN?
     return 0;
 
   return static_cast<std::size_t>(nbytes);
@@ -86,8 +89,11 @@ try {
   can_frame input;
   auto dest = std::as_writable_bytes(std::span{&input, std::size_t(1)});
   ssize_t nbytes = socket.GetSocket().Read(dest);
-  if (nbytes < 0)
+  if (nbytes < 0) {
+    if (errno == EAGAIN || errno == EWOULDBLOCK)
+      return; // spurious readiness, try again later
     throw MakeSocketError("Failed to receive");
+  }
 
   if (nbytes == 0) {
     socket.Close();
