@@ -34,8 +34,7 @@ static bool slcan_port;
 static Device *
 CANaerospaceCreateOnPort([[maybe_unused]] const DeviceConfig &config, Port &com_port)
 {
-  slcan_port = config.port_type == DeviceConfig::PortType::ANDROID_USB_SERIAL ||
-      config.port_type == DeviceConfig::PortType::SERIAL;
+  slcan_port = config.port_type != DeviceConfig::PortType::CAN_INTERFACE;
   if (slcan_port) {
     // Setup CANable device: Close the CAN channel; Set bitrate to 500k; Open the CAN channel
     com_port.Write("C\r");
