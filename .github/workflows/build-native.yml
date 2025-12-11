@@ -197,6 +197,61 @@ jobs:
         with:
           key: ${{ matrix.target }}-ccache
 
+      - name: Configure ccache for cross-compilation
+        if: ${{ matrix.target == 'KOBO' || matrix.target == 'ANDROID' || matrix.target == 'ANDROID_BUNDLE' }}
+        run: |
+          # Configure ccache to ignore compiler path for cross-compilation
+          # This is important because cross-compilers have different paths
+          # but produce the same output, so we want to cache based on content
+          ccache --set-config compiler_check=content
+          ccache --set-config hard_link=false
+
+      - name: Show ccache stats
+        run: ccache --show-stats || true
+
+      - name: "Cache common downloads"
+        uses: actions/cache@v4
+        with:
+          key: downloads-common-${{ runner.os }}-${{ hashFiles('build/libboost.mk') }}
+          restore-keys: |
+            downloads-common-${{ runner.os }}-
+          path: ${{ github.workspace }}/output/download
+
+      - name: "Cache target-specific downloads"
+        uses: actions/cache@v4
+        with:
+          key: downloads-${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('build/kobo.mk', 'build/thirdparty.py', 'build/python/build/libs.py') }}
+          restore-keys: |
+            downloads-${{ runner.os }}-${{ matrix.target }}-
+            downloads-${{ runner.os }}-
+            downloads-common-${{ runner.os }}-
+          path: ${{ github.workspace }}/output/download
+
+      - name: "Cache apt packages"
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        uses: actions/cache@v4
+        with:
+          key: apt-${{ matrix.target_container }}-${{ hashFiles('ide/provisioning/install-debian-packages.sh') }}
+          restore-keys: |
+            apt-${{ matrix.target_container }}
+            apt
+          path: /var/cache/apt
+
+      - name: "Cache Homebrew packages"
+        if: ${{ matrix.os == 'macos-14' || matrix.os == 'macos-12' }}
+        uses: actions/cache@v4
+        with:
+          key: brew-${{ matrix.os }}-${{ hashFiles('ide/provisioning/install-darwin-packages.sh') }}
+          restore-keys: |
+            brew-${{ matrix.os }}
+            brew
+          path: |
+            /opt/homebrew/var/cache
+            /opt/homebrew/var/homebrew/cache
+            /usr/local/var/cache
+            /usr/local/var/homebrew/cache
+            /Users/runner/Library/Caches/Homebrew
+
       - name: "Cache Boost"
         uses: actions/cache@v4
         with:
@@ -205,6 +260,30 @@ jobs:
             ${{ github.workspace }}/output/download/${{ env.BOOST }}.tar.bz2
             ${{ github.workspace }}/output/src/stamp-${{ env.BOOST }}
             ${{ github.workspace }}/output/src/${{ env.BOOST }}/boost
+
+      - name: "Cache Android SDK/NDK"
+        if: ${{ matrix.target == 'ANDROID' || matrix.target == 'ANDROID_BUNDLE' }}
+        uses: actions/cache@v4
+        with:
+          key: android-tools-${{ matrix.ndk }}-${{ hashFiles('ide/provisioning/install-android-tools.sh') }}
+          restore-keys: |
+            android-tools-${{ matrix.ndk }}-
+            android-tools-
+          path: |
+            ~/opt/android-sdk-linux
+            ~/opt/android-ndk-${{ matrix.ndk }}
+            ~/opt/bundletool
+
+      - name: "Cache third-party libraries"
+        if: ${{ matrix.target == 'ANDROID' || matrix.target == 'ANDROID_BUNDLE' || matrix.target == 'KOBO' }}
+        uses: actions/cache@v4
+        with:
+          key: thirdparty-${{ matrix.target }}-${{ hashFiles('build/thirdparty.py', 'build/python/build/libs.py', 'build/python/build/project.py', 'build/thirdparty.mk') }}
+          restore-keys: |
+            thirdparty-${{ matrix.target }}-
+          path: |
+            ${{ github.workspace }}/output/${{ matrix.target }}/**/lib
+            ${{ github.workspace }}/output/${{ matrix.target }}/lib
 
       - name: Install dependencies
         run: |
