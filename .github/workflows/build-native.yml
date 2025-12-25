@@ -39,7 +39,7 @@ on:
 
 env:
   DEBUG: y
-  BOOST: boost_1_87_0
+  BOOST: boost_1_90_0
 
 jobs:
   release:
@@ -259,7 +259,7 @@ jobs:
           path: |
             ${{ github.workspace }}/output/download/${{ env.BOOST }}.tar.bz2
             ${{ github.workspace }}/output/src/stamp-${{ env.BOOST }}
-            ${{ github.workspace }}/output/src/${{ env.BOOST }}/boost
+            ${{ github.workspace }}/output/src/${{ env.BOOST }}
 
       - name: "Cache Android SDK/NDK"
         if: ${{ matrix.target == 'ANDROID' || matrix.target == 'ANDROID_BUNDLE' }}
@@ -413,13 +413,13 @@ jobs:
           fi
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.target_final }}-${{ env.git_hash }}${{ matrix.target }}${{ matrix.target_ext }}
           path: output/${{ matrix.target }}/${{ matrix.target_bin_path }}/${{ matrix.target_bin }}${{ matrix.target_ext }}
 
       - name: Upload artifact (Bundle)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: ${{ matrix.target == 'ANDROID_BUNDLE' }}
         with:
           name: ${{ matrix.target_final }}-${{ env.git_hash }}${{ matrix.target }}.aab
