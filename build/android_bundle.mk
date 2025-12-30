@@ -147,6 +147,7 @@ JAVA_SOURCES := \
 	android/ioio/IOIOLibAndroid/src/main/java/ioio/lib/spi/LogImpl.java \
 	android/ioio/IOIOLibAndroid/src/main/java/ioio/lib/util/android/ContextWrapperDependent.java \
 	android/ioio/IOIOLibAndroidAccessory/src/main/java/ioio/lib/android/accessory/AccessoryConnectionBootstrap.java \
+	android/ioio/IOIOLibAndroidAccessory/src/main/java/ioio/lib/android/accessory/Adapter.java \
 	android/ioio/IOIOLibAndroidBluetooth/src/main/java/ioio/lib/android/bluetooth/BluetoothIOIOConnectionBootstrap.java \
 	android/ioio/IOIOLibAndroidBluetooth/src/main/java/ioio/lib/android/bluetooth/BluetoothIOIOConnection.java \
 	android/ioio/IOIOLibAndroidDevice/src/main/java/ioio/lib/android/device/DeviceConnectionBootstrap.java \
@@ -256,10 +257,11 @@ endif
 # Convert resources to protobuf format with AAPT2 (build and unzip an apk)
 $(PROTOBUF_OUT_DIR)/dirstamp: $(PNG_FILES) $(SOUND_FILES) $(ANDROID_XML_RES_COPIES) $(MANIFEST) | $(GEN_DIR)/dirstamp $(COMPILED_RES_DIR)/dirstamp
 	@$(NQ)echo "  AAPT2"
+	$(Q)find $(RES_DIR) -name dirstamp -type f -delete
 	$(Q)$(AAPT2) compile \
 		-o $(COMPILED_RES_DIR) \
 		--dir $(RES_DIR)
-	$(Q)rm $(COMPILED_RES_DIR)/*dirstamp.flat
+	$(Q)rm -f $(COMPILED_RES_DIR)/*dirstamp.flat
 	$(Q)$(AAPT2) link --proto-format --auto-add-overlay \
 		--custom-package $(JAVA_PACKAGE) \
 		--manifest $(MANIFEST) \

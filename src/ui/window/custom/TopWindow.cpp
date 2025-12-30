@@ -9,6 +9,10 @@
 #include "ui/event/Globals.hpp"
 #include "Hardware/CPU.hpp"
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #ifdef ANDROID
 #include "Android/Main.hpp"
 #include "Android/NativeView.hpp"
@@ -72,6 +76,9 @@ TopWindow::Create([[maybe_unused]] const TCHAR *text, PixelSize size,
   size = screen->SetDisplayOrientation(style.GetInitialOrientation());
 #elif defined(USE_MEMORY_CANVAS)
   size = screen->GetSize();
+#elif defined(ENABLE_OPENGL) && defined(__APPLE__) && TARGET_OS_OSX
+  // macOS HiDPI: drawable size may differ from window size; use native size.
+  size = screen->GetNativeSize();
 #endif
   ContainerWindow::Create(nullptr, PixelRect{size}, style);
 }
@@ -172,10 +179,10 @@ TopWindow::Refresh() noexcept
        OpenGL surface - ignore all drawing requests */
     return;
 
-#ifdef USE_X11
+#if defined(USE_X11) || defined(USE_WAYLAND)
   if (!IsVisible())
     /* don't bother to invoke the renderer if we're not visible on the
-       X11 display */
+       display */
     return;
 #endif
 

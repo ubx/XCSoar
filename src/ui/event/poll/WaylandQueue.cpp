@@ -1,16 +1,29 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright The XCSoar Project
 
+#ifdef ENABLE_OPENGL
+#include "ui/opengl/Features.hpp"
+#endif
 #include "WaylandQueue.hpp"
 #include "Queue.hpp"
 #include "../shared/Event.hpp"
 #include "ui/display/Display.hpp"
+#include "Hardware/DisplayDPI.hpp"
 #include "util/StringAPI.hxx"
+#include "util/EnvParser.hpp"
 #include "ui/event/poll/linux/Translate.hpp"
 #include "ui/event/KeyCode.hpp"
 #include "xdg-shell-client-protocol.h"
+#include "xdg-decoration-unstable-v1-client-protocol.h"
+
+#ifdef SOFTWARE_ROTATE_DISPLAY
+#include "../shared/TransformCoordinates.hpp"
+#include "ui/canvas/opengl/Globals.hpp"
+#include "ui/dim/Size.hpp"
+#endif
 
 #include <wayland-client.h>
+#include <wayland-cursor.h>
 #include <xkbcommon/xkbcommon.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -32,10 +45,19 @@ WaylandRegistryGlobal(void *data, struct wl_registry *registry, uint32_t id,
 }
 
 static void
-WaylandRegistryGlobalRemove([[maybe_unused]] void *data,
+WaylandRegistryGlobalRemove(void *data,
                             [[maybe_unused]] struct wl_registry *registry,
-                            [[maybe_unused]] uint32_t id)
+                            uint32_t id)
 {
+  auto &queue = *(WaylandEventQueue *)data;
+  /* Handle removal of globals. The seat may be removed if the input
+   * device is disconnected. In that case, we should clean up pointer
+   * and keyboard objects. However, we don't track which id corresponds
+   * to which global, so we can't directly match. The compositor will
+   * send a capabilities event with no capabilities when the seat is
+   * removed, which will trigger cleanup via SeatHandleCapabilities. */
+  (void)queue;
+  (void)id;
 }
 
 static constexpr struct wl_registry_listener registry_listener = {
@@ -112,10 +134,20 @@ WaylandPointerAxis(void *data,
                    [[maybe_unused]] uint32_t time,
                    uint32_t axis, wl_fixed_t value)
 {
-  auto &queue = *(WaylandEventQueue *)data;
-
-  if (axis == WL_POINTER_AXIS_VERTICAL_SCROLL)
-    queue.Push(Event(Event::MOUSE_WHEEL, wl_fixed_to_int(value)));
+  if (axis == WL_POINTER_AXIS_VERTICAL_SCROLL ||
+      axis == WL_POINTER_AXIS_HORIZONTAL_SCROLL) {
+    auto &q = *(WaylandEventQueue *)data;
+#ifdef SOFTWARE_ROTATE_DISPLAY
+    PixelPoint p = q.GetTransformedPointerPosition();
+#else
+    PixelPoint p(q.pointer_position.x, q.pointer_position.y);
+#endif
+    Event e(Event::MOUSE_WHEEL, p);
+    /* Vertical scroll: positive = down, negative = up
+       Horizontal scroll: positive = right, negative = left */
+    e.param = wl_fixed_to_int(value);
+    q.Push(e);
+  }
 }
 
 static constexpr struct wl_pointer_listener pointer_listener = {
@@ -218,12 +250,50 @@ WaylandEventQueue::WaylandEventQueue(UI::Display &_display, EventQueue &_queue)
 
   if (compositor == nullptr)
     throw std::runtime_error("No Wayland compositor found");
-
   if (seat == nullptr)
     throw std::runtime_error("No Wayland seat found");
 
   if (wm_base == nullptr && shell == nullptr)
     throw std::runtime_error{"No Wayland xdg_wm_base/shell found"};
+
+  if (shm == nullptr) throw std::runtime_error("No Wayland wl_shm found");
+
+  /* Load cursor theme. Use nullptr for theme name to use the default system
+     theme. Cursor size: read from XCURSOR_SIZE environment variable
+     (standard), or calculate from display DPI if available. Defaults to 24
+     pixels for 96 DPI displays, scaling proportionally for higher DPI. */
+  /* Allow up to 2048 pixels to support very high-DPI displays (e.g., 3000 DPI
+     -> ~750px). Cursor themes typically have sizes up to 256px, but we allow
+     larger requests; the theme will use the closest available size. */
+  int cursor_size = GetEnvInt("XCURSOR_SIZE", 0, /* min */ 0, /* max */ 2048);
+  if (cursor_size == 0) {
+    /* If XCURSOR_SIZE not set, scale default cursor size based on DPI
+       Default is 24px at 96 DPI (1/4 inch). Scale proportionally for
+       higher DPI displays (e.g., 650 DPI -> ~162px, 3000 DPI -> ~750px). */
+    const auto dpi = ::Display::GetDPI(_display, 0);
+    if (dpi.x > 0) {
+      /* Scale: cursor_size = 24 * (dpi / 96) */
+      const int scaled_size = (24 * dpi.x + 48) / 96; /* +48 for rounding */
+      if (scaled_size > 0 && scaled_size <= 2048) {
+        cursor_size = scaled_size;
+      } else {
+        cursor_size = 24; /* Fallback to default if scaling fails */
+      }
+    } else {
+      cursor_size = 24; /* Fallback to default if DPI unavailable */
+    }
+  }
+  cursor_theme = wl_cursor_theme_load(nullptr, cursor_size, shm);
+  if (cursor_theme != nullptr) {
+    cursor_pointer = wl_cursor_theme_get_cursor(cursor_theme, "left_ptr");
+    if (cursor_pointer == nullptr) {
+      /* Fallback to default cursor name */
+      cursor_pointer = wl_cursor_theme_get_cursor(cursor_theme, "default");
+    }
+    if (cursor_pointer != nullptr && compositor != nullptr) {
+      cursor_surface = wl_compositor_create_surface(compositor);
+    }
+  }
 
   socket_event.Open(SocketDescriptor(wl_display_get_fd(display)));
   socket_event.ScheduleRead();
@@ -232,6 +302,7 @@ WaylandEventQueue::WaylandEventQueue(UI::Display &_display, EventQueue &_queue)
 
 WaylandEventQueue::~WaylandEventQueue() noexcept
 {
+  /* Clean up xkbcommon resources */
   if (xkb_state != nullptr) {
     xkb_state_unref(xkb_state);
     xkb_state = nullptr;
@@ -244,6 +315,57 @@ WaylandEventQueue::~WaylandEventQueue() noexcept
     xkb_context_unref(xkb_context);
     xkb_context = nullptr;
   }
+
+  /* Clean up cursor resources */
+  if (cursor_surface != nullptr) {
+    wl_surface_destroy(cursor_surface);
+    cursor_surface = nullptr;
+  }
+  if (cursor_theme != nullptr) {
+    wl_cursor_theme_destroy(cursor_theme);
+    cursor_theme = nullptr;
+  }
+
+  /* Clean up input devices */
+  if (pointer != nullptr) {
+    wl_pointer_destroy(pointer);
+    pointer = nullptr;
+  }
+  if (keyboard != nullptr) {
+    wl_keyboard_destroy(keyboard);
+    keyboard = nullptr;
+  }
+
+  /* Clean up Wayland protocol objects obtained via wl_registry_bind */
+  /* Use wl_proxy_destroy for global objects (compositor, seat, shell, shm) */
+  /* Use protocol-specific destroy functions for xdg and zxdg objects */
+  if (decoration_manager != nullptr) {
+    zxdg_decoration_manager_v1_destroy(decoration_manager);
+    decoration_manager = nullptr;
+  }
+  if (wm_base != nullptr) {
+    xdg_wm_base_destroy(wm_base);
+    wm_base = nullptr;
+  }
+  if (shell != nullptr) {
+    wl_proxy_destroy((struct wl_proxy *)shell);
+    shell = nullptr;
+  }
+  if (shm != nullptr) {
+    wl_proxy_destroy((struct wl_proxy *)shm);
+    shm = nullptr;
+  }
+  if (seat != nullptr) {
+    wl_proxy_destroy((struct wl_proxy *)seat);
+    seat = nullptr;
+  }
+  if (compositor != nullptr) {
+    wl_proxy_destroy((struct wl_proxy *)compositor);
+    compositor = nullptr;
+  }
+  /* Note: display is owned by UI::Display, not by WaylandEventQueue.
+   * The Display destructor will call wl_display_disconnect(), so we
+   * must not disconnect it here to avoid double-disconnect segfault. */
 }
 
 bool
@@ -295,12 +417,19 @@ WaylandEventQueue::RegistryHandler(struct wl_registry *registry, uint32_t id,
     seat = (wl_seat *)wl_registry_bind(registry, id,
                                          &wl_seat_interface, 1);
     wl_seat_add_listener(seat, &seat_listener, this);
-  } else if (StringIsEqual(interface, "wl_shell"))
+  } else if (StringIsEqual(interface, "wl_shm"))
+    shm = (wl_shm *)wl_registry_bind(registry, id,
+                                      &wl_shm_interface, 1);
+  else if (StringIsEqual(interface, "wl_shell"))
     shell = (wl_shell *)wl_registry_bind(registry, id,
                                          &wl_shell_interface, 1);
   else if (StringIsEqual(interface, "xdg_wm_base"))
     wm_base = (xdg_wm_base *)wl_registry_bind(registry, id,
                                               &xdg_wm_base_interface, 1);
+  else if (StringIsEqual(interface, "zxdg_decoration_manager_v1"))
+    decoration_manager = (zxdg_decoration_manager_v1 *)
+      wl_registry_bind(registry, id,
+                       &zxdg_decoration_manager_v1_interface, 1);
 }
 
 inline void
@@ -314,8 +443,10 @@ WaylandEventQueue::SeatHandleCapabilities(bool has_pointer, bool has_keyboard,
         wl_pointer_add_listener(pointer, &pointer_listener, this);
     }
   } else {
-    if (pointer != nullptr)
+    if (pointer != nullptr) {
       wl_pointer_destroy(pointer);
+      pointer = nullptr;
+    }
   }
 
   if (has_keyboard) {
@@ -325,8 +456,10 @@ WaylandEventQueue::SeatHandleCapabilities(bool has_pointer, bool has_keyboard,
         wl_keyboard_add_listener(keyboard, &keyboard_listener, this);
     }
   } else {
-    if (keyboard != nullptr)
+    if (keyboard != nullptr) {
       wl_keyboard_destroy(keyboard);
+      keyboard = nullptr;
+    }
   }
 
   has_touchscreen = has_touch;
@@ -469,6 +602,57 @@ WaylandEventQueue::KeyboardKey(uint32_t key, uint32_t state) noexcept
       queue.Push(e);
     }
     break;
+  }
+}
+
+#ifdef SOFTWARE_ROTATE_DISPLAY
+
+PixelPoint
+WaylandEventQueue::GetTransformedPointerPosition() const noexcept
+{
+  PixelPoint p(pointer_position.x, pointer_position.y);
+  return TransformCoordinates(p, physical_screen_size);
+}
+
+void
+WaylandEventQueue::SetScreenSize(PixelSize screen_size) noexcept
+{
+  if (AreAxesSwapped(OpenGL::display_orientation)) {
+    physical_screen_size = PixelSize(screen_size.height, screen_size.width);
+  } else {
+    physical_screen_size = screen_size;
+  }
+}
+
+void
+WaylandEventQueue::SetDisplayOrientation([[maybe_unused]] DisplayOrientation orientation) noexcept
+{
+}
+
+#endif
+
+void
+WaylandEventQueue::SetCursor(struct wl_pointer *wl_pointer, uint32_t serial) noexcept
+{
+  if (cursor_surface == nullptr || cursor_pointer == nullptr)
+    return;
+
+  /* wl_cursor contains an images array of wl_cursor_image structs */
+  if (cursor_pointer->image_count == 0)
+    return;
+
+  struct wl_cursor_image *image = cursor_pointer->images[0];
+  if (image == nullptr)
+    return;
+
+  wl_pointer_set_cursor(wl_pointer, serial, cursor_surface,
+                        image->hotspot_x, image->hotspot_y);
+
+  struct wl_buffer *buffer = wl_cursor_image_get_buffer(image);
+  if (buffer != nullptr) {
+    wl_surface_attach(cursor_surface, buffer, 0, 0);
+    wl_surface_damage(cursor_surface, 0, 0, image->width, image->height);
+    wl_surface_commit(cursor_surface);
   }
 }
 
