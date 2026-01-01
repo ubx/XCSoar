@@ -104,23 +104,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             target: UNIX
             target_bin: xcsoar_${{ needs.release.outputs.version }}_amd64
             target_bin_path: ''
             target_final: xcsoar_
             target_ext: .deb
             target_upload: true
-            target_container: debian:bookworm-slim
-          - os: ubuntu-22.04
+            target_container: debian:trixie-slim
+          - os: ubuntu-24.04
             target: KOBO
             target_bin: KoboRoot
             target_bin_path: ''
             target_final: KoboRoot
             target_ext: .tgz
             target_upload: true
-            target_container: debian:bookworm-slim
-          - os: ubuntu-22.04
+            target_container: debian:trixie-slim
+          - os: ubuntu-24.04
             target: ANDROID
             target_bin: XCSoar
             target_bin_path: bin
@@ -128,8 +128,8 @@ jobs:
             target_ext: .apk
             target_upload: true
             ndk: r26d
-            target_container: debian:bookworm-slim
-          - os: ubuntu-22.04
+            target_container: debian:trixie-slim
+          - os: ubuntu-24.04
             target: ANDROID_BUNDLE
             target_bin: XCSoar
             target_bin_path: bin
@@ -137,23 +137,23 @@ jobs:
             target_ext: .apk
             target_upload: false
             ndk: r26d
-            target_container: debian:bookworm-slim
-          - os: ubuntu-22.04
+            target_container: debian:trixie-slim
+          - os: ubuntu-24.04
             target: WIN64
             target_bin: XCSoar
             target_bin_path: bin
             target_final: XCSoar
             target_ext: .exe
             target_upload: true
-            target_container: debian:bookworm-slim
-          - os: ubuntu-22.04
+            target_container: debian:trixie-slim
+          - os: ubuntu-24.04
             target: PC
             target_bin: XCSoar
             target_bin_path: bin
             target_final: XCSoar
             target_ext: .exe
             target_upload: true
-            target_container: debian:bookworm-slim
+            target_container: debian:trixie-slim
           - os: macos-15
             target: MACOS
             target_bin: XCSoar
@@ -174,7 +174,7 @@ jobs:
     steps:
       - name: Install checkout dependencies
         run: |
-          if [ "${{ matrix.os }}" = 'ubuntu-22.04' ]; then
+          if [ "${{ matrix.os }}" = 'ubuntu-24.04' ]; then
             apt-get update
             apt-get install -y --no-install-recommends git \
             ca-certificates rsync openssh-client
@@ -212,9 +212,6 @@ jobs:
           ccache --set-config compiler_check=content
           ccache --set-config hard_link=false
 
-      - name: Show ccache stats
-        run: ccache --show-stats || true
-
       - name: "Cache common downloads"
         uses: actions/cache@v5
         with:
@@ -234,7 +231,7 @@ jobs:
           path: ${{ github.workspace }}/output/download
 
       - name: "Cache apt packages"
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
         uses: actions/cache@v5
         with:
           key: apt-${{ matrix.target_container }}-${{ hashFiles('ide/provisioning/install-debian-packages.sh') }}
@@ -279,7 +276,7 @@ jobs:
         if: ${{ matrix.target == 'ANDROID' || matrix.target == 'ANDROID_BUNDLE' }}
         uses: actions/cache@v5
         with:
-          key: android-tools-${{ matrix.ndk }}-${{ hashFiles('ide/provisioning/install-android-tools.sh') }}
+          key: android-tools-${{ matrix.ndk }}-${{ hashFiles('ide/provisioning/install-android-tools.sh', 'build/android.mk', 'build/android_bundle.mk', 'build/targets.mk') }}
           restore-keys: |
             android-tools-${{ matrix.ndk }}-
             android-tools-
@@ -300,7 +297,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          if [ ${{ matrix.os }} = 'ubuntu-22.04' ]; then
+          if [ ${{ matrix.os }} = 'ubuntu-24.04' ]; then
             ./ide/provisioning/install-debian-packages.sh UPDATE
             ./ide/provisioning/install-debian-packages.sh BASE
             if [ ${{ matrix.target }} = 'UNIX' ]; then
@@ -588,3 +585,6 @@ jobs:
           REMOTE_USER: ${{ secrets.REPOSITORY_SSH_USER }}
           TARGET: ${{ secrets.REPOSITORY_REMOTE_PATH }}/releases/${{ needs.release.outputs.version }}/${{ matrix.target }}/
           SCRIPT_BEFORE: mkdir -p ${{ secrets.REPOSITORY_REMOTE_PATH }}/releases/${{ needs.release.outputs.version }}/${{ matrix.target }}/
+
+      - name: Show ccache stats
+        run: ccache --show-stats || true
