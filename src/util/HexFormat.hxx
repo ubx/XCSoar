@@ -71,6 +71,23 @@ HexFormat(char *output, std::span<const std::byte> input) noexcept
 }
 
 /**
+ * Format the given input buffer of bytes to hex and append CRLF.  The
+ * caller ensures that the output buffer is at least twice as large as
+ * the input plus 2.
+ * Does not null-terminate the output buffer.
+ *
+ * @return a pointer to one after the last written character
+ */
+constexpr char *
+HexFormatCRLF(char *output, std::span<const std::byte> input) noexcept
+{
+	output = HexFormat(output, input);
+	*output++ = '\r';
+	*output++ = '\n';
+	return output;
+}
+
+/**
  * Return a std::array<char> (not null-terminated) containing a hex
  * dump of the given fixed-size input.
  */

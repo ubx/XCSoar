@@ -13,6 +13,7 @@
 #include "Operation/MessageOperationEnvironment.hpp"
 #include "ui/event/DelayedNotify.hpp"
 #include "thread/Mutex.hxx"
+#include "util/HexFormat.hxx"
 #include "UIGlobals.hpp"
 
 /**
@@ -58,17 +59,8 @@ public:
 
         const std::size_t max_in = (cap - 2) / 2;
         const std::size_t in_n = std::min(s.size(), max_in);
-        auto out_it = range.begin();
 
-        static constexpr char tohex[] = "0123456789ABCDEF";
-        for (std::size_t i = 0; i < in_n; ++i) {
-          const unsigned char v = static_cast<unsigned char>(s[i]);
-          *out_it++ = static_cast<std::byte>(tohex[(v >> 4) & 0xF]);
-          *out_it++ = static_cast<std::byte>(tohex[v & 0xF]);
-        }
-        // Append CRLF
-        *out_it++ = static_cast<std::byte>('\r');
-        *out_it++ = static_cast<std::byte>('\n');
+        HexFormatCRLF((char *)range.data(), s.first(in_n));
 
         const std::size_t out_len = (in_n * 2) + 2;
         buffer.Append(out_len);
@@ -104,24 +96,6 @@ private:
       terminal.Write((const char *)data.data(), length);
     }
   }
-
-  char *bin2hex(const unsigned char *bin, size_t *len) {
-      static const char *const tohex = "0123456789ABCDEF";
-      char *out;
-      size_t i;
-      if (bin == NULL || len == 0)
-          return NULL;
-      out = static_cast<char *>(malloc((*len * 2) + 2));
-      for (i = 0; i < *len; i++) {
-          out[i * 2] = tohex[bin[i] >> 4];
-          out[(i * 2) + 1] = tohex[bin[i] & 0x0F];
-      }
-      out[*len * 2] = '\r';
-      out[(*len * 2) + 1] = '\n';
-      *len = (*len * 2) + 2;
-      return out;
-  }
-
 };
 
 class PortMonitorWidget final : public WindowWidget {
