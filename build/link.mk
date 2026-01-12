@@ -42,6 +42,10 @@ $(2)_STRIP := n
 endif
 endif
 
+ifeq ($$(TARGET_IS_COLIBRI),y)
+$(2)_STRIP := y
+endif
+
 ifeq ($$($(2)_STRIP),y)
 $(2)_NOSTRIP = $$(TARGET_BIN_DIR)/$(1)-ns$$(TARGET_EXEEXT)
 else

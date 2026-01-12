@@ -67,7 +67,7 @@ elif toolchain.is_darwin:
         proj,
         libtiff,
         libgeotiff,
-        sdl2
+        sdl2,
     ]
 elif toolchain.is_android:
     thirdparty_libs = [
@@ -102,6 +102,28 @@ elif '-kobo-linux-' in host_triplet:
         libsalsa,
         libusb,
         simple_usbmodeswitch,
+    ]
+elif '-colibri-linux-' in host_triplet:
+    thirdparty_libs = [
+        binutils,
+        linux_headers,
+        gcc_bootstrap,
+        musl,
+        gcc,
+        zlib,
+        libfmt,
+        libsodium,
+        freetype,
+        openssl,
+        cares,
+        curl,
+        libpng,
+        libjpeg,
+        lua,
+        libsalsa,
+        libusb,
+        simple_usbmodeswitch,
+        sdl2_at,
     ]
 else:
     raise RuntimeError('Unrecognized target')

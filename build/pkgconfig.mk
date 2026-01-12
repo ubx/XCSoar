@@ -31,7 +31,13 @@ $(1) = $$($(2))$$(if $$(filter ERROR,$$($(2))),$$(error $(3)))
 endef
 
 ifeq ($(TARGET_IS_KOBO),y)
+# Nomake clean on the Kobo because it may break our Musl sysroot
+pkg-config-cppflags-filter = $(1)
+else ifeq ($(TARGET_IS_COLIBR),y)
 # No -isystem on the Kobo because it may break our Musl sysroot
+pkg-config-cppflags-filter = $(1)
+else ifeq ($(TARGET_IS_COLIBRI),y)
+# No -isystem on the Colibr because it may break our Musl sysroot
 pkg-config-cppflags-filter = $(1)
 else
 pkg-config-cppflags-filter = $(patsubst -I%,-isystem %,$(1))

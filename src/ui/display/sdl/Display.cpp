@@ -13,8 +13,9 @@ namespace SDL {
 Display::Display()
 {
   Uint32 flags = SDL_INIT_VIDEO;
-  if (!IsKobo())
-    flags |= SDL_INIT_AUDIO;
+// Todo --  implement/adapt isColibri()
+//  if (!IsKobo())
+//    flags |= SDL_INIT_AUDIO;
 
   if (::SDL_Init(flags) != 0)
     throw FmtRuntimeError("SDL_Init() has failed: {}", ::SDL_GetError());

@@ -47,6 +47,9 @@ class OpenSSLProject(MakeProject):
             # Kobo
             'armv7a-kobo-linux-musleabihf': 'linux-generic32',
 
+            # Colibri
+            'armv7a-colibri-linux-musleabihf': 'linux-generic32',
+
             # Windows
             'i686-w64-mingw32': 'mingw',
             'x86_64-w64-mingw32': 'mingw64',

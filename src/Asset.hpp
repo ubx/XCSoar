@@ -143,7 +143,7 @@ HasIOIOLib() noexcept
  * @return True if a touch screen or mouse is assumed for the hardware
  * that XCSoar is running on, False if the hardware has only buttons
  */
-#if (defined(USE_CONSOLE) && !defined(KOBO)) || defined(USE_WAYLAND)
+#if (defined(USE_CONSOLE) && !defined(KOBO) && !defined(COLIBRI)) || defined(USE_WAYLAND)
 [[gnu::pure]]
 bool
 HasPointer() noexcept;

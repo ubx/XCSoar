@@ -1,4 +1,4 @@
-ifneq ($(HAVE_WIN32)$(TARGET_IS_DARWIN)$(TARGET_IS_ANDROID)$(TARGET_IS_KOBO),nnnn)
+ifneq ($(HAVE_WIN32)$(TARGET_IS_DARWIN)$(TARGET_IS_ANDROID)$(TARGET_IS_KOBO)$(TARGET_IS_COLIBRI),nnnnn)
 # Windows uses GDI
 # macOS and iOS use SDL
 # Android uses Java-EGL

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
 #include "linux/MergeMouse.hpp"
 #include "linux/Input.hpp"
 #else
@@ -22,7 +22,7 @@ class EventQueue;
 struct Event;
 
 class InputEventQueue final {
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
   MergeMouse merge_mouse;
   LinuxInputDevice keyboard;
   LinuxInputDevice mouse;

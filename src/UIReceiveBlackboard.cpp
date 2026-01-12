@@ -13,7 +13,7 @@
 #include "Components.hpp"
 #include "BackendComponents.hpp"
 
-#if defined(__linux__) && defined(USE_POLL_EVENT) && !defined(KOBO)
+#if defined(__linux__) && defined(USE_POLL_EVENT) && !defined(KOBO) && !defined(COLIBRI)
 #include "lib/dbus/Connection.hxx"
 #include "lib/dbus/TimeDate.hxx"
 #include "LogFile.hpp"
@@ -30,7 +30,7 @@ UIReceiveSensorData(OperationEnvironment &env)
 
   ApplyVegaSwitches();
 
-#if defined(__linux__) && defined(USE_POLL_EVENT) && !defined(KOBO)
+#if defined(__linux__) && defined(USE_POLL_EVENT) && !defined(KOBO) && !defined(COLIBRI)
   static bool clock_set = false;
   if (const auto &basic = CommonInterface::Basic();
       !clock_set &&

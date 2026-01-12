@@ -46,41 +46,43 @@ gcc = GccProject(
     [
         # GCC fails to build if we disable the shared libstdc++
         #'--disable-shared', '--enable-static',
-        "--with-gcc",
-        "--with-gnu-ld",
-        "--with-gnu-as",
-        "--disable-nls",
-        "--disable-lto",
-        "--enable-clocale=generic",
-        "--enable-languages=c,c++",
-        "--disable-bootstrap",
-        "--disable-multilib",
-        "--without-newlib",
-        "--disable-wchar_t",
-        "--disable-symvers",
-        "--disable-decimal-float",
-        "--disable-libatomic",
-        "--disable-libgomp",
-        "--disable-libmpx",
-        "--disable-libquadmath",
-        "--disable-libssp",
-        "--disable-libvtv",
-        "--disable-libsanitizer",
-        "--disable-libstdcxx-verbose",
-        "--disable-libstdcxx-dual-abi",
-        "--disable-libstdcxx-backtrace",
-        "--disable-libstdcxx-filesystem-ts",
-        # TODO: don't hard-code Kobo settings
-        "--with-arch=armv7-a+vfpv3",
-        "--with-fpu=neon",
-        "--with-float=hard",
+        '--with-gcc',
+        '--with-gnu-ld',
+        '--with-gnu-as',
+        '--disable-nls',
+        '--disable-lto',
+        '--enable-clocale=generic',
+        '--enable-languages=c,c++',
+        '--disable-bootstrap',
+        '--disable-multilib',
+        '--without-newlib',
+
+        '--disable-wchar_t',
+        '--disable-symvers',
+
+        '--disable-decimal-float',
+        '--disable-libatomic',
+        '--disable-libgomp', '--disable-libmpx', '--disable-libquadmath',
+        '--disable-libssp', '--disable-libvtv',
+        '--disable-libsanitizer',
+
+        '--disable-libstdcxx-verbose',
+        '--disable-libstdcxx-dual-abi',
+        '--disable-libstdcxx-backtrace',
+        '--disable-libstdcxx-filesystem-ts',
+
+        # TODO: don't hard-code COLIBRI settings
+        '--with-arch=armv7-a+vfpv3',
+        '--with-fpu=vfp',
+        '--with-fpu=vfpv3-d16',
+        '--with-float=hard',
     ],
 )
 
 gcc_bootstrap = GccBootstrapProject(
     gcc.url,
     gcc.md5,
-    "../bin/armv7a-kobo-linux-musleabihf-g++",
+    '../bin/armv7a-colibri-linux-musleabihf-g++',
     gcc.configure_args,
     install_target="install-gcc",
 )
@@ -416,47 +418,43 @@ libgeotiff = CmakeProject(
     patches=abspath("lib/libgeotiff/patches"),
 )
 
-sdl2 = CmakeProject(
+sdl2_at = AutotoolsProject(
     (
-        "http://www.libsdl.org/release/SDL2-2.30.0.tar.gz",
-        # GitHub release tarball mirror
-        "https://github.com/libsdl-org/SDL/releases/download/release-2.30.0/SDL2-2.30.0.tar.gz",
+    'http://www.libsdl.org/release/SDL2-2.28.2.tar.gz',
+    'https://fossies.org/linux/misc/SDL2-2.28.2.tar.gz',
     ),
-    "36e2e41557e0fa4a1519315c0f5958a87ccb27e25c51776beb6f1239526447b0",
-    "lib/libSDL2.a",
+    '64b1102fa22093515b02ef33dd8739dee1ba57e9dbba6a092942b8bbed1a1c5e',
+    'lib/libSDL2.a',
     [
-        "-DBUILD_SHARED_LIBS=OFF",
-        "-DSDL_TEST=OFF",
-        # subsystems
-        "-DSDL_RENDER=OFF",
-        "-DSDL_JOYSTICK=ON", # won't compile for iOS without SDL_JOYSTICK
-        "-DSDL_HAPTIC=OFF",
-        "-DSDL_HIDAPI=OFF",
-        "-DSDL_POWER=OFF",
-        "-DSDL_TIMERS=ON", # needs to be enabled for SDL_Delay() to work on iOS
-        "-DSDL_FILE=OFF",
-        "-DSDL_LOADSO=OFF",
-        "-DSDL_CPUINFO=OFF",
-        "-DSDL_FILESYSTEM=OFF",
-        "-DSDL_SENSOR=OFF",
-        "-DSDL_LOCALE=OFF",
-        "-DSDL_MISC=OFF",
-        "-DSDL2_DISABLE_SDL2MAIN=OFF",
-        "-DSDL_DISKAUDIO=OFF",
-        "-DSDL_DUMMYAUDIO=OFF",
-        "-DSDL_DUMMYVIDEO=OFF",
-        "-DSDL_OPENGL=OFF",
-        "-DSDL_OPENGLES=ON",
-        "-DSDL_OSS=OFF",
-        "-DSDL_JACK=OFF",
-        "-DSDL_ESD=OFF",
-        "-DSDL_ARTS=OFF",
-        "-DSDL_NAS=OFF",
-        "-DSDL_SNDIO=OFF",
-        "-DSDL_LIBSAMPLERATE=OFF",
-        "-DSDL_COCOA=OFF",
+        '--disable-shared', '--enable-static',
+        '--disable-joystick',
+        '--disable-haptic',
+        '--disable-hidapi',
+        '--disable-sensor',
+        '--disable-power',
+        '--disable-filesystem',
+        '--disable-threads',
+        '--disable-timers',
+        '--disable-file',
+        '--disable-misc',
+        '--disable-locale',
+        '--disable-loadso',
+        '--disable-cpuinfo',
+        '--disable-oss',
+        '--disable-jack',
+        '--disable-esd',
+        '--disable-arts',
+        '--disable-nas',
+        '--disable-sndio',
+        '--disable-diskaudio',
+        '--disable-dummyaudio',
+        '--disable-libsamplerate',
+        '--disable-video-dummy',
+        '--disable-video-opengl',
+        '--disable-video-opengles1',
+        '--disable-sdl2-config',
     ],
-    patches=abspath("lib/sdl2/patches"),
+    patches=abspath('lib/sdl2/patches'),
 )
 
 lua = LuaProject(
@@ -478,4 +476,110 @@ libsalsa = AutotoolsProject(
     "lib/libsalsa.a",
     ["--disable-4bit", "--disable-user-elem", "--enable-shared=no", "--enable-tlv"],
     patches=abspath("lib/salsa-lib/patches"),
+)
+
+libinput = MesonProject(
+    (
+        'https://gitlab.freedesktop.org/libinput/libinput/-/archive/1.23.0/libinput-1.23.0.tar.bz2',
+        'https://gitlab.freedesktop.org/libinput/libinput/-/archive/1.23.0/libinput-1.23.0.tar.bz2',
+    ),
+    'dea612151f5792df73f01c49197b6b41',
+    'lib/libinput.a',
+    [
+        '-Ddocumentation=false',
+        '-Dtests=false',
+        '-Dlibwacom=false',
+        '-Ddebug-gui=false',
+        '-Dtests=false',
+        '-Dinstall-tests=false',
+        '--default-library=static',
+    ]
+)
+
+libudev = AutotoolsProject(
+    (
+        'https://github.com/eudev-project/eudev/releases/download/v3.2.12/eudev-3.2.12.tar.gz',
+        'https://github.com/eudev-project/eudev/releases/download/v3.2.12/eudev-3.2.12.tar.gz',
+    ),
+    '6f1559ca7c27013ff68816e2732498a3',
+    'lib/libudev.a',
+    [
+        '--disable-shared', '--enable-static',
+    ],
+    autogen=True,
+)
+
+libmtdev = AutotoolsProject(
+    (
+        'https://bitmath.org/code/mtdev/mtdev-1.1.6.tar.bz2',
+        'https://bitmath.org/code/mtdev/mtdev-1.1.6.tar.bz2',
+    ),
+    'bf8ef2482e84a00b5db8fbd3ce00e249',
+    'lib/libmtdev.a',
+    [
+        '--disable-shared', '--enable-static',
+    ],
+    autogen=True,
+)
+
+libevdev = AutotoolsProject(
+    (
+        'https://www.freedesktop.org/software/libevdev/libevdev-1.13.1.tar.xz',
+        'https://www.freedesktop.org/software/libevdev/libevdev-1.13.1.tar.xz',
+    ),
+    '58fe71aa6fd5e80d0928e9b691761311',
+    'lib/libevdev.a',
+    [
+        '--disable-shared', '--enable-static',
+    ],
+    autogen=True,
+)
+
+libgudev = MesonProject(
+    (
+        'https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz',
+        'https://download.gnome.org/sources/libgudev/238/libgudev-238.tar.xz',
+    ),
+    '46da30a1c69101c3a13fa660d9ab7b73',
+    'lib/libgudev.a',
+    [
+        '-Dintrospection=disabled',
+        '-Dtests=disabled',
+        '-Dvapi=disabled',
+        '-Dgtk_doc=false'
+    ],
+    patches=abspath('lib/gudev/patches')
+)
+
+glib = MesonProject(
+    (
+        'https://download.gnome.org/sources/glib/2.77/glib-2.77.1.tar.xz',
+        'https://gitlab.gnome.org/GNOME/glib/-/archive/2.77.1/glib-2.77.1.tar.bz2',
+    ),
+    'dce8d0c9e916d8c81a64436bd4ee4d6515a52dd3d157c994e1cdb9b3d6300a03',
+    'lib/glib.a',
+    [
+        '-Dtests=false',
+        '-Dbsymbolic_functions=false',
+        '-Dglib_debug=disabled',
+        '-Dmultiarch=true',
+        '-Dbsymbolic_functions=true',
+    ]
+)
+
+libpcre2 =  AutotoolsProject(
+    (
+        'https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.bz2',
+        'https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.42/pcre2-10.42.tar.bz2',
+    ),
+    'a8e9ab2935d428a4807461f183034abe',
+    'lib/libpcre2.a',
+    [
+        '--disable-shared', '--enable-static',
+        '--enable-pcre2-32',
+        '--disable-pcre2-16',
+        '--disable-pcre2-8',
+        '--with-pic=pic-only',
+    ],
+    autogen=True,
 )
