@@ -2,7 +2,17 @@ HOST_EXEEXT = $(findstring .exe,$(MAKE))
 HOSTCC = $(LOCAL_TCPREFIX)gcc$(LOCAL_TCSUFFIX)$(HOST_EXEEXT)
 HOSTCXX = $(LOCAL_TCPREFIX)g++$(LOCAL_TCSUFFIX)$(HOST_EXEEXT)
 
-HOST_CPPFLAGS = $(INCLUDES)
+# Filter out any include paths that point into the output directory,
+# because those contain target-specific headers which may conflict with
+# host system headers (e.g. musl vs glibc).
+# We must use a more specific pattern to avoid filtering out necessary
+# project headers if they were somehow absolute or started with output
+# but were not what we wanted to filter.
+# Actually, the previous filter-out was too broad because it matched anything
+# with "output" in it if it wasn't carefully anchored.
+HOST_CPPFLAGS = $(filter-out -I$(topdir)/output% -isystem $(topdir)/output% -Ioutput% -isystem output% -I$(OUT)% -isystem $(OUT)%,$(TARGET_INCLUDES) $(INCLUDES) $(TARGET_CPPFLAGS) $(CPPFLAGS))
+HOST_CPPFLAGS := $(filter-out -I/opt/xcsoar/output% -isystem /opt/xcsoar/output%,$(HOST_CPPFLAGS))
+HOST_CPPFLAGS += -I$(SRC) -I$(ENGINE_SRC_DIR) -I$(OUT)/include
 HOST_CXXFLAGS = $(OPTIMIZE) $(HOST_OPTIMIZE) $(HOST_CXX_FEATURES) $(CXX_WARNINGS)
 
 ifeq ($(HOST_IS_WIN32),y)
