@@ -423,7 +423,7 @@ sdl2_at = AutotoolsProject(
     'http://www.libsdl.org/release/SDL2-2.28.2.tar.gz',
     'https://fossies.org/linux/misc/SDL2-2.28.2.tar.gz',
     ),
-    '64b1102fa22093515b02ef33dd8739dee1ba57e9dbba6a092942b8bbed1a1c5e',
+    '3b0a35e1d794382dcd64d9da93870ea1',
     'lib/libSDL2.a',
     [
         '--disable-shared', '--enable-static',
