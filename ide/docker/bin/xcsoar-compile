@@ -20,6 +20,9 @@ case "${TARGET}" in
         make TARGET="${TARGET}" -j"${CPUS}" "${ARGS[@]}"
         make TARGET="${TARGET}" -j"${CPUS}" output/KOBO/KoboRoot.tgz
       ;;
+      "COLIBRI")
+        make TARGET="${TARGET}" -j"${CPUS}" OPENGL=n ENABLE_SDL=y USE_SDL2=y GEOTIFF=n WERROR=n "${ARGS[@]}"
+      ;;
       "WAYLAND" | "UNIX" | "PC" | "WIN64")
         make TARGET="${TARGET}" -j"${CPUS}" "${ARGS[@]}"
       ;;
@@ -31,7 +34,7 @@ case "${TARGET}" in
         ls ../
       ;;
       *)
-        echo "No target specified. Valid targets: ANDROID DOCS KOBO WAYLAND UNIX UNIX-SDL PC WIN64"
+        echo "No target specified. Valid targets: ANDROID DOCS KOBO WAYLAND UNIX UNIX-SDL PC WIN64 COLIBRI"
         exit 1
       ;;
 esac
