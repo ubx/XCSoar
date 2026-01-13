@@ -1,4 +1,5 @@
-USE_FB = $(call bool_or,$(TARGET_IS_KOBO),$(TARGET_IS_COLIBRI))
+//USE_FB = $(call bool_or,$(TARGET_IS_KOBO),$(TARGET_IS_COLIBRI))
+USE_FB = $(TARGET_IS_KOBO)
 ifeq ($(USE_FB),y)
 USE_POLL_EVENT = y
 USE_CONSOLE = y
