@@ -420,8 +420,8 @@ libgeotiff = CmakeProject(
 
 sdl2_at = AutotoolsProject(
     (
-    'http://www.libsdl.org/release/SDL2-2.28.2.tar.gz',
-    'https://fossies.org/linux/misc/SDL2-2.28.2.tar.gz',
+    'http://www.libsdl.org/release/SDL2-2.30.0.tar.gz',
+    'https://fossies.org/linux/misc/SDL2-2.30.0.tar.gz',
     ),
     '3b0a35e1d794382dcd64d9da93870ea1',
     'lib/libSDL2.a',
