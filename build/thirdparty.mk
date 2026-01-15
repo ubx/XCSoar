@@ -40,11 +40,8 @@ endif
 
 endif
 
-ifeq ($(TARGET_IS_KOBO),y)
-  # we build a toolchain as part of the thirdparty-library build
-  BUILD_TOOLCHAIN_TARGET = $(THIRDPARTY_LIBS_DIR)/stamp
-else
-  BUILD_TOOLCHAIN_TARGET =
-endif
+BUILD_TOOLCHAIN_TARGET := \
+  $(if $(filter y,$(TARGET_IS_KOBO) $(TARGET_IS_COLIBRI)), \
+    $(THIRDPARTY_LIBS_DIR)/stamp)
 
 compile-depends += boost
