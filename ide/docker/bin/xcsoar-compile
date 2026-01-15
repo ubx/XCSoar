@@ -21,7 +21,7 @@ case "${TARGET}" in
         make TARGET="${TARGET}" -j"${CPUS}" output/KOBO/KoboRoot.tgz
       ;;
       "COLIBRI")
-        make TARGET="${TARGET}" -j"${CPUS}" OPENGL=n ENABLE_SDL=y USE_SDL2=y GEOTIFF=n WERROR=n "${ARGS[@]}"
+        make TARGET="${TARGET}" -j"${CPUS}" OPENGL=n ENABLE_SDL=y GEOTIFF=n WERROR=n "${ARGS[@]}"
       ;;
       "WAYLAND" | "UNIX" | "PC" | "WIN64")
         make TARGET="${TARGET}" -j"${CPUS}" "${ARGS[@]}"
