@@ -59,15 +59,17 @@ set(CMAKE_RANLIB {toolchain.ranlib})
             # the build host
             f.write(f"""
 set(CMAKE_FIND_ROOT_PATH "{toolchain.install_prefix};{sysroot}")
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 """)
-    elif cmake_system_name == 'Windows':
-        # For Windows cross-compilation, restrict cmake to only search in
-        # the sysroot to avoid picking up host libraries like Homebrew's c-ares
+    else:
+        # For cross-compilation, restrict cmake to only search in
+        # the sysroot to avoid picking up host libraries and headers
         f.write(f"""
 set(CMAKE_FIND_ROOT_PATH "{toolchain.install_prefix}")
+set(CMAKE_SYSROOT "{toolchain.install_prefix}")
+""")
+
+    f.write("""
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
@@ -99,8 +101,6 @@ def configure(toolchain: AnyToolchain, src: str, build: str, args: list[str]=[],
         # has a sysroot already
         no_isystem = False
         if not toolchain.is_android and not toolchain.is_darwin:
-            configure.append('-DCMAKE_SYSROOT=' + toolchain.install_prefix)
-
             # strip "-isystem" to avoid build failures with C++ headers
             # because "#include_next" ceases to work
             no_isystem = True
