@@ -7,36 +7,61 @@
 
 #include <SDL.h>
 #include <SDL_hints.h>
+#include <cstdlib>
 
 namespace SDL {
+static void logAvailableVideoDrivers(const char* phase)
+{
+  SDL_Log("=== SDL video drivers (%s) ===", phase);
+
+  int count = SDL_GetNumVideoDrivers();
+  if (count <= 0) {
+    SDL_Log("No SDL video drivers available");
+    return;
+  }
+
+  for (int i = 0; i < count; ++i) {
+    SDL_Log("  %d: %s", i, SDL_GetVideoDriver(i));
+  }
+}
 
 Display::Display()
 {
-  Uint32 flags = SDL_INIT_VIDEO;
-// Todo --  implement/adapt isColibri()
-//  if (!IsKobo())
-//    flags |= SDL_INIT_AUDIO;
+  // SDL logging works even before SDL_Init()
+  SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
-  if (::SDL_Init(flags) != 0)
-    throw FmtRuntimeError("SDL_Init() has failed: {}", ::SDL_GetError());
+  logAvailableVideoDrivers("before SDL_Init");
 
-#ifdef ENABLE_OPENGL
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-#endif
+  // First try: prefer X11
+  setenv("SDL_VIDEODRIVER", "x11", 0);
 
-  // Keep screen on (works on iOS, and maybe for other platforms)
-  SDL_SetHint(SDL_HINT_IDLE_TIMER_DISABLED, "1");
+  if (SDL_Init(SDL_INIT_VIDEO) == 0) {
+    SDL_Log("SDL video initialized using driver: %s",
+            SDL_GetCurrentVideoDriver());
+    return;
+  }
 
-  if (HasTouchScreen())
-    SDL_ShowCursor (SDL_FALSE);
+  SDL_LogError(SDL_LOG_CATEGORY_VIDEO,
+               "SDL_Init(x11) failed: %s", SDL_GetError());
 
-#if defined(ENABLE_OPENGL)
-  ::SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-  ::SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 1);
-#endif
+  // Clean up any partial state
+  SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+  // Second try: fallback to dummy
+  setenv("SDL_VIDEODRIVER", "dummy", 1);
+
+  if (SDL_Init(SDL_INIT_VIDEO) == 0) {
+    SDL_Log("SDL video initialized using driver: %s",
+            SDL_GetCurrentVideoDriver());
+    return;
+  }
+
+  SDL_LogError(SDL_LOG_CATEGORY_VIDEO,
+               "SDL_Init(dummy) failed: %s", SDL_GetError());
+
+  throw FmtRuntimeError("SDL_Init() failed: {}", SDL_GetError());
 }
+
 
 Display::~Display() noexcept
 {
