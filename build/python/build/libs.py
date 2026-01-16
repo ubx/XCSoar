@@ -472,6 +472,7 @@ sdl2_209 = CmakeProject(
     "lib/libSDL2.a",
     [
         "-DSDL_SHARED=OFF",
+        "-DX11_SHARED=ON",
         "-DSDL_STATIC=ON",
         "-DSDL_TEST=OFF",
         "-DSDL2_DISABLE_SDLMAIN=ON",
@@ -493,7 +494,7 @@ sdl2_209 = CmakeProject(
         "-DSDL_SENSOR=ON",
 
         # Audio
-        "-DALSA=ON",
+        "-DALSA=OFF",
         "-DDUMMYAUDIO=OFF",
         "-DDISKAUDIO=OFF",
         "-DOSS=OFF",
@@ -505,13 +506,14 @@ sdl2_209 = CmakeProject(
 
         # Video
         "-DVIDEO_X11=ON",
-        "-DVIDEO_DUMMY=OFF",
-        "-DVIDEO_OPENGL=OFF",
-        "-DVIDEO_OPENGLES=OFF",
-        "-DVIDEO_OPENGLES2=OFF",
+        "-DSDL_VIDEO_X11=ON",
+        "-DVIDEO_DUMMY=ON",
+        "-DVIDEO_OPENGL=ON",
+        "-DVIDEO_OPENGLES=ON",
+        "-DVIDEO_OPENGLES2=ON",
         "-DVIDEO_WAYLAND=OFF",
-        "-DVIDEO_DIRECTFB=OFF",
-        "-DVIDEO_KMSDRM=OFF"
+        "-DVIDEO_DIRECTFB=ON",
+        "-DVIDEO_KMSDRM=ON"
     ],
 )
 
