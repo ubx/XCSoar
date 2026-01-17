@@ -8,7 +8,8 @@ else ifeq ($(TARGET_IS_KOBO),y)
 # the Kobo uses the frame buffer
 ENABLE_SDL ?= n
 else ifeq ($(TARGET_IS_COLIBRI),y)
-ENABLE_SDL = y
+# the COLIBRI doesn't have OpenGL/SDL support
+ENABLE_SDL = n
 else
 # everything else defaults to SDL
 ENABLE_SDL ?= y

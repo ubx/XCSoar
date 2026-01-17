@@ -8,7 +8,7 @@ OPENGL = n
 
 # the Colibri doesn't have OpenGL support
 else ifeq ($(TARGET_IS_COLIBRI),y)
-OPENGL ?= y
+OPENGL = n
 
 # the Raspberry Pi uses EGL + GL/ES
 else ifeq ($(TARGET_IS_PI),y)

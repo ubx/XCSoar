@@ -6,6 +6,12 @@ else ifeq ($(TARGET_IS_CUBIE),y)
 # auto-enable EGL on the Cubieboard.
 EGL ?= y
 ENABLE_MESA_KMS = y
+
+else ifeq ($(TARGET_IS_COLIBRI),y)
+# the COLIBRI doesn't have OpenGL/EGL support
+EGL = n
+ENABLE_MESA_KMS = n
+
 else ifeq ($(ENABLE_MESA_KMS),y)
 # if Mesa KMS is explicitly enabled, we also need to enable EGL
 EGL ?= y

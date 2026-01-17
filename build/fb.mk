@@ -1,4 +1,4 @@
-USE_FB = $(TARGET_IS_KOBO)
+USE_FB = $(filter y,$(TARGET_IS_KOBO) $(TARGET_IS_COLIBRI))
 ifeq ($(USE_FB),y)
 USE_POLL_EVENT = y
 USE_CONSOLE = y
