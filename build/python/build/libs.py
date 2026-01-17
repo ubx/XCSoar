@@ -462,13 +462,13 @@ sdl2 = CmakeProject(
     patches=abspath("lib/sdl2/patches"),
 )
 
-sdl2_209 = CmakeProject(
+sdl2_static = CmakeProject(
     (
-        "http://www.libsdl.org/release/SDL2-2.0.9.tar.gz",
+        "http://www.libsdl.org/release/SDL2-2.30.0.tar.gz",
         # GitHub release tarball mirror
-        "https://github.com/libsdl-org/SDL/releases/download/release-2.0.9/SDL2-2.0.9.tar.gz",
+        "https://github.com/libsdl-org/SDL/releases/download/release-2.30.0/SDL2-2.30.0.tar.gz",
     ),
-    "f2ecfba915c54f7200f504d8b48a5dfe",
+    "36e2e41557e0fa4a1519315c0f5958a87ccb27e25c51776beb6f1239526447b0",
     "lib/libSDL2.a",
     [
         "-DSDL_SHARED=OFF",
