@@ -42,6 +42,7 @@
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/KRT2.hpp"
 #include "Device/Driver/Stratux.hpp"
+#include "Device/Driver/LoEFGREN.hpp"
 #include "util/Macros.hpp"
 #include "util/StringAPI.hxx"
 #include "Device/Driver/CANaerospace.hpp"
@@ -91,9 +92,6 @@ static const struct DeviceRegister *const driver_list[] = {
   &condor3_driver,
   &lx_eos_driver,
   &stratux_driver,
-#ifdef HAVE_CAN
-  &can_aerospace_driver,
-#endif
   nullptr
 };
 
