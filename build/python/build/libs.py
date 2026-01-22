@@ -462,61 +462,6 @@ sdl2 = CmakeProject(
     patches=abspath("lib/sdl2/patches"),
 )
 
-sdl2_static = CmakeProject(
-    (
-        "http://www.libsdl.org/release/SDL2-2.30.0.tar.gz",
-        # GitHub release tarball mirror
-        "https://github.com/libsdl-org/SDL/releases/download/release-2.30.0/SDL2-2.30.0.tar.gz",
-    ),
-    "36e2e41557e0fa4a1519315c0f5958a87ccb27e25c51776beb6f1239526447b0",
-    "lib/libSDL2.a",
-    [
-        "-DSDL_SHARED=OFF",
-        "-DX11_SHARED=ON",
-        "-DSDL_STATIC=ON",
-        "-DSDL_TEST=OFF",
-        "-DSDL2_DISABLE_SDLMAIN=ON",
-        "-DSDL_ATOMIC=ON",
-        "-DSDL_AUDIO=ON",
-        "-DSDL_VIDEO=ON",
-        "-DSDL_RENDER=ON",
-        "-DSDL_EVENTS=ON",
-        "-DSDL_JOYSTICK=ON",
-        "-DSDL_HAPTIC=ON",
-        "-DSDL_POWER=ON",
-        "-DSDL_THREADS=ON",
-        "-DSDL_TIMERS=ON",
-        "-DSDL_FILE=ON",
-        "-DSDL_LOADSO=ON",
-        "-DSDL_CPUINFO=ON",
-        "-DSDL_FILESYSTEM=ON",
-        "-DSDL_DLOPEN=OFF",
-        "-DSDL_SENSOR=ON",
-
-        # Audio
-        "-DALSA=OFF",
-        "-DDUMMYAUDIO=OFF",
-        "-DDISKAUDIO=OFF",
-        "-DOSS=OFF",
-        "-DJACK=OFF",
-        "-DESD=OFF",
-        "-DARTS=OFF",
-        "-DNAS=OFF",
-        "-DSNDIO=OFF",
-
-        # Video
-        "-DVIDEO_X11=ON",
-        "-DSDL_VIDEO_X11=ON",
-        "-DVIDEO_DUMMY=ON",
-        "-DVIDEO_OPENGL=ON",
-        "-DVIDEO_OPENGLES=ON",
-        "-DVIDEO_OPENGLES2=ON",
-        "-DVIDEO_WAYLAND=OFF",
-        "-DVIDEO_DIRECTFB=ON",
-        "-DVIDEO_KMSDRM=ON"
-    ],
-)
-
 lua = LuaProject(
     (
         "http://www.lua.org/ftp/lua-5.4.6.tar.gz",
