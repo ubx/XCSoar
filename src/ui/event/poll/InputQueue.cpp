@@ -16,12 +16,17 @@ InputEventQueue::InputEventQueue(EventQueue &queue) noexcept
    libinput_handler(queue)
 #endif
 {
-#if defined(KOBO) || defined(COLIBRI)
+#if defined(KOBO)
   /* power button */
   keyboard.Open("/dev/input/event0");
 
   /* Kobo touch screen */
   mouse.Open("/dev/input/event1");
+#elif  defined(COLIBRI)
+  /* power button */
+  keyboard.Open("/dev/input/event5");
+  /* Colibri touch screen */
+  mouse.Open("/dev/input/event6");
 #else
   libinput_handler.Open();
 #endif
