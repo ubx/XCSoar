@@ -5,7 +5,7 @@
 #include "ui/canvas/custom/TopCanvas.hpp"
 #include "ui/canvas/Canvas.hpp"
 
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
 #include "ui/canvas/Canvas.hpp"
 #endif
 
@@ -24,7 +24,7 @@ TopWindow::CheckResize() noexcept
 
 #endif
 
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
 void
 TopWindow::OnDestroy() noexcept
 {
@@ -33,7 +33,7 @@ TopWindow::OnDestroy() noexcept
   if (canvas.IsDefined()) {
     canvas.Clear(COLOR_BLACK);
     screen->Flip();
-    screen->Wait();
+    // todo screen->Wait();
 
     canvas.ClearWhite();
     screen->Unlock();

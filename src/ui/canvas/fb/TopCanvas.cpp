@@ -259,7 +259,7 @@ TopCanvas::Flip()
 #endif
 
 
-#ifdef KOBO
+#if defined(KOBO)
   if (frame_sync)
     Wait();
 
@@ -294,7 +294,7 @@ TopCanvas::Flip()
 #endif /* USE_FB */
 }
 
-#ifdef KOBO
+#if defined(KOBO) // todo || defined(COLIBRI)
 
 void
 TopCanvas::Wait() noexcept

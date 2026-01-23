@@ -26,7 +26,7 @@ Display::LoadOrientation(VerboseOperationEnvironment &env)
   DisplayOrientation orientation =
     CommonInterface::GetUISettings().display.orientation;
 
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
   /* on the Kobo, the display orientation must be loaded explicitly
      (portrait), because the hardware default is landscape */
 #else
@@ -57,7 +57,7 @@ Display::RestoreOrientation()
   if (!Display::RotateSupported())
     return;
 
-#ifndef KOBO
+#if !defined(KOBO) && !defined(COLIBRI)
   DisplayOrientation orientation =
     CommonInterface::GetUISettings().display.orientation;
   if (orientation == DisplayOrientation::DEFAULT)

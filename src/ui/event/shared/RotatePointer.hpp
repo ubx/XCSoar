@@ -9,7 +9,7 @@
 
 #include <algorithm>
 
-#ifdef KOBO
+#if defined(KOBO)
 #include "Kobo/Model.hpp"
 #endif
 
@@ -55,7 +55,7 @@ public:
 
   void SetDisplayOrientation(DisplayOrientation orientation) {
     SetSwap(AreAxesSwapped(orientation));
-#ifdef KOBO
+#if defined(KOBO)
     KoboModel kobo_model = DetectKoboModel();
 #endif
 

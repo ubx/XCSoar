@@ -49,7 +49,7 @@ class Canvas;
 struct PixelSize;
 namespace UI { class Display; }
 
-#if defined(USE_FB) && !defined(KOBO)
+#if defined(USE_FB) && !defined(KOBO) && !defined(COLIBRI)
 /* defined if we need to initialise /dev/tty to graphics mode, see
    TopCanvas::InitialiseTTY() */
 #define USE_TTY
@@ -115,7 +115,7 @@ class TopCanvas
   uint32_t epd_update_marker;
 #endif // USE_FB
 
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
   /**
    * Runtime flag that can be used to disable dithering at runtime for
    * some situations.

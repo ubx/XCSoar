@@ -471,7 +471,7 @@ protected:
 
   virtual bool OnClose() noexcept;
 
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
   void OnDestroy() noexcept override;
 #endif
 

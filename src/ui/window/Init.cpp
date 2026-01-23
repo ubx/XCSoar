@@ -9,7 +9,7 @@
 #include "ui/canvas/Font.hpp"
 #endif
 
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
 #include "Hardware/RotateDisplay.hpp"
 #include "DisplayOrientation.hpp"
 #endif
@@ -40,9 +40,9 @@ ScreenGlobalInit::ScreenGlobalInit()
 
   UI::event_queue = &event_queue;
 
-#ifdef KOBO
-  Display::Rotate(DisplayOrientation::DEFAULT);
-  UI::event_queue->SetDisplayOrientation(DisplayOrientation::DEFAULT);
+#if defined(KOBO) || defined(COLIBRI)
+  Display::Rotate(DisplayOrientation::PORTRAIT); // todo
+  UI::event_queue->SetDisplayOrientation(DisplayOrientation::PORTRAIT); // todo
 #endif
 
 #ifdef USE_WINUSER
