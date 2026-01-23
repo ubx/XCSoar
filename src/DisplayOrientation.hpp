@@ -13,8 +13,8 @@ enum class DisplayOrientation : uint8_t {
   REVERSE_LANDSCAPE,
 };
 
-#ifdef KOBO
-/* Kobo defaults to portrait */
+#if defined(KOBO) || defined(COLIBRI)
+/* Kobo and Colibri default to portrait */
 static constexpr DisplayOrientation DEFAULT_DISPLAY_ORIENTATION =
   DisplayOrientation::PORTRAIT;
 #else

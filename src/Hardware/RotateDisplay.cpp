@@ -9,8 +9,11 @@
 #include "Android/NativeView.hpp"
 #endif
 
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
 #include "system/FileUtil.hpp"
+#endif
+
+#ifdef KOBO
 #include "Kobo/Model.hpp"
 #endif
 
@@ -31,7 +34,7 @@ Display::RotateInitialize()
 bool
 Display::RotateSupported()
 {
-#if defined(ANDROID) || defined(KOBO)
+#if defined(ANDROID) || defined(KOBO) || defined(COLIBRI)
   return true;
 #elif defined(SOFTWARE_ROTATE_DISPLAY)
   /* rotate supported via glRotatef() (OpenGL projection matrix) */
@@ -46,7 +49,7 @@ Display::RotateSupported()
 bool
 Display::Rotate(DisplayOrientation orientation)
 {
-#if !defined(ANDROID) && !defined(KOBO)
+#if !defined(ANDROID) && !defined(KOBO) && !defined(COLIBRI)
   if (orientation == DisplayOrientation::DEFAULT)
     /* leave it as it is */
     return true;
@@ -143,6 +146,29 @@ Display::Rotate(DisplayOrientation orientation)
   };
 
   return File::WriteExisting(Path("/sys/class/graphics/fb0/rotate"), rotate);
+#elif defined(COLIBRI)
+  const char *rotate = "3";
+
+  switch (orientation) {
+  case DisplayOrientation::DEFAULT:
+  case DisplayOrientation::PORTRAIT:
+    rotate = "3";
+    break;
+
+  case DisplayOrientation::REVERSE_PORTRAIT:
+    rotate = "1";
+    break;
+
+  case DisplayOrientation::LANDSCAPE:
+    rotate = "0";
+    break;
+
+  case DisplayOrientation::REVERSE_LANDSCAPE:
+    rotate = "2";
+    break;
+  };
+
+  return File::WriteExisting(Path("/sys/class/graphics/fb0/rotate"), rotate);
 #elif defined(SOFTWARE_ROTATE_DISPLAY)
   if (!RotateSupported())
     return false;
@@ -160,7 +186,7 @@ Display::RotateRestore()
 #if defined(ANDROID)
   return native_view->SetRequestedOrientation(Java::GetEnv(),
                                               NativeView::ScreenOrientation::SENSOR);
-#elif defined(KOBO)
+#elif defined(KOBO) || defined(COLIBRI)
   return Rotate(DisplayOrientation::DEFAULT);
 #else
   return false;
