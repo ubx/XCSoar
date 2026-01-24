@@ -9,6 +9,16 @@
 
 namespace UI {
 
+PixelPoint
+TopWindow::PointToReal(PixelPoint p) const noexcept
+{
+#ifdef HAVE_HIGHDPI_SUPPORT
+  p.x = int(static_cast<float>(p.x) * point_to_real_x);
+  p.y = int(static_cast<float>(p.y) * point_to_real_y);
+#endif
+  return p;
+}
+
 void
 TopWindow::Create(const TCHAR *cls, const TCHAR *text, PixelSize size,
                   TopWindowStyle style)

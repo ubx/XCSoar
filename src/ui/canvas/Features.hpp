@@ -11,6 +11,10 @@
 #include "ui/opengl/Features.hpp"
 #endif
 
+#if defined(ENABLE_SDL) && !defined(ENABLE_OPENGL)
+#define SOFTWARE_ROTATE_DISPLAY
+#endif
+
 #ifdef USE_GDI
 #include "gdi/Features.hpp"
 #endif

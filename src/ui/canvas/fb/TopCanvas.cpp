@@ -253,9 +253,9 @@ TopCanvas::Flip()
                     enable_dither,
 #endif
                     map, map_pitch, map_bpp,
-                    buffer);
+                    buffer, DisplayOrientation::DEFAULT);
 #else
-  CopyFromBGRA(map, map_pitch, map_bpp, buffer);
+  CopyFromBGRA(map, map_pitch, map_bpp, buffer, DisplayOrientation::DEFAULT);
 #endif
 
 

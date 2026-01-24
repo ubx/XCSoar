@@ -8,7 +8,73 @@
 #include "Dither.hpp"
 #endif
 
+#include <algorithm>
 #include <cassert>
+
+template<typename D, typename S, typename C>
+static void
+RotateConvertCopy(D *dest, unsigned dest_pitch,
+                  const S *src, unsigned src_pitch,
+                  unsigned src_width, unsigned src_height,
+                  DisplayOrientation orientation,
+                  C convert)
+{
+  switch (TranslateDefaultDisplayOrientation(orientation)) {
+  case DisplayOrientation::DEFAULT:
+  case DisplayOrientation::LANDSCAPE:
+    for (unsigned y = 0; y < src_height; ++y) {
+      D *d = dest + y * dest_pitch;
+      const S *s = src + y * src_pitch;
+      for (unsigned x = 0; x < src_width; ++x)
+        d[x] = convert(s[x]);
+    }
+    break;
+
+  case DisplayOrientation::REVERSE_LANDSCAPE:
+    for (unsigned y = 0; y < src_height; ++y) {
+      D *d = dest + (src_height - 1 - y) * dest_pitch + (src_width - 1);
+      const S *s = src + y * src_pitch;
+      for (unsigned x = 0; x < src_width; ++x)
+        *d-- = convert(*s++);
+    }
+    break;
+
+  case DisplayOrientation::PORTRAIT:
+    for (unsigned y = 0; y < src_height; ++y) {
+      const S *s = src + y * src_pitch;
+      for (unsigned x = 0; x < src_width; ++x)
+        dest[y + (src_width - 1 - x) * dest_pitch] = convert(*s++);
+    }
+    break;
+
+  case DisplayOrientation::REVERSE_PORTRAIT:
+    for (unsigned y = 0; y < src_height; ++y) {
+      const S *s = src + y * src_pitch;
+      for (unsigned x = 0; x < src_width; ++x)
+        dest[(src_height - 1 - y) + x * dest_pitch] = convert(*s++);
+    }
+    break;
+  }
+}
+
+template<typename T>
+static void
+RotateCopy(T *dest, unsigned dest_pitch,
+           const T *src, unsigned src_pitch,
+           unsigned src_width, unsigned src_height,
+           DisplayOrientation orientation)
+{
+  if (orientation == DisplayOrientation::DEFAULT ||
+      orientation == DisplayOrientation::LANDSCAPE) {
+    for (unsigned y = 0; y < src_height; ++y)
+      std::copy_n(src + y * src_pitch, src_width, dest + y * dest_pitch);
+    return;
+  }
+
+  RotateConvertCopy(dest, dest_pitch, src, src_pitch,
+                    src_width, src_height, orientation,
+                    [](T x) { return x; });
+}
 
 #ifdef GREYSCALE
 
@@ -35,8 +101,26 @@ CopyFromGreyscale(
                   bool enable_dither,
 #endif
                   void *dest_pixels, unsigned dest_pitch, [[maybe_unused]] unsigned dest_bpp,
-                  ConstImageBuffer<GreyscalePixelTraits> src)
+                  ConstImageBuffer<GreyscalePixelTraits> src,
+                  DisplayOrientation orientation)
 {
+  if (orientation != DisplayOrientation::DEFAULT &&
+      orientation != DisplayOrientation::LANDSCAPE) {
+    /* software rotate */
+    if (dest_bpp == 2) {
+      RotateConvertCopy((RGB565Color *)dest_pixels, dest_pitch / 2,
+                        (const Luminosity8 *)src.data, src.pitch / sizeof(Luminosity8),
+                        src.size.width, src.size.height, orientation,
+                        [](const Luminosity8 &c) { return ToRGB565(c); });
+    } else {
+      RotateConvertCopy((uint32_t *)dest_pixels, dest_pitch / 4,
+                        (const Luminosity8 *)src.data, src.pitch / sizeof(Luminosity8),
+                        src.size.width, src.size.height, orientation,
+                        [](const Luminosity8 &c) { return ToRGB8(c); });
+    }
+    return;
+  }
+
   const uint8_t *src_pixels = reinterpret_cast<const uint8_t *>(src.data);
 
 #ifdef KOBO
@@ -91,7 +175,8 @@ CopyFromGreyscale(
 
 void
 CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
-             ConstImageBuffer<BGRAPixelTraits> src)
+             ConstImageBuffer<BGRAPixelTraits> src,
+             DisplayOrientation orientation)
 {
   assert(dest_bpp == 4 || dest_bpp == 2);
 
@@ -104,18 +189,25 @@ CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
     RGB565Color *dest_pixels = reinterpret_cast<RGB565Color *>(_dest_pixels);
     const BGRA8Color *src_pixels = src.data;
 
-    for (unsigned row = src.size.height; row > 0;
-         --row, src_pixels += src_pitch, dest_pixels += dest_pitch)
-      BGRAToRGB565((RGB565Color *)dest_pixels,
-                   (const BGRA8Color *)src_pixels,
-                   src.size.width);
+    if (orientation == DisplayOrientation::DEFAULT ||
+        orientation == DisplayOrientation::LANDSCAPE) {
+      for (unsigned row = src.size.height; row > 0;
+           --row, src_pixels += src_pitch, dest_pixels += dest_pitch)
+        BGRAToRGB565((RGB565Color *)dest_pixels,
+                     (const BGRA8Color *)src_pixels,
+                     src.size.width);
+    } else {
+      /* software rotate AND convert to RGB565 */
+      RotateConvertCopy(dest_pixels, dest_pitch, src_pixels, src_pitch,
+                        src.size.width, src.size.height, orientation,
+                        [](const BGRA8Color &c) { return ToRGB565(c); });
+    }
   } else {
     uint32_t *dest_pixels = reinterpret_cast<uint32_t *>(_dest_pixels);
     const uint32_t *src_pixels = reinterpret_cast<const uint32_t *>(src.data);
 
-    for (unsigned row = src.size.height; row > 0;
-         --row, src_pixels += src_pitch, dest_pixels += dest_pitch)
-      std::copy_n(src_pixels, src.size.width, dest_pixels);
+    RotateCopy(dest_pixels, dest_pitch, src_pixels, src_pitch,
+               src.size.width, src.size.height, orientation);
   }
 }
 

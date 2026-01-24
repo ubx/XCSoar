@@ -101,10 +101,14 @@ class TopCanvas
   Dither dither;
 #endif
 
-#elif !defined(ENABLE_SDL)
+#else
   WritableImageBuffer<ActivePixelTraits> buffer;
 #endif
 #endif /* USE_MEMORY_CANVAS */
+
+#ifdef SOFTWARE_ROTATE_DISPLAY
+  DisplayOrientation orientation = DisplayOrientation::DEFAULT;
+#endif
 
 #ifdef USE_FB
   int fd = -1;
@@ -221,7 +225,7 @@ public:
   void OnResize(PixelSize new_size) noexcept;
 #endif
 
-#if defined(USE_MEMORY_CANVAS) && (defined(GREYSCALE) || !defined(ENABLE_SDL))
+#ifdef USE_MEMORY_CANVAS
   const PixelSize &GetSize() const noexcept {
     return buffer.size;
   }

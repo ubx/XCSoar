@@ -14,14 +14,9 @@
 #include "Kobo/Model.hpp"
 #endif
 
-#ifdef ENABLE_OPENGL
-#include "ui/opengl/Features.hpp"
-#ifdef SOFTWARE_ROTATE_DISPLAY
 #include "UIGlobals.hpp"
 #include "ui/window/SingleWindow.hpp"
-#include "ui/canvas/opengl/Globals.hpp"
-#endif
-#endif
+#include "ui/canvas/Features.hpp"
 
 void
 Display::RotateInitialize()

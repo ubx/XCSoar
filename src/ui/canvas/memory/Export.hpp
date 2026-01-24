@@ -5,6 +5,7 @@
 
 #include "Concepts.hpp"
 #include "PixelTraits.hpp"
+#include "DisplayOrientation.hpp"
 #include "ui/canvas/PortableColor.hpp"
 #include "util/Compiler.h"
 
@@ -73,12 +74,14 @@ CopyFromGreyscale(
                   bool enable_dither,
 #endif
                   void *dest_pixels, unsigned dest_pitch, unsigned dest_bpp,
-                  ConstImageBuffer<GreyscalePixelTraits> src);
+                  ConstImageBuffer<GreyscalePixelTraits> src,
+                  DisplayOrientation orientation);
 
 #else
 
 void
 CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
-             ConstImageBuffer<BGRAPixelTraits> src);
+             ConstImageBuffer<BGRAPixelTraits> src,
+             DisplayOrientation orientation);
 
 #endif
