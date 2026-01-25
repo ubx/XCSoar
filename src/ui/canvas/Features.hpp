@@ -11,7 +11,7 @@
 #include "ui/opengl/Features.hpp"
 #endif
 
-#if defined(ENABLE_SDL) && !defined(ENABLE_OPENGL)
+#if (defined(ENABLE_SDL) && !defined(ENABLE_OPENGL)) || defined(COLIBRI)
 #define SOFTWARE_ROTATE_DISPLAY
 #endif
 

@@ -2,7 +2,9 @@
 // Copyright The XCSoar Project
 
 #include "ui/canvas/custom/TopCanvas.hpp"
+#include "ui/canvas/Features.hpp"
 #include "ui/canvas/Canvas.hpp"
+#include "DisplayOrientation.hpp"
 #include "lib/fmt/SystemError.hxx"
 
 #ifdef USE_FB
@@ -253,13 +255,23 @@ TopCanvas::Flip()
                     enable_dither,
 #endif
                     map, map_pitch, map_bpp,
-                    buffer, DisplayOrientation::DEFAULT);
+                    buffer
+#ifdef SOFTWARE_ROTATE_DISPLAY
+                    ,orientation
+#endif
+                    );
 #else
-  CopyFromBGRA(map, map_pitch, map_bpp, buffer, DisplayOrientation::DEFAULT);
+  CopyFromBGRA(map, map_pitch, map_bpp, buffer,
+#ifdef SOFTWARE_ROTATE_DISPLAY
+               orientation
+#else
+               DisplayOrientation::DEFAULT
+#endif
+               );
 #endif
 
 
-#if defined(KOBO)
+#ifdef KOBO
   if (frame_sync)
     Wait();
 
@@ -294,12 +306,36 @@ TopCanvas::Flip()
 #endif /* USE_FB */
 }
 
-#if defined(KOBO) // todo || defined(COLIBRI)
+#if defined(KOBO) || defined(COLIBRI)
 
 void
 TopCanvas::Wait() noexcept
 {
+#ifdef KOBO
   ioctl(fd, MXCFB_WAIT_FOR_UPDATE_COMPLETE, &epd_update_marker);
+#endif
 }
 
+#endif
+
+#ifdef SOFTWARE_ROTATE_DISPLAY
+PixelSize
+TopCanvas::SetDisplayOrientation(DisplayOrientation _orientation) noexcept
+{
+  if (orientation == _orientation)
+    return GetSize();
+
+  const bool was_swapped = AreAxesSwapped(orientation);
+  const bool now_swapped = AreAxesSwapped(_orientation);
+
+  orientation = _orientation;
+
+  if (was_swapped != now_swapped) {
+    PixelSize size = buffer.size;
+    buffer.Free();
+    buffer.Allocate(size.Swapped());
+  }
+
+  return GetSize();
+}
 #endif

@@ -7,6 +7,10 @@
 #include <TargetConditionals.h>
 #endif
 
+#ifdef COLIBRI
+#include "ui/canvas/Features.hpp"
+#endif
+
 #ifdef USE_MEMORY_CANVAS
 #include "ui/canvas/memory/PixelTraits.hpp"
 #include "ui/canvas/memory/ActivePixelTraits.hpp"
@@ -39,7 +43,11 @@
 #include <cstdint>
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
+#ifdef COLIBRI
+#include "DisplayOrientation.hpp"
+#else
 enum class DisplayOrientation : uint8_t;
+#endif
 #endif
 
 struct SDL_Window;
@@ -101,12 +109,12 @@ class TopCanvas
   Dither dither;
 #endif
 
-#else
+#elif !defined(ENABLE_SDL)
   WritableImageBuffer<ActivePixelTraits> buffer;
 #endif
 #endif /* USE_MEMORY_CANVAS */
 
-#ifdef SOFTWARE_ROTATE_DISPLAY
+#if defined(SOFTWARE_ROTATE_DISPLAY) && defined(COLIBRI)
   DisplayOrientation orientation = DisplayOrientation::DEFAULT;
 #endif
 
@@ -225,7 +233,7 @@ public:
   void OnResize(PixelSize new_size) noexcept;
 #endif
 
-#ifdef USE_MEMORY_CANVAS
+#if defined(USE_MEMORY_CANVAS) && (defined(GREYSCALE) || !defined(ENABLE_SDL))
   const PixelSize &GetSize() const noexcept {
     return buffer.size;
   }
@@ -239,7 +247,7 @@ public:
 
   void Flip();
 
-#ifdef KOBO
+#if defined(KOBO) || defined(COLIBRI)
   /**
    * Wait until the screen update is complete.
    */

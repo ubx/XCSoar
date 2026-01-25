@@ -73,15 +73,28 @@ CopyFromGreyscale(
 #ifdef KOBO
                   bool enable_dither,
 #endif
+
+#ifdef COLIBRI
                   void *dest_pixels, unsigned dest_pitch, unsigned dest_bpp,
                   ConstImageBuffer<GreyscalePixelTraits> src,
                   DisplayOrientation orientation);
+#else
+                  void *dest_pixels, unsigned dest_pitch, unsigned dest_bpp,
+                  ConstImageBuffer<GreyscalePixelTraits> src);
+                  #endif
+
 
 #else
 
+#ifdef COLIBRI
 void
 CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
              ConstImageBuffer<BGRAPixelTraits> src,
              DisplayOrientation orientation);
+#else
+void
+CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
+             ConstImageBuffer<BGRAPixelTraits> src);
+#endif
 
 #endif

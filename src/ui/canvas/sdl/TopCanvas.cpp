@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright The XCSoar Project
 
-#ifdef SOFTWARE_ROTATE_DISPLAY
-#include "ui/canvas/opengl/Globals.hpp"
-#endif
-
 #include "ui/canvas/custom/TopCanvas.hpp"
 #include "ui/canvas/Features.hpp"
 #include "ui/dim/Size.hpp"
-#include "ui/canvas/memory/Export.hpp"
-#include "ui/canvas/memory/Buffer.hpp"
 #include "lib/fmt/RuntimeError.hxx"
 #include "Asset.hpp"
 
@@ -19,6 +13,7 @@
 #include "Math/Point2D.hpp"
 #include "LogFile.hpp"
 #else
+#include "ui/canvas/memory/Export.hpp"
 #include "ui/canvas/Canvas.hpp"
 #endif
 
@@ -101,14 +96,14 @@ TopCanvas::TopCanvas(UI::Display &_display, SDL_Window *_window)
   SetupViewport(GetNativeSize());
 #endif
 
-#ifdef USE_MEMORY_CANVAS
+#ifdef GREYSCALE
   buffer.Allocate(PixelSize(width, height));
 #endif
 }
 
 TopCanvas::~TopCanvas() noexcept
 {
-#ifdef USE_MEMORY_CANVAS
+#if !defined(ENABLE_OPENGL) && defined(GREYSCALE)
   buffer.Free();
 #endif
 
@@ -127,19 +122,23 @@ TopCanvas::GetNativeSize() const noexcept
   return PixelSize(w, h);
 }
 
-#else
-
-PixelSize
-TopCanvas::GetNativeSize() const noexcept
-{
-  int w, h;
-  SDL_GetWindowSize(window, &w, &h);
-  return PixelSize(w, h);
-}
-
 #endif
 
 #ifdef USE_MEMORY_CANVAS
+
+#ifndef GREYSCALE
+
+PixelSize
+TopCanvas::GetSize() const noexcept
+{
+  int width, height;
+  if (SDL_QueryTexture(texture, nullptr, nullptr, &width, &height) != 0)
+    return {};
+
+  return PixelSize(width, height);
+}
+
+#endif // !GREYSCALE
 
 void
 TopCanvas::OnResize(PixelSize new_size) noexcept
@@ -161,27 +160,115 @@ TopCanvas::OnResize(PixelSize new_size) noexcept
       SDL_DestroyTexture(texture);
   texture = t;
 
+#ifdef GREYSCALE
   buffer.Free();
   buffer.Allocate(new_size);
+#endif
 }
 
 #endif // USE_MEMORY_CANVAS
+
+#ifdef GREYSCALE
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+#endif
+
+static void
+CopyFromGreyscale(
+#ifdef DITHER
+                  Dither &dither,
+#endif
+                  SDL_Texture *dest,
+                  ConstImageBuffer<GreyscalePixelTraits> src)
+{
+  uint8_t *dest_pixels;
+  int pitch_as_int, dest_with, dest_height;
+  SDL_QueryTexture(dest, nullptr, nullptr, &dest_with, &dest_height);
+  if (SDL_LockTexture(dest, nullptr,
+                      reinterpret_cast<void**>(&dest_pixels),
+                      &pitch_as_int) != 0)
+    return;
+
+  int bytes_per_pixel = pitch_as_int / dest_with;
+
+  assert(bytes_per_pixel == 4 || bytes_per_pixel == 2);
+
+  const uint8_t *src_pixels = reinterpret_cast<const uint8_t *>(src.data);
+
+  const unsigned dest_pitch = (unsigned) pitch_as_int;
+
+#ifdef DITHER
+
+  dither.DitherGreyscale(src_pixels, src.pitch,
+                         dest_pixels,
+                         dest_pitch / bytes_per_pixel,
+                         src.size.width, src.size.height);
+  if (bytes_per_pixel == 4) {
+    const unsigned n_pixels = (dest_pitch / bytes_per_pixel)
+      * src.size.height;
+    int32_t *d = (int32_t *)dest_pixels + n_pixels;
+    const int8_t *end = (int8_t *)dest_pixels;
+    const int8_t *s = end + n_pixels;
+
+    while (s != end)
+      *--d = *--s;
+  }
+
+#else
+
+  const unsigned src_pitch = src.pitch;
+
+  if (bytes_per_pixel == 2) {
+    for (unsigned row = src.size.height; row > 0;
+         --row, src_pixels += src_pitch, dest_pixels += dest_pitch)
+      CopyGreyscaleToRGB565((RGB565Color *)dest_pixels,
+                            (const Luminosity8 *)src_pixels, src.size.width);
+  } else {
+    for (unsigned row = src.size.height; row > 0;
+         --row, src_pixels += src_pitch, dest_pixels += dest_pitch)
+      CopyGreyscaleToRGB8((uint32_t *)dest_pixels,
+                           (const Luminosity8 *)src_pixels, src.size.width);
+  }
+
+#endif
+
+  ::SDL_UnlockTexture(dest);
+}
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
+#endif
 
 #ifndef ENABLE_OPENGL
 
 Canvas
 TopCanvas::Lock()
 {
-#ifdef USE_MEMORY_CANVAS
-  return Canvas(buffer);
-#else
-  return Canvas();
+#ifndef GREYSCALE
+  WritableImageBuffer<ActivePixelTraits> buffer;
+  void* pixels;
+  int pitch, width, height;
+  SDL_QueryTexture(texture, nullptr, nullptr, &width, &height);
+  if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) != 0)
+    return Canvas();
+  buffer.data = (ActivePixelTraits::pointer)pixels;
+  buffer.pitch = (unsigned) pitch;
+  buffer.size = PixelSize(width, height);
 #endif
+
+  return Canvas(buffer);
 }
 
 void
 TopCanvas::Unlock() noexcept
 {
+#ifndef GREYSCALE
+  SDL_UnlockTexture(texture);
+#endif
 }
 
 #endif
@@ -192,54 +279,20 @@ TopCanvas::Flip()
 #ifdef ENABLE_OPENGL
   ::SDL_GL_SwapWindow(window);
 #else
-  void* pixels;
-  int pitch;
-  if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) == 0) {
-    Uint32 format;
-    int w, h;
-    SDL_QueryTexture(texture, &format, nullptr, &w, &h);
-    unsigned bpp = SDL_BYTESPERPIXEL(format);
 
 #ifdef GREYSCALE
-    CopyFromGreyscale(
+  CopyFromGreyscale(
 #ifdef DITHER
-                      dither,
+                    dither,
 #endif
-                      pixels, pitch, bpp, buffer, orientation);
-#else
-    CopyFromBGRA(pixels, pitch, bpp, buffer, orientation);
+                    texture, buffer);
 #endif
-
-    SDL_UnlockTexture(texture);
-  }
 
   ::SDL_RenderCopy(renderer, texture, nullptr, nullptr);
   ::SDL_RenderPresent(renderer);
+
 #endif
 }
-
-#ifdef SOFTWARE_ROTATE_DISPLAY
-PixelSize
-TopCanvas::SetDisplayOrientation(DisplayOrientation _orientation) noexcept
-{
-  if (orientation == _orientation)
-    return GetSize();
-
-  const bool was_swapped = AreAxesSwapped(orientation);
-  const bool now_swapped = AreAxesSwapped(_orientation);
-
-  orientation = _orientation;
-  OpenGL::display_orientation = orientation;
-
-  if (was_swapped != now_swapped) {
-    PixelSize size = buffer.size;
-    buffer.Free();
-    buffer.Allocate(size.Swapped());
-  }
-
-  return GetSize();
-}
-#endif
 
 #if defined(__APPLE__) && TARGET_OS_IPHONE
 

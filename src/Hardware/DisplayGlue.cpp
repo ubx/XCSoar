@@ -34,6 +34,7 @@ Display::LoadOrientation(VerboseOperationEnvironment &env)
     return;
 #endif
 
+#ifndef COLIBRI
   if (!Display::Rotate(orientation)) {
     LogString("Display rotation failed");
     return;
@@ -44,6 +45,7 @@ Display::LoadOrientation(VerboseOperationEnvironment &env)
 #endif
 
   LogString("Display rotated");
+#endif
 
   CommonInterface::main_window->Initialise();
 
@@ -74,7 +76,11 @@ Display::RestoreOrientation()
 DisplayOrientation
 Display::DetectInitialOrientation()
 {
+#if defined(COLIBRI)
+  auto orientation = DisplayOrientation::PORTRAIT;
+#else
   auto orientation = DisplayOrientation::DEFAULT;
+#endif
 
 #ifdef MESA_KMS
   // When running in DRM/KMS mode, infer the display orientation from the linux

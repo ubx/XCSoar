@@ -40,9 +40,12 @@ ScreenGlobalInit::ScreenGlobalInit()
 
   UI::event_queue = &event_queue;
 
-#if defined(KOBO) || defined(COLIBRI)
+#if defined(KOBO)
   Display::Rotate(DisplayOrientation::DEFAULT);
   UI::event_queue->SetDisplayOrientation(DisplayOrientation::DEFAULT);
+#elif defined(COLIBRI)
+  //Display::Rotate(DisplayOrientation::PORTRAIT);
+  //UI::event_queue->SetDisplayOrientation(DisplayOrientation::PORTRAIT);
 #endif
 
 #ifdef USE_WINUSER

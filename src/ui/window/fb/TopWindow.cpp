@@ -18,8 +18,10 @@ TopWindow::CheckResize() noexcept
 {
   assert(screen != nullptr);
 
+#ifndef COLIBRI
   if (screen->CheckResize())
     Resize(screen->GetSize());
+#endif
 }
 
 #endif

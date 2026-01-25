@@ -12,25 +12,7 @@
 
 #include <cassert>
 
-#ifdef SOFTWARE_ROTATE_DISPLAY
-#include "ui/event/shared/TransformCoordinates.hpp"
-#endif
-
 namespace UI {
-
-PixelPoint
-TopWindow::PointToReal(PixelPoint p) const noexcept
-{
-#ifdef SOFTWARE_ROTATE_DISPLAY
-  if (screen != nullptr)
-    p = TransformCoordinates(p, screen->GetNativeSize());
-#endif
-#ifdef HAVE_HIGHDPI_SUPPORT
-  p.x = int(static_cast<float>(p.x) * point_to_real_x);
-  p.y = int(static_cast<float>(p.y) * point_to_real_y);
-#endif
-  return p;
-}
 
 TopWindow::TopWindow(UI::Display &_display) noexcept
   :display(_display)

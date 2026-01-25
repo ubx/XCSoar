@@ -56,6 +56,10 @@ struct PixelSize {
   explicit operator UnsignedPoint2D() const noexcept {
     return { width, height };
   }
+
+  constexpr PixelSize Swapped() const noexcept {
+    return {height, width};
+  }
 };
 
 constexpr PixelPoint

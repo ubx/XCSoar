@@ -16,7 +16,7 @@ InputEventQueue::InputEventQueue(EventQueue &queue) noexcept
    libinput_handler(queue)
 #endif
 {
-#if defined(KOBO)
+#ifdef KOBO
   /* power button */
   keyboard.Open("/dev/input/event0");
 

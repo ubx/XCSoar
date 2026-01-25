@@ -8,8 +8,10 @@
 #include "Dither.hpp"
 #endif
 
-#include <algorithm>
 #include <cassert>
+
+#ifdef COLIBRI
+#include <algorithm>
 
 template<typename D, typename S, typename C>
 static void
@@ -75,6 +77,7 @@ RotateCopy(T *dest, unsigned dest_pitch,
                     src_width, src_height, orientation,
                     [](T x) { return x; });
 }
+#endif
 
 #ifdef GREYSCALE
 
@@ -101,9 +104,10 @@ CopyFromGreyscale(
                   bool enable_dither,
 #endif
                   void *dest_pixels, unsigned dest_pitch, [[maybe_unused]] unsigned dest_bpp,
-                  ConstImageBuffer<GreyscalePixelTraits> src,
-                  DisplayOrientation orientation)
-{
+                  ConstImageBuffer<GreyscalePixelTraits> src
+#ifdef COLIBRI
+                  ,DisplayOrientation orientation)
+
   if (orientation != DisplayOrientation::DEFAULT &&
       orientation != DisplayOrientation::LANDSCAPE) {
     /* software rotate */
@@ -120,7 +124,10 @@ CopyFromGreyscale(
     }
     return;
   }
-
+#else
+)
+#endif
+{
   const uint8_t *src_pixels = reinterpret_cast<const uint8_t *>(src.data);
 
 #ifdef KOBO
@@ -175,8 +182,12 @@ CopyFromGreyscale(
 
 void
 CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
-             ConstImageBuffer<BGRAPixelTraits> src,
-             DisplayOrientation orientation)
+             ConstImageBuffer<BGRAPixelTraits> src
+#ifdef COLIBRI
+             ,DisplayOrientation orientation)
+#else
+)
+#endif
 {
   assert(dest_bpp == 4 || dest_bpp == 2);
 
@@ -189,6 +200,7 @@ CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
     RGB565Color *dest_pixels = reinterpret_cast<RGB565Color *>(_dest_pixels);
     const BGRA8Color *src_pixels = src.data;
 
+#ifdef COLIBRI
     if (orientation == DisplayOrientation::DEFAULT ||
         orientation == DisplayOrientation::LANDSCAPE) {
       for (unsigned row = src.size.height; row > 0;
@@ -196,19 +208,34 @@ CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
         BGRAToRGB565((RGB565Color *)dest_pixels,
                      (const BGRA8Color *)src_pixels,
                      src.size.width);
-    } else {
-      /* software rotate AND convert to RGB565 */
-      RotateConvertCopy(dest_pixels, dest_pitch, src_pixels, src_pitch,
-                        src.size.width, src.size.height, orientation,
-                        [](const BGRA8Color &c) { return ToRGB565(c); });
-    }
+        } else {
+          /* software rotate AND convert to RGB565 */
+          RotateConvertCopy(dest_pixels, dest_pitch, src_pixels, src_pitch,
+                            src.size.width, src.size.height, orientation,
+                            [](const BGRA8Color &c) { return ToRGB565(c); });
+        }
+  } else {
+    uint32_t *dest_pixels = reinterpret_cast<uint32_t *>(_dest_pixels);
+    const uint32_t *src_pixels = reinterpret_cast<const uint32_t *>(src.data);
+    RotateCopy(dest_pixels, dest_pitch, src_pixels, src_pitch,
+               src.size.width, src.size.height, orientation);
+  }
+#else
+
+    for (unsigned row = src.size.height; row > 0;
+        --row, src_pixels += src_pitch, dest_pixels += dest_pitch)
+      BGRAToRGB565((RGB565Color *)dest_pixels,
+                   (const BGRA8Color *)src_pixels,
+                   src.size.width);
   } else {
     uint32_t *dest_pixels = reinterpret_cast<uint32_t *>(_dest_pixels);
     const uint32_t *src_pixels = reinterpret_cast<const uint32_t *>(src.data);
 
-    RotateCopy(dest_pixels, dest_pitch, src_pixels, src_pitch,
-               src.size.width, src.size.height, orientation);
+    for (unsigned row = src.size.height; row > 0;
+         --row, src_pixels += src_pitch, dest_pixels += dest_pitch)
+      std::copy_n(src_pixels, src.size.width, dest_pixels);
   }
+#endif
 }
 
 #endif
