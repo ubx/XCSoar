@@ -25,7 +25,7 @@ class InputEventQueue final {
 #if defined(KOBO) || defined(COLIBRI)
   MergeMouse merge_mouse;
   LinuxInputDevice keyboard;
-  LinuxInputDevice mouse;
+  LinuxInputDevice mouse, mouse2;
 #else
   LibInputHandler libinput_handler;
 #endif /* !USE_LIBINPUT */

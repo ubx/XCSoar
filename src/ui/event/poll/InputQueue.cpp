@@ -11,7 +11,8 @@ InputEventQueue::InputEventQueue(EventQueue &queue) noexcept
   :
 #if defined(KOBO) || defined(COLIBRI)
    keyboard(queue, merge_mouse),
-   mouse(queue, merge_mouse)
+   mouse(queue, merge_mouse),
+   mouse2(queue, merge_mouse)
 #else
    libinput_handler(queue)
 #endif
@@ -27,6 +28,8 @@ InputEventQueue::InputEventQueue(EventQueue &queue) noexcept
   keyboard.Open("/dev/input/event5");
   /* Colibri touch screen */
   mouse.Open("/dev/input/event6");
+  /* external mouse */
+  mouse2.Open("/dev/input/event8");
 #else
   libinput_handler.Open();
 #endif
