@@ -72,8 +72,8 @@ Setup(CurlEasy &easy)
 	}
 #endif
 
-#ifdef KOBO
-	/* no TLS certificate validation because Kobos usually don't
+#if defined(KOBO) || defined(COLIBRI)
+	/* no TLS certificate validation because Kobos and Colibri usually don't
 	   have the correct date/time in the real-time clock, which
 	   causes the certificate validation to fail */
 	easy.SetVerifyPeer(false);
