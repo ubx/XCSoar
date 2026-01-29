@@ -47,7 +47,7 @@ UnorderedTask::CheckTransitions(const AircraftState &state_now,
   if (!stats.task_valid || !state_now.flying)
     return false;
 
-  if (!stats.start.HasStarted()) {
+  if (!stats.start.HasStarted() && state_now.HasTime()) {
     stats.start.SetStarted(state_now);
     return true;
   }

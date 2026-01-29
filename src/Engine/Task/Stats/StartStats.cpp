@@ -12,6 +12,4 @@ StartStats::SetStarted(const AircraftState &aircraft) noexcept
   time = aircraft.time;
   altitude = aircraft.altitude;
   ground_speed = aircraft.ground_speed;
-
-  assert(HasStarted());
 }
