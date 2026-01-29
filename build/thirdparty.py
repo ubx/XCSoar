@@ -91,9 +91,9 @@ elif '-kobo-linux-' in host_triplet:
     thirdparty_libs = [
         binutils,
         linux_headers,
-        gcc_bootstrap,
+        gcc_bootstrap_kobo,
         musl,
-        gcc,
+        gcc_kobo,
         zlib,
         libfmt,
         libsodium,
@@ -112,9 +112,9 @@ elif '-colibri-linux-' in host_triplet:
     thirdparty_libs = [
         binutils,
         linux_headers,
-        gcc_bootstrap,
+        gcc_bootstrap_colibri,
         musl,
-        gcc,
+        gcc_colibri,
         zlib,
         libfmt,
         libsodium,

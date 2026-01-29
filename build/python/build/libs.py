@@ -36,54 +36,74 @@ linux_headers = SabotageLinuxHeadersProject(
     "include/linux/input.h",
 )
 
-gcc = GccProject(
-    (
-        "https://ftpmirror.gnu.org/gcc/gcc-13.2.0/gcc-13.2.0.tar.xz",
-        "https://sourceware.org/ftp/gcc/releases/gcc-13.2.0/gcc-13.2.0.tar.xz",
-    ),
-    "e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da",
-    "lib/libstdc++.a",
-    [
-        # GCC fails to build if we disable the shared libstdc++
-        #'--disable-shared', '--enable-static',
-        "--with-gcc",
-        "--with-gnu-ld",
-        "--with-gnu-as",
-        "--disable-nls",
-        "--disable-lto",
-        "--enable-clocale=generic",
-        "--enable-languages=c,c++",
-        "--disable-bootstrap",
-        "--disable-multilib",
-        "--without-newlib",
-        "--disable-wchar_t",
-        "--disable-symvers",
-        "--disable-decimal-float",
-        "--disable-libatomic",
-        "--disable-libgomp",
-        "--disable-libmpx",
-        "--disable-libquadmath",
-        "--disable-libssp",
-        "--disable-libvtv",
-        "--disable-libsanitizer",
-        "--disable-libstdcxx-verbose",
-        "--disable-libstdcxx-dual-abi",
-        "--disable-libstdcxx-backtrace",
-        "--disable-libstdcxx-filesystem-ts",
+# -------------------------------------------------
+# Common flag groups
+# -------------------------------------------------
+GCC_COMMON_ARGS = [
+    "--with-gcc",
+    "--with-gnu-ld",
+    "--with-gnu-as",
+    "--disable-nls",
+    "--disable-lto",
+    "--enable-clocale=generic",
+    "--enable-languages=c,c++",
+    "--disable-bootstrap",
+    "--disable-multilib",
+    "--without-newlib",
+    "--disable-wchar_t",
+    "--disable-symvers",
+    "--disable-decimal-float",
+    "--disable-libatomic",
+    "--disable-libgomp",
+    "--disable-libmpx",
+    "--disable-libquadmath",
+    "--disable-libssp",
+    "--disable-libvtv",
+    "--disable-libsanitizer",
+    "--disable-libstdcxx-verbose",
+    "--disable-libstdcxx-dual-abi",
+    "--disable-libstdcxx-backtrace",
+    "--disable-libstdcxx-filesystem-ts",
+]
+GCC_URLS = [
+    "https://ftpmirror.gnu.org/gcc/gcc-13.2.0/gcc-13.2.0.tar.xz",
+    "https://sourceware.org/ftp/gcc/releases/gcc-13.2.0/gcc-13.2.0.tar.xz",
+]
+GCC_HASH = "e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da"
+GCC_ARTIFACT = "lib/libstdc++.a"
 
-        # TODO: don't hard-code COLIBRI settings
-        '--with-arch=armv7-a+vfpv3',
-        '--with-fpu=vfp',
-        '--with-fpu=vfpv3-d16',
-        '--with-float=hard',
+# the GCC project
+gcc_kobo = GccProject(
+    GCC_URLS, GCC_HASH, GCC_ARTIFACT,
+    GCC_COMMON_ARGS + [
+        "--with-arch=armv7-a+vfpv3",
+        "--with-fpu=neon",
+        "--with-float=hard",
     ],
 )
 
-gcc_bootstrap = GccBootstrapProject(
-    gcc.url,
-    gcc.md5,
+gcc_colibri = GccProject(
+    GCC_URLS, GCC_HASH, GCC_ARTIFACT,
+    GCC_COMMON_ARGS + [
+        "--with-arch=armv7-a+vfpv3",
+        "--with-fpu=vfpv3-d16",
+        "--with-float=hard",
+    ],
+)
+
+gcc_bootstrap_kobo = GccBootstrapProject(
+    gcc_kobo.url,
+    gcc_kobo.md5,
+    '../bin/armv7a-kobo-linux-musleabihf-g++',
+    gcc_kobo.configure_args,
+    install_target="install-gcc",
+)
+
+gcc_bootstrap_colibri = GccBootstrapProject(
+    gcc_colibri.url,
+    gcc_colibri.md5,
     '../bin/armv7a-colibri-linux-musleabihf-g++',
-    gcc.configure_args,
+    gcc_colibri.configure_args,
     install_target="install-gcc",
 )
 
