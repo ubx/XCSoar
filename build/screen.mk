@@ -192,6 +192,7 @@ SCREEN_SOURCES += \
 	$(CANVAS_SRC_DIR)/custom/Files.cpp \
 	$(CANVAS_SRC_DIR)/custom/Bitmap.cpp \
 	$(CANVAS_SRC_DIR)/custom/ResourceBitmap.cpp \
+	$(CANVAS_SRC_DIR)/memory/Export.cpp \
 	$(WINDOW_SRC_DIR)/poll/TopWindow.cpp \
 	$(WINDOW_SRC_DIR)/fb/TopWindow.cpp \
 	$(CANVAS_SRC_DIR)/fb/TopCanvas.cpp \
@@ -239,9 +240,7 @@ SCREEN_SOURCES += \
 	$(CANVAS_SRC_DIR)/memory/RawBitmap.cpp \
 	$(CANVAS_SRC_DIR)/memory/VirtualCanvas.cpp \
 	$(CANVAS_SRC_DIR)/memory/SubCanvas.cpp \
-	$(CANVAS_SRC_DIR)/memory/Canvas.cpp \
-	$(CANVAS_SRC_DIR)/memory/Export.cpp \
-	$(CANVAS_SRC_DIR)/DisplayOrientation.cpp
+	$(CANVAS_SRC_DIR)/memory/Canvas.cpp
 MEMORY_CANVAS_CPPFLAGS = -DUSE_MEMORY_CANVAS
 endif
 

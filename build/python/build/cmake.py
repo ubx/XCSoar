@@ -63,10 +63,22 @@ set(CMAKE_FIND_ROOT_PATH "{toolchain.install_prefix};{sysroot}")
     else:
         # For cross-compilation, restrict cmake to only search in
         # the sysroot to avoid picking up host libraries and headers
-        f.write(f"""
-set(CMAKE_FIND_ROOT_PATH "{toolchain.install_prefix}")
-set(CMAKE_SYSROOT "{toolchain.install_prefix}")
-""")
+        find_root_path = [toolchain.install_prefix]
+        sysroot = toolchain.install_prefix
+
+        if toolchain.is_android:
+            # Try to find the NDK sysroot from the compiler path
+            cc_path = toolchain.cc.split()[-1]
+            ndk_sysroot = os.path.abspath(os.path.join(os.path.dirname(cc_path), "..", "sysroot"))
+            if os.path.isdir(ndk_sysroot):
+                find_root_path.append(ndk_sysroot)
+                sysroot = ndk_sysroot
+            else:
+                sysroot = None
+
+        f.write(f'set(CMAKE_FIND_ROOT_PATH "{";".join(find_root_path)}")\n')
+        if sysroot:
+            f.write(f'set(CMAKE_SYSROOT "{sysroot}")\n')
 
     f.write("""
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
