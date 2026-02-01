@@ -7,6 +7,6 @@
 
 #define HAVE_ALPHA_BLEND
 
-#if defined(USE_FB) && !defined(KOBO)
+#if defined(USE_FB) && !defined(KOBO) && !defined(COLIBRI)
 #define DRAW_MOUSE_CURSOR
 #endif
