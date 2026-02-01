@@ -5,31 +5,50 @@
 #include "../shared/Event.hpp"
 #include "DisplayOrientation.hpp"
 
+#if defined(KOBO) || defined(COLIBRI)
+#include <cstdio>
+#endif
+
 namespace UI {
 
 InputEventQueue::InputEventQueue(EventQueue &queue) noexcept
   :
 #if defined(KOBO) || defined(COLIBRI)
-   keyboard(queue, merge_mouse),
-   mouse(queue, merge_mouse),
-   mouse2(queue, merge_mouse)
+   merge_mouse()
 #else
    libinput_handler(queue)
 #endif
 {
 #ifdef KOBO
+  devices.emplace_front(queue, merge_mouse);
   /* power button */
-  keyboard.Open("/dev/input/event0");
+  devices.front().Open("/dev/input/event0");
 
+  devices.emplace_front(queue, merge_mouse);
   /* Kobo touch screen */
-  mouse.Open("/dev/input/event1");
-#elif  defined(COLIBRI)
-  /* power button */
-  keyboard.Open("/dev/input/event5");
-  /* Colibri touch screen */
-  mouse.Open("/dev/input/event6");
-  /* external mouse */
-  mouse2.Open("/dev/input/event8");
+  devices.front().Open("/dev/input/event1");
+#elif defined(COLIBRI)
+  for (unsigned i = 0; i < 32; ++i) {
+    char path[64];
+    std::sprintf(path, "/dev/input/event%u", i);
+
+    devices.emplace_front(queue, merge_mouse);
+    if (!devices.front().Open(path))
+      devices.pop_front();
+  }
+
+  /* open keyboard devices from /dev/input/by-id/ */
+  static const char *const keyboard_devices[] = {
+    "/dev/input/by-id/usb-Logitech_USB_Keyboard-event-kbd",
+    "/dev/input/by-id/usb-Logitech_USB_Receiver-if01-event-kbd",
+    "/dev/input/by-id/usb-04d9_USB_Keyboard-event-kbd",
+  };
+
+  for (const char *path : keyboard_devices) {
+    devices.emplace_front(queue, merge_mouse);
+    if (!devices.front().Open(path))
+      devices.pop_front();
+  }
 #else
   libinput_handler.Open();
 #endif

@@ -6,6 +6,7 @@
 #if defined(KOBO) || defined(COLIBRI)
 #include "linux/MergeMouse.hpp"
 #include "linux/Input.hpp"
+#include <forward_list>
 #else
 #include "libinput/LibInputHandler.hpp"
 #endif
@@ -24,8 +25,7 @@ struct Event;
 class InputEventQueue final {
 #if defined(KOBO) || defined(COLIBRI)
   MergeMouse merge_mouse;
-  LinuxInputDevice keyboard;
-  LinuxInputDevice mouse, mouse2;
+  std::forward_list<LinuxInputDevice> devices;
 #else
   LibInputHandler libinput_handler;
 #endif /* !USE_LIBINPUT */

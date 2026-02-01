@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if defined(KOBO) || defined(USE_LIBINPUT) || defined(USE_WAYLAND)
+#if defined(KOBO) || defined(COLIBRI) || defined(USE_LIBINPUT) || defined(USE_WAYLAND)
 #include <linux/input.h>
 
 /* these macros conflict with Event::Type */
@@ -17,6 +17,8 @@
 /* these are defined in linux/input.h but we redefine them in our enum */
 #undef KEY_LEFT
 #undef KEY_RIGHT
+#undef KEY_HOME
+#undef KEY_END
 
 /* function keys and other keys from linux/input.h that we redefine */
 #undef KEY_F1
@@ -36,7 +38,7 @@
 #endif
 
 enum {
-#if defined(KOBO) || defined(USE_LIBINPUT) || defined(USE_WAYLAND)
+#if defined(KOBO) || defined(COLIBRI) || defined(USE_LIBINPUT) || defined(USE_WAYLAND)
   KEY_RETURN = KEY_ENTER,
   KEY_ESCAPE = KEY_ESC,
   KEY_PRIOR = KEY_PAGEUP,
@@ -63,6 +65,8 @@ enum {
   KEY_DOWN = 108,  /* Linux KEY_DOWN - conflicts with 'l' (108) */
   KEY_LEFT = 105,  /* Linux KEY_LEFT - conflicts with 'i' (105) */
   KEY_RIGHT = 106, /* Linux KEY_RIGHT - conflicts with 'j' (106) */
+  KEY_HOME = 102,  /* Linux KEY_HOME */
+  KEY_END = 107,   /* Linux KEY_END */
   /* KEY_APP1-6 need explicit values above 200 to avoid conflicts with
      ASCII and Linux key codes */
   KEY_APP1 = 201,
