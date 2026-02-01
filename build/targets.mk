@@ -250,6 +250,9 @@ ifeq ($(TARGET),COLIBRI)
   TARGET_IS_COLIBRI = y
   HOST_TRIPLET = armv7a-colibri-linux-musleabihf
   TCPREFIX ?= $(HOST_TRIPLET)-
+   ifeq ($(CLANG),n)
+      TARGET_ARCH += -mcpu=cortex-a9
+   endif
   TARGET_IS_LINUX = y
   TARGET_IS_ARM = y
   TARGET_IS_ARMHF = y
