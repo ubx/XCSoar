@@ -9,9 +9,7 @@
 #include "UIGlobals.hpp"
 #include "util/StaticString.hxx"
 #include "util/StringSplit.hxx"
-#include "util/StringCompare.hxx"
 #include "util/tstring.hpp"
-#include "io/DataFile.hpp"
 #include "io/FileReader.hxx"
 #include "io/Reader.hxx"
 #include "io/BufferedReader.hxx"
@@ -25,8 +23,6 @@
 #include <string>
 #include <vector>
 
-#define XCSCHKLIST  "xcsoar-checklist.txt"
-
 struct ChecklistPage {
   tstring title, text;
 
@@ -37,11 +33,16 @@ struct ChecklistPage {
 
 using Checklist = std::vector<ChecklistPage>;
 
+/** Maximum checklist pages; must not exceed PagerWidget's child limit (32). */
+static constexpr std::size_t MAX_CHECKLIST_PAGES = 32;
+
 static void
 UpdateCaption(WndForm &form, const Checklist &checklist, std::size_t page)
 {
-  StaticString<80> buffer{_("Checklist")};
+  if (page >= checklist.size())
+    return;
 
+  StaticString<80> buffer{_("Checklist")};
   const auto &p = checklist[page];
 
   if (!p.title.empty()) {
@@ -53,29 +54,15 @@ UpdateCaption(WndForm &form, const Checklist &checklist, std::size_t page)
 }
 
 static Checklist
-LoadChecklist() noexcept
+LoadChecklist(Path path) noexcept
 try {
   Checklist c;
 
-  std::unique_ptr<FileReader> file_reader;
-  
-  // Try configured checklist file first
-  const auto configured_path = Profile::GetPath(ProfileKeys::ChecklistFile);
-  if (configured_path != nullptr) {
-    try {
-      file_reader = std::make_unique<FileReader>(configured_path);
-    } catch (...) {
-      // If configured file fails, fall back to default
-      file_reader = nullptr;
-    }
-  }
-  
-  // Fall back to default checklist file if no configured file
-  if (file_reader == nullptr) {
-    file_reader = std::make_unique<FileReader>(LocalPath(_T(XCSCHKLIST)));
-  }
-  
-  BufferedReader reader{*file_reader};
+  if (path == nullptr || path.empty())
+    return c;
+
+  FileReader file_reader(path);
+  BufferedReader reader{file_reader};
   StringConverter string_converter{Charset::UTF8};
 
   ChecklistPage page;
@@ -84,24 +71,50 @@ try {
   while ((TempString = reader.ReadLine()) != nullptr) {
     const std::string_view line{TempString};
 
-    // Look for start
+    // Look for start of new page
     if (TempString[0] == '[') {
       if (!page.empty()) {
-        c.emplace_back(std::move(page));
+        if (c.size() < MAX_CHECKLIST_PAGES) {
+          c.emplace_back(std::move(page));
+        } else if (!c.empty()) {
+          c.back().text.append(page.title);
+          c.back().text.append(_T("\n"));
+          c.back().text.append(page.text);
+        }
         page = {};
       }
 
-      // extract name
-      page.title.assign(string_converter.Convert(Split(line.substr(1), ']').first));
+      if (c.size() < MAX_CHECKLIST_PAGES) {
+        page.title.assign(string_converter.Convert(Split(line.substr(1), ']').first));
+      } else if (!c.empty()) {
+        // Already at page limit; append this line to last page instead
+        c.back().text.append(string_converter.Convert(line));
+        c.back().text.push_back('\n');
+      }
     } else if (!line.empty() || !page.text.empty()) {
       // append text to details string
-      page.text.append(string_converter.Convert(line));
-      page.text.push_back('\n');
+      if (c.size() < MAX_CHECKLIST_PAGES) {
+        page.text.append(string_converter.Convert(line));
+        page.text.push_back('\n');
+      } else if (!c.empty()) {
+        c.back().text.append(string_converter.Convert(line));
+        c.back().text.push_back('\n');
+      }
     }
   }
 
-  if (!page.empty())
-    c.emplace_back(std::move(page));
+  if (!page.empty()) {
+    if (c.size() < MAX_CHECKLIST_PAGES) {
+      c.emplace_back(std::move(page));
+    } else if (!c.empty()) {
+      // At page limit; append final page content to last page
+      if (!page.title.empty()) {
+        c.back().text.append(page.title);
+        c.back().text.append(_T("\n"));
+      }
+      c.back().text.append(page.text);
+    }
+  }
 
   return c;
 } catch (...) {
@@ -113,12 +126,19 @@ dlgChecklistShowModal()
 {
   static std::size_t current_page = 0;
 
-  auto checklist = LoadChecklist();
+  auto path = Profile::GetPath(ProfileKeys::ChecklistFile);
+  if (path == nullptr || path.empty())
+    path = LocalPath(_T("xcsoar-checklist.txt"));
+  auto checklist = LoadChecklist(path);
   if (checklist.empty())
     checklist.emplace_back(ChecklistPage{
         _("No checklist loaded"),
-        _("Create xcsoar-checklist.txt"),
+        _("Create a checklist file (e.g. checklist.xcc) or select one in Site "
+          "Files > Checklist."),
       });
+
+  if (current_page >= checklist.size())
+    current_page = 0;
 
   const DialogLook &look = UIGlobals::GetDialogLook();
 
@@ -130,8 +150,7 @@ dlgChecklistShowModal()
   for (const auto &i : checklist)
     pager->Add(std::make_unique<LargeTextWidget>(look, i.text.c_str()));
 
-  if (current_page < checklist.size())
-    pager->SetCurrent(current_page);
+  pager->SetCurrent(current_page);
 
   pager->SetPageFlippedCallback([&checklist, &dialog, &pager=*pager](){
     UpdateCaption(dialog, checklist, pager.GetCurrentIndex());
