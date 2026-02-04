@@ -36,6 +36,7 @@
 #include "ui/event/Globals.hpp"
 #include "ui/event/Queue.hpp"
 #include "Dialogs/Message.hpp"
+#include "Dialogs/Tracking/CloudEnableDialog.hpp"
 #include "Profile/Profile.hpp"
 #include "MainWindow.hpp"
 #include "Startup.hpp"
@@ -47,6 +48,7 @@
 #include "java/Closeable.hxx"
 #include "util/Compiler.h"
 #include "org_xcsoar_NativeView.h"
+#include "Simulator.hpp"
 #include "io/async/GlobalAsioThread.hpp"
 #include "io/async/AsioThread.hpp"
 #include "net/http/Init.hpp"
@@ -187,6 +189,26 @@ try {
 }
 
 gcc_visibility_default
+void
+Java_org_xcsoar_NativeView_showCloudEnableDialog([[maybe_unused]] JNIEnv *env,
+                                                  [[maybe_unused]] jclass cls)
+{
+  CloudEnableDialog();
+}
+
+gcc_visibility_default
+jboolean
+Java_org_xcsoar_NativeView_isSimulatorNative([[maybe_unused]] JNIEnv *env,
+                                             [[maybe_unused]] jclass cls)
+{
+#ifdef SIMULATOR_AVAILABLE
+  return is_simulator() ? JNI_TRUE : JNI_FALSE;
+#else
+  return JNI_FALSE;
+#endif
+}
+
+gcc_visibility_default
 JNIEXPORT void JNICALL
 Java_org_xcsoar_NativeView_runNative(JNIEnv *env, jobject obj,
                                      jobject _context,
@@ -317,15 +339,23 @@ try {
 gcc_visibility_default
 JNIEXPORT void JNICALL
 Java_org_xcsoar_NativeView_resizedNative(JNIEnv *env, jobject obj,
-                                         jint width, jint height)
+                                         jint width, jint height,
+                                         jint inset_left, jint inset_top,
+                                         jint inset_right, jint inset_bottom)
 {
+  (void)inset_left;
+  (void)inset_top;
+  (void)inset_right;
+  (void)inset_bottom;
+
   const std::scoped_lock shutdown_lock{shutdown_mutex};
 
   if (event_queue == nullptr)
     return;
 
-  if (auto *main_window = NativeView::GetPointer(env, obj))
+  if (auto *main_window = NativeView::GetPointer(env, obj)) {
     main_window->AnnounceResize({width, height});
+  }
 
   event_queue->Purge(UI::Event::RESIZE);
 
