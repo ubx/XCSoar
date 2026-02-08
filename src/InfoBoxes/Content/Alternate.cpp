@@ -13,31 +13,26 @@
 #include "Engine/Waypoint/Waypoint.hpp"
 #include "Dialogs/Task/TaskDialogs.hpp"
 #include "Language/Language.hpp"
-#include "Widget/CallbackWidget.hpp"
 #include "BackendComponents.hpp"
 #include "DataComponents.hpp"
 
 #include <stdio.h>
-#include <tchar.h>
 
-static std::unique_ptr<Widget>
-LoadAlternatesPanel([[maybe_unused]] unsigned id) noexcept
+bool
+InfoBoxContentAlternateBase::HandleClick() noexcept
 {
-  return std::make_unique<CallbackWidget>([]{
-    dlgAlternatesListShowModal(data_components->waypoints.get());
-  });
-}
+  if (!backend_components ||
+      !data_components || !data_components->waypoints)
+    return false;
 
-static constexpr
-InfoBoxPanel alternate_infobox_panels[] = {
-  { N_("Alternates"), LoadAlternatesPanel },
-  { nullptr, nullptr }
-};
+  dlgAlternatesListShowModal(data_components->waypoints.get());
+  return true;
+}
 
 void
 InfoBoxContentAlternateName::Update(InfoBoxData &data) noexcept
 {
-  if (!backend_components->protected_task_manager) {
+  if (!backend_components || !backend_components->protected_task_manager) {
     data.SetInvalid();
     return;
   }
@@ -74,16 +69,10 @@ InfoBoxContentAlternateName::Update(InfoBoxData &data) noexcept
   data.SetValueColor(alternate->solution.IsFinalGlide() ? 2 : 0);
 }
 
-const InfoBoxPanel *
-InfoBoxContentAlternateName::GetDialogContent() noexcept
-{
-  return alternate_infobox_panels;
-}
-
 void
 InfoBoxContentAlternateGR::Update(InfoBoxData &data) noexcept
 {
-  if (!backend_components->protected_task_manager) {
+  if (!backend_components || !backend_components->protected_task_manager) {
     data.SetInvalid();
     return;
   }
@@ -101,7 +90,7 @@ InfoBoxContentAlternateGR::Update(InfoBoxData &data) noexcept
     alternate = NULL;
   }
 
-  data.FmtTitle(_T("Altn {} GR"), index + 1);
+  data.FmtTitle(_("Altn {} GR"), index + 1);
 
   if (alternate == NULL) {
     data.SetInvalid();
@@ -115,7 +104,7 @@ InfoBoxContentAlternateGR::Update(InfoBoxData &data) noexcept
 
   if (gradient < 0) {
     data.SetValueColor(0);
-    data.SetValue(_T("+++"));
+    data.SetValue("+++");
     return;
   }
   if (::GradientValid(gradient)) {
@@ -128,16 +117,10 @@ InfoBoxContentAlternateGR::Update(InfoBoxData &data) noexcept
   data.SetValueColor(alternate->solution.IsFinalGlide() ? 2 : 0);
 }
 
-const InfoBoxPanel *
-InfoBoxContentAlternateGR::GetDialogContent() noexcept
-{
-  return alternate_infobox_panels;
-}
-
 void
 InfoBoxContentAlternateAltDiff::Update(InfoBoxData &data) noexcept
 {
-  if (!backend_components->protected_task_manager) {
+  if (!backend_components || !backend_components->protected_task_manager) {
     data.SetInvalid();
     return;
   }
@@ -155,7 +138,7 @@ InfoBoxContentAlternateAltDiff::Update(InfoBoxData &data) noexcept
     alternate = NULL;
   }
 
-  data.FmtTitle(_T("Altn {} AltD"), index + 1);
+  data.FmtTitle(_("Altn {} AltD"), index + 1);
 
   if (alternate == NULL) {
     data.SetInvalid();
@@ -170,8 +153,3 @@ InfoBoxContentAlternateAltDiff::Update(InfoBoxData &data) noexcept
   data.SetValueFromArrival(altitude_difference);
 }
 
-const InfoBoxPanel *
-InfoBoxContentAlternateAltDiff::GetDialogContent() noexcept
-{
-  return alternate_infobox_panels;
-}

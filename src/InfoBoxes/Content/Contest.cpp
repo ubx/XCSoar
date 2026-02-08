@@ -2,47 +2,17 @@
 // Copyright The XCSoar Project
 
 #include "Contest.hpp"
+#include "ShowAnalysis.hpp"
 #include "InfoBoxes/Data.hpp"
-#include "InfoBoxes/Panel/Panel.hpp"
 #include "Interface.hpp"
 #include "Components.hpp"
-#include "UIGlobals.hpp"
-#include "Dialogs/dlgAnalysis.hpp"
 #include "Language/Language.hpp"
-#include "Widget/CallbackWidget.hpp"
 #include "BackendComponents.hpp"
-#include "DataComponents.hpp"
 
-#include <tchar.h>
-
-static void
-ShowAnalysis8() noexcept
+bool
+InfoBoxContentContest::HandleClick() noexcept
 {
-  dlgAnalysisShowModal(UIGlobals::GetMainWindow(),
-                       UIGlobals::GetLook(),
-                       CommonInterface::Full(),
-                       *backend_components->glide_computer,
-                       data_components->airspaces.get(),
-                       data_components->terrain.get(),
-                       AnalysisPage::CONTEST);
-}
-
-static std::unique_ptr<Widget>
-LoadAnalysis8Panel([[maybe_unused]] unsigned id) noexcept
-{
-  return std::make_unique<CallbackWidget>(ShowAnalysis8);
-}
-
-static constexpr
-InfoBoxPanel analysis8_infobox_panels[] = {
-  { N_("Analysis"), LoadAnalysis8Panel },
-  { nullptr, nullptr }
-};
-
-const InfoBoxPanel *
-InfoBoxContentContest::GetDialogContent() noexcept
-{
-  return analysis8_infobox_panels;
+  return ShowAnalysis(AnalysisPage::CONTEST);
 }
 
 void
@@ -52,7 +22,7 @@ InfoBoxContentContest::Update(InfoBoxData &data) noexcept
     CommonInterface::GetComputerSettings();
 
    if (!settings_computer.contest.enable ||
-       !backend_components->protected_task_manager) {
+       !backend_components || !backend_components->protected_task_manager) {
     data.SetInvalid();
     return;
   }
@@ -71,13 +41,13 @@ InfoBoxContentContest::Update(InfoBoxData &data) noexcept
   // Set Value
   data.SetValueFromDistance(result_contest.distance);
 
-  data.FmtComment(_T("{:.1f} pts"), result_contest.score);
+  data.FmtComment("{:.1f} pts", result_contest.score);
 }
 
-const InfoBoxPanel *
-InfoBoxContentContestSpeed::GetDialogContent() noexcept
+bool
+InfoBoxContentContestSpeed::HandleClick() noexcept
 {
-  return analysis8_infobox_panels;
+  return ShowAnalysis(AnalysisPage::CONTEST);
 }
 
 void
@@ -87,7 +57,7 @@ InfoBoxContentContestSpeed::Update(InfoBoxData &data) noexcept
     CommonInterface::GetComputerSettings();
 
   if (!settings_computer.contest.enable ||
-      !backend_components->protected_task_manager) {
+      !backend_components || !backend_components->protected_task_manager) {
     data.SetInvalid();
     return;
   }
@@ -106,5 +76,5 @@ InfoBoxContentContestSpeed::Update(InfoBoxData &data) noexcept
   // Set Value
   data.SetValueFromTaskSpeed(result_contest.GetSpeed());
 
-  data.FmtComment(_T("{:.1f} pts"), result_contest.score);
+  data.FmtComment("{:.1f} pts", result_contest.score);
 }

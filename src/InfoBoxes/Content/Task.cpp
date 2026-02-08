@@ -21,36 +21,39 @@
 #include "BackendComponents.hpp"
 #include "DataComponents.hpp"
 
-#include <tchar.h>
-
-static void
-ShowNextWaypointDetails() noexcept
+/**
+ * Return the active waypoint, or nullptr if unavailable.
+ */
+[[gnu::pure]]
+static WaypointPtr
+GetActiveWaypoint() noexcept
 {
-  if (!backend_components->protected_task_manager)
-    return;
+  return (backend_components && backend_components->protected_task_manager)
+    ? backend_components->protected_task_manager->GetActiveWaypoint()
+    : nullptr;
+}
 
-  auto wp = backend_components->protected_task_manager->GetActiveWaypoint();
-  if (wp == nullptr)
-    return;
+/**
+ * Open waypoint details for the active task waypoint.
+ *
+ * @return true if the dialog was shown, false if no active
+ * waypoint or required data components are unavailable
+ */
+bool
+NextWaypointClick() noexcept
+{
+  auto wp = GetActiveWaypoint();
+  if (!wp)
+    return false;
+
+  if (!data_components || !data_components->waypoints)
+    return false;
 
   dlgWaypointDetailsShowModal(data_components->waypoints.get(),
                               std::move(wp), false);
-}
 
-static std::unique_ptr<Widget>
-LoadNextWaypointDetailsPanel([[maybe_unused]] unsigned id) noexcept
-{
-  return std::make_unique<CallbackWidget>(ShowNextWaypointDetails);
+  return true;
 }
-
-#ifdef __clang__
-/* gcc gives "redeclaration differs in 'constexpr'" */
-constexpr
-#endif
-const InfoBoxPanel next_waypoint_infobox_panels[] = {
-  { N_("Details"), LoadNextWaypointDetailsPanel },
-  { nullptr, nullptr }
-};
 
 void
 UpdateInfoBoxBearing(InfoBoxData &data) noexcept
@@ -108,9 +111,7 @@ InfoBoxContentNextWaypoint::Update(InfoBoxData &data) noexcept
 {
   // use proper non-terminal next task stats
 
-  const auto way_point = backend_components->protected_task_manager
-    ? backend_components->protected_task_manager->GetActiveWaypoint()
-    : nullptr;
+  const auto way_point = GetActiveWaypoint();
 
   if (!way_point) {
     data.SetTitle(_("Next"));
@@ -123,7 +124,7 @@ InfoBoxContentNextWaypoint::Update(InfoBoxData &data) noexcept
   // Set Comment
   if (way_point->radio_frequency.IsDefined()) {
     const unsigned freq = way_point->radio_frequency.GetKiloHertz();
-    data.FmtComment(_T("{}.{:03} {}"),
+    data.FmtComment("{}.{:03} {}",
                     freq / 1000, freq % 1000, way_point->comment);
   }
   else
@@ -148,18 +149,11 @@ InfoBoxContentNextWaypoint::Update(InfoBoxData &data) noexcept
   data.SetValueColor(solution_remaining.IsFinalGlide() ? 2 : 0);
 }
 
-const InfoBoxPanel *
-InfoBoxContentNextWaypoint::GetDialogContent() noexcept
-{
-  return next_waypoint_infobox_panels;
-}
 
 void
 UpdateInfoBoxNextDistance(InfoBoxData &data) noexcept
 {
-  const auto way_point = backend_components->protected_task_manager
-    ? backend_components->protected_task_manager->GetActiveWaypoint()
-    : nullptr;
+  const auto way_point = GetActiveWaypoint();
 
   // Set title
   if (!way_point)
@@ -191,9 +185,7 @@ UpdateInfoBoxNextDistance(InfoBoxData &data) noexcept
 void
 UpdateInfoBoxNextDistanceNominal(InfoBoxData &data) noexcept
 {
-  const auto way_point = backend_components->protected_task_manager
-    ? backend_components->protected_task_manager->GetActiveWaypoint()
-    : nullptr;
+  const auto way_point = GetActiveWaypoint();
 
   if (!way_point) {
     data.SetInvalid();
@@ -255,10 +247,10 @@ UpdateInfoBoxNextETA(InfoBoxData &data) noexcept
     std::chrono::duration_cast<std::chrono::seconds>(task_stats.current_leg.solution_remaining.time_elapsed);
 
   // Set Value
-  data.FmtValue(_T("{:02}:{:02}"), t.hour, t.minute);
+  data.FmtValue("{:02}:{:02}", t.hour, t.minute);
 
   // Set Comment
-  data.FmtComment(_T("{:02}"), t.second);
+  data.FmtComment("{:02}", t.second);
 }
 
 static void
@@ -343,7 +335,7 @@ UpdateInfoBoxNextGR(InfoBoxData &data) noexcept
   auto gradient = CommonInterface::Calculated().task_stats.current_leg.gradient;
 
   if (gradient <= 0) {
-    data.SetValue(_T("+++"));
+    data.SetValue("+++");
     return;
   }
   if (::GradientValid(gradient)) {
@@ -403,10 +395,10 @@ UpdateInfoBoxFinalETA(InfoBoxData &data) noexcept
     std::chrono::duration_cast<std::chrono::seconds>(task_stats.total.solution_remaining.time_elapsed);
 
   // Set Value
-  data.FmtValue(_T("{:02}:{:02}"), t.hour, t.minute);
+  data.FmtValue("{:02}:{:02}", t.hour, t.minute);
 
   // Set Comment
-  data.FmtComment(_T("{:02}"), t.second);
+  data.FmtComment("{:02}", t.second);
 }
 
 void
@@ -536,7 +528,7 @@ UpdateInfoBoxFinalGR(InfoBoxData &data) noexcept
   auto gradient = task_stats.total.gradient;
 
   if (gradient <= 0) {
-    data.SetValue(_T("+++"));
+    data.SetValue("+++");
     return;
   }
   if (::GradientValid(gradient))
@@ -638,7 +630,7 @@ UpdateInfoBoxTaskAADistanceMax(InfoBoxData &data) noexcept
 
   if (map_settings.show_95_percent_rule_helpers) {
     auto distance = FormatUserDistanceSmart(0.95*task_stats.distance_max_total);
-    auto comment = std::basic_string<TCHAR>( _T("95% ") ) + distance.data();
+    auto comment = std::string("95% ") + distance.data();
     data.SetComment(comment.data());
   }
   else {
@@ -713,13 +705,17 @@ UpdateInfoBoxTaskAASpeedMin(InfoBoxData &data) noexcept
 void
 UpdateInfoBoxTaskTimeUnderMaxHeight(InfoBoxData &data) noexcept
 {
+  if (!backend_components || !backend_components->protected_task_manager) {
+    data.SetInvalid();
+    return;
+  }
+
   const auto &calculated = CommonInterface::Calculated();
   const auto &task_stats = calculated.ordered_task_stats;
   const auto &common_stats = calculated.common_stats;
   const double maxheight = backend_components->protected_task_manager->GetOrderedTaskSettings().start_constraints.max_height;
 
   if (!task_stats.task_valid || maxheight <= 0
-      || !backend_components->protected_task_manager
       || !common_stats.TimeUnderStartMaxHeight.IsDefined()) {
     data.SetInvalid();
     return;
@@ -779,8 +775,8 @@ UpdateInfoBoxNextETAVMG(InfoBoxData &data) noexcept
   if (now_local.IsPlausible()) {
     const std::chrono::seconds dd{long(d/v)};
     const BrokenTime t = now_local + dd;
-    data.FmtValue(_T("{:02}:{:02}"), t.hour, t.minute);
-    data.FmtComment(_T("{:02}"), t.second);
+    data.FmtValue("{:02}:{:02}", t.hour, t.minute);
+    data.FmtComment("{:02}", t.second);
   }
 
 }
@@ -859,7 +855,7 @@ UpdateInfoBoxStartOpen(InfoBoxData &data) noexcept
   } else if (open.HasBegun(now)) {
     if (open.GetEnd().IsValid()) {
       unsigned seconds = SecondsUntil(now_s, open.GetEnd());
-      data.FmtValue(_T("{:02}:{:02}"), seconds / 60, seconds % 60);
+      data.FmtValue("{:02}:{:02}", seconds / 60, seconds % 60);
       data.SetValueColor(3);
     } else
       data.SetValueInvalid();
@@ -867,7 +863,7 @@ UpdateInfoBoxStartOpen(InfoBoxData &data) noexcept
     data.SetComment(_("Open"));
   } else {
     unsigned seconds = SecondsUntil(now_s, open.GetStart());
-    data.FmtValue(_T("{:02}:{:02}"), seconds / 60, seconds % 60);
+    data.FmtValue("{:02}:{:02}", seconds / 60, seconds % 60);
     data.SetValueColor(2);
     data.SetComment(_("Waiting"));
   }
@@ -904,7 +900,7 @@ UpdateInfoBoxStartOpenArrival(InfoBoxData &data) noexcept
   } else if (open.HasBegun(arrival)) {
     if (open.GetEnd().IsValid()) {
       unsigned seconds = SecondsUntil(arrival_s, open.GetEnd());
-      data.FmtValue(_T("{:02}:{:02}"), seconds / 60, seconds % 60);
+      data.FmtValue("{:02}:{:02}", seconds / 60, seconds % 60);
       data.SetValueColor(3);
     } else
       data.SetValueInvalid();
@@ -912,7 +908,7 @@ UpdateInfoBoxStartOpenArrival(InfoBoxData &data) noexcept
     data.SetComment(_("Open"));
   } else {
     unsigned seconds = SecondsUntil(arrival_s, open.GetStart());
-    data.FmtValue(_T("{:02}:{:02}"), seconds / 60, seconds % 60);
+    data.FmtValue("{:02}:{:02}", seconds / 60, seconds % 60);
     data.SetValueColor(2);
     data.SetComment(_("Waiting"));
   }
@@ -935,9 +931,7 @@ InfoBoxContentNextArrow::Update(InfoBoxData &data) noexcept
   bool angle_valid = distance_valid && basic.track_available;
 
   // Set title. Use waypoint name if available.
-  const auto way_point = backend_components->protected_task_manager
-    ? backend_components->protected_task_manager->GetActiveWaypoint()
-    : nullptr;
+  const auto way_point = GetActiveWaypoint();
   if (!way_point)
     data.SetTitle(_("Next arrow"));
   else
@@ -1002,7 +996,7 @@ UpdateInfoTaskETAorAATdT(InfoBoxData& data) noexcept
     UpdateInfoBoxTaskAATimeDelta(data);
     data.SetComment(eta_text);
 
-    data.SetTitle(_T("AAT delta time"));
+    data.SetTitle(_("AAT delta time"));
   } else
-    data.SetTitle(_T("Task arrival time"));
+    data.SetTitle(_("Task arrival time"));
 }
