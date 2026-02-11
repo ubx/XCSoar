@@ -85,6 +85,9 @@ public:
      dragging(false),
      blackboard(_blackboard), glide_computer(_glide_computer) {
     fs_renderer.SetTerrain(terrain);
+#ifdef ENABLE_OPENGL
+    fs_renderer.SetFullResolution();
+#endif
     fs_renderer.SetAirspaces(airspaces);
     cross_section_renderer.SetAirspaces(airspaces);
     cross_section_renderer.SetTerrain(terrain);
@@ -338,7 +341,7 @@ ChartControl::OnPaint(Canvas &canvas) noexcept
   GLCanvasScissor scissor(canvas);
 #endif
 
-  canvas.SetTextColor(COLOR_BLACK);
+  canvas.SetTextColor(chart_look.text_color);
 
   PixelRect rcgfx = GetClientRect();
 

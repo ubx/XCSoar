@@ -9,6 +9,7 @@ endif
 
 DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Inflate.cpp \
+	$(SRC)/Dialogs/InternalLink.cpp \
 	$(SRC)/Dialogs/Message.cpp \
 	$(SRC)/Dialogs/LockScreen.cpp \
 	$(SRC)/Dialogs/Error.cpp \
@@ -141,8 +142,6 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Task/TargetDialog.cpp \
 	$(SRC)/Dialogs/Task/AlternatesListDialog.cpp \
 	\
-	$(SRC)/Dialogs/Tracking/CloudEnableDialog.cpp \
-	\
 	$(SRC)/Dialogs/NumberEntry.cpp \
 	$(SRC)/Dialogs/TextEntry.cpp \
 	$(SRC)/Dialogs/KnobTextEntry.cpp \
@@ -153,6 +152,8 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Weather/WeatherDialog.cpp \
 	$(SRC)/Dialogs/Weather/RASPDialog.cpp \
 	$(SRC)/Dialogs/dlgCredits.cpp \
+	$(SRC)/Dialogs/dlgQuickGuide.cpp \
+	$(SRC)/Dialogs/dlgGestureHelp.cpp \
 	$(SRC)/Dialogs/dlgQuickMenu.cpp
 
 ifeq ($(HAVE_PCM_PLAYER),y)
@@ -242,6 +243,8 @@ XCSOAR_SOURCES := \
 	$(SRC)/IGC/IGCString.cpp \
 	$(SRC)/IGC/Generator.cpp \
 	$(SRC)/util/MD5.cpp \
+	$(SRC)/system/OpenLink.cpp \
+	$(SRC)/util/MarkdownParser.cpp \
 	$(SRC)/Logger/NMEALogger.cpp \
 	$(SRC)/Logger/ExternalLogger.cpp \
 	$(SRC)/Logger/FlightLogger.cpp \
@@ -582,6 +585,7 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/Bitmap.cpp \
 	$(SRC)/Android/Product.cpp \
 	$(SRC)/Android/InternalSensors.cpp \
+	$(SRC)/Android/Permissions.cpp \
 	$(SRC)/Android/SoundUtil.cpp \
 	$(SRC)/Android/TextUtil.cpp \
 	$(SRC)/Android/EventBridge.cpp \

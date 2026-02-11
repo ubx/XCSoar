@@ -14,6 +14,7 @@ WIDGET_SOURCES = \
 	$(SRC)/Widget/TabWidget.cpp \
 	$(SRC)/Widget/TextWidget.cpp \
 	$(SRC)/Widget/LargeTextWidget.cpp \
+	$(SRC)/Widget/RichTextWidget.cpp \
 	$(SRC)/Widget/OverlappedWidget.cpp \
 	$(SRC)/Widget/TwoWidgets.cpp \
 	$(SRC)/Widget/RowFormWidget.cpp \
@@ -30,6 +31,7 @@ WIDGET_SOURCES = \
 	$(SRC)/Widget/DrawWidget.cpp \
 	$(SRC)/Widget/QuestionWidget.cpp \
 	$(SRC)/Widget/KeyboardWidget.cpp \
+	$(SRC)/Widget/QuickGuidePageWidget.cpp \
 	$(SRC)/Widget/ViewImageWidget.cpp \
 	$(SRC)/Widget/MultiSelectListWidget.cpp \
 	$(SRC)/Widget/FileMultiSelectWidget.cpp

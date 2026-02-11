@@ -9,12 +9,25 @@
 #include "Resources.hpp"
 #include "Version.hpp"
 
+#ifdef ENABLE_OPENGL
+#include "ui/canvas/opengl/Scope.hpp"
+#endif
+
 #include <algorithm>
 
 LogoView::LogoView() noexcept try
   :logo(IDB_LOGO), big_logo(IDB_LOGO_HD), huge_logo(IDB_LOGO_UHD),
    title(IDB_TITLE), big_title(IDB_TITLE_HD), huge_title(IDB_TITLE_UHD)
 {
+#ifndef USE_WIN32_RESOURCES
+  /* Load RGBA logo variants for dark mode (transparent background) */
+  logo_rgba.Load(IDB_LOGO_RGBA);
+  big_logo_rgba.Load(IDB_LOGO_HD_RGBA);
+  huge_logo_rgba.Load(IDB_LOGO_UHD_RGBA);
+  /* Load white title variants for dark mode */
+  white_title.Load(IDB_TITLE_HD_WHITE);
+  huge_white_title.Load(IDB_TITLE_UHD_WHITE);
+#endif
 #ifndef USE_GDI
   font.Load(FontDescription(Layout::FontScale(10)));
 #ifndef NDEBUG
@@ -66,7 +79,8 @@ EstimateLogoViewSize(LogoViewOrientation orientation,
 }
 
 void
-LogoView::draw(Canvas &canvas, const PixelRect &rc) noexcept
+LogoView::draw(Canvas &canvas, const PixelRect &rc,
+               bool dark_mode) noexcept
 {
   /* Return only if all logo and title variants are missing */
   if (!huge_logo.IsDefined() && !big_logo.IsDefined() && !logo.IsDefined() &&
@@ -116,6 +130,16 @@ LogoView::draw(Canvas &canvas, const PixelRect &rc) noexcept
     /* Use standard (80px logo, 110px title) for low resolution displays */
     bitmap_logo = &logo;
     bitmap_title = &title;
+  }
+
+  /* In dark mode, use RGBA logos (transparent background) if available */
+  if (dark_mode) {
+    if (bitmap_logo == &huge_logo && huge_logo_rgba.IsDefined())
+      bitmap_logo = &huge_logo_rgba;
+    else if (bitmap_logo == &big_logo && big_logo_rgba.IsDefined())
+      bitmap_logo = &big_logo_rgba;
+    else if (bitmap_logo == &logo && logo_rgba.IsDefined())
+      bitmap_logo = &logo_rgba;
   }
 
   // Determine logo size
@@ -169,11 +193,33 @@ LogoView::draw(Canvas &canvas, const PixelRect &rc) noexcept
   }
 
   // Draw 'XCSoar N.N' title
-  if (orientation != LogoViewOrientation::SQUARE)
-    canvas.Stretch(title_position, title_size, *bitmap_title);
+  if (orientation != LogoViewOrientation::SQUARE) {
+    const Bitmap *draw_title = bitmap_title;
+#ifdef ENABLE_OPENGL
+    /* On OpenGL, use white title variants for dark mode
+       (they have alpha and composite correctly).
+       On non-OpenGL, keep the standard (black) title since
+       the memory canvas composites alpha against white. */
+    if (dark_mode) {
+      if (bitmap_title == &huge_title &&
+          huge_white_title.IsDefined())
+        draw_title = &huge_white_title;
+      else if (white_title.IsDefined())
+        draw_title = &white_title;
+    }
+
+    const ScopeAlphaBlend alpha_blend;
+#endif
+    canvas.Stretch(title_position, title_size, *draw_title);
+  }
 
   // Draw XCSoar swift logo
-  canvas.Stretch(logo_position, logo_size, *bitmap_logo);
+  {
+#ifdef ENABLE_OPENGL
+    const ScopeAlphaBlend alpha_blend;
+#endif
+    canvas.Stretch(logo_position, logo_size, *bitmap_logo);
+  }
 
   // Draw full XCSoar version number
 
@@ -184,7 +230,7 @@ LogoView::draw(Canvas &canvas, const PixelRect &rc) noexcept
   canvas.Select(font);
 #endif
 
-  canvas.SetTextColor(COLOR_BLACK);
+  canvas.SetTextColor(dark_mode ? COLOR_WHITE : COLOR_BLACK);
   canvas.SetBackgroundTransparent();
   canvas.DrawText({2, 2}, XCSoar_ProductToken);
 

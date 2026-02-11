@@ -15,11 +15,6 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.ViewParent;
 import android.view.Window;
-import android.view.WindowInsets;
-import android.view.WindowManager;
-import android.view.WindowMetrics;
-import android.graphics.Insets;
-import android.graphics.Rect;
 import android.os.Build;
 import android.os.Handler;
 import android.net.Uri;
@@ -30,9 +25,6 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.webkit.MimeTypeMap;
-import android.view.Display;
-import android.view.ViewConfiguration;
-import android.graphics.Point;
 
 class EGLException extends Exception {
   private static final long serialVersionUID = 5928634879321047581L;
@@ -50,36 +42,9 @@ class NativeView extends SurfaceView
   private static final String TAG = "XCSoar";
 
   /**
-   * Parameters for detecting system swipe gestures vs taps.
-   * Swipes exceeding this distance in the "OS gesture direction"
-   * will be rejected if they started at an edge inset.
+   * Filters touch events to reject system edge gestures.
    */
-  private int touchSlop = 0;
-
-  /**
-   * System gesture inset values for detecting edge swipes.
-   * Stored as individual int fields to avoid referencing the
-   * Insets class (API 29+) in field declarations.
-   */
-  private int gestureInsetLeft = 0;
-  private int gestureInsetRight = 0;
-  private int gestureInsetTop = 0;
-  private int gestureInsetBottom = 0;
-
-  private int screenWidth = 0;
-  private int screenHeight = 0;
-
-  /**
-   * Properties of current tap / swipe to identify OS edge gestures.
-   */
-
-  private int edgeTouchFlags = 0;
-
-  private float edgeTouchStartX = 0;
-  private float edgeTouchStartY = 0;
-
-  private boolean edgeTouchRejected = false;
-  private boolean edgeDownForwarded = false;
+  private final EdgeTouchFilter edgeTouchFilter = new EdgeTouchFilter();
 
   /**
    * A native pointer to a C++ #TopWindow instance.
@@ -102,6 +67,12 @@ class NativeView extends SurfaceView
 
   Thread thread;
 
+  /**
+   * Listens for physical device orientation changes to offer a
+   * rotation suggestion button (like Android's Rotate Suggestions).
+   */
+  private RotationListener rotationListener;
+
   /*
    * Check if running in simulator mode (user chose "simulator" on startup)
    */
@@ -112,6 +83,38 @@ class NativeView extends SurfaceView
       return isSimulatorNative();
     } catch (UnsatisfiedLinkError e) {
       return false;
+    }
+  }
+
+  /**
+   * Start the foreground service.  Called from native code after the
+   * user chooses Fly mode (not called in Simulator mode because
+   * IGC logging and safety warnings are not needed in simulation).
+   */
+  private void startMyService() {
+    final Context context = getContext();
+
+    try {
+      if (Build.VERSION.SDK_INT >= 34) {
+        final String fgsPermission = "android.permission.FOREGROUND_SERVICE_LOCATION";
+        if (context.checkSelfPermission(fgsPermission) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED) {
+          context.startService(new Intent(context, MyService.class));
+        } else {
+          permissionManager.requestPermission(fgsPermission, null);
+          try {
+            context.startService(new Intent(context, MyService.class));
+          } catch (SecurityException e) {
+            /* Expected on Android 14+ without permission */
+          }
+        }
+      } else {
+        context.startService(new Intent(context, MyService.class));
+      }
+    } catch (IllegalStateException e) {
+      /* Android may not allow starting a service in this state */
+    } catch (SecurityException e) {
+      /* Expected on Android 14+ without FOREGROUND_SERVICE_LOCATION */
     }
   }
 
@@ -137,42 +140,10 @@ class NativeView extends SurfaceView
     holder.addCallback(this);
     holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
-    /* Set up listener to capture system gesture inset configuration*/
-    setOnApplyWindowInsetsListener(new OnApplyWindowInsetsListener() {
-      @Override
-      public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
-        if (Build.VERSION.SDK_INT >= 29) {
-            Insets gi = insets.getSystemGestureInsets();
-            gestureInsetLeft = gi.left;
-            gestureInsetRight = gi.right;
-            gestureInsetTop = gi.top;
-            gestureInsetBottom = gi.bottom;
-        }
-
-        if (Build.VERSION.SDK_INT >= 30) {
-            WindowManager wm = v.getContext().getSystemService(WindowManager.class);
-            Rect bounds = wm.getCurrentWindowMetrics().getBounds();
-            screenWidth = bounds.width();
-            screenHeight = bounds.height();
-        } else {
-            WindowManager wm =
-                    (WindowManager) v.getContext()
-                            .getSystemService(Context.WINDOW_SERVICE);
-            Display display = wm.getDefaultDisplay();
-            Point size = new Point();
-            display.getRealSize(size);
-            screenWidth = size.x;
-            screenHeight = size.y;
-        }
-
-        ViewConfiguration vc = ViewConfiguration.get(context);
-        touchSlop = vc.getScaledTouchSlop();
-
-        return insets;
-      }
-    });
-
+    setOnApplyWindowInsetsListener(edgeTouchFilter);
     requestApplyInsets(); // trigger initial inset calculation
+
+    rotationListener = new RotationListener(context);
   }
 
   private void start() {
@@ -201,6 +172,20 @@ class NativeView extends SurfaceView
     fullScreenHandler.sendEmptyMessage(fullScreen ? 1 : 0);
   }
 
+  /**
+   * Check if the system auto-rotate setting is enabled.
+   * Called from native code.
+   */
+  private boolean isAutoRotateEnabled() {
+    try {
+      return android.provider.Settings.System.getInt(
+        getContext().getContentResolver(),
+        android.provider.Settings.System.ACCELEROMETER_ROTATION) == 1;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
   private boolean setRequestedOrientation(int requestedOrientation) {
     try {
       ((Activity)getContext()).setRequestedOrientation(requestedOrientation);
@@ -214,6 +199,8 @@ class NativeView extends SurfaceView
   }
 
   @Override public void surfaceCreated(SurfaceHolder holder) {
+    if (rotationListener != null && rotationListener.canDetectOrientation())
+      rotationListener.enable();
   }
 
   @Override public void surfaceChanged(SurfaceHolder holder, int format,
@@ -253,6 +240,9 @@ class NativeView extends SurfaceView
   }
 
   @Override public void surfaceDestroyed(SurfaceHolder holder) {
+    if (rotationListener != null)
+      rotationListener.disable();
+
     surfaceDestroyedNative();
   }
 
@@ -265,43 +255,16 @@ class NativeView extends SurfaceView
     ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
     try {
-      try {
-        /* On Android 14+ (API 34+), FOREGROUND_SERVICE_LOCATION is a runtime permission
-           that must be granted before starting a foreground service with type="location" */
-        boolean serviceStarted = false;
-        if (Build.VERSION.SDK_INT >= 34) {
-          final String fgsPermission = "android.permission.FOREGROUND_SERVICE_LOCATION";
-          if (context.checkSelfPermission(fgsPermission) ==
-              android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            context.startService(new Intent(context, MyService.class));
-            serviceStarted = true;
-          } else {
-            /* Permission not granted - request it. Service will be started after permission is granted.
-               For now, try to start it anyway - it will fail gracefully with SecurityException if needed. */
-            permissionManager.requestPermission(fgsPermission, null);
-            /* Try to start service anyway - on some devices it might work, or will fail with SecurityException */
-            try {
-              context.startService(new Intent(context, MyService.class));
-              serviceStarted = true;
-            } catch (SecurityException e) {
-              /* Expected on Android 14+ without permission - service will be started after permission is granted */
-            }
-          }
-        } else {
-          context.startService(new Intent(context, MyService.class));
-          serviceStarted = true;
-        }
-      } catch (IllegalStateException e) {
-        /* we get crash reports on this all the time, but I don't
-           know why - Android docs say "the application is in a
-           state where the service can not be started (such as not
-           in the foreground in a state when services are allowed)",
-           but we're about to be resumed, which means we're in
-           foreground... */
-      } catch (SecurityException e) {
-        /* On Android 14+ without FOREGROUND_SERVICE_LOCATION permission, starting the service throws SecurityException.
-           This is expected - the service will be started after permission is granted via the permission request above. */
-      }
+      /* Clear the shutdown flag from any previous session so the
+         service starts normally */
+      context.getSharedPreferences("xcsoar_service", Context.MODE_PRIVATE)
+        .edit()
+        .remove("app_shutdown")
+        .commit();
+
+      /* The foreground service is started from native code via
+         startMyService() after the user chooses Fly mode.  In
+         Simulator mode the service is not needed. */
 
       try {
         runNative(context, permissionManager,
@@ -309,6 +272,12 @@ class NativeView extends SurfaceView
                   (int)metrics.xdpi, (int)metrics.ydpi,
                   Build.PRODUCT);
       } finally {
+        /* Set shutdown flag before stopping service so it does not
+           restart itself after System.exit() kills the process */
+        context.getSharedPreferences("xcsoar_service", Context.MODE_PRIVATE)
+          .edit()
+          .putBoolean("app_shutdown", true)
+          .commit();
         context.stopService(new Intent(context, MyService.class));
       }
     } catch (Exception e) {
@@ -323,10 +292,40 @@ class NativeView extends SurfaceView
   static native void initNative();
   static native void deinitNative();
 
+  /**
+   * Show a native permission disclosure dialog on the XCSoar UI
+   * thread.  Called from PermissionHelper instead of showing a Java
+   * AlertDialog.  When the user responds, calls back to
+   * PermissionManager.onDisclosureResult().
+   */
+  static native void showPermissionDisclosure(String permission);
+
+  /**
+   * Notify native code that a permission request completed.
+   * Called from PermissionHelper when a permission chain finishes.
+   *
+   * @param granted true if the permission was granted
+   */
+  static native void onPermissionResult(boolean granted);
+
   static native void onConfigurationChangedNative(boolean nightMode);
 
+  /**
+   * Called when the physical device orientation changes, to show
+   * or refresh the rotate suggestion button.
+   */
+  static native void onRotationSuggestion();
+
+  /**
+   * Delegate to {@link RotationListener#getPhysicalOrientation()}.
+   * Called from native code when the rotate button is pressed.
+   */
+  int getPhysicalOrientation() {
+    return rotationListener != null
+      ? rotationListener.getPhysicalOrientation() : 0;
+  }
+
   static native String onReceiveXCTrackTask(String data);
-  static native void showCloudEnableDialog();
 
   protected native void runNative(Context context,
                                   PermissionManager permissionManager,
@@ -421,6 +420,21 @@ class NativeView extends SurfaceView
   }
 
   /**
+   * Opens a URL in the default browser.
+   */
+  private boolean openURL(String url) {
+    try {
+      Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      getContext().startActivity(intent);
+      return true;
+    } catch (Exception e) {
+      Log.e(TAG, "openURL('" + url + "') error", e);
+      return false;
+    }
+  }
+
+  /**
    * Starts a VIEW intent for a given file
    */
   private void openWaypointFile(int id, String filename) {
@@ -453,36 +467,6 @@ class NativeView extends SurfaceView
     return NetUtil.getNetState();
   }
 
-  /**
-   * Check if the current touch movement matches an OS edge gesture pattern.
-   */
-  private boolean isOsEdgeGesturePattern(float dx, float dy, float threshold) {
-    if (edgeTouchFlags == 0)
-      return false;
-
-    /* Left edge: horizontal swipe to the right */
-    if ((edgeTouchFlags & MotionEvent.EDGE_LEFT) != 0 &&
-        dx > threshold && Math.abs(dx) > Math.abs(dy))
-      return true;
-
-    /* Right edge: horizontal swipe to the left */
-    if ((edgeTouchFlags & MotionEvent.EDGE_RIGHT) != 0 &&
-        dx < -threshold && Math.abs(dx) > Math.abs(dy))
-      return true;
-
-    /* Top edge: vertical swipe downward */
-    if ((edgeTouchFlags & MotionEvent.EDGE_TOP) != 0 &&
-        dy > threshold && Math.abs(dy) > Math.abs(dx))
-      return true;
-
-    /* Bottom edge: vertical swipe upward */
-    if ((edgeTouchFlags & MotionEvent.EDGE_BOTTOM) != 0 &&
-        dy < -threshold && Math.abs(dy) > Math.abs(dx))
-      return true;
-
-    return false;
-  }
-
   @Override public boolean onTouchEvent(final MotionEvent event)
   {
     /* the MotionEvent coordinates are supposed to be relative to this
@@ -501,96 +485,8 @@ class NativeView extends SurfaceView
 
     float x = event.getX() - offsetX;
     float y = event.getY() - offsetY;
-    
-    /* Since we set margins on the SurfaceView in non-fullscreen mode, the SurfaceView
-       is already positioned in the safe area. The MotionEvent coordinates are already
-       relative to the SurfaceView, so we don't need to subtract insets. */
-    
-    final int finalX = (int)x;
-    final int finalY = (int)y;
 
-    switch (event.getActionMasked()) {
-    case MotionEvent.ACTION_DOWN:
-      if(screenHeight>0 && screenWidth>0 && touchSlop>0) {
-        /* Reset edge touch tracking state */
-        edgeTouchStartX = x;
-        edgeTouchStartY = y;
-        edgeTouchRejected = false;
-        edgeDownForwarded = true;
-        edgeTouchFlags = 0;
-
-        final float rawX = event.getRawX();
-        final float rawY = event.getRawY();
-
-        if (gestureInsetLeft > 0 && rawX < gestureInsetLeft)
-          edgeTouchFlags |= MotionEvent.EDGE_LEFT;
-        if (gestureInsetRight > 0 && rawX > screenWidth - gestureInsetRight)
-          edgeTouchFlags |= MotionEvent.EDGE_RIGHT;
-        if (gestureInsetTop > 0 && rawY < gestureInsetTop)
-          edgeTouchFlags |= MotionEvent.EDGE_TOP;
-        if (gestureInsetBottom > 0 && rawY > screenHeight - gestureInsetBottom)
-          edgeTouchFlags |= MotionEvent.EDGE_BOTTOM;
-      }
-      /* Always forward ACTION_DOWN to allow focus changes */
-      EventBridge.onMouseDown(finalX, finalY);
-      break;
-
-    case MotionEvent.ACTION_UP:
-      if (edgeTouchRejected) {
-        /* Touch sequence was previously rejected as an OS edge gesture. */
-      } else {
-        EventBridge.onMouseUp(finalX, finalY);
-      }
-
-      edgeTouchFlags = 0;
-      edgeTouchRejected = false;
-      edgeDownForwarded = false;
-      break;
-
-    case MotionEvent.ACTION_MOVE:
-      if (edgeTouchRejected) {
-        /* Touch sequence already rejected */
-        break;
-      }
-
-      if (edgeTouchFlags != 0) {
-        /* Touch started at an edge - check if this is an OS edge gesture */
-        float dx = x - edgeTouchStartX;
-        float dy = y - edgeTouchStartY;
-
-        if (isOsEdgeGesturePattern(dx, dy, touchSlop)) {
-          /* This looks like an OS edge gesture - reject sequence, cancel any ongoing interaction. */
-          edgeTouchRejected = true;
-
-          if (edgeDownForwarded) {
-            EventBridge.onMouseCancel();
-          }
-          break;
-        }
-      }
-
-      /* Normal movement - forward to native code */
-      EventBridge.onMouseMove(finalX, finalY);
-      break;
-
-    case MotionEvent.ACTION_POINTER_DOWN:
-      if (!edgeTouchRejected)
-        EventBridge.onPointerDown();
-      break;
-
-    case MotionEvent.ACTION_POINTER_UP:
-      if (!edgeTouchRejected)
-        EventBridge.onPointerUp();
-      break;
-
-    case MotionEvent.ACTION_CANCEL:
-      EventBridge.onMouseCancel();
-      edgeTouchFlags = 0;
-      edgeTouchRejected = false;
-      edgeDownForwarded = false;
-      break;
-    }
-
+    edgeTouchFilter.onTouchEvent(event, x, y);
     return true;
   }
 
@@ -602,20 +498,7 @@ class NativeView extends SurfaceView
     pauseNative();
   }
 
-  private final int translateKeyCode(int keyCode) {
-    if (!hasKeyboard) {
-      /* map the volume keys to cursor up/down if the device has no
-         hardware keys */
-
-      switch (keyCode) {
-      case KeyEvent.KEYCODE_VOLUME_UP:
-        return KeyEvent.KEYCODE_DPAD_UP;
-
-      case KeyEvent.KEYCODE_VOLUME_DOWN:
-        return KeyEvent.KEYCODE_DPAD_DOWN;
-      }
-    }
-
+  private static int translateKeyCode(int keyCode) {
     return keyCode;
   }
 

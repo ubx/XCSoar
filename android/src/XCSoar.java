@@ -88,14 +88,9 @@ public class XCSoar extends Activity implements PermissionManager {
 
     mainHandler = new Handler(Looper.getMainLooper());
 
-    /* Create PermissionHelper with callback */
-    permissionHelper = new PermissionHelper(this, mainHandler,
-        new Runnable() {
-          @Override
-          public void run() {
-            checkCloudEnableDialogIfReady();
-          }
-        });
+    /* Create PermissionHelper (no cloud dialog callback needed;
+       cloud consent is handled during onboarding) */
+    permissionHelper = new PermissionHelper(this, mainHandler, null);
 
     NativeView.initNative();
 
@@ -344,10 +339,16 @@ public class XCSoar extends Activity implements PermissionManager {
       return;
     }
 
-    /* Stop the foreground service when app is being destroyed.
-       This is the only place where we stop the service - it continues running
-       when the app goes to background to ensure continuous IGC logging and
-       safety warnings. */
+    /* Mark the app as shutting down so that MyService will not restart
+       itself after System.exit() kills the process.  The flag must be
+       written synchronously (commit(), not apply()) because
+       System.exit() follows shortly. */
+    getApplicationContext()
+      .getSharedPreferences("xcsoar_service", Context.MODE_PRIVATE)
+      .edit()
+      .putBoolean("app_shutdown", true)
+      .commit();
+
     try {
       stopService(new Intent(this, org.xcsoar.MyService.class));
     } catch (Exception e) {
@@ -376,8 +377,16 @@ public class XCSoar extends Activity implements PermissionManager {
     System.exit(0);
   }
 
+  private static boolean isVolumeKey(int keyCode) {
+    return keyCode == KeyEvent.KEYCODE_VOLUME_UP ||
+           keyCode == KeyEvent.KEYCODE_VOLUME_DOWN ||
+           keyCode == KeyEvent.KEYCODE_VOLUME_MUTE;
+  }
+
   @Override public boolean onKeyDown(int keyCode, final KeyEvent event) {
-    // Overrides Back key to use in our app
+    if (isVolumeKey(keyCode))
+      return super.onKeyDown(keyCode, event);
+
     if (nativeView != null) {
       nativeView.onKeyDown(keyCode, event);
       return true;
@@ -386,6 +395,9 @@ public class XCSoar extends Activity implements PermissionManager {
   }
 
   @Override public boolean onKeyUp(int keyCode, final KeyEvent event) {
+    if (isVolumeKey(keyCode))
+      return super.onKeyUp(keyCode, event);
+
     if (nativeView != null) {
       nativeView.onKeyUp(keyCode, event);
       return true;
@@ -444,21 +456,6 @@ public class XCSoar extends Activity implements PermissionManager {
     }
   }
 
-  /**
-   * Check if all location permissions are granted and show CloudEnableDialog if ready.
-   * Called from permission helper callback after location permissions are granted.
-   */
-  private void checkCloudEnableDialogIfReady() {
-    /* Don't call showCloudEnableDialog() directly from permission callback.
-       The native code will show the dialog automatically via ProcessTimer when it's ready.
-       Calling it too early causes crashes because runNative() may not have completed yet.
-       
-       The native CloudEnableDialog() function already checks if permissions are granted
-       and will show the dialog when appropriate. We just need to ensure permissions are
-       granted, which the permission helper has already done. */
-    Log.d(TAG, "Location permissions granted - native code will show CloudEnableDialog when ready");
-  }
-
   /* virtual methods from PermissionManager */
 
   @Override
@@ -479,5 +476,36 @@ public class XCSoar extends Activity implements PermissionManager {
     if (permissionHelper != null)
       return permissionHelper.areLocationPermissionsGranted();
     return false;
+  }
+
+  @Override
+  public boolean isNotificationPermissionGranted() {
+    if (permissionHelper != null)
+      return permissionHelper.isNotificationPermissionGranted();
+    return true;
+  }
+
+  @Override
+  public void requestAllLocationPermissionsDirect() {
+    if (permissionHelper != null)
+      permissionHelper.requestAllLocationPermissionsDirect();
+  }
+
+  @Override
+  public void requestNotificationPermissionDirect() {
+    if (permissionHelper != null)
+      permissionHelper.requestNotificationPermissionDirect();
+  }
+
+  @Override
+  public void suppressPermissionDialogs() {
+    if (permissionHelper != null)
+      permissionHelper.suppressPermissionDialogs();
+  }
+
+  @Override
+  public void onDisclosureResult(boolean accepted) {
+    if (permissionHelper != null)
+      permissionHelper.onDisclosureResult(accepted);
   }
 }

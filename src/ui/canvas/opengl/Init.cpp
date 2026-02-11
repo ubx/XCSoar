@@ -109,12 +109,17 @@ OpenGL::SetupContext()
   if (auto s = (const char *)glGetString(GL_RENDERER)) {
     LogFormat("GL renderer: %s", s);
 
-    if (strstr(s, "PowerVR Rogue GE8300") != nullptr)
+    if (strstr(s, "Mali400") == s) {
+      /* Allwinner A20 SoC has a Mali-400 GPU. Limit the map scale to
+         250 km. */
+      max_map_scale = 251*1000*2;
+    } else if (strstr(s, "PowerVR Rogue GE8300") != nullptr) {
       /* PowerVR Rogue GE8300 (MediaTek MT8166) crashes in the driver
          when rendering large topography polygons at extreme zoom-out.
          Limit the maximum map scale to avoid triggering the bug.
          See https://github.com/XCSoar/XCSoar/issues/1235 */
       max_map_scale = 300000;
+    }
   }
 
   if (auto s = (const char *)glGetString(GL_EXTENSIONS))
@@ -169,7 +174,7 @@ OpenGL::SetupContext()
     render_buffer_stencil = render_buffer_depth_stencil;
 
   glDisable(GL_DEPTH_TEST);
-  glDisable(GL_DITHER);
+  glEnable(GL_DITHER);
 
   InitShaders();
 }
@@ -221,11 +226,12 @@ OpenGL::SetupViewport(UnsignedPoint2D size) noexcept
   window_size = size;
 
   glViewport(0, 0, size.x, size.y);
-  projection_matrix = glm::ortho<float>(0, size.x, size.y, 0, -1, 1);
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
   OrientationSwap(size, display_orientation);
 #endif
+
+  projection_matrix = glm::ortho<float>(0, size.x, size.y, 0, -1, 1);
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
   glm::mat4 rot_matrix = glm::rotate(
@@ -235,7 +241,6 @@ OpenGL::SetupViewport(UnsignedPoint2D size) noexcept
   projection_matrix = rot_matrix * projection_matrix;
 #endif
 
-  /* viewport_size is the EGL surface size (which is already the safe area in non-fullscreen) */
   viewport_size = size;
 
   UpdateShaderProjectionMatrix();

@@ -3,8 +3,9 @@
 
 #include "Dialogs/Dialogs.h"
 #include "Dialogs/WidgetDialog.hpp"
+#include "Widget/VScrollWidget.hpp"
 #include "Widget/ArrowPagerWidget.hpp"
-#include "Widget/LargeTextWidget.hpp"
+#include "Widget/RichTextWidget.hpp"
 #include "Look/DialogLook.hpp"
 #include "UIGlobals.hpp"
 #include "util/StaticString.hxx"
@@ -37,20 +38,25 @@ using Checklist = std::vector<ChecklistPage>;
 static constexpr std::size_t MAX_CHECKLIST_PAGES = 32;
 
 static void
-UpdateCaption(WndForm &form, const Checklist &checklist, std::size_t page)
+UpdateCaption(WndForm &form, const Checklist &checklist,
+              std::size_t page, std::size_t total)
 {
   if (page >= checklist.size())
     return;
 
-  StaticString<80> buffer{_("Checklist")};
   const auto &p = checklist[page];
+  StaticString<128> caption;
 
-  if (!p.title.empty()) {
-    buffer.append(_T(": "));
-    buffer.append(p.title);
-  }
+  if (!p.title.empty())
+    caption.Format("%s (%u/%u)",
+                   p.title.c_str(),
+                   (unsigned)(page + 1), (unsigned)total);
+  else
+    caption.Format("%s (%u/%u)",
+                   (const char *)_("Checklist"),
+                   (unsigned)(page + 1), (unsigned)total);
 
-  form.SetCaption(buffer);
+  form.SetCaption(caption);
 }
 
 static Checklist
@@ -78,7 +84,7 @@ try {
           c.emplace_back(std::move(page));
         } else if (!c.empty()) {
           c.back().text.append(page.title);
-          c.back().text.append(_T("\n"));
+          c.back().text.append("\n");
           c.back().text.append(page.text);
         }
         page = {};
@@ -110,7 +116,7 @@ try {
       // At page limit; append final page content to last page
       if (!page.title.empty()) {
         c.back().text.append(page.title);
-        c.back().text.append(_T("\n"));
+        c.back().text.append("\n");
       }
       c.back().text.append(page.text);
     }
@@ -128,14 +134,43 @@ dlgChecklistShowModal()
 
   auto path = Profile::GetPath(ProfileKeys::ChecklistFile);
   if (path == nullptr || path.empty())
-    path = LocalPath(_T("xcsoar-checklist.txt"));
+    path = LocalPath("xcsoar-checklist.txt");
   auto checklist = LoadChecklist(path);
   if (checklist.empty())
-    checklist.emplace_back(ChecklistPage{
-        _("No checklist loaded"),
-        _("Create a checklist file (e.g. checklist.xcc) or select one in Site "
-          "Files > Checklist."),
-      });
+    {
+      /* Build the getting-started page by assembling translated
+         display text with untranslated Markdown syntax so that
+         translators never need to touch formatting characters. */
+      StaticString<1024> body;
+      body.Format(
+        "# %s\n\n"
+        "%s\n\n"
+        "- [%s](https://xcsoar.org/download/data/xcsoar-checklist.txt)\n"
+        "- [%s](https://xcsoar.readthedocs.io/en/latest/checklist.html)\n\n"
+        "%s **%s**.\n\n"
+        "## %s\n\n"
+        "- [ ] %s\n"
+        "- [ ] %s\n"
+        "- [ ] %s\n"
+        "- [ ] %s\n"
+        "- [ ] %s",
+        _("Getting Started"),
+        _("Download the example checklist or create your own:"),
+        _("Download Example"),
+        _("View Documentation"),
+        _("Then select it in"),
+        _("Site Files > Checklist"),
+        _("Features"),
+        _("Interactive checkboxes"),
+        N_("**Bold** and # Headings"),
+        _("Clickable links"),
+        _("Phone: tel: / SMS: sms: / Email: mailto:"),
+        _("Maps: geo:47.5,8.5"));
+      checklist.emplace_back(ChecklistPage{
+          _("No checklist loaded"),
+          body.c_str(),
+        });
+    }
 
   if (current_page >= checklist.size())
     current_page = 0;
@@ -148,15 +183,21 @@ dlgChecklistShowModal()
   auto pager = std::make_unique<ArrowPagerWidget>(look.button,
                                                    dialog.MakeModalResultCallback(mrOK));
   for (const auto &i : checklist)
-    pager->Add(std::make_unique<LargeTextWidget>(look, i.text.c_str()));
+    pager->Add(std::make_unique<VScrollWidget>(
+      std::make_unique<RichTextWidget>(look, i.text.c_str()), look, true));
 
   pager->SetCurrent(current_page);
 
-  pager->SetPageFlippedCallback([&checklist, &dialog, &pager=*pager](){
-    UpdateCaption(dialog, checklist, pager.GetCurrentIndex());
-  });
+  const std::size_t total_pages = checklist.size();
 
-  UpdateCaption(dialog, checklist, pager->GetCurrentIndex());
+  pager->SetPageFlippedCallback(
+    [&checklist, &dialog, &pager=*pager, total_pages](){
+      UpdateCaption(dialog, checklist,
+                    pager.GetCurrentIndex(), total_pages);
+    });
+
+  UpdateCaption(dialog, checklist,
+                pager->GetCurrentIndex(), total_pages);
 
   dialog.FinishPreliminary(std::move(pager));
   dialog.ShowModal();

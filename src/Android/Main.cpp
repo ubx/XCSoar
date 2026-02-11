@@ -36,7 +36,6 @@
 #include "ui/event/Globals.hpp"
 #include "ui/event/Queue.hpp"
 #include "Dialogs/Message.hpp"
-#include "Dialogs/Tracking/CloudEnableDialog.hpp"
 #include "Profile/Profile.hpp"
 #include "MainWindow.hpp"
 #include "Startup.hpp"
@@ -177,6 +176,17 @@ Java_org_xcsoar_NativeView_onConfigurationChangedNative([[maybe_unused]] JNIEnv 
 }
 
 gcc_visibility_default
+void
+Java_org_xcsoar_NativeView_onRotationSuggestion([[maybe_unused]] JNIEnv *env,
+                                                [[maybe_unused]] jclass cls)
+{
+  const std::scoped_lock shutdown_lock{shutdown_mutex};
+
+  if (CommonInterface::main_window != nullptr)
+    CommonInterface::main_window->SendRotationSuggestion();
+}
+
+gcc_visibility_default
 JNIEXPORT jstring JNICALL
 Java_org_xcsoar_NativeView_onReceiveXCTrackTask(JNIEnv *env,
                                                 [[maybe_unused]] jclass cls,
@@ -186,14 +196,6 @@ try {
   return nullptr;
 } catch (...) {
   return env->NewStringUTF(GetFullMessage(std::current_exception()).c_str());
-}
-
-gcc_visibility_default
-void
-Java_org_xcsoar_NativeView_showCloudEnableDialog([[maybe_unused]] JNIEnv *env,
-                                                  [[maybe_unused]] jclass cls)
-{
-  CloudEnableDialog();
 }
 
 gcc_visibility_default
