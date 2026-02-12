@@ -301,7 +301,7 @@ TopCanvas::Flip()
   };
 
   ioctl(fd, MXCFB_SEND_UPDATE, &epd_update_data);
-#elifdef COLIBRI
+#elif defined(COLIBRI)
   Wait();
 #endif
 
