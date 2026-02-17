@@ -667,7 +667,7 @@ ifeq ($(TARGET),UNIX)
 endif
 
 ifeq ($(TARGET),ANDROID)
-  TARGET_LDLIBS += -llog -landroid
+  TARGET_LDLIBS += -llog -landroid -ljnigraphics
 endif
 
 # Linking against libsocketcan is not required for CAN raw socket usage.
