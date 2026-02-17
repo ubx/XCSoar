@@ -3,15 +3,13 @@
 
 #pragma once
 
-#include <tchar.h>
-
 struct PixelRect;
 class Canvas;
 struct ChartLook;
 class GlidePolar;
 
 void
-MacCreadyCaption(TCHAR *sTmp, const GlidePolar &glide_polar);
+MacCreadyCaption(char *sTmp, const GlidePolar &glide_polar);
 
 void
 RenderMacCready(Canvas &canvas, const PixelRect rc,

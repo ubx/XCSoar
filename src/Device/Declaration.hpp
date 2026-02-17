@@ -7,8 +7,6 @@
 #include "util/StaticString.hxx"
 
 #include <vector>
-#include <tchar.h>
-
 struct LoggerSettings;
 struct Plane;
 class OrderedTask;
@@ -59,12 +57,12 @@ struct Declaration {
   }
 
   [[gnu::pure]]
-  const TCHAR *GetName(const unsigned i) const {
+  const char *GetName(const unsigned i) const {
     return turnpoints[i].waypoint.name.c_str();
   }
 
   [[gnu::pure]]
-  const TCHAR *GetShortName(const unsigned i) const {
+  const char *GetShortName(const unsigned i) const {
     return turnpoints[i].waypoint.shortname.c_str();
   }
 

@@ -5,14 +5,13 @@
 #include "Trace/Trace.hpp"
 #include "system/FileUtil.hpp"
 #include "Waypoint/Waypoint.hpp"
-#include "util/ConvertString.hpp"
 
 #include <fstream>
 
 std::ostream &
 operator<<(std::ostream &f, Path path)
 {
-  f << WideToUTF8Converter(path.c_str());
+  f << path.c_str();
   return f;
 }
 
@@ -81,7 +80,7 @@ void
 PrintHelper::trace_print([[maybe_unused]] const Trace& trace,
 			 [[maybe_unused]] const GeoPoint &loc)
 {
-  Directory::Create(Path(_T("output/results")));
+  Directory::Create(Path("output/results"));
   std::ofstream fs("output/results/res-trace.txt");
 
   for (auto it = trace.begin(); it != trace.end(); ++it)

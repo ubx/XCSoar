@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
 #include <cstdint>
 
 enum class TaskPointType : uint8_t;
@@ -17,13 +16,13 @@ class ObservationZonePoint;
  * @param linebreaks True if each summary item should be separated with a line break
  */
 void
-OrderedTaskSummary(const OrderedTask *task, TCHAR *text, bool linebreaks);
+OrderedTaskSummary(const OrderedTask *task, char *text, bool linebreaks);
 
 void
-OrderedTaskPointLabel(TaskPointType type, const TCHAR *name,
-                      unsigned index, TCHAR *buffer);
+OrderedTaskPointLabel(TaskPointType type, const char *name,
+                      unsigned index, char *buffer);
 
-void OrderedTaskPointRadiusLabel(const ObservationZonePoint &ozp, TCHAR* radius);
+void OrderedTaskPointRadiusLabel(const ObservationZonePoint &ozp, char* radius);
 
 bool
 OrderedTaskSave(OrderedTask &task);

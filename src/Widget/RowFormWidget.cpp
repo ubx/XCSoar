@@ -266,7 +266,7 @@ RowFormWidget::AddSpacer() noexcept
 }
 
 void
-RowFormWidget::AddMultiLine(const TCHAR *text) noexcept
+RowFormWidget::AddMultiLine(const char *text) noexcept
 {
   assert(IsDefined());
 
@@ -292,7 +292,7 @@ RowFormWidget::AddMultiLine(const TCHAR *text) noexcept
 }
 
 Button *
-RowFormWidget::AddButton(const TCHAR *label,
+RowFormWidget::AddButton(const char *label,
                          std::function<void()> callback) noexcept
 {
   assert(IsDefined());
@@ -312,7 +312,7 @@ RowFormWidget::AddButton(const TCHAR *label,
 }
 
 void
-RowFormWidget::SetMultiLineText(unsigned i, const TCHAR *text) noexcept
+RowFormWidget::SetMultiLineText(unsigned i, const char *text) noexcept
 {
   assert(text != nullptr);
   assert(rows[i].type == Row::Type::MULTI_LINE);
@@ -421,7 +421,7 @@ PixelSize
 RowFormWidget::GetMinimumSize() const noexcept
 {
   const unsigned value_width =
-    look.text_font.TextSize(_T("Foo Bar Foo Bar")).width;
+    look.text_font.TextSize("Foo Bar Foo Bar").width;
 
   const bool expert = UIGlobals::GetDialogSettings().expert;
 
@@ -441,7 +441,7 @@ PixelSize
 RowFormWidget::GetMaximumSize() const noexcept
 {
   const unsigned value_width =
-    look.text_font.TextSize(_T("Foo Bar Foo Bar")).width * 2;
+    look.text_font.TextSize("Foo Bar Foo Bar").width * 2;
 
   const unsigned edit_width = vertical
     ? std::max(GetRecommendedCaptionWidth(), value_width)

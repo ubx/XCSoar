@@ -5,12 +5,10 @@
 
 #include "StringAPI.hxx"
 #include "TruncateString.hpp"
-#include "tstring_view.hxx"
 
+#include <string_view>
 #include <concepts>
 #include <span>
-
-#include <tchar.h>
 
 /**
  * Expand variable references in the "$(NAME)" style from the source
@@ -18,20 +16,20 @@
  * buffer is too small, then the output is truncated silently.
  */
 void
-DollarExpand(const TCHAR *src, std::span<TCHAR> dest,
-             std::invocable<tstring_view> auto lookup_function) noexcept
+DollarExpand(const char *src, std::span<char> dest,
+             std::invocable<std::string_view> auto lookup_function) noexcept
 {
   while (true) {
-    auto dollar = StringFind(src, _T("$("));
+    auto dollar = StringFind(src, "$(");
     if (dollar == nullptr)
       break;
 
     auto name_start = dollar + 2;
-    auto closing = StringFind(name_start, _T(')'));
+    auto closing = StringFind(name_start, ')');
     if (closing == nullptr)
       break;
 
-    const tstring_view name(name_start, closing - name_start);
+    const std::string_view name(name_start, closing - name_start);
 
     const std::size_t prefix_size = dollar - src;
     if (prefix_size >= dest.size())
@@ -46,9 +44,9 @@ DollarExpand(const TCHAR *src, std::span<TCHAR> dest,
     /* look up the name and copy the result to the destination
        buffer */
 
-    const TCHAR *const expansion = lookup_function(name);
+    const char *const expansion = lookup_function(name);
     if (expansion != nullptr) {
-      const tstring_view ex{expansion};
+      const std::string_view ex{expansion};
       if (ex.size() >= dest.size())
         break;
 

@@ -17,6 +17,7 @@
 #include "Version.hpp"
 #include "Simulator.hpp"
 #include "Inflate.hpp"
+#include "Message.hpp"
 #include "Interface.hpp"
 #include "Device/Config.hpp"
 #include "Tracking/SkyLines/Features.hpp"
@@ -27,7 +28,6 @@
 #include "Android/Permissions.hpp"
 #endif
 #include "util/AllocatedString.hxx"
-#include "util/ConvertString.hpp"
 #include "util/StringCompare.hxx"
 #include "util/StaticString.hxx"
 
@@ -66,10 +66,10 @@ GetWelcomeText(bool dark_mode)
     "**Version %s**\n\n"
     "%s\n\n"
     "%s\n\n"
+    "- [https://xcsoar.org](https://xcsoar.org)\n"
     "- [%s](https://xcsoar.org/discover/manual.html)\n"
     "- [%s](https://github.com/XCSoar/XCSoar)\n"
-    "- [%s](https://github.com/XCSoar/XCSoar/discussions)\n"
-    "- [https://xcsoar.org](https://xcsoar.org)",
+    "- [%s](https://github.com/XCSoar/XCSoar/discussions)",
     dark_mode ? "IDB_TITLE_HD_WHITE" : "IDB_TITLE_HD",
     XCSoar_VersionString,
     _("To get the most out of XCSoar and to learn about its many "
@@ -413,11 +413,22 @@ dlgQuickGuideShowModal(bool force_info)
                       UIGlobals::GetMainWindow(),
                       look, _("Welcome to XCSoar"));
 
-  auto pager = std::make_unique<ArrowPagerWidget>(
-    look.button, dialog.MakeModalResultCallback(mrOK));
-  ArrowPagerWidget *pager_ptr = pager.get();
-
   QuickGuideState state;
+
+  auto pager = std::make_unique<ArrowPagerWidget>(
+    look.button, [&dialog, &state, warranty_needed]() {
+      if (warranty_needed && !state.warranty_accepted) {
+        if (ShowMessageBox(
+              _("The safety disclaimer must be accepted "
+                "to use XCSoar. Quit?"),
+              "XCSoar",
+              MB_YESNO | MB_ICONWARNING) != IDYES)
+          /* User chose not to quit — stay in the dialog */
+          return;
+      }
+      dialog.SetModalResult(mrOK);
+    });
+  ArrowPagerWidget *pager_ptr = pager.get();
 
   // Track page titles for the caption callback
   std::vector<const char *> titles;
@@ -457,6 +468,9 @@ dlgQuickGuideShowModal(bool force_info)
       [&state, pager_ptr](bool checked) {
         state.warranty_accepted = checked;
         pager_ptr->UpdateNextButtonState();
+        pager_ptr->SetCloseButtonCaption(checked
+                                         ? _("Close")
+                                         : _("Quit"));
       });
     state.warranty_widget = page.get();
 
@@ -477,12 +491,11 @@ dlgQuickGuideShowModal(bool force_info)
   if (news_needed) {
     news_inflated = InflateToString(NEWS_txt_gz, NEWS_txt_gz_size);
     TruncateToCurrentVersion(news_inflated.data());
-    const UTF8ToWideConverter news_text(news_inflated.c_str());
-    if (news_text.IsValid()) {
+    if (!news_inflated.empty()) {
       state.news_page_index = pager->GetSize();
 
       auto page = QuickGuidePageWidget::CreateCheckboxPage(
-        look, news_text,
+        look, news_inflated.c_str(),
         _("Don't show these release notes again"),
         false,
         [](bool) { /* state is read on dialog close */ });
@@ -666,12 +679,16 @@ dlgQuickGuideShowModal(bool force_info)
 
   dialog.FinishPreliminary(std::move(pager));
 
+  /* Show "Quit" instead of "Close" until the disclaimer is accepted */
+  if (warranty_needed)
+    pager_ptr->SetCloseButtonCaption(_("Quit"));
+
   const int result = dialog.ShowModal();
 
   /* ---- Handle results ---- */
 
-  /* If warranty page was shown and user cancelled or closed without
-     accepting, the app should exit */
+  /* If warranty page was shown and user closed without accepting,
+     the close callback already confirmed the quit via message box */
   if (warranty_needed && !state.warranty_accepted)
     return false;
 
@@ -710,7 +727,8 @@ dlgQuickGuideShowModal(bool force_info)
   }
 #endif
 
-  // Check if user set "don't show again"
+  // Save "don't show again" state (both checked and unchecked,
+  // so unticking from the Info menu re-enables the guide)
   if (info_pages_needed) {
     // The last page is the don't-show-again page
     const unsigned last_page_idx = total_pages - 1;
@@ -718,9 +736,9 @@ dlgQuickGuideShowModal(bool force_info)
       dialog.GetWidget()).GetWidget(last_page_idx);
     auto *guide_page =
       dynamic_cast<QuickGuidePageWidget *>(&last_widget);
-    if (guide_page != nullptr &&
-        guide_page->GetCheckboxState()) {
-      Profile::Set(ProfileKeys::HideQuickGuideDialogOnStartup, true);
+    if (guide_page != nullptr) {
+      Profile::Set(ProfileKeys::HideQuickGuideDialogOnStartup,
+                   guide_page->GetCheckboxState());
       Profile::Save();
     }
   }

@@ -6,20 +6,20 @@
 #include "util/NumberParser.hpp"
 #include "util/StringFormat.hpp"
 
-TCHAR *
-TransponderCode::Format(TCHAR *buffer, std::size_t max_size) const noexcept
+char *
+TransponderCode::Format(char *buffer, std::size_t max_size) const noexcept
 {
   if (!IsDefined())
     return nullptr;
 
-  StringFormat(buffer, max_size, _T("%04o"), value);
+  StringFormat(buffer, max_size, "%04o", value);
   return buffer;
 }
 
 TransponderCode
-TransponderCode::Parse(const TCHAR *s) noexcept
+TransponderCode::Parse(const char *s) noexcept
 {
-  TCHAR *endptr;
+  char *endptr;
   const auto value = ParseUnsigned(s, &endptr, 8);
 
   auto result = Null();

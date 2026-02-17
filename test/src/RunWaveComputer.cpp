@@ -39,13 +39,13 @@ int main(int argc, char **argv)
   delete replay;
 
   for (const auto &w : result.waves) {
-    TCHAR time_buffer[32];
+    char time_buffer[32];
     if (w.time.IsDefined())
       FormatTime(time_buffer, w.time);
     else
-      _tcscpy(time_buffer, _T("?"));
+      strcpy(time_buffer, "?");
 
-    _tprintf(_T("wave: t=%s location=%f,%f a=%f,%f b=%f,%f location=%s normal=%f\n"),
+    printf("wave: t=%s location=%f,%f a=%f,%f b=%f,%f location=%s normal=%f\n",
              time_buffer,
              (double)w.location.longitude.Degrees(),
              (double)w.location.latitude.Degrees(),

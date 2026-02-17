@@ -15,7 +15,7 @@
 
 static TaskBehaviour task_behaviour;
 static OrderedTaskSettings ordered_task_settings;
-static constexpr Path task_path{_T("output/results/Test-Task.tsk")};
+static constexpr Path task_path{"output/results/Test-Task.tsk"};
 
 static constexpr GeoPoint
 MakeGeoPoint(double longitude, double latitude) noexcept
@@ -24,7 +24,7 @@ MakeGeoPoint(double longitude, double latitude) noexcept
 }
 
 static Waypoint
-MakeWaypoint(Waypoint wp, double altitude, tstring name, unsigned id) noexcept
+MakeWaypoint(Waypoint wp, double altitude, std::string name, unsigned id) noexcept
 {
   wp.name = name;
   wp.id = id;
@@ -34,7 +34,7 @@ MakeWaypoint(Waypoint wp, double altitude, tstring name, unsigned id) noexcept
 }
 
 static Waypoint
-MakeWaypoint(double longitude, double latitude, double altitude, tstring name, unsigned id) noexcept
+MakeWaypoint(double longitude, double latitude, double altitude, std::string name, unsigned id) noexcept
 {
   return MakeWaypoint(Waypoint(MakeGeoPoint(longitude, latitude)), altitude, name, id);
 }
@@ -46,9 +46,9 @@ MakeWaypointPtr(Args&&... args) noexcept
   return WaypointPtr(new Waypoint(MakeWaypoint(std::forward<Args>(args)...)));
 }
 
-static const auto wp1_str = _T("wp-01");
-static const auto wp2_str = _T("wp-02");
-static const auto wp3_str = _T("wp-03");
+static const auto wp1_str = "wp-01";
+static const auto wp2_str = "wp-02";
+static const auto wp3_str = "wp-03";
 
 static const auto wp1 = MakeWaypointPtr(0, 45, 50, wp1_str, 100);
 static const auto wp2 = MakeWaypointPtr(0, 45.3, 50,  wp2_str, 102);
@@ -97,7 +97,7 @@ TestAll()
 
 int main()
 {
-  Directory::Create(Path{_T("output/results")});
+  Directory::Create(Path{"output/results"});
 
   plan_tests(10);
   task_behaviour.SetDefaults();

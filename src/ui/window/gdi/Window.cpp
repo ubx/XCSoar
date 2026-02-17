@@ -13,7 +13,7 @@
 #include <windowsx.h>
 
 void
-Window::Create(ContainerWindow *parent, const TCHAR *cls, const TCHAR *text,
+Window::Create(ContainerWindow *parent, const char *cls, const char *text,
                PixelRect rc, const WindowStyle window_style) noexcept
 {
   assert(IsScreenInitialized());
@@ -39,7 +39,7 @@ Window::Create(ContainerWindow *parent, const TCHAR *cls, const TCHAR *text,
 void
 Window::CreateMessageWindow() noexcept
 {
-  hWnd = ::CreateWindowEx(0, _T("PaintWindow"), nullptr, 0, 0, 0, 0, 0,
+  hWnd = ::CreateWindowEx(0, "PaintWindow", nullptr, 0, 0, 0, 0, 0,
                           HWND_MESSAGE,
                           nullptr, nullptr, this);
   assert(hWnd != nullptr);
@@ -163,6 +163,12 @@ Window::OnUser([[maybe_unused]] unsigned id) noexcept
 }
 
 LRESULT
+Window::OnChildColor([[maybe_unused]] HDC hdc) noexcept
+{
+  return 0;
+}
+
+LRESULT
 Window::OnMessage([[maybe_unused]] HWND _hWnd, UINT message,
                   WPARAM wParam, LPARAM lParam) noexcept
 {
@@ -248,7 +254,7 @@ Window::OnMessage([[maybe_unused]] HWND _hWnd, UINT message,
     break;
 
   case WM_CHAR:
-    if (OnCharacter((TCHAR)wParam))
+    if (OnCharacter((char)wParam))
       /* true returned: message was handled */
       return 0;
 
@@ -278,6 +284,17 @@ Window::OnMessage([[maybe_unused]] HWND _hWnd, UINT message,
     /* pass on to DefWindowProc() so the underlying window class knows
        it's not focused anymore */
     break;
+
+  case WM_CTLCOLORSTATIC:
+  case WM_CTLCOLOREDIT: {
+    Window *child = GetUnchecked((HWND)lParam);
+    if (child != nullptr) {
+      LRESULT result = child->OnChildColor((HDC)wParam);
+      if (result != 0)
+        return result;
+    }
+    break;
+  }
 
   case WM_GETDLGCODE:
     if (OnKeyCheck(wParam))

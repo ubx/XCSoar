@@ -18,7 +18,7 @@ struct ListItem
   StaticString<32> name;
   AllocatedPath path;
 
-  ListItem(const TCHAR *_name, Path _path)
+  ListItem(const char *_name, Path _path)
     :name(_name), path(_path) {}
 
   bool operator<(const ListItem &i2) const {
@@ -59,7 +59,7 @@ void
 ToolsWidget::Prepare([[maybe_unused]] ContainerWindow &parent, [[maybe_unused]] const PixelRect &rc) noexcept
 {
   ScriptFileVisitor sfv(list);
-  Directory::VisitFiles(Path(_T("/mnt/onboard/XCSoarData/kobo/scripts")), sfv);
+  Directory::VisitFiles(Path("/mnt/onboard/XCSoarData/kobo/scripts"), sfv);
 
   unsigned len = list.size();
   if (len > 0)

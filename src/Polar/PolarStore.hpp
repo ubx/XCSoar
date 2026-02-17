@@ -5,8 +5,6 @@
 
 #include <span>
 
-#include <tchar.h>
-
 struct PolarShape;
 struct PolarInfo;
 
@@ -14,7 +12,7 @@ namespace PolarStore {
 
 struct Item {
   /**< Name of the glider type */
-  const TCHAR *name;
+  const char *name;
 
   // Using doubles here to simplify the code in PolarStore.cpp
 

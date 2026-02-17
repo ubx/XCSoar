@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
 #include <string.h>
 
 #include <array>
@@ -13,7 +12,7 @@
  */
 class MenuItem {
 public:
-  const TCHAR *label;
+  const char *label;
   unsigned event;
 
   void Clear() noexcept {
@@ -32,7 +31,7 @@ public:
    */
   [[gnu::pure]]
   bool IsDynamic() const noexcept {
-    return label != nullptr && _tcsstr(label, _T("$(")) != nullptr;
+    return label != nullptr && strstr(label, "$(") != nullptr;
   }
 };
 
@@ -53,7 +52,7 @@ public:
     return items[i];
   }
 
-  void Add(const TCHAR *label, unsigned location, unsigned event_id) noexcept;
+  void Add(const char *label, unsigned location, unsigned event_id) noexcept;
 
   [[gnu::pure]]
   int FindByEvent(unsigned event) const noexcept;

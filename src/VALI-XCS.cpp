@@ -14,8 +14,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tchar.h>
-
 enum STATUS_t {
   eValidationPassed,
   eValidationFileNotFound,
@@ -32,7 +30,7 @@ ValidateXCS(Path path, GRecord &oGRecord)
   STATUS_t eStatus = eValidationFileNotFound;
 
   FILE *inFile = nullptr;
-  inFile = _tfopen(path.c_str(), _T("r"));
+  inFile = fopen(path.c_str(), "r");
   if (inFile == nullptr)
     return eStatus;
 

@@ -9,11 +9,10 @@
 #include "LocalPath.hpp"
 #include "Profile/Profile.hpp"
 #include "RowFormWidget.hpp"
-#include "util/ConvertString.hpp"
 
 WndProperty *
-RowFormWidget::AddFile(const TCHAR *label, const TCHAR *help,
-                       std::string_view profile_key, const TCHAR *filters,
+RowFormWidget::AddFile(const char *label, const char *help,
+                       std::string_view profile_key, const char *filters,
                        FileType file_type,
                        bool nullable) noexcept
 {
@@ -39,9 +38,9 @@ RowFormWidget::AddFile(const TCHAR *label, const TCHAR *help,
 }
 
 WndProperty *
-RowFormWidget::AddMultipleFiles(const TCHAR *label, const TCHAR *help,
+RowFormWidget::AddMultipleFiles(const char *label, const char *help,
                                 std::string_view registry_key,
-                                const TCHAR *filters, FileType file_type)
+                                const char *filters, FileType file_type)
 {
 
   WndProperty *edit = Add(label, help);
@@ -74,7 +73,7 @@ RowFormWidget::SetProfile(std::string_view profile_key, unsigned value) noexcept
 
 bool
 RowFormWidget::SaveValue(unsigned i, std::string_view profile_key,
-                         TCHAR *string, size_t max_size) const noexcept
+                         char *string, size_t max_size) const noexcept
 {
   if (!SaveValue(i, string, max_size))
     return false;
@@ -114,15 +113,14 @@ RowFormWidget::SaveValueFileReader(unsigned i,
   if (contracted != nullptr)
     new_value = contracted;
 
-  const WideToUTF8Converter new_value2(new_value.c_str());
-  if (!new_value2.IsValid())
+  if (new_value.empty())
     return false;
 
   const char *old_value = Profile::Get(profile_key, "");
-  if (StringIsEqual(old_value, new_value2))
+  if (StringIsEqual(old_value, new_value.c_str()))
     return false;
 
-  Profile::Set(profile_key, new_value2);
+  Profile::Set(profile_key, new_value.c_str());
   return true;
 }
 
@@ -142,7 +140,7 @@ RowFormWidget::SaveValue(unsigned i,
   if (new_value == value)
     return false;
 
-  TCHAR buffer[0x10];
+  char buffer[0x10];
   FormatISO8601(buffer, new_value);
   Profile::Set(profile_key, buffer);
   value = new_value;
@@ -177,10 +175,9 @@ RowFormWidget::SaveValueMultiFileReader(unsigned i,
     const auto contracted = ContractLocalPath(value);
     Path final_path = contracted != nullptr ? Path(contracted) : value;
 
-    const WideToUTF8Converter value_to_add(final_path.c_str());
-    if (!value_to_add.IsValid()) continue;
+    if (final_path.empty()) continue;
 
-    new_output += value_to_add;
+    new_output += final_path.c_str();
     new_output += "|";
   }
   if (!new_output.empty())

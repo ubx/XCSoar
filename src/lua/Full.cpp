@@ -18,7 +18,6 @@
 #include "LocalPath.hpp"
 #include "Compatibility/path.h"
 #include "system/Path.hpp"
-#include "util/ConvertString.hpp"
 #include "Airspace.hpp"
 #include "Task.hpp"
 #include "Settings.hpp"
@@ -59,7 +58,7 @@ Lua::NewFullState()
 
   {
     SetPackagePath(L,
-                   WideToUTF8Converter(LocalPath(_T("lua" DIR_SEPARATOR_S "?.lua")).c_str()));
+                   LocalPath("lua" DIR_SEPARATOR_S "?.lua").c_str());
   }
 
   return L;

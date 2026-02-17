@@ -11,42 +11,42 @@
 #include <string.h>
 
 void
-AirspaceFormatter::FormatAltitudeShort(TCHAR *buffer,
+AirspaceFormatter::FormatAltitudeShort(char *buffer,
                                        const AirspaceAltitude &altitude,
                                        bool include_unit)
 {
   switch (altitude.reference) {
   case AltitudeReference::AGL:
     if (altitude.altitude_above_terrain <= 0)
-      _tcscpy(buffer, _T("GND"));
+      strcpy(buffer, "GND");
     else
       if (include_unit)
-        StringFormatUnsafe(buffer, _T("%d %s AGL"),
+        StringFormatUnsafe(buffer, "%d %s AGL",
                            iround(Units::ToUserAltitude(altitude.altitude_above_terrain)),
                            Units::GetAltitudeName());
       else
-        StringFormatUnsafe(buffer, _T("%d AGL"),
+        StringFormatUnsafe(buffer, "%d AGL",
                            iround(Units::ToUserAltitude(altitude.altitude_above_terrain)));
     break;
 
   case AltitudeReference::STD:
-    StringFormatUnsafe(buffer, _T("FL%d"), iround(altitude.flight_level));
+    StringFormatUnsafe(buffer, "FL%d", iround(altitude.flight_level));
     break;
 
   case AltitudeReference::MSL:
     if (include_unit)
-      StringFormatUnsafe(buffer, _T("%d %s"),
+      StringFormatUnsafe(buffer, "%d %s",
                          iround(Units::ToUserAltitude(altitude.altitude)),
                          Units::GetAltitudeName());
     else
-      StringFormatUnsafe(buffer, _T("%d"),
+      StringFormatUnsafe(buffer, "%d",
                          iround(Units::ToUserAltitude(altitude.altitude)));
     break;
   }
 }
 
 void
-AirspaceFormatter::FormatAltitude(TCHAR *buffer,
+AirspaceFormatter::FormatAltitude(char *buffer,
                                   const AirspaceAltitude &altitude)
 {
   FormatAltitudeShort(buffer, altitude);
@@ -56,13 +56,13 @@ AirspaceFormatter::FormatAltitude(TCHAR *buffer,
       Units::GetUserAltitudeUnit() == Unit::METER)
     /* additionally show airspace altitude in feet, because aviation
        charts usually print altitudes in feet */
-    StringFormatUnsafe(buffer + _tcslen(buffer), _T(" (%d %s)"),
+    StringFormatUnsafe(buffer + strlen(buffer), " (%d %s)",
                        iround(Units::ToUserUnit(altitude.altitude, Unit::FEET)),
                        Units::GetUnitName(Unit::FEET));
 
   if (altitude.reference != AltitudeReference::MSL &&
       altitude.altitude > 0)
-    StringFormatUnsafe(buffer + _tcslen(buffer), _T(" %d %s"),
+    StringFormatUnsafe(buffer + strlen(buffer), " %d %s",
                        iround(Units::ToUserAltitude(altitude.altitude)),
                        Units::GetAltitudeName());
 }

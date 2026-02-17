@@ -3,13 +3,12 @@
 
 #include "Operation/Operation.hpp"
 #include "system/Sleep.h"
-#include "util/ConvertString.hpp"
 #include "util/Exception.hxx"
 
 void
 OperationEnvironment::SetError(std::exception_ptr e) noexcept
 {
-  SetErrorMessage(UTF8ToWideConverter(GetFullMessage(e).c_str()));
+  SetErrorMessage(GetFullMessage(e).c_str());
 }
 
 bool
@@ -30,12 +29,12 @@ NullOperationEnvironment::Sleep(std::chrono::steady_clock::duration) noexcept
 }
 
 void
-NullOperationEnvironment::SetErrorMessage([[maybe_unused]] const TCHAR *text) noexcept
+NullOperationEnvironment::SetErrorMessage([[maybe_unused]] const char *text) noexcept
 {
 }
 
 void
-NullOperationEnvironment::SetText([[maybe_unused]] const TCHAR *text) noexcept
+NullOperationEnvironment::SetText([[maybe_unused]] const char *text) noexcept
 {
 }
 

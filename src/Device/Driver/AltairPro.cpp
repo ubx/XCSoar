@@ -11,7 +11,6 @@
 #include "NMEA/InputLine.hpp"
 #include "Units/System.hpp"
 #include "Waypoint/Waypoint.hpp"
-#include "util/ConvertString.hpp"
 #include "util/TruncateString.hpp"
 #include "util/Macros.hpp"
 #include "time/TimeoutClock.hpp"
@@ -19,7 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <cassert>
-#include <tchar.h>
+#include <string>
 
 using std::string_view_literals::operator""sv;
 
@@ -56,7 +55,7 @@ ReadAltitude(NMEAInputLine &line, double &value_r)
   if (!available)
     return false;
 
-  if (unit == _T('f') || unit == _T('F'))
+  if (unit == 'f' || unit == 'F')
     value = Units::ToSysUnit(value, Unit::FEET);
 
   value_r = value;
@@ -232,8 +231,8 @@ AltairProDevice::PutTurnPoint(const char *propertyName,
   char NoS, EoW;
 
   if (waypoint != nullptr){
-    if (WideToACPConverter wp_name{waypoint->name.c_str()}; wp_name.IsValid())
-      CopyTruncateString(Name, ARRAY_SIZE(Name), wp_name);
+    if (waypoint->name.c_str())
+      CopyTruncateString(Name, ARRAY_SIZE(Name), waypoint->name.c_str());
     else
       throw std::runtime_error("Invalid string");
 
@@ -287,8 +286,8 @@ AltairProCreateOnPort([[maybe_unused]] const DeviceConfig &config, Port &com_por
 }
 
 const struct DeviceRegister altair_pro_driver = {
-  _T("Altair RU"),
-  _T("Altair Recording Unit"),
+  "Altair RU",
+  "Altair Recording Unit",
   DeviceRegister::DECLARE,
   AltairProCreateOnPort,
 };

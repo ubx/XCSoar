@@ -6,8 +6,6 @@
 #include "ui/window/PaintWindow.hpp"
 #include "util/StaticString.hxx"
 
-#include <tchar.h>
-
 struct DialogLook;
 
 /**
@@ -21,7 +19,7 @@ protected:
 
 private:
   /** Helptext of the Control */
-  const TCHAR *help_text = nullptr;
+  const char *help_text = nullptr;
 
 public:
   WindowControl() noexcept;
@@ -46,7 +44,7 @@ public:
    * Returns the Caption/Text of the Control
    * @return The Caption/Text of the Control
    */
-  const TCHAR *GetCaption() const noexcept {
+  const char *GetCaption() const noexcept {
     return caption.c_str();
   }
 
@@ -54,17 +52,17 @@ public:
    * Sets the Caption/Text of the Control
    * @param Value The new Caption/Text of the Control
    */
-  void SetCaption(const TCHAR *Value) noexcept;
+  void SetCaption(const char *Value) noexcept;
 
   /**
    * Sets the Helptext of the Control
    * @param Value The new Helptext of the Control
    */
-  void SetHelpText(const TCHAR *_help_text) noexcept {
+  void SetHelpText(const char *_help_text) noexcept {
     help_text = _help_text;
   }
 
-  const TCHAR *GetHelpText() const noexcept {
+  const char *GetHelpText() const noexcept {
     return help_text;
   }
 };

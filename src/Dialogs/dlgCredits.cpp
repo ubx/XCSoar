@@ -9,7 +9,6 @@
 #include "Look/DialogLook.hpp"
 #include "Version.hpp"
 #include "Inflate.hpp"
-#include "util/ConvertString.hpp"
 #include "util/AllocatedString.hxx"
 #include "util/StaticString.hxx"
 #include "UIGlobals.hpp"
@@ -44,7 +43,7 @@ GetLogoText() noexcept
     "Visit us at:\n"
     "[https://xcsoar.org](https://xcsoar.org)",
     XCSoar_VersionString,
-    _T(GIT_COMMIT_ID));
+    GIT_COMMIT_ID);
 #else
   text.Format(
     "![XCSoar Logo](resource:IDB_LOGO_HD)\n\n"
@@ -64,14 +63,9 @@ dlgCreditsShowModal([[maybe_unused]] UI::SingleWindow &parent)
   const DialogLook &look = UIGlobals::GetDialogLook();
 
   const auto authors = InflateToString(AUTHORS_gz, AUTHORS_gz_size);
-  const UTF8ToWideConverter authors2(authors.c_str());
-
-  const auto news = InflateToString(NEWS_txt_gz, NEWS_txt_gz_size);
-  const UTF8ToWideConverter news2(news.c_str());
-
+  const auto news = InflateToString(NEWS_txt_gz, NEWS_txt_gz_size);  
   const auto license = InflateToString(COPYING_gz, COPYING_gz_size);
-  const UTF8ToWideConverter license2(license.c_str());
-
+  
   WidgetDialog dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
                       look, _("Credits"));
 
@@ -81,12 +75,12 @@ dlgCreditsShowModal([[maybe_unused]] UI::SingleWindow &parent)
 
   pager->Add(std::make_unique<VScrollWidget>(
     std::make_unique<RichTextWidget>(look, GetLogoText()), look, true));
-  pager->Add(std::make_unique<VScrollWidget>(
-    std::make_unique<RichTextWidget>(look, authors2), look, true));
-  pager->Add(std::make_unique<VScrollWidget>(
-    std::make_unique<RichTextWidget>(look, news2, false), look, true));
-  pager->Add(std::make_unique<VScrollWidget>(
-    std::make_unique<RichTextWidget>(look, license2, false), look, true));
+  pager->Add(std::make_unique<VScrollWidget>(std::make_unique<RichTextWidget>
+             (look, authors.c_str()), look, true));
+  pager->Add(std::make_unique<VScrollWidget>(std::make_unique<RichTextWidget>
+             (look, news.c_str(), false), look, true));
+  pager->Add(std::make_unique<VScrollWidget>(std::make_unique<RichTextWidget>
+             (look, license.c_str(), false), look, true));
 
   /* Caption update on page flip */
   static constexpr const char *const titles[] = {

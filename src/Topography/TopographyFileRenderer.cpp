@@ -12,7 +12,6 @@
 #include "Screen/Layout.hpp"
 #include "shapelib/mapserver.h"
 #include "util/AllocatedArray.hxx"
-#include "util/tstring.hpp"
 #include "Geo/GeoClip.hpp"
 #include "Geo/FAISphere.hpp"
 
@@ -28,6 +27,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #endif
 
+#include <string>
 #include <algorithm>
 #include <numeric>
 #include <set>
@@ -370,14 +370,14 @@ TopographyFileRenderer::PaintLabels(Canvas &canvas,
 
   int iskip = file.GetSkipSteps(map_scale);
 
-  std::set<tstring> drawn_labels;
+  std::set<std::string> drawn_labels;
 
   // Iterate over all shapes in the file
   for (const XShape *shape_p : visible_labels) {
     const XShape &shape = *shape_p;
 
     // Skip shapes without a label
-    const TCHAR *label = shape.GetLabel();
+    const char *label = shape.GetLabel();
     assert(label != nullptr);
 
     const auto lines = shape.GetLines();

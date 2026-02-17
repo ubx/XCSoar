@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
-
 class DataField;
 
 /**
@@ -13,5 +11,5 @@ class DataField;
  * @return true if the value has been modified
  */
 bool
-EditDataFieldDialog(const TCHAR *caption, DataField &df,
-                    const TCHAR *help_text);
+EditDataFieldDialog(const char *caption, DataField &df,
+                    const char *help_text);

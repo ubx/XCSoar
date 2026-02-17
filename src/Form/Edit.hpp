@@ -5,7 +5,8 @@
 
 #include "Form/Control.hpp"
 #include "ui/dim/Rect.hpp"
-#include "util/tstring.hpp"
+
+#include <string>
 
 struct DialogLook;
 class DataField;
@@ -16,8 +17,8 @@ class ContainerWindow;
  * an editable field (the Editor).
  */
 class WndProperty : public WindowControl {
-  typedef bool (*EditCallback)(const TCHAR *caption, DataField &df,
-                               const TCHAR *help_text);
+  typedef bool (*EditCallback)(const char *caption, DataField &df,
+                               const char *help_text);
 
   const DialogLook &look;
 
@@ -27,7 +28,7 @@ class WndProperty : public WindowControl {
   /** Width reserved for the caption of the Control */
   int caption_width;
 
-  tstring value;
+  std::string value;
 
   DataField *data_field = nullptr;
 
@@ -45,7 +46,7 @@ public:
    * @param CaptionWidth Width of the Caption of the Control
    */
   WndProperty(ContainerWindow &parent, const DialogLook &look,
-              const TCHAR *Caption,
+              const char *Caption,
               const PixelRect &rc, int CaptionWidth,
               const WindowStyle style) noexcept;
 
@@ -55,7 +56,7 @@ public:
   ~WndProperty() noexcept;
 
   void Create(ContainerWindow &parent, const PixelRect &rc,
-              const TCHAR *_caption,
+              const char *_caption,
               unsigned _caption_width,
               const WindowStyle style) noexcept;
 
@@ -132,7 +133,7 @@ public:
     edit_callback = _ec;
   }
 
-  const TCHAR *GetText() const noexcept {
+  const char *GetText() const noexcept {
     return value.c_str();
   }
 
@@ -140,7 +141,7 @@ public:
    * Sets the Editors text to the given Value
    * @param Value The new text of the Editor Control
    */
-  void SetText(const TCHAR *_value) noexcept;
+  void SetText(const char *_value) noexcept;
 
 private:
   /**

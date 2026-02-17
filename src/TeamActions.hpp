@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
-
 class FlarmId;
 
 namespace TeamActions {
@@ -13,6 +11,6 @@ namespace TeamActions {
  * Track the specified FLARM peer.
  */
 void
-TrackFlarm(FlarmId id, const TCHAR *callsign=nullptr) noexcept;
+TrackFlarm(FlarmId id, const char *callsign=nullptr) noexcept;
 
 };

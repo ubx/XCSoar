@@ -7,8 +7,6 @@
 
 #include <memory>
 #include <stdio.h>
-#include <tchar.h>
-
 class Reader;
 class FileOutputStream;
 
@@ -20,20 +18,20 @@ public:
 
 protected:
   [[gnu::pure]]
-  AllocatedPath MakeCachePath(const TCHAR *name) const {
+  AllocatedPath MakeCachePath(const char *name) const {
     return AllocatedPath::Build(cache_path, name);
   }
 
 public:
-  void Flush(const TCHAR *name);
+  void Flush(const char *name);
 
   /**
    * Returns nullptr on error.
    */
-  std::unique_ptr<Reader> Load(const TCHAR *name, Path original_path) noexcept;
+  std::unique_ptr<Reader> Load(const char *name, Path original_path) noexcept;
 
   /**
    * Throws on error.
    */
-  std::unique_ptr<FileOutputStream> Save(const TCHAR *name, Path original_path);
+  std::unique_ptr<FileOutputStream> Save(const char *name, Path original_path);
 };

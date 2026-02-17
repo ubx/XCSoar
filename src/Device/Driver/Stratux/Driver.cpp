@@ -9,7 +9,8 @@
 #include "Device/Driver/FLARM/StaticParser.hpp"
 #include "Device/Driver/LevilAHRS_G.hpp"
 #include "FLARM/Details.hpp"
-#include "util/ConvertString.hpp"
+
+#include <string_view>
 
 StratuxDevice::StratuxSettings settings;
 
@@ -80,13 +81,13 @@ void StratuxDevice::ExtractAndSetCallSign(const char *line, NMEAInfo &info)
     char *ptr = strchr(id_string, '!');
 
     if (ptr && ptr[1] != '\0' && flarm_slot->name.empty()) {
-      UTF8ToWideConverter callsign(ptr + 1);
-      if (callsign.IsValid())
-        flarm_slot->name.append(callsign.c_str());
+      std::string_view callsign(ptr + 1);
+      if (!callsign.empty())
+        flarm_slot->name.append(callsign.data());
     }
 
     /* Callsign from own list always overwrites. */
-    const TCHAR *cs = FlarmDetails::LookupCallsign(id);
+    const char *cs = FlarmDetails::LookupCallsign(id);
     if (cs != nullptr && cs[0] != 0) {
       flarm_slot->name.clear();
       flarm_slot->name.append(cs);
@@ -103,8 +104,8 @@ StratuxCreateOnPort([[maybe_unused]] const DeviceConfig &config, [[maybe_unused]
 }
 
 const struct DeviceRegister stratux_driver = {
-  _T("Stratux"),
-  _T("Stratux"),
+  "Stratux",
+  "Stratux",
   DeviceRegister::MANAGE,
   StratuxCreateOnPort,
 };

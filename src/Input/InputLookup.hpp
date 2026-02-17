@@ -3,22 +3,20 @@
 
 #pragma once
 
-#include "util/tstring_view.hxx"
+#include <string_view>
 
-#include <tchar.h>
-
-typedef void (*pt2Event)(const TCHAR *);
+typedef void (*pt2Event)(const char *);
 
 namespace InputEvents {
 
 [[gnu::pure]]
-int findGCE(const TCHAR *data);
+int findGCE(const char *data);
 
 [[gnu::pure]]
-int findNE(const TCHAR *data);
+int findNE(const char *data);
 
 [[gnu::pure]]
 pt2Event
-findEvent(tstring_view name) noexcept;
+findEvent(std::string_view name) noexcept;
 
 } // namespace InputEvents

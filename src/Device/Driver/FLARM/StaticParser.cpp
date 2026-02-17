@@ -29,12 +29,12 @@ ParsePFLAE(NMEAInputLine &line, FlarmError &error, TimeStamp clock) noexcept
   error.severity = (FlarmError::Severity)
     line.Read((int)FlarmError::Severity::NO_ERROR);
   error.code = (FlarmError::Code)line.ReadHex(0);
-  TCHAR buffer[100];
-  StringFormatUnsafe(buffer, _T("%s - %s"),
+  char buffer[100];
+  StringFormatUnsafe(buffer, "%s - %s",
                      FlarmError::ToString(error.severity),
                      FlarmError::ToString(error.code));
   if (error.severity != FlarmError::Severity::NO_ERROR)
-    Message::AddMessage(_T("FLARM: "), buffer);
+    Message::AddMessage("FLARM: ", buffer);
 
   error.available.Update(clock);
 }

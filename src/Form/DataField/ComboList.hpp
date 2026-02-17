@@ -3,11 +3,8 @@
 
 #pragma once
 
-#include "util/tstring.hpp"
-
+#include <string>
 #include <vector>
-#include <tchar.h>
-
 class ComboList {
 public:
   struct Item {
@@ -16,13 +13,13 @@ public:
     static constexpr int DOWNLOAD = -800003;
 
     int int_value;
-    tstring string_value;
-    tstring display_string;
-    tstring help_text;
+    std::string string_value;
+    std::string display_string;
+    std::string help_text;
 
-    Item(int _int_value, const TCHAR *_string_value,
-         const TCHAR *_display_string,
-         const TCHAR *_help_text = nullptr) noexcept;
+    Item(int _int_value, const char *_string_value,
+         const char *_display_string,
+         const char *_help_text = nullptr) noexcept;
 
     Item(const Item &other) = delete;
     Item &operator=(const Item &other) = delete;
@@ -69,26 +66,26 @@ public:
   }
 
   unsigned Append(int int_value,
-                  const TCHAR *string_value,
-                  const TCHAR *display_string,
-                  const TCHAR *help_text = nullptr) noexcept {
+                  const char *string_value,
+                  const char *display_string,
+                  const char *help_text = nullptr) noexcept {
     unsigned i = items.size();
     items.emplace_back(int_value,
                        string_value, display_string, help_text);
     return i;
   }
 
-  unsigned Append(const TCHAR *string_value,
-                  const TCHAR *display_string,
-                  const TCHAR *help_text = nullptr) noexcept {
+  unsigned Append(const char *string_value,
+                  const char *display_string,
+                  const char *help_text = nullptr) noexcept {
     return Append(items.size(), string_value, display_string, help_text);
   }
 
-  unsigned Append(int int_value, const TCHAR *string_value) noexcept {
+  unsigned Append(int int_value, const char *string_value) noexcept {
     return Append(int_value, string_value, string_value);
   }
 
-  unsigned Append(const TCHAR *string_value) noexcept {
+  unsigned Append(const char *string_value) noexcept {
     return Append(string_value, string_value);
   }
 

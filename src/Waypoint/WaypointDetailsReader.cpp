@@ -22,18 +22,18 @@
 namespace WaypointDetails {
 
 static WaypointPtr
-FindWaypoint(Waypoints &way_points, const TCHAR *name)
+FindWaypoint(Waypoints &way_points, const char *name)
 {
   return way_points.LookupName(name);
 }
 
 struct WaypointDetailsBuilder {
-  TCHAR name[201];
-  tstring details;
+  char name[201];
+  std::string details;
 #ifdef HAVE_RUN_FILE
-  std::forward_list<tstring> files_external;
+  std::forward_list<std::string> files_external;
 #endif
-  std::forward_list<tstring> files_embed;
+  std::forward_list<std::string> files_embed;
 
   void Reset() noexcept {
     details.clear();
@@ -120,7 +120,7 @@ ReadFileFromProfile(Waypoints &way_points,
                     ProgressListener &progress)
 {
   auto paths =
-      Profile::GetMultiplePaths(ProfileKeys::AirfieldFileList, _T("*.txt\0"));
+      Profile::GetMultiplePaths(ProfileKeys::AirfieldFileList, "*.txt\0");
   for (const auto &path : paths) {
     try {
       auto reader = std::make_unique<FileReader>(Path(path));

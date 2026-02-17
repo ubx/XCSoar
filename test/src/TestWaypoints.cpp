@@ -8,8 +8,6 @@
 #include <functional>
 
 #include <stdio.h>
-#include <tchar.h>
-
 extern "C" {
 #include "tap.h"
 }
@@ -65,15 +63,15 @@ AddSpiralWaypoints(Waypoints &waypoints,
     StaticString<256> buffer;
 
     if (i % 7 == 0) {
-      buffer = _T("Airfield");
+      buffer = "Airfield";
       waypoint.type = Waypoint::Type::AIRFIELD;
     } else if (i % 3 == 0) {
-      buffer = _T("Field");
+      buffer = "Field";
       waypoint.type = Waypoint::Type::OUTLANDING;
     } else
-      buffer = _T("Waypoint");
+      buffer = "Waypoint";
 
-    buffer.AppendFormat(_T(" #%d"), i + 1);
+    buffer.AppendFormat(" #%d", i + 1);
     waypoint.name = buffer;
 
     waypoints.Append(std::move(waypoint));
@@ -98,7 +96,7 @@ TestLookups(const Waypoints &waypoints, const GeoPoint &center)
   ok1((waypoint = waypoints.LookupLocation(center, 0)) != NULL);
   ok1(waypoint->original_id == 0);
 
-  ok1((waypoint = waypoints.LookupName(_T("Waypoint #5"))) != NULL);
+  ok1((waypoint = waypoints.LookupName("Waypoint #5")) != NULL);
   ok1(waypoint->original_id == 4);
 
   ok1((waypoint = waypoints.LookupLocation(waypoint->location, 10000)) != NULL);
@@ -107,10 +105,10 @@ TestLookups(const Waypoints &waypoints, const GeoPoint &center)
 
 class BeginsWith
 {
-  const TCHAR *prefix;
+  const char *prefix;
 
 public:
-  BeginsWith(const TCHAR *_prefix):prefix(_prefix) {}
+  BeginsWith(const char *_prefix):prefix(_prefix) {}
 
   bool operator()(const Waypoint &waypoint) {
     return StringStartsWith(waypoint.name.c_str(), prefix);
@@ -118,7 +116,7 @@ public:
 };
 
 static void
-TestNamePrefixVisitor(const Waypoints &waypoints, const TCHAR *prefix,
+TestNamePrefixVisitor(const Waypoints &waypoints, const char *prefix,
                       unsigned expected_results)
 {
   WaypointPredicateCounter::Predicate predicate = BeginsWith(prefix);
@@ -130,12 +128,12 @@ TestNamePrefixVisitor(const Waypoints &waypoints, const TCHAR *prefix,
 static void
 TestNamePrefixVisitor(const Waypoints &waypoints)
 {
-  TestNamePrefixVisitor(waypoints, _T(""), 151);
-  TestNamePrefixVisitor(waypoints, _T("Foo"), 0);
-  TestNamePrefixVisitor(waypoints, _T("a"), 0);
-  TestNamePrefixVisitor(waypoints, _T("A"), 22);
-  TestNamePrefixVisitor(waypoints, _T("Air"), 22);
-  TestNamePrefixVisitor(waypoints, _T("Field"), 51 - 8);
+  TestNamePrefixVisitor(waypoints, "", 151);
+  TestNamePrefixVisitor(waypoints, "Foo", 0);
+  TestNamePrefixVisitor(waypoints, "a", 0);
+  TestNamePrefixVisitor(waypoints, "A", 22);
+  TestNamePrefixVisitor(waypoints, "Air", 22);
+  TestNamePrefixVisitor(waypoints, "Field", 51 - 8);
 }
 
 class CloserThan
@@ -268,15 +266,15 @@ TestReplace(Waypoints& waypoints, unsigned id)
   if (wp == NULL)
     return false;
 
-  tstring oldName = wp->name;
+  std::string oldName = wp->name;
 
   Waypoint copy = *wp;
-  copy.name = _T("Fred");
+  copy.name = "Fred";
   waypoints.Replace(wp, std::move(copy));
   waypoints.Optimise();
 
   wp = waypoints.LookupId(id);
-  return wp != NULL && wp->name != oldName && wp->name == _T("Fred");
+  return wp != NULL && wp->name != oldName && wp->name == "Fred";
 }
 
 int

@@ -7,8 +7,6 @@
 #include "Math/Angle.hpp"
 
 #include <cstdint>
-#include <tchar.h>
-
 struct Waypoint;
 struct GeoPoint;
 class FAITrianglePointValidator;
@@ -78,7 +76,7 @@ private:
 
   bool CompareDirection(const Waypoint &waypoint, GeoPoint location) const;
 
-  static bool CompareName(const Waypoint &waypoint, const TCHAR *name);
+  static bool CompareName(const Waypoint &waypoint, const char *name);
 
   bool CompareName(const Waypoint &waypoint) const;
 };

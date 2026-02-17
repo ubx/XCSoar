@@ -12,10 +12,9 @@
 #include "io/BufferedReader.hxx"
 #include "system/ConvertPathName.hpp"
 #include "Operation/Operation.hpp"
-#include "util/ConvertString.hpp"
 #include "LogFile.hpp"
 
-static const TCHAR *const terrain_cache_name = _T("terrain");
+static const char *const terrain_cache_name = "terrain";
 
 inline bool
 RasterTerrain::LoadCache(FileCache &cache, Path path)

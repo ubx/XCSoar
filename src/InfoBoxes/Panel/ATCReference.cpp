@@ -41,16 +41,16 @@ ATCReferencePanel::UpdateValues() noexcept
     ? data_components->waypoints->GetNearest(location, 100)
     : nullptr;
 
-  SetText(WAYPOINT, waypoint != nullptr ? waypoint->name.c_str() : _T("---"));
+  SetText(WAYPOINT, waypoint != nullptr ? waypoint->name.c_str() : "---");
 
-  const TCHAR *location_string;
-  TCHAR buffer[64];
+  const char *location_string;
+  char buffer[64];
   if (location.IsValid()) {
     FormatGeoPoint(location, buffer, ARRAY_SIZE(buffer),
                    CommonInterface::GetUISettings().format.coordinate_format);
     location_string = buffer;
   } else
-    location_string = _T("---");
+    location_string = "---";
 
   SetText(LOCATION, location_string);
 }

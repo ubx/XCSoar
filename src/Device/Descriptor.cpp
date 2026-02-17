@@ -16,7 +16,6 @@
 #include "NMEA/Info.hpp"
 #include "thread/Mutex.hxx"
 #include "util/StringAPI.hxx"
-#include "util/ConvertString.hpp"
 #include "util/Exception.hxx"
 #include "Logger/NMEALogger.hpp"
 #include "Language/Language.hpp"
@@ -196,8 +195,8 @@ try {
   port = std::move(_port);
 
   parser.Reset();
-  parser.SetReal(!StringIsEqual(driver->name, _T("Condor")));
-  if (config.IsDriver(_T("Condor")))
+  parser.SetReal(!StringIsEqual(driver->name, "Condor"));
+  if (config.IsDriver("Condor"))
     parser.DisableGeoid();
 
   if (driver->CreateOnPort != nullptr) {
@@ -387,30 +386,29 @@ try {
   } catch (...) {
     const auto e = std::current_exception();
 
-    TCHAR name_buffer[64];
-    const TCHAR *name = config.GetPortName(name_buffer, 64);
+    char name_buffer[64];
+    const char *name = config.GetPortName(name_buffer, 64);
 
-    LogError(e, WideToUTF8Converter(name));
+    LogError(e, name);
 
-    const auto _msg = GetFullMessage(e);
-    if (const UTF8ToWideConverter what{_msg.c_str()}; what.IsValid()) {
-      LockSetErrorMessage(what);
+    const auto msg = GetFullMessage(e);
+    if (!msg.empty()) {
+      LockSetErrorMessage(msg.c_str());
 
-      StaticString<256> msg;
-      msg.Format(_T("%s: %s (%s)"), _("Unable to open port"), name,
-                 (const TCHAR *)what);
-      env.SetErrorMessage(msg);
+      StaticString<256> _msg;
+      _msg.Format("%s: %s (%s)", _("Unable to open port"), name, msg.c_str());
+      env.SetErrorMessage(_msg);
     }
 
     return false;
   }
 
   if (port == nullptr) {
-    TCHAR name_buffer[64];
-    const TCHAR *name = config.GetPortName(name_buffer, 64);
+    char name_buffer[64];
+    const char *name = config.GetPortName(name_buffer, 64);
 
     StaticString<256> msg;
-    msg.Format(_T("%s: %s."), _("Unable to open port"), name);
+    msg.Format("%s: %s.", _("Unable to open port"), name);
     env.SetErrorMessage(msg);
     return false;
   }
@@ -436,11 +434,11 @@ try {
   const auto e = std::current_exception();
   LogError(e);
 
-  const auto _msg = GetFullMessage(e);
+  const auto msg = GetFullMessage(e);
 
-  if (const UTF8ToWideConverter msg{_msg.c_str()}; msg.IsValid()) {
-    LockSetErrorMessage(msg);
-    env.SetErrorMessage(msg);
+  if (!msg.empty()) {
+    LockSetErrorMessage(msg.c_str());
+    env.SetErrorMessage(msg.c_str());
   }
 
   return false;
@@ -465,8 +463,8 @@ DeviceDescriptor::Open(OperationEnvironment &env)
   assert(!IsOccupied());
   assert(open_job == nullptr);
 
-  TCHAR buffer[64];
-  LogFormat(_T("Opening device: %s"), config.GetPortName(buffer, 64));
+  char buffer[64];
+  LogFormat("Opening device: %s", config.GetPortName(buffer, 64));
 
 #ifdef ANDROID
   /* reset the Kalman filter */
@@ -554,8 +552,8 @@ DeviceDescriptor::AutoReopen(OperationEnvironment &env)
       !reopen_clock.CheckUpdate(std::chrono::seconds(30)))
     return;
 
-  TCHAR buffer[64];
-  LogFormat(_T("Reconnecting to device: %s"), config.GetPortName(buffer, 64));
+  char buffer[64];
+  LogFormat("Reconnecting to device: %s", config.GetPortName(buffer, 64));
 
   InputEvents::processGlideComputer(GCE_COMMPORT_RESTART);
   Reopen(env);
@@ -584,7 +582,7 @@ DeviceDescriptor::EnableNMEA(OperationEnvironment &env) noexcept
   return success;
 }
 
-const TCHAR *
+const char *
 DeviceDescriptor::GetDisplayName() const noexcept
 {
   return driver != nullptr
@@ -593,7 +591,7 @@ DeviceDescriptor::GetDisplayName() const noexcept
 }
 
 bool
-DeviceDescriptor::IsDriver(const TCHAR *name) const noexcept
+DeviceDescriptor::IsDriver(const char *name) const noexcept
 {
   return driver != nullptr
     ? StringIsEqual(driver->name, name)
@@ -627,7 +625,7 @@ DeviceDescriptor::IsManageable() const noexcept
     if (driver->IsManageable())
       return true;
 
-    if (StringIsEqual(driver->name, _T("LX")) && device != nullptr) {
+    if (StringIsEqual(driver->name, "LX") && device != nullptr) {
       const LXDevice &lx = *(const LXDevice *)device;
       return lx.IsManageable();
     }
@@ -916,7 +914,7 @@ DeviceDescriptor::PutPilotEvent(OperationEnvironment &env) noexcept
 
 bool
 DeviceDescriptor::PutActiveFrequency(RadioFrequency frequency,
-                                     const TCHAR *name,
+                                     const char *name,
                                      OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
@@ -966,7 +964,7 @@ DeviceDescriptor::ExchangeRadioFrequencies(OperationEnvironment &env,
 
 bool
 DeviceDescriptor::PutStandbyFrequency(RadioFrequency frequency,
-                                      const TCHAR *name,
+                                      const char *name,
                                       OperationEnvironment &env) noexcept
 {
   assert(InMainThread());
@@ -1074,13 +1072,13 @@ DoDeclare(const struct Declaration &declaration,
           OperationEnvironment &env)
 {
   StaticString<60> text;
-  text.Format(_T("%s: %s."), _("Sending declaration"), driver.display_name);
+  text.Format("%s: %s.", _("Sending declaration"), driver.display_name);
   env.SetText(text);
 
   bool result = device != nullptr && device->Declare(declaration, home, env);
 
   if (flarm) {
-    text.Format(_T("%s: FLARM."), _("Sending declaration"));
+    text.Format("%s: FLARM.", _("Sending declaration"));
     env.SetText(text);
 
     result |= DeclareToFLARM(declaration, port, driver, device, home, env);
@@ -1108,7 +1106,7 @@ DeviceDescriptor::Declare(const struct Declaration &declaration,
   } else {
     /* enable the "muxed FLARM" hack? */
     const bool flarm = blackboard.IsFLARM(index) &&
-      !IsDriver(_T("FLARM"));
+      !IsDriver("FLARM");
 
     return DoDeclare(declaration, *port, *driver, device, flarm,
                      home, env);
@@ -1127,14 +1125,14 @@ DeviceDescriptor::ReadFlightList(RecordedFlightList &flight_list,
   StaticString<60> text;
 
   if (driver->HasPassThrough() && second_device != nullptr) {
-    text.Format(_T("%s: %s."), _("Reading flight list"),
+    text.Format("%s: %s.", _("Reading flight list"),
                 second_driver->display_name);
     env.SetText(text);
 
     device->EnablePassThrough(env);
     return second_device->ReadFlightList(flight_list, env);
   } else {
-    text.Format(_T("%s: %s."), _("Reading flight list"), driver->display_name);
+    text.Format("%s: %s.", _("Reading flight list"), driver->display_name);
     env.SetText(text);
 
     return device->ReadFlightList(flight_list, env);
@@ -1158,14 +1156,14 @@ DeviceDescriptor::DownloadFlight(const RecordedFlightInfo &flight,
 
 
   if (driver->HasPassThrough() && (second_device != nullptr)) {
-    text.Format(_T("%s: %s."), _("Downloading flight log"),
+    text.Format("%s: %s.", _("Downloading flight log"),
                 second_driver->display_name);
     env.SetText(text);
 
     device->EnablePassThrough(env);
     return second_device->DownloadFlight(flight, path, env);
   } else {
-    text.Format(_T("%s: %s."), _("Downloading flight log"),
+    text.Format("%s: %s.", _("Downloading flight log"),
                 driver->display_name);
     env.SetText(text);
 
@@ -1251,7 +1249,7 @@ DeviceDescriptor::OnCalculatedUpdate(const MoreData &basic,
 }
 
 inline void
-DeviceDescriptor::LockSetErrorMessage(const TCHAR *msg) noexcept
+DeviceDescriptor::LockSetErrorMessage(const char *msg) noexcept
 {
     const std::lock_guard lock{mutex};
     error_message = msg;
@@ -1289,8 +1287,8 @@ void
 DeviceDescriptor::PortError(const char *msg) noexcept
 {
   {
-    TCHAR buffer[64];
-    LogFormat(_T("Device error on %s: %s"),
+    char buffer[64];
+    LogFormat("Device error on %s: %s",
               config.GetPortName(buffer, 64), msg);
   }
 

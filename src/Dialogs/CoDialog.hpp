@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
-
 struct DialogLook;
 class PluggableOperationEnvironment;
 namespace UI { class SingleWindow; }
@@ -21,5 +19,5 @@ namespace Co { class InvokeTask; }
  */
 bool
 ShowCoDialog(UI::SingleWindow &parent, const DialogLook &dialog_look,
-             const TCHAR *caption, Co::InvokeTask task,
+             const char *caption, Co::InvokeTask task,
              PluggableOperationEnvironment *env);

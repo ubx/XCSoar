@@ -12,13 +12,10 @@
 #include "Task/ObservationZones/SymmetricSectorZone.hpp"
 #include "XML/DataNode.hpp"
 #include "util/Compiler.h"
-#include "util/ConvertString.hpp"
 
 #include <cassert>
-#include <tchar.h>
-
 [[gnu::const]]
-static const TCHAR *
+static const char *
 GetName(TaskPointType type, bool mode_optional_start)
 {
   switch (type) {
@@ -26,23 +23,23 @@ GetName(TaskPointType type, bool mode_optional_start)
     gcc_unreachable();
 
   case TaskPointType::START:
-    return mode_optional_start ? _T("OptionalStart") : _T("Start");
+    return mode_optional_start ? "OptionalStart" : "Start";
 
   case TaskPointType::AST:
-    return _T("Turn");
+    return "Turn";
 
   case TaskPointType::AAT:
-    return _T("Area");
+    return "Area";
 
   case TaskPointType::FINISH:
-    return _T("Finish");
+    return "Finish";
   }
 
   gcc_unreachable();
 }
 
 [[gnu::pure]]
-static const TCHAR *
+static const char *
 GetName(const OrderedTaskPoint &tp, bool mode_optional_start)
 {
   return GetName(tp.GetType(), mode_optional_start);
@@ -58,9 +55,9 @@ Serialise(WritableDataNode &node, const GeoPoint &data)
 static void
 Serialise(WritableDataNode &node, const Waypoint &data)
 {
-  node.SetAttribute("name", WideToUTF8Converter(data.name.c_str()));
+  node.SetAttribute("name", data.name.c_str());
   node.SetAttribute("id", data.id);
-  node.SetAttribute("comment", WideToUTF8Converter(data.comment.c_str()));
+  node.SetAttribute("comment", data.comment.c_str());
   if (data.has_elevation)
     node.SetAttribute("altitude", data.elevation);
 
@@ -166,11 +163,11 @@ Serialise(WritableDataNode &node, const ObservationZonePoint &data)
 
 static void
 Serialise(WritableDataNode &node, const OrderedTaskPoint &data,
-          const TCHAR *name)
+          const char *name)
 {
   // do nothing
   auto child = node.AppendChild("Point");
-  child->SetAttribute("type", WideToUTF8Converter(name));
+  child->SetAttribute("type", name);
 
   Serialise(*child->AppendChild("Waypoint"), data.GetWaypoint());
   Serialise(*child->AppendChild("ObservationZone"),
@@ -187,7 +184,7 @@ static void
 Serialise(WritableDataNode &node, const OrderedTaskPoint &tp,
           bool mode_optional_start)
 {
-  const TCHAR *name = GetName(tp, mode_optional_start);
+  const char *name = GetName(tp, mode_optional_start);
   assert(name != nullptr);
   Serialise(node, tp, name);
 }
@@ -210,28 +207,28 @@ GetHeightRef(AltitudeReference height_ref)
 }
 
 [[gnu::const]]
-static const TCHAR *
+static const char *
 GetTaskFactoryType(TaskFactoryType type)
 {
   switch(type) {
   case TaskFactoryType::FAI_GENERAL:
-    return _T("FAIGeneral");
+    return "FAIGeneral";
   case TaskFactoryType::FAI_TRIANGLE:
-    return _T("FAITriangle");
+    return "FAITriangle";
   case TaskFactoryType::FAI_OR:
-    return _T("FAIOR");
+    return "FAIOR";
   case TaskFactoryType::FAI_GOAL:
-    return _T("FAIGoal");
+    return "FAIGoal";
   case TaskFactoryType::RACING:
-    return _T("RT");
+    return "RT";
   case TaskFactoryType::AAT:
-    return _T("AAT");
+    return "AAT";
   case TaskFactoryType::MAT:
-    return _T("MAT");
+    return "MAT";
   case TaskFactoryType::MIXED:
-    return _T("Mixed");
+    return "Mixed";
   case TaskFactoryType::TOURING:
-    return _T("Touring");
+    return "Touring";
   case TaskFactoryType::COUNT:
     gcc_unreachable();
   }
@@ -269,7 +266,7 @@ Serialise(WritableDataNode &node, const OrderedTaskSettings &data)
 void
 SaveTask(WritableDataNode &node, const OrderedTask &task)
 {
-  node.SetAttribute("type", WideToUTF8Converter(GetTaskFactoryType(task.GetFactoryType())));
+  node.SetAttribute("type", GetTaskFactoryType(task.GetFactoryType()));
   Serialise(node, task.GetOrderedTaskSettings());
 
   for (const auto &tp : task.GetPoints())

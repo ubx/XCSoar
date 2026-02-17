@@ -16,9 +16,9 @@
  * len characters with last char = '\0'
  */
 static void
-copy_space_padded(char dest[], const TCHAR src[], unsigned int len)
+copy_space_padded(char dest[], const char src[], unsigned int len)
 {
-  const unsigned slen = _tcslen(src);
+  const unsigned slen = strlen(src);
   for(unsigned i = 0; i < (len - 1); i++) {
     if (i < slen)
       dest[i] = (char)std::max((src[i] & 0x7f), 0x20);
@@ -95,7 +95,7 @@ LoadTask(LX::Declaration &lx_driver_Declaration, const Declaration &declaration)
       lx_driver_Declaration.tptypes[i] = 3;
       lx_driver_Declaration.Latitudes[i] = 0;
       lx_driver_Declaration.Longitudes[i] = 0;
-      copy_space_padded(lx_driver_Declaration.WaypointNames[i], _T("TAKEOFF"),
+      copy_space_padded(lx_driver_Declaration.WaypointNames[i], "TAKEOFF",
         sizeof(lx_driver_Declaration.WaypointNames[i]));
 
 
@@ -113,7 +113,7 @@ LoadTask(LX::Declaration &lx_driver_Declaration, const Declaration &declaration)
       lx_driver_Declaration.tptypes[i] = 2;
       lx_driver_Declaration.Longitudes[i] = 0;
       lx_driver_Declaration.Latitudes[i] = 0;
-      copy_space_padded(lx_driver_Declaration.WaypointNames[i], _T("LANDING"),
+      copy_space_padded(lx_driver_Declaration.WaypointNames[i], "LANDING",
           sizeof(lx_driver_Declaration.WaypointNames[i]));
 
     } else { // unused
@@ -131,7 +131,7 @@ static void
 LoadContestClass(LX::ContestClass &lx_driver_ContestClass,
                  [[maybe_unused]] const Declaration &declaration)
 {
-  copy_space_padded(lx_driver_ContestClass.contest_class, _T(""),
+  copy_space_padded(lx_driver_ContestClass.contest_class, "",
                     sizeof(lx_driver_ContestClass.contest_class));
 }
 

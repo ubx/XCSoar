@@ -10,14 +10,13 @@
 #include "time/TimeoutClock.hpp"
 #include "time/BrokenDateTime.hpp"
 #include "Operation/Operation.hpp"
-#include "util/ConvertString.hpp"
 
 static bool
 NanoWriteDecl(Port &port, OperationEnvironment &env, PortNMEAReader &reader,
               unsigned row, unsigned n_rows,
               const char *content)
 {
-  NarrowString<256> buffer;
+  StaticString<256> buffer;
   buffer.Format("$PLXVC,DECL,W,%u,%u,%s", row, n_rows, content);
 
   PortWriteNMEA(port, buffer, env);
@@ -35,7 +34,7 @@ NanoWriteDeclFormat(Port &port, OperationEnvironment &env,
                     unsigned row, unsigned n_rows,
                     const char *fmt, Args&&... args)
 {
-  NarrowString<256> buffer;
+  StaticString<256> buffer;
   buffer.Format(fmt, args...);
   return NanoWriteDecl(port, env, reader, row, n_rows, buffer);
 }
@@ -45,14 +44,13 @@ static bool
 NanoWriteDeclString(Port &port, OperationEnvironment &env,
                     PortNMEAReader &reader,
                     unsigned row, unsigned n_rows,
-                    const char *prefix, const TCHAR *value)
+                    const char *prefix, const char *value)
 {
-  WideToUTF8Converter narrow_value(value);
-  if (!narrow_value.IsValid())
+  if (!value)
     return false;
 
   return NanoWriteDeclFormat(port, env, reader, row, n_rows,
-                             "%s%s", prefix, (const char *)narrow_value);
+                             "%s%s", prefix, value);
 }
 
 static bool

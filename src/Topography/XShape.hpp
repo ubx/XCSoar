@@ -17,8 +17,6 @@
 #include <memory>
 #include <span>
 
-#include <tchar.h>
-
 struct GeoPoint;
 
 class XShape {
@@ -75,7 +73,7 @@ class XShape {
   mutable unsigned offset;
 #endif
 
-  BasicAllocatedString<TCHAR> label;
+  BasicAllocatedString<char> label;
 
 public:
   /**
@@ -129,7 +127,7 @@ public:
     return points.get();
   }
 
-  const TCHAR *GetLabel() const noexcept {
+  const char *GetLabel() const noexcept {
     return label.c_str();
   }
 };

@@ -17,9 +17,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <tchar.h>
-
-static BasicAllocatedString<TCHAR>
+static BasicAllocatedString<char>
 ImportLabel(const char *src) noexcept
 {
   if (src == nullptr)
@@ -34,7 +32,7 @@ ImportLabel(const char *src) noexcept
   if (!ValidateUTF8(src))
     return nullptr;
 
-  return BasicAllocatedString<TCHAR>(src);
+  return BasicAllocatedString<char>(src);
 }
 
 /**

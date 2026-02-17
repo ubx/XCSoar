@@ -5,17 +5,16 @@
 
 #include "Charset.hpp"
 #include "util/ReusableArray.hpp"
-#include "util/tstring_view.hxx"
 
-#include <tchar.h>
+#include <string_view>
 
 /**
- * Helper which imports strings from a file to `TCHAR*`.
+ * Helper which imports strings from a file to `char*`.
  */
 class StringConverter {
   Charset charset;
 
-  ReusableArray<TCHAR> tbuffer;
+  ReusableArray<char> tbuffer;
 
 public:
   explicit StringConverter(Charset cs=Charset::AUTO) noexcept
@@ -47,7 +46,7 @@ public:
    *
    * Throws on error.
    */
-  TCHAR *Convert(char *src);
+  char *Convert(char *src);
 
-  tstring_view Convert(std::string_view src);
+  std::string_view Convert(std::string_view src);
 };

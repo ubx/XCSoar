@@ -11,7 +11,6 @@
 #include "Engine/Waypoint/Waypoints.hpp"
 #include "Input/InputEvents.hpp"
 #include "system/Args.hpp"
-#include "util/ConvertString.hpp"
 #include "util/StringStrip.hxx"
 
 #include <stdio.h>
@@ -160,24 +159,23 @@ Dump(const NMEAInfo &basic)
 
 int main(int argc, char **argv)
 {
-  NarrowString<1024> usage;
+  StaticString<1024> usage;
   usage = "DRIVER\n\n"
           "Where DRIVER is one of:";
   {
     const DeviceRegister *driver;
     for (unsigned i = 0; (driver = GetDriverByIndex(i)) != nullptr; ++i) {
-      WideToUTF8Converter driver_name(driver->name);
-      usage.AppendFormat("\n\t%s", (const char *)driver_name);
+      usage.AppendFormat("\n\t%s", driver->name);
     }
   }
 
   Args args(argc, argv, usage);
-  tstring driver_name = args.ExpectNextT();
+  std::string driver_name = args.ExpectNextT();
   args.ExpectEnd();
 
   driver = FindDriverByName(driver_name.c_str());
   if (driver == nullptr) {
-    _ftprintf(stderr, _T("No such driver: %s\n"), driver_name.c_str());
+    fprintf(stderr, "No such driver: %s\n", driver_name.c_str());
     return 1;
   }
 

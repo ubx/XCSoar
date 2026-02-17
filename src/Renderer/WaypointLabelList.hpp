@@ -10,14 +10,12 @@
 #include "util/StaticArray.hxx"
 #include "Sizes.h" /* for NAME_SIZE */
 
-#include <tchar.h>
-
 class WaypointLabelList : private NonCopyable {
   static constexpr int WPCIRCLESIZE = 2;
 
 public:
   struct Label{
-    TCHAR Name[NAME_SIZE+1];
+    char Name[NAME_SIZE+1];
     PixelPoint Pos;
     TextInBoxMode Mode;
     int AltArivalAGL;
@@ -41,7 +39,7 @@ public:
     clip_rect.right += WPCIRCLESIZE * 2;
   }
 
-  void Add(const TCHAR *name, PixelPoint p,
+  void Add(const char *name, PixelPoint p,
            TextInBoxMode Mode, bool bold,
            int AltArivalAGL,
            bool inTask, bool isLandable, bool isAirport,

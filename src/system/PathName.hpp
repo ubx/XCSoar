@@ -5,8 +5,6 @@
 
 #include "util/Compiler.h"
 
-#include <tchar.h>
-
 /**
  * Replaces the "base name" of the specified path, i.e. the portion
  * after the last path separator.  If the input path does not contain
@@ -16,4 +14,4 @@
  * @param new_base the new base name to be copied to #path
  */
 void
-ReplaceBaseName(TCHAR *path, const TCHAR *new_base);
+ReplaceBaseName(char *path, const char *new_base);

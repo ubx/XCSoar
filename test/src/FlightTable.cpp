@@ -23,7 +23,7 @@ class FlightCheck {
   unsigned slow_count, fast_count;
 
 public:
-  FlightCheck(const TCHAR *_name)
+  FlightCheck(const char *_name)
     :name(_name),
      year(0), month(0), day(0),
      previous_valid(false), takeoff_valid(false),
@@ -36,7 +36,7 @@ public:
   }
 
   void print_flight() {
-    _tprintf(_T("%s,%04u-%02u-%02u,%02u:%02u,%02u:%02u\n"), name.c_str(),
+    printf("%s,%04u-%02u-%02u,%02u:%02u,%02u:%02u\n", name.c_str(),
              year, month, day,
              takeoff.time.hour, takeoff.time.minute,
              landing.time.hour, landing.time.minute);
@@ -140,7 +140,7 @@ IGCFileVisitor::Visit(Path path, Path filename)
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 try {
   IGCFileVisitor visitor;
-  Directory::VisitSpecificFiles(Path(_T(".")), _T("*.igc"), visitor);
+  Directory::VisitSpecificFiles(Path("."), "*.igc", visitor);
   return 0;
 } catch (...) {
   PrintException(std::current_exception());

@@ -6,15 +6,15 @@
 #include <stdio.h>
 
 void
-ConsoleOperationEnvironment::SetErrorMessage(const TCHAR *text) noexcept
+ConsoleOperationEnvironment::SetErrorMessage(const char *text) noexcept
 {
-  _ftprintf(stderr, _T("ERROR: %s\n"), text);
+  fprintf(stderr, "ERROR: %s\n", text);
 }
 
 void
-ConsoleOperationEnvironment::SetText(const TCHAR *text) noexcept
+ConsoleOperationEnvironment::SetText(const char *text) noexcept
 {
-  _tprintf(_T("%s\n"), text);
+  printf("%s\n", text);
 }
 
 void

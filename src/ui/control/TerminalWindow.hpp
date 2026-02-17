@@ -7,8 +7,6 @@
 #include "ui/dim/Size.hpp"
 #include "util/AllocatedGrid.hxx"
 
-#include <tchar.h>
-
 struct TerminalLook;
 
 class TerminalWindow : public PaintWindow {
@@ -17,7 +15,7 @@ class TerminalWindow : public PaintWindow {
   unsigned cursor_x, cursor_y;
   PixelSize cell_size;
 
-  AllocatedGrid<TCHAR> data;
+  AllocatedGrid<char> data;
 
 public:
   TerminalWindow(const TerminalLook &_look):look(_look) {}

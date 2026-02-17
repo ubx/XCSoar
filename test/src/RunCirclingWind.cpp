@@ -43,10 +43,10 @@ int main(int argc, char **argv)
     CirclingWind::Result result = circling_wind.NewSample(replay->Basic(),
                                                           replay->Calculated());
     if (result.quality > 0) {
-      TCHAR time_buffer[32];
+      char time_buffer[32];
       FormatTime(time_buffer, replay->Basic().time);
 
-      _tprintf(_T("%s %d %d %g\n"),
+      printf("%s %d %d %g\n",
                time_buffer, result.quality,
                (int)result.wind.bearing.Degrees(),
                (double)result.wind.norm);

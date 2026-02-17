@@ -7,8 +7,6 @@
 
 #include <vector>
 #include <algorithm>
-#include <tchar.h>
-
 class Canvas;
 struct PixelRect;
 
@@ -119,7 +117,7 @@ protected:
    * Draw a checkbox at the left of the row and clipped text to the right.
    */
   void DrawCheckboxText(Canvas &canvas, const PixelRect &rc,
-                        const TCHAR *text, bool selected) noexcept;
+                        const char *text, bool selected) noexcept;
 
   /** Optional hook for derived classes to react to selection changes. */
   virtual void OnSelectionChanged() noexcept {}

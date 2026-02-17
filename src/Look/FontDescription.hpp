@@ -6,8 +6,6 @@
 #ifdef USE_GDI
 #include <windef.h>
 #include <wingdi.h>
-#include <tchar.h>
-
 class FontDescription {
   LOGFONT logfont;
 
@@ -50,7 +48,7 @@ public:
   }
 
 private:
-  void Init(const TCHAR *face,
+  void Init(const char *face,
             int height,
             bool bold, bool italic,
             bool monospace);

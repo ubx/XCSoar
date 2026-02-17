@@ -5,18 +5,16 @@
 
 #include "StaticString.hxx"
 #include "StringCompare.hxx"
-#include "tstring.hpp"
 
+#include <string>
 #include <algorithm>
 #include <cassert>
-#include <tchar.h>
-
 #ifdef PRINT_RADIX_TREE
 #include <ostream>
 #endif
 
 /**
- * An associative container which maps TCHAR strings to arbitrary
+ * An associative container which maps char strings to arbitrary
  * objects.  Each "key" may have multiple values.
  *
  * This class provides a sorted iterator, which is optimized for
@@ -29,10 +27,10 @@ class RadixTree {
 	template<class V>
 	struct KeyVisitorAdapter {
 		V &visitor;
-		const TCHAR *key;
+		const char *key;
 
 		constexpr KeyVisitorAdapter(V &_visitor,
-					    const TCHAR *_key) noexcept
+					    const char *_key) noexcept
 			:visitor(_visitor), key(_key) {}
 
 		void operator()(const T &value) const {
@@ -164,7 +162,7 @@ class RadixTree {
 		Node *next_sibling = nullptr, *children = nullptr;
 		LeafList leaves;
 
-		constexpr Node(const TCHAR *_label) noexcept
+		constexpr Node(const char *_label) noexcept
 			:label(_label) {}
 
 		Node(const Node &) = delete;
@@ -180,9 +178,9 @@ class RadixTree {
 		 * StaticString, multiple chained Node objects are
 		 * created.
 		 */
-		Node *CreateLeaf(const TCHAR *label, const T &value) const {
+		Node *CreateLeaf(const char *label, const T &value) const {
 			Node *top = new Node(label), *bottom = top;
-			while (_tcslen(label) >= Node::label.capacity()) {
+			while (strlen(label) >= Node::label.capacity()) {
 				/* label too long for the Node's
 				   StaticString, create another child
 				   Node */
@@ -209,8 +207,8 @@ class RadixTree {
 		 * match (even if the node's label is longer).
 		 */
 		[[gnu::pure]]
-		const TCHAR *MatchKey(const TCHAR *key) const noexcept {
-			const TCHAR *l = label.c_str();
+		const char *MatchKey(const char *key) const noexcept {
+			const char *l = label.c_str();
 
 			while (!StringIsEmpty(key) && *key == *l) {
 				++key;
@@ -231,8 +229,8 @@ class RadixTree {
 		 * Returns nullptr if there is a mismatch.
 		 */
 		[[gnu::pure]]
-		const TCHAR *MatchPrefix(const TCHAR *prefix) const noexcept {
-			const TCHAR *l = label.c_str();
+		const char *MatchPrefix(const char *prefix) const noexcept {
+			const char *l = label.c_str();
 
 			while (!StringIsEmpty(prefix) && !StringIsEmpty(l)) {
 				if (*l != *prefix)
@@ -246,7 +244,7 @@ class RadixTree {
 		}
 
 		[[gnu::pure]]
-		T *Get(const TCHAR *key) noexcept {
+		T *Get(const char *key) noexcept {
 			if (StringIsEmpty(key))
 				/* found */
 				return leaves.GetFirstPointer();
@@ -258,7 +256,7 @@ class RadixTree {
 		}
 
 		[[gnu::pure]]
-		const T *Get(const TCHAR *key) const noexcept {
+		const T *Get(const char *key) const noexcept {
 			if (StringIsEmpty(key))
 				/* found */
 				return leaves.GetFirstPointer();
@@ -271,7 +269,7 @@ class RadixTree {
 
 		template<class P>
 		[[gnu::pure]]
-		T *GetIf(const TCHAR *key, const P &predicate) noexcept {
+		T *GetIf(const char *key, const P &predicate) noexcept {
 			if (StringIsEmpty(key))
 				/* found */
 				return leaves.GetIf(predicate);
@@ -284,7 +282,7 @@ class RadixTree {
 
 		template<class P>
 		[[gnu::pure]]
-		const T *GetIf(const TCHAR *key,
+		const T *GetIf(const char *key,
 			       const P &predicate) const noexcept {
 			if (StringIsEmpty(key))
 				/* found */
@@ -297,18 +295,18 @@ class RadixTree {
 		}
 
 		[[gnu::pure]]
-		TCHAR *Suggest(const TCHAR *prefix, TCHAR *dest,
+		char *Suggest(const char *prefix, char *dest,
 			       size_t max_length) const noexcept {
 			if (StringIsEmpty(prefix)) {
 				/* exact match - return the first character of all child
 				   nodes */
-				TCHAR *retval = dest, *end = dest + max_length - 1;
+				char *retval = dest, *end = dest + max_length - 1;
 
 				for (const Node *node = children; node != nullptr && dest < end;
 				     node = node->next_sibling)
 					*dest++ = node->label[0u];
 
-				*dest = _T('\0');
+				*dest = '\0';
 				return retval;
 			}
 
@@ -323,7 +321,7 @@ class RadixTree {
 
 			/* return one character */
 			dest[0u] = m.node->label[(unsigned)(m.key - prefix)];
-			dest[1] = _T('\0');
+			dest[1] = '\0';
 			return dest;
 		}
 
@@ -373,7 +371,7 @@ class RadixTree {
 		/**
 		 * Remove all values with the specified key.
 		 */
-		void RemoveValues(const TCHAR *key) noexcept {
+		void RemoveValues(const char *key) noexcept {
 			assert(key != nullptr);
 
 			if (StringIsEmpty(key)) {
@@ -392,7 +390,7 @@ class RadixTree {
 		 *
 		 * @return true if a value was found and removed
 		 */
-		bool RemoveValue(const TCHAR *key, const T &value) noexcept {
+		bool RemoveValue(const char *key, const T &value) noexcept {
 			assert(key != nullptr);
 
 			if (StringIsEmpty(key)) {
@@ -426,8 +424,8 @@ class RadixTree {
 		 * This overload is used by VisitAllPairs().
 		 */
 		template<typename V>
-		void VisitValues(const TCHAR *prefix, V &visitor) const {
-			tstring key(prefix);
+		void VisitValues(const char *prefix, V &visitor) const {
+			std::string key(prefix);
 			key.append(label);
 
 			const KeyVisitorAdapter<V> adapter(visitor, key.c_str());
@@ -464,8 +462,8 @@ class RadixTree {
 		 * alphabetic order.  This overload is used by VisitAllPairs().
 		 */
 		template<typename V>
-		void VisitAllChildren(const TCHAR *prefix, V &visitor) const {
-			tstring key(prefix);
+		void VisitAllChildren(const char *prefix, V &visitor) const {
+			std::string key(prefix);
 			key.append(label);
 
 			for (const Node *node = children; node != nullptr;
@@ -481,7 +479,7 @@ class RadixTree {
 		 * is only matched on children's labels.
 		 */
 		template<typename V>
-		void VisitChildren(const TCHAR *key, V &visitor) {
+		void VisitChildren(const char *key, V &visitor) {
 			VisitSiblings(children, key, visitor);
 		}
 
@@ -491,7 +489,7 @@ class RadixTree {
 		 * children's labels.
 		 */
 		template<typename V>
-		void VisitChildren(const TCHAR *key, V &visitor) const {
+		void VisitChildren(const char *key, V &visitor) const {
 			VisitSiblings(const_cast<const Node *>(children), key, visitor);
 		}
 
@@ -500,8 +498,8 @@ class RadixTree {
 		 * key is matched on this node's label first.
 		 */
 		template<typename V>
-		void Visit(const TCHAR *key, V &visitor) {
-			const TCHAR *match = MatchPrefix(key);
+		void Visit(const char *key, V &visitor) {
+			const char *match = MatchPrefix(key);
 			if (match == nullptr)
 				return;
 
@@ -516,8 +514,8 @@ class RadixTree {
 		 * key is matched on this node's label first.
 		 */
 		template<typename V>
-		void Visit(const TCHAR *key, V &visitor) const {
-			const TCHAR *match = MatchPrefix(key);
+		void Visit(const char *key, V &visitor) const {
+			const char *match = MatchPrefix(key);
 			if (match == nullptr)
 				return;
 
@@ -533,7 +531,7 @@ class RadixTree {
 		 * is only matched on children's labels.
 		 */
 		template<typename V>
-		void VisitPrefixChildren(const TCHAR *prefix, V &visitor) {
+		void VisitPrefixChildren(const char *prefix, V &visitor) {
 			if (StringIsEmpty(prefix))
 				VisitAllChildren(visitor);
 			else
@@ -547,7 +545,7 @@ class RadixTree {
 		 * is only matched on children's labels.
 		 */
 		template<typename V>
-		void VisitPrefixChildren(const TCHAR *prefix, V &visitor) const {
+		void VisitPrefixChildren(const char *prefix, V &visitor) const {
 			if (StringIsEmpty(prefix))
 				VisitAllChildren(visitor);
 			else
@@ -562,8 +560,8 @@ class RadixTree {
 		 * prefix is matched on this node's label first.
 		 */
 		template<typename V>
-		void VisitPrefix(const TCHAR *prefix, V &visitor) {
-			const TCHAR *match = MatchPrefix(prefix);
+		void VisitPrefix(const char *prefix, V &visitor) {
+			const char *match = MatchPrefix(prefix);
 			if (match == nullptr)
 				return;
 
@@ -581,8 +579,8 @@ class RadixTree {
 		 * prefix is matched on this node's label first.
 		 */
 		template<typename V>
-		void VisitPrefix(const TCHAR *prefix, V &visitor) const {
-			const TCHAR *match = MatchPrefix(prefix);
+		void VisitPrefix(const char *prefix, V &visitor) const {
+			const char *match = MatchPrefix(prefix);
 			if (match == nullptr)
 				return;
 
@@ -596,14 +594,14 @@ class RadixTree {
 
 		struct Match {
 			Node *node;
-			const TCHAR *key;
+			const char *key;
 
 			constexpr Match(Node *_node,
-					const TCHAR *_key) noexcept
+					const char *_key) noexcept
 				:node(_node), key(_key) {}
 
 			[[gnu::pure]]
-			bool IsFullMatch(const TCHAR *key) const noexcept {
+			bool IsFullMatch(const char *key) const noexcept {
 				return this->key != key && this->key >= key + node->label.length();
 			}
 		};
@@ -615,10 +613,10 @@ class RadixTree {
 		 * of the key which was not used yet.
 		 */
 		[[gnu::pure]]
-		struct Match FindChild(const TCHAR *key) const noexcept {
+		struct Match FindChild(const char *key) const noexcept {
 			Node *node = children, *prev = nullptr;
 			while (node != nullptr) {
-				const TCHAR *label = node->label.c_str();
+				const char *label = node->label.c_str();
 				if (key[0u] < label[0u])
 					return Match(prev, key);
 				else if (key[0u] == label[0u])
@@ -635,7 +633,7 @@ class RadixTree {
 		 * Adds a new value relative to this node, possibly creating a
 		 * new node and/or splitting an existing node.
 		 */
-		void Add(const TCHAR *key, const T &value) {
+		void Add(const char *key, const T &value) {
 			assert(key != nullptr);
 
 			if (StringIsEmpty(key)) {
@@ -708,7 +706,7 @@ class RadixTree {
 	Node root;
 
 public:
-	constexpr RadixTree() noexcept:root(_T("")) {}
+	constexpr RadixTree() noexcept:root("") {}
 
 	/**
 	 * Gets a value for the specified key.  Returns the parameter
@@ -716,7 +714,7 @@ public:
 	 * multiple values, any one is returned.
 	 */
 	[[gnu::pure]]
-	T &Get(const TCHAR *key, T &default_value) noexcept {
+	T &Get(const char *key, T &default_value) noexcept {
 		T *value = root.get(key);
 		return value != nullptr
 			? *value
@@ -729,7 +727,7 @@ public:
 	 * multiple values, any one is returned.
 	 */
 	[[gnu::pure]]
-	const T &Get(const TCHAR *key, const T &default_value) const noexcept {
+	const T &Get(const char *key, const T &default_value) const noexcept {
 		const T *value = root.Get(key);
 		return value != nullptr
 			? *value
@@ -738,7 +736,7 @@ public:
 
 	template<class P>
 	[[gnu::pure]]
-	T &GetIf(const TCHAR *key, T &default_value, const P &predicate) noexcept {
+	T &GetIf(const char *key, T &default_value, const P &predicate) noexcept {
 		const T *value = root.GetIf(key, predicate);
 		return value != nullptr
 			? *value
@@ -747,7 +745,7 @@ public:
 
 	template<class P>
 	[[gnu::pure]]
-	const T &GetIf(const TCHAR *key, const T &default_value,
+	const T &GetIf(const char *key, const T &default_value,
 		       const P &predicate) const noexcept {
 		const T *value = root.GetIf(key, predicate);
 		return value != nullptr
@@ -769,7 +767,7 @@ public:
 	 * occur in the tree
 	 */
 	[[gnu::pure]]
-	TCHAR *Suggest(const TCHAR *prefix, TCHAR *dest,
+	char *Suggest(const char *prefix, char *dest,
 		       size_t max_length) const noexcept {
 		return root.Suggest(prefix, dest, max_length);
 	}
@@ -782,14 +780,14 @@ public:
 	 * Add a new value with the specified key.  Multiple values can
 	 * exist for one key.
 	 */
-	void Add(const TCHAR *key, const T &value) {
+	void Add(const char *key, const T &value) {
 		root.Add(key, value);
 	}
 
 	/**
 	 * Remove all values with the specified key.
 	 */
-	void Remove(const TCHAR *key) noexcept {
+	void Remove(const char *key) noexcept {
 		assert(key != nullptr);
 
 		root.RemoveValues(key);
@@ -800,7 +798,7 @@ public:
 	 *
 	 * @return true if a value was found and removed
 	 */
-	bool Remove(const TCHAR *key, const T &value) noexcept {
+	bool Remove(const char *key, const T &value) noexcept {
 		assert(key != nullptr);
 
 		return root.RemoveValue(key, value);
@@ -829,15 +827,15 @@ public:
 	 */
 	template<typename V>
 	void VisitAllPairs(V &visitor) const {
-		root.VisitValues(_T(""), visitor);
-		root.VisitAllChildren(_T(""), visitor);
+		root.VisitValues("", visitor);
+		root.VisitAllChildren("", visitor);
 	}
 
 	/**
 	 * Visit all values with the specified key.
 	 */
 	template<typename V>
-	void Visit(const TCHAR *key, V &visitor) {
+	void Visit(const char *key, V &visitor) {
 		root.Visit(key, visitor);
 	}
 
@@ -845,7 +843,7 @@ public:
 	 * Visit all values with the specified key.
 	 */
 	template<typename V>
-	void Visit(const TCHAR *key, V &visitor) const {
+	void Visit(const char *key, V &visitor) const {
 		root.Visit(key, visitor);
 	}
 
@@ -854,7 +852,7 @@ public:
 	 * order.
 	 */
 	template<typename V>
-	void VisitPrefix(const TCHAR *prefix, V &visitor) {
+	void VisitPrefix(const char *prefix, V &visitor) {
 		root.VisitPrefix(prefix, visitor);
 	}
 
@@ -863,7 +861,7 @@ public:
 	 * order.
 	 */
 	template<typename V>
-	void VisitPrefix(const TCHAR *prefix, V &visitor) const {
+	void VisitPrefix(const char *prefix, V &visitor) const {
 		root.VisitPrefix(prefix, visitor);
 	}
 

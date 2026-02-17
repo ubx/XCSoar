@@ -18,7 +18,6 @@
 #include "LocalPath.hpp"
 #include "Look/GlobalFonts.hpp"
 
-#include <tchar.h>
 #include <stdio.h>
 
 void
@@ -65,7 +64,7 @@ LoadFiles()
 static void
 CreateDefaultTask(TaskManager &task_manager, const Waypoints &way_points)
 {
-  const TCHAR start_name[] = _T("Bergneustadt");
+  const char start_name[] = "Bergneustadt";
 
   task_manager.set_factory(OrderedTask::FactoryType::MIXED);
   AbstractTaskFactory &factory = task_manager.GetFactory();
@@ -83,7 +82,7 @@ CreateDefaultTask(TaskManager &task_manager, const Waypoints &way_points)
     fprintf(stderr, "No start waypoint\n");
   }
 
-  wp = way_points.lookup_name(_T("Uslar"));
+  wp = way_points.lookup_name("Uslar");
   if (wp != NULL) {
     tp = factory.createIntermediate(AbstractTaskFactory::AST_CYLINDER, *wp);
     if (!factory.append(tp, false)) {
@@ -93,7 +92,7 @@ CreateDefaultTask(TaskManager &task_manager, const Waypoints &way_points)
     fprintf(stderr, "No turn point\n");
   }
 
-  wp = way_points.lookup_name(_T("Suhl Goldlaut"));
+  wp = way_points.lookup_name("Suhl Goldlaut");
   if (wp != NULL) {
     tp = factory.createIntermediate(AbstractTaskFactory::AST_CYLINDER, *wp);
     if (!factory.append(tp, false)) {
@@ -131,7 +130,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   CreateDefaultTask(task_manager, way_points);
 
   SingleWindow main_window;
-  main_window.set(_T("STATIC"), _T("RunTaskEditorDialog"),
+  main_window.set("STATIC", "RunTaskEditorDialog",
                   0, 0, 640, 480);
   main_window.Show();
 

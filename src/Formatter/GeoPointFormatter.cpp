@@ -24,13 +24,13 @@
 #include "util/StringAPI.hxx"
 
 bool
-FormatLongitude(Angle longitude, TCHAR *buffer, size_t size,
+FormatLongitude(Angle longitude, char *buffer, size_t size,
                 CoordinateFormat format)
 {
   int dd, mm, ss;
 
   // Calculate Longitude sign
-  TCHAR sign = longitude.IsNegative() ? _T('W') : _T('E');
+  char sign = longitude.IsNegative() ? 'W' : 'E';
 
   double mlong(longitude.AbsoluteDegrees());
 
@@ -53,7 +53,7 @@ FormatLongitude(Angle longitude, TCHAR *buffer, size_t size,
       mm -= 60;
     }
     // Save the string to the buffer
-    StringFormat(buffer, size, _T("%03d" ) _T(DEG) _T("%02d'%02d\" %c"),
+    StringFormat(buffer, size, "%03d"  DEG "%02d'%02d\" %c",
                  dd, mm, ss, sign);
     break;
 
@@ -66,7 +66,7 @@ FormatLongitude(Angle longitude, TCHAR *buffer, size_t size,
     // Calculate seconds
     mlong = (mlong - mm) * 60.0;
     // Save the string to the buffer
-    StringFormat(buffer, size, _T("%03d") _T(DEG) _T("%02d'%04.1f\" %c"),
+    StringFormat(buffer, size, "%03d" DEG "%02d'%04.1f\" %c",
                  dd, mm, mlong, sign);
     break;
 
@@ -76,13 +76,13 @@ FormatLongitude(Angle longitude, TCHAR *buffer, size_t size,
     // Calculate minutes
     mlong = (mlong - dd) * 60.0;
     // Save the string to the buffer
-    StringFormat(buffer, size, _T("%03d") _T(DEG) _T("%06.3f' %c"),
+    StringFormat(buffer, size, "%03d" DEG "%06.3f' %c",
                  dd, mlong, sign);
     break;
 
   case CoordinateFormat::DD_DDDDD:
     // Save the string to the buffer
-    StringFormat(buffer, size, _T("%09.5f" DEG " %c"), mlong, sign);
+    StringFormat(buffer, size, "%09.5f" DEG " %c", mlong, sign);
     break;
 
   case CoordinateFormat::UTM:
@@ -93,13 +93,13 @@ FormatLongitude(Angle longitude, TCHAR *buffer, size_t size,
 }
 
 bool
-FormatLatitude(Angle latitude, TCHAR *buffer, size_t size,
+FormatLatitude(Angle latitude, char *buffer, size_t size,
                CoordinateFormat format)
 {
   int dd, mm, ss;
 
   // Calculate Latitude sign
-  TCHAR sign = latitude.IsNegative() ? _T('S') : _T('N');
+  char sign = latitude.IsNegative() ? 'S' : 'N';
 
   double mlat(latitude.AbsoluteDegrees());
 
@@ -122,7 +122,7 @@ FormatLatitude(Angle latitude, TCHAR *buffer, size_t size,
       mm -= 60;
     }
     // Save the string to the buffer
-    StringFormat(buffer, size, _T("%02d") _T(DEG) _T("%02d'%02d\" %c"),
+    StringFormat(buffer, size, "%02d" DEG "%02d'%02d\" %c",
                  dd, mm, ss, sign);
     break;
 
@@ -135,7 +135,7 @@ FormatLatitude(Angle latitude, TCHAR *buffer, size_t size,
     // Calculate seconds
     mlat = (mlat - mm) * 60.0;
     // Save the string to the buffer
-    StringFormat(buffer, size, _T("%02d") _T(DEG) _T("%02d'%04.1f\" %c"),
+    StringFormat(buffer, size, "%02d" DEG "%02d'%04.1f\" %c",
                  dd, mm, mlat, sign);
     break;
 
@@ -145,13 +145,13 @@ FormatLatitude(Angle latitude, TCHAR *buffer, size_t size,
     // Calculate minutes
     mlat = (mlat - dd) * 60.0;
     // Save the string to the buffer
-    StringFormat(buffer, size, _T("%02d") _T(DEG) _T("%06.3f' %c"),
+    StringFormat(buffer, size, "%02d" DEG "%06.3f' %c",
                  dd, mlat, sign);
     break;
 
   case CoordinateFormat::DD_DDDDD:
     // Save the string to the buffer
-    StringFormat(buffer, size, _T("%08.5f" DEG " %c"), mlat, sign);
+    StringFormat(buffer, size, "%08.5f" DEG " %c", mlat, sign);
     break;
 
   case CoordinateFormat::UTM:
@@ -161,21 +161,21 @@ FormatLatitude(Angle latitude, TCHAR *buffer, size_t size,
   return true;
 }
 
-static TCHAR *
-FormatUTM(const GeoPoint &location, TCHAR *buffer, size_t size,
-          TCHAR separator = _T(' '))
+static char *
+FormatUTM(const GeoPoint &location, char *buffer, size_t size,
+          char separator = ' ')
 {
   UTM utm = UTM::FromGeoPoint(location);
-  StringFormat(buffer, size, _T("%u%c%c%.0f%c%.0f"),
+  StringFormat(buffer, size, "%u%c%c%.0f%c%.0f",
                utm.zone_number, utm.zone_letter, separator,
                (double)utm.easting, separator,
                (double)utm.northing);
   return buffer;
 }
 
-TCHAR *
-FormatGeoPoint(const GeoPoint &location, TCHAR *buffer, size_t size,
-               CoordinateFormat format, TCHAR separator)
+char *
+FormatGeoPoint(const GeoPoint &location, char *buffer, size_t size,
+               CoordinateFormat format, char separator)
 {
   if (format == CoordinateFormat::UTM)
     return FormatUTM(location, buffer, size, separator);
@@ -183,7 +183,7 @@ FormatGeoPoint(const GeoPoint &location, TCHAR *buffer, size_t size,
   if (!FormatLatitude(location.latitude, buffer, size, format))
     return nullptr;
 
-  TCHAR *end = buffer + size, *p = buffer + StringLength(buffer);
+  char *end = buffer + size, *p = buffer + StringLength(buffer);
   if (p >= end)
     return nullptr;
 

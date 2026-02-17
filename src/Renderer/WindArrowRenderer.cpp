@@ -15,8 +15,6 @@
 #include "util/Macros.hpp"
 #include "MapSettings.hpp"
 
-#include <tchar.h>
-
 #ifdef ENABLE_OPENGL
 #include "ui/canvas/opengl/Scope.hpp"
 #endif
@@ -90,7 +88,7 @@ WindArrowRenderer::Draw(Canvas &canvas, const Angle screen_angle,
   // Draw wind speed label
 
   StaticString<12> buffer;
-  buffer.Format(_T("%i"), iround(Units::ToUserWindSpeed(wind.norm)));
+  buffer.Format("%i", iround(Units::ToUserWindSpeed(wind.norm)));
 
   canvas.SetTextColor(COLOR_BLACK);
   canvas.Select(*look.font);

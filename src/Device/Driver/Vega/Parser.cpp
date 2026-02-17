@@ -6,7 +6,6 @@
 #include "NMEA/Info.hpp"
 #include "NMEA/InputLine.hpp"
 
-#include <tchar.h>
 #include <algorithm>
 
 using std::string_view_literals::operator""sv;
@@ -185,7 +184,7 @@ PDTSM(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
   buffer.SetASCII(message);
 
   // todo duration handling
-  Message::AddMessage(_T("VEGA:"), buffer);
+  Message::AddMessage("VEGA:", buffer);
 
   return true;
 }

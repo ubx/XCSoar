@@ -58,9 +58,9 @@ Directory::Exists(Path path) noexcept
  */
 #ifndef HAVE_POSIX
 static bool
-IsDots(const TCHAR *str) noexcept
+IsDots(const char *str) noexcept
 {
-  return StringIsEqual(str, _T(".")) || StringIsEqual(str, _T(".."));
+  return StringIsEqual(str, ".") || StringIsEqual(str, "..");
 }
 #endif
 
@@ -68,7 +68,7 @@ IsDots(const TCHAR *str) noexcept
 
 [[gnu::pure]]
 static bool
-checkFilter(const TCHAR *filename, const TCHAR *filter) noexcept
+checkFilter(const char *filename, const char *filter) noexcept
 {
   // filter = e.g. "*.igc" or "config/*.prf"
   // todo: make filters like "config/*.prf" work
@@ -83,23 +83,23 @@ checkFilter(const TCHAR *filename, const TCHAR *filter) noexcept
 
 static bool
 ScanFiles(File::Visitor &visitor, Path sPath,
-          const TCHAR* filter = _T("*"))
+          const char* filter = "*")
 {
-  TCHAR DirPath[MAX_PATH];
-  TCHAR FileName[MAX_PATH];
+  char DirPath[MAX_PATH];
+  char FileName[MAX_PATH];
 
   if (sPath != nullptr)
     // e.g. "/test/data/something"
-    _tcscpy(DirPath, sPath.c_str());
+    strcpy(DirPath, sPath.c_str());
   else
     DirPath[0] = 0;
 
   // "/test/data/something/"
-  _tcscat(DirPath, _T(DIR_SEPARATOR_S));
-  _tcscpy(FileName, DirPath);
+  strcat(DirPath, DIR_SEPARATOR_S);
+  strcpy(FileName, DirPath);
 
   // "/test/data/something/*.igc"
-  _tcscat(FileName, filter);
+  strcat(FileName, filter);
 
   // Find the first matching file
   WIN32_FIND_DATA FindFileData;
@@ -115,9 +115,9 @@ ScanFiles(File::Visitor &visitor, Path sPath,
         !(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
         checkFilter(FindFileData.cFileName, filter)) {
       // "/test/data/something/"
-      _tcscpy(FileName, DirPath);
+      strcpy(FileName, DirPath);
       // "/test/data/something/blubb.txt"
-      _tcscat(FileName, FindFileData.cFileName);
+      strcat(FileName, FindFileData.cFileName);
       // Call visitor with the file that was found
       visitor.Visit(Path(FileName), Path(FindFileData.cFileName));
     }
@@ -145,25 +145,25 @@ ScanFiles(File::Visitor &visitor, Path sPath,
 
 static bool
 ScanDirectories(File::Visitor &visitor, bool recursive,
-                Path sPath, const TCHAR* filter = _T("*"))
+                Path sPath, const char* filter = "*")
 {
 #ifdef HAVE_POSIX
   DIR *dir = opendir(sPath.c_str());
   if (dir == nullptr)
     return false;
 
-  TCHAR FileName[MAX_PATH];
-  _tcscpy(FileName, sPath.c_str());
-  size_t FileNameLength = _tcslen(FileName);
+  char FileName[MAX_PATH];
+  strcpy(FileName, sPath.c_str());
+  size_t FileNameLength = strlen(FileName);
   FileName[FileNameLength++] = '/';
 
   struct dirent *ent;
   while ((ent = readdir(dir)) != nullptr) {
     // omit '.', '..' and any other files/directories starting with '.'
-    if (*ent->d_name == _T('.'))
+    if (*ent->d_name == '.')
       continue;
 
-    _tcscpy(FileName + FileNameLength, ent->d_name);
+    strcpy(FileName + FileNameLength, ent->d_name);
 
     struct stat st;
     if (stat(FileName, &st) < 0)
@@ -183,13 +183,13 @@ ScanDirectories(File::Visitor &visitor, bool recursive,
 
   closedir(dir);
 #else /* !HAVE_POSIX */
-  TCHAR DirPath[MAX_PATH];
-  TCHAR FileName[MAX_PATH];
+  char DirPath[MAX_PATH];
+  char FileName[MAX_PATH];
 
   if (sPath != nullptr) {
     // e.g. "/test/data/something"
-    _tcscpy(DirPath, sPath.c_str());
-    _tcscpy(FileName, sPath.c_str());
+    strcpy(DirPath, sPath.c_str());
+    strcpy(FileName, sPath.c_str());
   } else {
     DirPath[0] = 0;
     FileName[0] = 0;
@@ -203,9 +203,9 @@ ScanDirectories(File::Visitor &visitor, bool recursive,
     return true;
 
   // "test/data/something/"
-  _tcscat(DirPath, _T(DIR_SEPARATOR_S));
+  strcat(DirPath, DIR_SEPARATOR_S);
   // "test/data/something/*"
-  _tcscat(FileName, _T(DIR_SEPARATOR_S "*"));
+  strcat(FileName, DIR_SEPARATOR_S "*");
 
   // Find the first file
   WIN32_FIND_DATA FindFileData;
@@ -220,9 +220,9 @@ ScanDirectories(File::Visitor &visitor, bool recursive,
     if (!IsDots(FindFileData.cFileName) &&
         (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
       // "test/data/something/"
-      _tcscpy(FileName, DirPath);
+      strcpy(FileName, DirPath);
       // "test/data/something/SUBFOLDER"
-      _tcscat(FileName, FindFileData.cFileName);
+      strcat(FileName, FindFileData.cFileName);
       // Scan subfolder for matching files too
       ScanDirectories(visitor, true, Path(FileName), filter);
     }
@@ -256,7 +256,7 @@ Directory::VisitFiles(Path path, File::Visitor &visitor, bool recursive)
 }
 
 void
-Directory::VisitSpecificFiles(Path path, const TCHAR* filter,
+Directory::VisitSpecificFiles(Path path, const char* filter,
                               File::Visitor &visitor, bool recursive)
 {
   ScanDirectories(visitor, recursive, path, filter);
@@ -387,7 +387,7 @@ File::ReadString(Path path, char *buffer, size_t size) noexcept
   flags |= O_CLOEXEC;
 #endif
 
-  int fd = _topen(path.c_str(), flags);
+  int fd = open(path.c_str(), flags);
   if (fd < 0)
     return false;
 
@@ -414,7 +414,7 @@ File::WriteExisting(Path path, const char *value) noexcept
   flags |= O_CLOEXEC;
 #endif
 
-  int fd = _topen(path.c_str(), flags);
+  int fd = open(path.c_str(), flags);
   if (fd < 0)
     return false;
 
@@ -436,7 +436,7 @@ File::CreateExclusive(Path path) noexcept
   flags |= O_CLOEXEC;
 #endif
 
-  int fd = _topen(path.c_str(), flags, 0666);
+  int fd = open(path.c_str(), flags, 0666);
   if (fd < 0)
     return false;
 

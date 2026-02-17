@@ -4,11 +4,9 @@
 #pragma once
 
 #include "util/Compiler.h"
-#include "util/tstring.hpp"
 #include "util/NumberParser.hpp"
 #include "system/Path.hpp"
-#include <tchar.h>
-
+#include <string>
 #include <list>
 #include <algorithm>
 #include <stdlib.h>
@@ -52,7 +50,7 @@ public:
   }
 
 #ifdef _WIN32
-  Args(const TCHAR *_cmdline, const char *_usage)
+  Args(const char *_cmdline, const char *_usage)
     :usage(_usage) {
     ParseCommandLine(_cmdline);
   }
@@ -160,11 +158,11 @@ public:
     return result;
   }
 
-  tstring ExpectNextT() {
+  std::string ExpectNextT() {
     const char *p = ExpectNext();
     assert(p != nullptr);
 
-    return tstring(p);
+    return std::string(p);
   }
 
   Path ExpectNextPath() {

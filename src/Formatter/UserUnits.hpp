@@ -7,8 +7,6 @@
 #include "util/StringBuffer.hxx"
 #include "util/Compiler.h"
 
-#include <tchar.h>
-
 class AtmosphericPressure;
 
 /**
@@ -18,7 +16,7 @@ class AtmosphericPressure;
  * @param size Size of the buffer
  */
 void
-FormatUserWingLoading(double value, TCHAR *buffer,
+FormatUserWingLoading(double value, char *buffer,
                       bool include_unit = true) noexcept;
 
 /**
@@ -28,7 +26,7 @@ FormatUserWingLoading(double value, TCHAR *buffer,
  * @param size Size of the buffer
  */
 void
-FormatUserMass(double value, TCHAR *buffer,
+FormatUserMass(double value, char *buffer,
                bool include_unit = true) noexcept;
 
 /**
@@ -38,14 +36,14 @@ FormatUserMass(double value, TCHAR *buffer,
  * @param size Size of the buffer
  */
 void
-FormatUserAltitude(double value, TCHAR *buffer,
+FormatUserAltitude(double value, char *buffer,
                    bool include_unit = true) noexcept;
 
 [[gnu::const]]
 static inline auto
 FormatUserAltitude(double value) noexcept
 {
-  BasicStringBuffer<TCHAR, 32> buffer;
+  BasicStringBuffer<char, 32> buffer;
   FormatUserAltitude(value, buffer.data());
   return buffer;
 }
@@ -58,7 +56,7 @@ FormatUserAltitude(double value) noexcept
  * @param size Size of the buffer
  */
 void
-FormatAlternateUserAltitude(double value, TCHAR *buffer,
+FormatAlternateUserAltitude(double value, char *buffer,
                             bool include_unit = true) noexcept;
 
 /**
@@ -68,7 +66,7 @@ FormatAlternateUserAltitude(double value, TCHAR *buffer,
  * @param size Size of the buffer
  */
 void
-FormatRelativeUserAltitude(double value, TCHAR *buffer,
+FormatRelativeUserAltitude(double value, char *buffer,
                            bool include_unit = true) noexcept;
 
 /**
@@ -79,7 +77,7 @@ FormatRelativeUserAltitude(double value, TCHAR *buffer,
  * @param precision the number of decimal places
  */
 void
-FormatUserDistance(double value, TCHAR *buffer,
+FormatUserDistance(double value, char *buffer,
                    bool include_unit = true, int precision = 0) noexcept;
 
 [[gnu::const]]
@@ -87,7 +85,7 @@ static inline auto
 FormatUserDistance(double value,
                    bool include_unit = true, int precision = 0) noexcept
 {
-  BasicStringBuffer<TCHAR, 32> buffer;
+  BasicStringBuffer<char, 32> buffer;
   FormatUserDistance(value, buffer.data(), include_unit, precision);
   return buffer;
 }
@@ -103,7 +101,7 @@ FormatUserDistance(double value,
  * @return the unit used for output formatting
  */
 Unit
-FormatSmallUserDistance(TCHAR *buffer, double value,
+FormatSmallUserDistance(char *buffer, double value,
                         bool include_unit = true, int precision = 0) noexcept;
 
 /**
@@ -113,7 +111,7 @@ FormatSmallUserDistance(TCHAR *buffer, double value,
  * @param size Size of the buffer
  */
 Unit
-FormatUserDistanceSmart(double value, TCHAR *buffer,
+FormatUserDistanceSmart(double value, char *buffer,
                         bool include_unit = true,
                         double small_unit_threshold = 0,
                         double precision_threshold = 100) noexcept;
@@ -124,14 +122,14 @@ FormatUserDistanceSmart(double value, bool include_unit = true,
                         double small_unit_threshold = 0,
                         double precision_threshold = 100) noexcept
 {
-  BasicStringBuffer<TCHAR, 32> buffer;
+  BasicStringBuffer<char, 32> buffer;
   FormatUserDistanceSmart(value, buffer.data(), include_unit,
                           small_unit_threshold, precision_threshold);
   return buffer;
 }
 
 Unit
-FormatUserMapScale(double value, TCHAR *buffer,
+FormatUserMapScale(double value, char *buffer,
                    bool include_unit = true) noexcept;
 
 /**
@@ -142,14 +140,14 @@ FormatUserMapScale(double value, TCHAR *buffer,
  * @return True if buffer long enough, False otherwise
  */
 void
-FormatUserSpeed(double value, TCHAR *buffer,
+FormatUserSpeed(double value, char *buffer,
                 bool include_unit = true, bool Precision = true) noexcept;
 
 [[gnu::const]]
 static inline auto
 FormatUserSpeed(double value, bool precision=true) noexcept
 {
-  BasicStringBuffer<TCHAR, 32> buffer;
+  BasicStringBuffer<char, 32> buffer;
   FormatUserSpeed(value, buffer.data(), true, precision);
   return buffer;
 }
@@ -162,14 +160,14 @@ FormatUserSpeed(double value, bool precision=true) noexcept
  * @return True if buffer long enough, False otherwise
  */
 void
-FormatUserWindSpeed(double value, TCHAR *buffer,
+FormatUserWindSpeed(double value, char *buffer,
                     bool include_unit = true, bool Precision = true) noexcept;
 
 [[gnu::const]]
 static inline auto
 FormatUserWindSpeed(double value, bool include_unit = true, bool precision=true) noexcept
 {
-  BasicStringBuffer<TCHAR, 32> buffer;
+  BasicStringBuffer<char, 32> buffer;
   FormatUserWindSpeed(value, buffer.data(), include_unit, precision);
   return buffer;
 }
@@ -181,14 +179,14 @@ FormatUserWindSpeed(double value, bool include_unit = true, bool precision=true)
  * @param value the speed value [m/s]
  */
 void
-FormatUserTaskSpeed(double value, TCHAR *buffer,
+FormatUserTaskSpeed(double value, char *buffer,
                     bool include_unit=true, bool precision=true) noexcept;
 
 [[gnu::const]]
 static inline auto
 FormatUserTaskSpeed(double value, bool precision=true) noexcept
 {
-  BasicStringBuffer<TCHAR, 32> buffer;
+  BasicStringBuffer<char, 32> buffer;
   FormatUserTaskSpeed(value, buffer.data(), true, precision);
   return buffer;
 }
@@ -199,7 +197,7 @@ FormatUserTaskSpeed(double value, bool precision=true) noexcept
  * @param include_sign include the sign into the string?
  * @return the format
  */
-const TCHAR *
+const char *
 GetUserVerticalSpeedFormat(bool include_unit = false,
                            bool include_sign = true) noexcept;
 
@@ -219,14 +217,14 @@ GetUserVerticalSpeedStep() noexcept;
  * @return True if buffer long enough, False otherwise
  */
 void
-FormatUserVerticalSpeed(double value, TCHAR *buffer,
+FormatUserVerticalSpeed(double value, char *buffer,
                         bool include_unit = true, bool include_sign = true) noexcept;
 
 [[gnu::const]]
 static inline auto
 FormatUserVerticalSpeed(double value, bool include_unit = true, bool include_sign = true) noexcept
 {
-  BasicStringBuffer<TCHAR, 32> buffer;
+  BasicStringBuffer<char, 32> buffer;
   FormatUserVerticalSpeed(value, buffer.data(), include_unit, include_sign);
   return buffer;
 }
@@ -238,7 +236,7 @@ FormatUserVerticalSpeed(double value, bool include_unit = true, bool include_sig
  * @param size Size of the buffer
  */
 void
-FormatUserTemperature(double value, TCHAR *buffer,
+FormatUserTemperature(double value, char *buffer,
                       bool include_unit = true) noexcept;
 
 /**
@@ -247,7 +245,7 @@ FormatUserTemperature(double value, TCHAR *buffer,
  * @param buffer buffer string to write to (pointer)
  * @param size Size of the buffer
  */
-void FormatUserPressure(AtmosphericPressure value, TCHAR *buffer,
+void FormatUserPressure(AtmosphericPressure value, char *buffer,
                         bool include_unit = true) noexcept;
 
 /**
@@ -256,7 +254,7 @@ void FormatUserPressure(AtmosphericPressure value, TCHAR *buffer,
  * @param size Size of the buffer
  * @return True if buffer long enough, False otherwise
  */
-const TCHAR *
+const char *
 GetUserPressureFormat(bool include_unit = false) noexcept;
 
 /**

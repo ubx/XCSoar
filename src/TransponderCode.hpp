@@ -7,8 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <tchar.h>
-
 /**
  * This class stores a 4-digit octal transponder code.
  */
@@ -55,8 +53,8 @@ public:
     *this = Null();
   }
 
-  TCHAR *Format(TCHAR *buffer, std::size_t max_size) const noexcept;
+  char *Format(char *buffer, std::size_t max_size) const noexcept;
 
   [[gnu::pure]]
-  static TransponderCode Parse(const TCHAR *s) noexcept;
+  static TransponderCode Parse(const char *s) noexcept;
 };

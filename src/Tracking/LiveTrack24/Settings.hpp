@@ -7,8 +7,6 @@
 
 #include <cstdint>
 
-#include <tchar.h>
-
 namespace LiveTrack24 {
 
 struct Settings {
@@ -36,7 +34,7 @@ struct Settings {
 
   void SetDefaults() {
     enabled = false;
-    server = _T("www.livetrack24.com");
+    server = "www.livetrack24.com";
     username.clear();
     password.clear();
 

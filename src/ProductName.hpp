@@ -13,8 +13,6 @@
  * See REBRANDING_GUIDE.md for complete rebranding instructions.
  */
 
-#include <tchar.h>
-
 #ifndef PRODUCT_NAME
 #define PRODUCT_NAME "XCSoar"
 #endif
@@ -23,9 +21,6 @@
 #ifndef PRODUCT_NAME_LC
 #define PRODUCT_NAME_LC "xcsoar"
 #endif
-
-/* TCHAR version for Windows API */
-#define PRODUCT_NAME_T _T(PRODUCT_NAME)
 
 /* ASCII version for help text and logging */
 #define PRODUCT_NAME_A PRODUCT_NAME
@@ -46,8 +41,5 @@
 #define PRODUCT_DATA_DIR PRODUCT_NAME "Data"
 #endif
 
-#ifndef PRODUCT_DATA_DIR_T
-#define PRODUCT_DATA_DIR_T _T(PRODUCT_DATA_DIR)
-#endif
 #define PRODUCT_UNIX_SYSCONF_DIR "/etc/" PRODUCT_NAME_LC
 #define PRODUCT_UNIX_HOME_DIR "." PRODUCT_NAME_LC

@@ -8,8 +8,6 @@
 
 #include <functional>
 
-#include <tchar.h>
-
 /**
  * A #Widget that displays a message and a number of buttons.  It is
  * used by XCSoar to display context-sensitive dialogs in the "bottom
@@ -17,20 +15,20 @@
  */
 class QuestionWidget : public SolidWidget {
   struct Button {
-    const TCHAR *caption;
+    const char *caption;
     std::function<void()> callback;
   };
 
-  const TCHAR *const message;
+  const char *const message;
 
   StaticArray<Button, 8> buttons;
 
 public:
-  explicit QuestionWidget(const TCHAR *_message) noexcept;
+  explicit QuestionWidget(const char *_message) noexcept;
 
-  void SetMessage(const TCHAR *_message) noexcept;
+  void SetMessage(const char *_message) noexcept;
 
-  void AddButton(const TCHAR *caption,
+  void AddButton(const char *caption,
                  std::function<void()> callback) noexcept {
     buttons.append({caption, std::move(callback)});
   }

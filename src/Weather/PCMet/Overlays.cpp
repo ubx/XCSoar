@@ -9,7 +9,6 @@
 #include "co/Task.hxx"
 #include "system/FileUtil.hpp"
 #include "util/StaticString.hxx"
-#include "util/ConvertString.hpp"
 #include "util/Macros.hpp"
 #include "LocalPath.hpp"
 
@@ -24,8 +23,8 @@ static constexpr const char *type_names[] = {
   "nb_cosde_ome",
 };
 
-static constexpr const TCHAR *type_labels[] = {
-  _T("Vertikal"),
+static constexpr const char *type_labels[] = {
+  "Vertikal",
 };
 
 static_assert(ARRAY_SIZE(type_names) == unsigned(PCMet::OverlayInfo::Type::COUNT),
@@ -39,9 +38,9 @@ static constexpr const char *area_names[] = {
   "sued",
 };
 
-static constexpr const TCHAR *area_labels[] = {
-  _T("Nord"),
-  _T("Süd"),
+static constexpr const char *area_labels[] = {
+  "Nord",
+  "Süd",
 };
 
 static_assert(ARRAY_SIZE(area_names) == unsigned(PCMet::OverlayInfo::Area::COUNT),
@@ -54,7 +53,7 @@ static void
 MakeOverlayLabel(PCMet::OverlayInfo &info)
 {
   StaticString<64> label;
-  label.Format(_T("%s %s %um +%uh"),
+  label.Format("%s %s %um +%uh",
                type_labels[unsigned(info.type)],
                area_labels[unsigned(info.area)],
                info.level,
@@ -83,9 +82,9 @@ FindLatestOverlay(PCMet::OverlayInfo &info)
     }
   } visitor(info);
 
-  const auto cache_path = MakeCacheDirectory(_T("pc_met"));
+  const auto cache_path = MakeCacheDirectory("pc_met");
   StaticString<256> pattern;
-  pattern.Format(_T("%s_%s_lv_%06u_p_%03u_*.tiff"),
+  pattern.Format("%s_%s_lv_%06u_p_%03u_*.tiff",
                  type_names[unsigned(info.type)],
                  area_names[unsigned(info.area)],
                  info.level, info.step);
@@ -121,23 +120,21 @@ PCMet::DownloadOverlay(const OverlayInfo &info, BrokenDateTime now_utc,
   const unsigned run_hour = (now_utc.hour / 3) * 3;
   unsigned run = (now_utc.hour / 3) * 300;
 
-  NarrowString<256> url;
+  StaticString<256> url;
   url.Format(PCMET_FTP "/%s_%s_lv_%06u_p_%03u_%04u.tiff",
              type_names[unsigned(info.type)],
              area_names[unsigned(info.area)],
              info.level, info.step, run);
 
-  const auto cache_path = MakeCacheDirectory(_T("pc_met"));
+  const auto cache_path = MakeCacheDirectory("pc_met");
   auto path = AllocatedPath::Build(cache_path,
-                                   UTF8ToWideConverter(url.c_str() + sizeof(PCMET_FTP)));
+                                   url.c_str() + sizeof(PCMET_FTP));
 
   {
-    const WideToUTF8Converter username(settings.ftp_credentials.username);
-    const WideToUTF8Converter password(settings.ftp_credentials.password);
-
     const auto ignored_response = co_await
       Net::CoDownloadToFile(curl, url,
-                            username, password,
+                            settings.ftp_credentials.username,
+                            settings.ftp_credentials.password,
                             path, nullptr,
                             progress);
   }

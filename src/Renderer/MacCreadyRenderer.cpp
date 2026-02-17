@@ -16,15 +16,15 @@ static constexpr double MAX_MACCREADY = 5.2;
 static constexpr unsigned STEPS_MACCREADY = 25;
 
 void
-MacCreadyCaption(TCHAR *sTmp, const GlidePolar &glide_polar)
+MacCreadyCaption(char *sTmp, const GlidePolar &glide_polar)
 {
   if (!glide_polar.IsValid()) {
-    *sTmp = _T('\0');
+    *sTmp = '\0';
     return;
   }
 
-  _stprintf(sTmp,
-            _T("%s: %d %s\r\n%s: %d %s"),
+  sprintf(sTmp,
+            "%s: %d %s\r\n%s: %d %s",
             _("Vopt"),
             (int)Units::ToUserSpeed(glide_polar.GetVBestLD()),
             Units::GetSpeedName(),
@@ -40,8 +40,8 @@ RenderMacCready(Canvas &canvas, const PixelRect rc,
                  const GlidePolar &glide_polar)
 {
   ChartRenderer chart(chart_look, canvas, rc);
-  chart.SetYLabel(_T("V"), Units::GetSpeedName());
-  chart.SetXLabel(_T("MC"), Units::GetVerticalSpeedName());
+  chart.SetYLabel("V", Units::GetSpeedName());
+  chart.SetXLabel("MC", Units::GetVerticalSpeedName());
   chart.Begin();
 
   if (!glide_polar.IsValid()) {
@@ -83,9 +83,9 @@ RenderMacCready(Canvas &canvas, const PixelRect rc,
   // draw labels and other overlays
 
   gp.SetMC(0.9*MAX_MACCREADY);
-  chart.DrawLabel({0.9*MAX_MACCREADY, gp.GetVBestLD()}, _T("Vopt"));
+  chart.DrawLabel({0.9*MAX_MACCREADY, gp.GetVBestLD()}, "Vopt");
   gp.SetMC(0.9*MAX_MACCREADY);
-  chart.DrawLabel({0.9*MAX_MACCREADY, gp.GetAverageSpeed()}, _T("Vave"));
+  chart.DrawLabel({0.9*MAX_MACCREADY, gp.GetAverageSpeed()}, "Vave");
 
   chart.Finish();
 

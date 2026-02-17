@@ -16,8 +16,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <tchar.h>
-
 #ifdef _WIN32
 #include <windows.h> /* for AllocConsole() */
 #endif
@@ -54,7 +52,7 @@ CommandLine::Parse(Args &args)
       s++;
 
     if (StringIsEqual(s, "-version")) {
-      _tprintf(_T("%s\n"), XCSoar_ProductToken);
+      printf("%s\n", XCSoar_ProductToken);
       exit(EXIT_SUCCESS);
     } else if (StringIsEqual(s, "-profile=", 9)) {
       s += 9;

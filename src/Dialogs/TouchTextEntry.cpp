@@ -24,7 +24,7 @@ static AllowedCharacters AllowedCharactersCallback;
 static constexpr size_t MAX_TEXTENTRY = 40;
 static unsigned int cursor = 0;
 static size_t max_width;
-static TCHAR edittext[MAX_TEXTENTRY];
+static char edittext[MAX_TEXTENTRY];
 
 static void
 UpdateAllowedCharacters()
@@ -60,7 +60,7 @@ OnBackspace()
 }
 
 static bool
-DoCharacter(TCHAR character)
+DoCharacter(char character)
 {
   if (cursor >= max_width - 1)
     return false;
@@ -97,7 +97,7 @@ FormCharacter(unsigned ch)
        support yet */
     return false;
 
-  DoCharacter((TCHAR)ch);
+  DoCharacter((char)ch);
   return true;
 }
 
@@ -110,8 +110,8 @@ ClearText()
 }
 
 bool
-TouchTextEntry(TCHAR *text, size_t width,
-               const TCHAR *caption,
+TouchTextEntry(char *text, size_t width,
+               const char *caption,
                AllowedCharacters accb,
                bool default_shift_state)
 {
@@ -169,7 +169,7 @@ TouchTextEntry(TCHAR *text, size_t width,
     ? rc.right
     : clear_left + Layout::Scale(50);
 
-  WndProperty _editor(client_area, look, _T(""),
+  WndProperty _editor(client_area, look, "",
                       { 0, padding, backspace_left - padding, editor_bottom },
                       0, WindowStyle());
   _editor.SetReadOnly();
@@ -207,7 +207,7 @@ TouchTextEntry(TCHAR *text, size_t width,
 
   kb = &keyboard;
 
-  Button backspace_button(client_area, look.button, _T("<-"),
+  Button backspace_button(client_area, look.button, "<-",
                           { backspace_left, padding, rc.right - padding,
                               editor_bottom },
                           button_style, [](){ OnBackspace(); });
@@ -219,7 +219,7 @@ TouchTextEntry(TCHAR *text, size_t width,
 
   if (!StringIsEmpty(text)) {
     CopyTruncateString(edittext, width, text);
-    cursor = _tcslen(text);
+    cursor = strlen(text);
   }
 
   UpdateTextboxProp();

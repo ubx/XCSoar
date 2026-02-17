@@ -5,8 +5,6 @@
 
 #include "Button.hpp"
 
-#include <tchar.h>
-
 /**
  * A button that emits a character on press.
  */
@@ -18,7 +16,7 @@ class CharacterButton : public Button {
 
 public:
   void Create(ContainerWindow &parent, const ButtonLook &look,
-              const TCHAR *text, PixelRect rc,
+              const char *text, PixelRect rc,
               OnCharacterCallback on_character, unsigned character,
               const WindowStyle _style=WindowStyle()) noexcept;
 

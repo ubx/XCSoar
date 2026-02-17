@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
-
 class FontDescription;
 
 /**
@@ -13,4 +11,4 @@ class FontDescription;
  * Throws on error.
  */
 void
-AutoSizeFont(FontDescription &d, unsigned width, const TCHAR *text);
+AutoSizeFont(FontDescription &d, unsigned width, const char *text);

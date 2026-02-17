@@ -30,7 +30,7 @@ GlueMapWindow::DrawGesture(Canvas &canvas) const noexcept
   if (!gestures.HasPoints())
     return;
 
-  const TCHAR *gesture = gestures.GetGesture();
+  const char *gesture = gestures.GetGesture();
   if (gesture != nullptr && !InputEvents::IsGesture(gesture))
     canvas.Select(gesture_look.invalid_pen);
   else
@@ -120,14 +120,14 @@ GlueMapWindow::DrawPanInfo(Canvas &canvas) const noexcept
     }
   }
 
-  TCHAR buffer[256];
-  FormatGeoPoint(location, buffer, ARRAY_SIZE(buffer), _T('\n'));
+  char buffer[256];
+  FormatGeoPoint(location, buffer, ARRAY_SIZE(buffer), '\n');
 
-  TCHAR *start = buffer;
+  char *start = buffer;
   while (true) {
-    auto *newline = StringFind(start, _T('\n'));
+    auto *newline = StringFind(start, '\n');
     if (newline != nullptr)
-      *newline = _T('\0');
+      *newline = '\0';
 
     TextInBox(canvas, start, p, mode, render_projection.GetScreenSize());
 
@@ -144,7 +144,7 @@ void
 GlueMapWindow::DrawGPSStatus(Canvas &canvas, const PixelRect &rc,
                              const NMEAInfo &info) const noexcept
 {
-  const TCHAR *txt;
+  const char *txt;
   const MaskedIcon *icon;
 
   if (!info.alive) {
@@ -314,37 +314,37 @@ GlueMapWindow::DrawMapScale(Canvas &canvas, const PixelRect &rc,
   buffer.clear();
 
   if (GetMapSettings().auto_zoom_enabled)
-    buffer = _T("AUTO ");
+    buffer = "AUTO ";
 
   switch (follow_mode) {
   case FOLLOW_SELF:
     break;
 
   case FOLLOW_PAN:
-    buffer += _T("PAN ");
+    buffer += "PAN ";
     break;
   }
 
   const UIState &ui_state = GetUIState();
   if (ui_state.auxiliary_enabled) {
     buffer += ui_state.panel_name;
-    buffer += _T(" ");
+    buffer += " ";
   }
 
   if (Basic().gps.replay)
-    buffer += _T("REPLAY ");
+    buffer += "REPLAY ";
   else if (Basic().gps.simulator) {
     buffer += _("Simulator");
-    buffer += _T(" ");
+    buffer += " ";
   }
 
   if (GetComputerSettings().polar.ballast_timer_active)
     buffer.AppendFormat(
-        _T("BALLAST %d LITERS "),
+        "BALLAST %d LITERS ",
         (int)GetComputerSettings().polar.glide_polar_task.GetBallastLitres());
 
   if (rasp_renderer != nullptr) {
-    const TCHAR *label = rasp_renderer->GetLabel();
+    const char *label = rasp_renderer->GetLabel();
     if (label != nullptr)
       buffer += gettext(label);
   }

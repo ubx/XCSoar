@@ -27,23 +27,23 @@ FormatISO8601(char *buffer, const BrokenDateTime &stamp) noexcept
 
 
 void
-FormatTime(TCHAR *buffer, FloatDuration _time) noexcept
+FormatTime(char *buffer, FloatDuration _time) noexcept
 {
   if (_time.count() < 0) {
-    *buffer++ = _T('-');
+    *buffer++ = '-';
     _time = -_time;
   }
 
   const BrokenTime time = BrokenTime::FromSinceMidnightChecked(_time);
-  _stprintf(buffer, _T("%02u:%02u:%02u"),
+  sprintf(buffer, "%02u:%02u:%02u",
             time.hour, time.minute, time.second);
 }
 
 void
-FormatTimeLong(TCHAR *buffer, FloatDuration _time) noexcept
+FormatTimeLong(char *buffer, FloatDuration _time) noexcept
 {
   if (_time.count() < 0) {
-    *buffer++ = _T('-');
+    *buffer++ = '-';
     _time = -_time;
   }
 
@@ -52,37 +52,37 @@ FormatTimeLong(TCHAR *buffer, FloatDuration _time) noexcept
   _time -= FloatDuration{trunc(_time.count())};
   unsigned millisecond = uround(_time.count() * 1000);
 
-  _stprintf(buffer, _T("%02u:%02u:%02u.%03u"),
+  sprintf(buffer, "%02u:%02u:%02u.%03u",
             time.hour, time.minute, time.second, millisecond);
 }
 
 void
-FormatSignedTimeHHMM(TCHAR *buffer, std::chrono::seconds _time) noexcept
+FormatSignedTimeHHMM(char *buffer, std::chrono::seconds _time) noexcept
 {
   if (_time.count() < 0) {
-    *buffer++ = _T('-');
+    *buffer++ = '-';
     _time = -_time;
   }
 
   const BrokenTime time = BrokenTime::FromSinceMidnightChecked(_time);
-  _stprintf(buffer, _T("%02u:%02u"), time.hour, time.minute);
+  sprintf(buffer, "%02u:%02u", time.hour, time.minute);
 }
 
 void
-FormatTimeTwoLines(TCHAR *buffer1, TCHAR *buffer2, std::chrono::seconds _time) noexcept
+FormatTimeTwoLines(char *buffer1, char *buffer2, std::chrono::seconds _time) noexcept
 {
   if (_time >= std::chrono::hours{24}) {
-    _tcscpy(buffer1, _T(">24h"));
+    strcpy(buffer1, ">24h");
     buffer2[0] = '\0';
     return;
   }
   if (_time <= -std::chrono::hours{24}) {
-    _tcscpy(buffer1, _T("<-24h"));
+    strcpy(buffer1, "<-24h");
     buffer2[0] = '\0';
     return;
   }
   if (_time.count() < 0) {
-    *buffer1++ = _T('-');
+    *buffer1++ = '-';
     _time = -_time;
   }
 
@@ -90,10 +90,10 @@ FormatTimeTwoLines(TCHAR *buffer1, TCHAR *buffer2, std::chrono::seconds _time) n
 
   if (time.hour > 0) { // hh:mm, ss
     // Set Value
-    _stprintf(buffer1, _T("%02u:%02u"), time.hour, time.minute);
-    _stprintf(buffer2, _T("%02u"), time.second);
+    sprintf(buffer1, "%02u:%02u", time.hour, time.minute);
+    sprintf(buffer2, "%02u", time.second);
   } else { // mm'ss
-    _stprintf(buffer1, _T("%02u'%02u"), time.minute, time.second);
+    sprintf(buffer1, "%02u'%02u", time.minute, time.second);
     buffer2[0] = '\0';
   }
 }
@@ -124,9 +124,9 @@ CalculateTimespanComponents(unsigned timespan, unsigned &days, unsigned &hours,
 }
 
 void
-FormatTimespanSmart(TCHAR *buffer, std::chrono::seconds timespan,
+FormatTimespanSmart(char *buffer, std::chrono::seconds timespan,
                     unsigned max_tokens,
-                    const TCHAR *separator) noexcept
+                    const char *separator) noexcept
 {
   assert(max_tokens > 0 && max_tokens <= 4);
 
@@ -178,40 +178,40 @@ FormatTimespanSmart(TCHAR *buffer, std::chrono::seconds timespan,
 
   // Output
   if (timespan.count() < 0) {
-    *buffer = _T('-');
+    *buffer = '-';
     buffer++;
   }
 
-  *buffer = _T('\0');
+  *buffer = '\0';
 
   StaticString<16> component_buffer;
 
   if (show_days) {
-    component_buffer.Format(_T("%u days"), days);
-    _tcscat(buffer, component_buffer);
+    component_buffer.Format("%u days", days);
+    strcat(buffer, component_buffer);
   }
 
   if (show_hours) {
     if (!StringIsEmpty(buffer))
-      _tcscat(buffer, separator);
+      strcat(buffer, separator);
 
-    component_buffer.Format(_T("%u h"), hours);
-    _tcscat(buffer, component_buffer);
+    component_buffer.Format("%u h", hours);
+    strcat(buffer, component_buffer);
   }
 
   if (show_minutes) {
     if (!StringIsEmpty(buffer))
-      _tcscat(buffer, separator);
+      strcat(buffer, separator);
 
-    component_buffer.Format(_T("%u min"), minutes);
-    _tcscat(buffer, component_buffer);
+    component_buffer.Format("%u min", minutes);
+    strcat(buffer, component_buffer);
   }
 
   if (show_seconds) {
     if (!StringIsEmpty(buffer))
-      _tcscat(buffer, separator);
+      strcat(buffer, separator);
 
-    component_buffer.Format(_T("%u sec"), seconds);
-    _tcscat(buffer, component_buffer);
+    component_buffer.Format("%u sec", seconds);
+    strcat(buffer, component_buffer);
   }
 }

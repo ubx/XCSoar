@@ -17,11 +17,11 @@ NOAAListRenderer::Draw(Canvas &canvas, const PixelRect rc,
   title = station.GetCodeT();
   if (station.parsed_metar_available &&
       station.parsed_metar.name_available)
-    title.AppendFormat(_T(": %s"), station.parsed_metar.name.c_str());
+    title.AppendFormat(": %s", station.parsed_metar.name.c_str());
 
   row_renderer.DrawFirstRow(canvas, rc, title);
 
-  const TCHAR *tmp;
+  const char *tmp;
   if (!station.metar_available)
     tmp = _("No METAR available");
   else

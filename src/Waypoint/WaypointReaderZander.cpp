@@ -9,7 +9,7 @@
 
 static bool
 ParseString(StringConverter &string_converter,
-            std::string_view src, tstring &dest, std::size_t len) noexcept
+            std::string_view src, std::string &dest, std::size_t len) noexcept
 {
   if (src.empty())
     return false;
@@ -51,7 +51,7 @@ ParseAngle(const char *src, Angle &dest, const bool lat) noexcept
 
   auto value = deg + min / 60. + sec / 3600.;
 
-  TCHAR sign = *endptr;
+  char sign = *endptr;
   if (sign == 'W' || sign == 'w' || sign == 'S' || sign == 's')
     value = -value;
 

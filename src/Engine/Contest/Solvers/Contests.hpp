@@ -4,10 +4,8 @@
 #pragma once
 
 #include <cstdint>
-#include <tchar.h>
-
 enum class Contest : uint8_t;
 
 [[gnu::const]]
-const TCHAR *
+const char *
 ContestToString(Contest contest) noexcept;

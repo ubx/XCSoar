@@ -27,10 +27,10 @@ int main(int argc, char **argv)
     if (basic.external_wind_available.Modified(last_available)) {
       last_available = basic.external_wind_available;
 
-      TCHAR time_buffer[32];
+      char time_buffer[32];
       FormatTime(time_buffer, basic.time);
 
-      _tprintf(_T("%s %d %g\n"),
+      printf("%s %d %g\n",
                time_buffer,
                (int)basic.external_wind.bearing.Degrees(),
                (double)basic.external_wind.norm);

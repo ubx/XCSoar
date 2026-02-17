@@ -26,7 +26,7 @@ PrintMoreUsage()
 
   const struct DeviceRegister *driver;
   for (unsigned i = 0; (driver = GetDriverByIndex(i)) != NULL; ++i)
-    _ftprintf(stderr, _T("\t%s\n"), driver->name);
+    fprintf(stderr, "\t%s\n", driver->name);
 }
 
 bool
@@ -63,8 +63,8 @@ int main(int argc, char **argv)
 try {
   Args args(argc, argv, "DRIVER PORT BAUD");
 
-  tstring _driver_name = args.ExpectNextT();
-  const TCHAR *driver_name = _driver_name.c_str();
+  std::string _driver_name = args.ExpectNextT();
+  const char *driver_name = _driver_name.c_str();
   DebugPort debug_port(args);
   args.ExpectEnd();
 
@@ -75,7 +75,7 @@ try {
 
   const struct DeviceRegister *driver = FindDriverByName(driver_name);
   if (driver == NULL) {
-    _ftprintf(stderr, _T("No such driver: %s\n"), driver_name);
+    fprintf(stderr, "No such driver: %s\n", driver_name);
     return EXIT_FAILURE;
   }
 

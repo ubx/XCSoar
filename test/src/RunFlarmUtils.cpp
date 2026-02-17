@@ -11,7 +11,6 @@
 #include "Device/Config.hpp"
 #include "system/Args.hpp"
 #include "util/StringStrip.hxx"
-#include "util/ConvertString.hpp"
 #include "util/PrintException.hxx"
 #include "Operation/ConsoleOperationEnvironment.hpp"
 #include "io/async/GlobalAsioThread.hpp"
@@ -24,9 +23,9 @@ static void
 ChangePilot(FlarmDevice &flarm, OperationEnvironment &env)
 {
   while (true) {
-    TCHAR old_pilot_name[64];
+    char old_pilot_name[64];
     if (flarm.GetPilot(old_pilot_name, 64, env))
-      _tprintf(_T("Old pilot name: \"%s\"\n"), old_pilot_name);
+      printf("Old pilot name: \"%s\"\n", old_pilot_name);
 
     fprintf(stdout, "Please enter the new pilot name:\n");
     fprintf(stdout, "> ");
@@ -40,8 +39,7 @@ ChangePilot(FlarmDevice &flarm, OperationEnvironment &env)
     StripRight(pilot_name);
     fprintf(stdout, "Setting pilot name to \"%s\" ...\n", pilot_name);
 
-    const UTF8ToWideConverter value(pilot_name);
-    if (flarm.SetPilot(value, env))
+    if (flarm.SetPilot(pilot_name, env))
       fprintf(stdout, "Pilot name set to \"%s\"\n", pilot_name);
     else
       fprintf(stdout, "Operation failed!\n");
@@ -54,9 +52,9 @@ static void
 ChangeCoPilot(FlarmDevice &flarm, OperationEnvironment &env)
 {
   while (true) {
-    TCHAR old_copilot_name[64];
+    char old_copilot_name[64];
     if (flarm.GetCoPilot(old_copilot_name, 64, env))
-      _tprintf(_T("Old copilot name: \"%s\"\n"), old_copilot_name);
+      printf("Old copilot name: \"%s\"\n", old_copilot_name);
 
     fprintf(stdout, "Please enter the new copilot name:\n");
     fprintf(stdout, "> ");
@@ -70,8 +68,7 @@ ChangeCoPilot(FlarmDevice &flarm, OperationEnvironment &env)
     StripRight(copilot_name);
     fprintf(stdout, "Setting copilot name to \"%s\" ...\n", copilot_name);
 
-    const UTF8ToWideConverter value(copilot_name);
-    if (flarm.SetCoPilot(value, env))
+    if (flarm.SetCoPilot(copilot_name, env))
       fprintf(stdout, "CoPilot name set to \"%s\"\n", copilot_name);
     else
       fprintf(stdout, "Operation failed!\n");
@@ -84,9 +81,9 @@ static void
 ChangePlaneType(FlarmDevice &flarm, OperationEnvironment &env)
 {
   while (true) {
-    TCHAR old_plane_type[64];
+    char old_plane_type[64];
     if (flarm.GetPlaneType(old_plane_type, 64, env))
-      _tprintf(_T("Old plane type: \"%s\"\n"), old_plane_type);
+      printf("Old plane type: \"%s\"\n", old_plane_type);
 
     fprintf(stdout, "Please enter the new plane type:\n");
     fprintf(stdout, "> ");
@@ -100,8 +97,7 @@ ChangePlaneType(FlarmDevice &flarm, OperationEnvironment &env)
     StripRight(plane_type);
     fprintf(stdout, "Setting plane type to \"%s\" ...\n", plane_type);
 
-    const UTF8ToWideConverter value(plane_type);
-    if (flarm.SetPlaneType(value, env))
+    if (flarm.SetPlaneType(plane_type, env))
       fprintf(stdout, "Plane type set to \"%s\"\n", plane_type);
     else
       fprintf(stdout, "Operation failed!\n");
@@ -114,9 +110,9 @@ static void
 ChangeRegistration(FlarmDevice &flarm, OperationEnvironment &env)
 {
   while (true) {
-    TCHAR old_registration[64];
+    char old_registration[64];
     if (flarm.GetPlaneRegistration(old_registration, 64, env))
-      _tprintf(_T("Old plane registratio: \"%s\"\n"), old_registration);
+      printf("Old plane registratio: \"%s\"\n", old_registration);
 
     fprintf(stdout, "Please enter the new plane registration:\n");
     fprintf(stdout, "> ");
@@ -130,8 +126,7 @@ ChangeRegistration(FlarmDevice &flarm, OperationEnvironment &env)
     StripRight(registration);
     fprintf(stdout, "Setting plane registration to \"%s\" ...\n", registration);
 
-    const UTF8ToWideConverter value(registration);
-    if (flarm.SetPlaneRegistration(value, env))
+    if (flarm.SetPlaneRegistration(registration, env))
       fprintf(stdout, "Plane registration set to \"%s\"\n", registration);
     else
       fprintf(stdout, "Operation failed!\n");
@@ -144,9 +139,9 @@ static void
 ChangeCompetitionId(FlarmDevice &flarm, OperationEnvironment &env)
 {
   while (true) {
-    TCHAR old_id[64];
+    char old_id[64];
     if (flarm.GetCompetitionId(old_id, 64, env))
-      _tprintf(_T("Old competition id: \"%s\"\n"), old_id);
+      printf("Old competition id: \"%s\"\n", old_id);
 
     fprintf(stdout, "Please enter the new competition id:\n");
     fprintf(stdout, "> ");
@@ -160,8 +155,7 @@ ChangeCompetitionId(FlarmDevice &flarm, OperationEnvironment &env)
     StripRight(id);
     fprintf(stdout, "Setting competition id to \"%s\" ...\n", id);
 
-    const UTF8ToWideConverter value(id);
-    if (flarm.SetCompetitionId(value, env))
+    if (flarm.SetCompetitionId(id, env))
       fprintf(stdout, "competition id set to \"%s\"\n", id);
     else
       fprintf(stdout, "Operation failed!\n");
@@ -174,9 +168,9 @@ static void
 ChangeCompetitionClass(FlarmDevice &flarm, OperationEnvironment &env)
 {
   while (true) {
-    TCHAR old_comp_class[64];
+    char old_comp_class[64];
     if (flarm.GetCompetitionClass(old_comp_class, 64, env))
-      _tprintf(_T("Old competition class: \"%s\"\n"), old_comp_class);
+      printf("Old competition class: \"%s\"\n", old_comp_class);
 
     fprintf(stdout, "Please enter the new competition class:\n");
     fprintf(stdout, "> ");
@@ -190,8 +184,7 @@ ChangeCompetitionClass(FlarmDevice &flarm, OperationEnvironment &env)
     StripRight(comp_class);
     fprintf(stdout, "Setting competition class to \"%s\" ...\n", comp_class);
 
-    const UTF8ToWideConverter value(comp_class);
-    if (flarm.SetCompetitionClass(value, env))
+    if (flarm.SetCompetitionClass(comp_class, env))
       fprintf(stdout, "Competition class set to \"%s\"\n", comp_class);
     else
       fprintf(stdout, "Operation failed!\n");

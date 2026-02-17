@@ -12,7 +12,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <tchar.h>
 #include <stdio.h>
 
 SerialPort::SerialPort(PortListener *_listener, DataHandler &_handler)
@@ -35,7 +34,7 @@ SerialPort::~SerialPort() noexcept
 }
 
 void
-SerialPort::Open(const TCHAR *path, unsigned _baud_rate)
+SerialPort::Open(const char *path, unsigned _baud_rate)
 {
   assert(!Thread::IsInside());
 

@@ -6,8 +6,6 @@
 #include "util/StaticString.hxx"
 #include "RadioFrequency.hpp"
 #include "Id.hpp"
-#include <tchar.h>
-
 static constexpr std::size_t
 LatinBufferSize(std::size_t size) noexcept
 {
@@ -42,11 +40,11 @@ struct FlarmNetRecord {
   RadioFrequency frequency = RadioFrequency::Null();
 
   /** 
-   * Format a TCHAR value; returns nullptr if empty.
+   * Format a char value; returns nullptr if empty.
    * @param buffer Present for interface compatibility with other Format
    *        overloads, but unused in this specialization
    * @return Formatted string pointer; must not be ignored 
    */
-  [[nodiscard]] const TCHAR *Format([[maybe_unused]] StaticString<256> &buffer,
-                                     const TCHAR *value) const noexcept;
+  [[nodiscard]] const char *Format([[maybe_unused]] StaticString<256> &buffer,
+                                     const char *value) const noexcept;
 };

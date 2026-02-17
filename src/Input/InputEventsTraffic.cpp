@@ -10,9 +10,9 @@
 #include "Dialogs/Traffic/TrafficDialogs.hpp"
 
 void
-InputEvents::eventFLARMRadar([[maybe_unused]] const TCHAR *misc)
+InputEvents::eventFLARMRadar([[maybe_unused]] const char *misc)
 {
-  if (StringIsEqual(misc, _T("ForceToggle"))) {
+  if (StringIsEqual(misc, "ForceToggle")) {
     CommonInterface::main_window->ToggleForceFLARMRadar();
   } else
     CommonInterface::main_window->ToggleSuppressFLARMRadar();
@@ -21,43 +21,43 @@ InputEvents::eventFLARMRadar([[maybe_unused]] const TCHAR *misc)
 // FLARM Traffic
 // Displays the FLARM traffic dialog
 void
-InputEvents::eventFlarmTraffic([[maybe_unused]] const TCHAR *misc)
+InputEvents::eventFlarmTraffic([[maybe_unused]] const char *misc)
 {
   PageActions::ShowTrafficRadar();
 }
 
 void
-InputEvents::eventTraffic(const TCHAR *misc)
+InputEvents::eventTraffic(const char *misc)
 {
   LoadFlarmDatabases();
 
-  if (StringIsEqual(misc, _T("show"))) {
+  if (StringIsEqual(misc, "show")) {
     PageActions::ShowTrafficRadar();
     return;
   }
 
   TrafficWidget *traffic_widget = (TrafficWidget *)
-    CommonInterface::main_window->GetFlavourWidget(_T("Traffic"));
+    CommonInterface::main_window->GetFlavourWidget("Traffic");
   if (traffic_widget == nullptr)
     return;
 
-  if (StringIsEqual(misc, _T("zoom auto toggle"))) {
+  if (StringIsEqual(misc, "zoom auto toggle")) {
     traffic_widget->ToggleAutoZoom();
-  } else if (StringIsEqual(misc, _T("zoom in"))) {
+  } else if (StringIsEqual(misc, "zoom in")) {
     traffic_widget->ZoomIn();
-  } else if (StringIsEqual(misc, _T("zoom out"))) {
+  } else if (StringIsEqual(misc, "zoom out")) {
     traffic_widget->ZoomOut();
-  } else if (StringIsEqual(misc, _T("northup toggle"))) {
+  } else if (StringIsEqual(misc, "northup toggle")) {
     traffic_widget->ToggleNorthUp();
-  } else if (StringIsEqual(misc, _T("details"))) {
+  } else if (StringIsEqual(misc, "details")) {
     traffic_widget->OpenDetails();
-  } else if (StringIsEqual(misc, _T("label toggle"))) {
+  } else if (StringIsEqual(misc, "label toggle")) {
     traffic_widget->SwitchData();
   }
 }
 
 void
-InputEvents::eventFlarmDetails([[maybe_unused]] const TCHAR *misc)
+InputEvents::eventFlarmDetails([[maybe_unused]] const char *misc)
 {
   LoadFlarmDatabases();
   TrafficListDialog();

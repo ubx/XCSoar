@@ -240,7 +240,7 @@ public:
   void Create(ContainerWindow *parent, const PixelRect rc,
               const WindowStyle window_style=WindowStyle()) noexcept;
 #else
-  void Create(ContainerWindow *parent, const TCHAR *cls, const TCHAR *text,
+  void Create(ContainerWindow *parent, const char *cls, const char *text,
               const PixelRect rc,
               const WindowStyle window_style=WindowStyle()) noexcept;
 
@@ -915,6 +915,15 @@ public:
 
 #ifdef USE_WINUSER
   virtual bool OnUser(unsigned id) noexcept;
+
+  /**
+   * Called when the parent receives WM_CTLCOLORSTATIC or
+   * WM_CTLCOLOREDIT for this child control.  Override to set
+   * text/background colors on the HDC and return a background brush.
+   *
+   * @return a HBRUSH cast to LRESULT, or 0 to use defaults
+   */
+  virtual LRESULT OnChildColor(HDC hdc) noexcept;
 
   virtual LRESULT OnMessage(HWND hWnd, UINT message,
                             WPARAM wParam, LPARAM lParam) noexcept;

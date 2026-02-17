@@ -28,7 +28,7 @@
  * @return True if FAI shape
  */
 static bool
-TaskSummaryShape(const OrderedTask *task, TCHAR *text)
+TaskSummaryShape(const OrderedTask *task, char *text)
 {
   bool FAIShape = false;
   switch (task->TaskSize()) {
@@ -37,33 +37,33 @@ TaskSummaryShape(const OrderedTask *task, TCHAR *text)
     break;
 
   case 1:
-    _tcscpy(text, _("Unknown"));
+    strcpy(text, _("Unknown"));
     break;
 
   case 2:
-    _tcscpy(text, _("Goal"));
+    strcpy(text, _("Goal"));
     FAIShape = true;
 
     break;
 
   case 3:
     if (task->GetFactory().IsClosed()) {
-      _tcscpy(text, _("Out and return"));
+      strcpy(text, _("Out and return"));
       FAIShape = true;
     }
     else
-      _tcscpy(text, _("Two legs"));
+      strcpy(text, _("Two legs"));
     break;
 
   case 4:
     if (!task->GetFactory().IsUnique() ||!task->GetFactory().IsClosed())
-      _tcscpy(text, _("Three legs"));
+      strcpy(text, _("Three legs"));
     else if (FAITriangleValidator::Validate(*task)) {
-      _tcscpy(text, _("FAI triangle"));
+      strcpy(text, _("FAI triangle"));
       FAIShape = true;
     }
     else
-      _tcscpy(text, _("non-FAI triangle"));
+      strcpy(text, _("non-FAI triangle"));
     break;
 
   default:
@@ -73,16 +73,16 @@ TaskSummaryShape(const OrderedTask *task, TCHAR *text)
   return FAIShape;
 }
 void
-OrderedTaskSummary(const OrderedTask *task, TCHAR *text, bool linebreaks)
+OrderedTaskSummary(const OrderedTask *task, char *text, bool linebreaks)
 {
   const TaskStats &stats = task->GetStats();
-  TCHAR summary_shape[100];
+  char summary_shape[100];
   bool FAIShape = TaskSummaryShape(task, summary_shape);
   TaskValidationErrorSet validation_errors;
   if (FAIShape || task->GetFactoryType() == TaskFactoryType::FAI_GENERAL)
     validation_errors = task->GetFactory().ValidateFAIOZs();
 
-  TCHAR linebreak[3];
+  char linebreak[3];
   if (linebreaks) {
     linebreak[0] = '\n';
     linebreak[1] = 0;
@@ -97,10 +97,10 @@ OrderedTaskSummary(const OrderedTask *task, TCHAR *text, bool linebreaks)
                        OrderedTaskFactoryName(task->GetFactoryType()));
   } else {
     if (task->HasTargets())
-      StringFormatUnsafe(text, _T("%s%s%s%s%.0f %s%s%s %.0f %s%s%s %.0f %s (%s)"),
+      StringFormatUnsafe(text, "%s%s%s%s%.0f %s%s%s %.0f %s%s%s %.0f %s (%s)",
                          summary_shape,
-                         validation_errors.IsEmpty() ? _T("") : _T(" / "),
-                         validation_errors.IsEmpty() ? _T("") : getTaskValidationErrors(validation_errors),
+                         validation_errors.IsEmpty() ? "" : " / ",
+                         validation_errors.IsEmpty() ? "" : getTaskValidationErrors(validation_errors),
                          linebreak,
                          (double)Units::ToUserDistance(stats.distance_nominal),
                          Units::GetDistanceName(),
@@ -114,10 +114,10 @@ OrderedTaskSummary(const OrderedTask *task, TCHAR *text, bool linebreaks)
                          Units::GetDistanceName(),
                          OrderedTaskFactoryName(task->GetFactoryType()));
     else
-      StringFormatUnsafe(text, _T("%s%s%s%s%s %.0f %s (%s)"),
+      StringFormatUnsafe(text, "%s%s%s%s%s %.0f %s (%s)",
                          summary_shape,
-                         validation_errors.IsEmpty() ? _T("") : _T(" / "),
-                         validation_errors.IsEmpty() ? _T("") : getTaskValidationErrors(validation_errors),
+                         validation_errors.IsEmpty() ? "" : " / ",
+                         validation_errors.IsEmpty() ? "" : getTaskValidationErrors(validation_errors),
                          linebreak,
                          _("dist."),
                          (double)Units::ToUserDistance(stats.distance_nominal),
@@ -127,24 +127,24 @@ OrderedTaskSummary(const OrderedTask *task, TCHAR *text, bool linebreaks)
 }
 
 void
-OrderedTaskPointLabel(TaskPointType type, const TCHAR *name,
-                      unsigned index, TCHAR* buffer)
+OrderedTaskPointLabel(TaskPointType type, const char *name,
+                      unsigned index, char* buffer)
 {
   switch (type) {
   case TaskPointType::START:
-    StringFormatUnsafe(buffer, _T("S: %s"), name);
+    StringFormatUnsafe(buffer, "S: %s", name);
     break;
 
   case TaskPointType::AST:
-    StringFormatUnsafe(buffer, _T("T%d: %s"), index, name);
+    StringFormatUnsafe(buffer, "T%d: %s", index, name);
     break;
 
   case TaskPointType::AAT:
-    StringFormatUnsafe(buffer, _T("A%d: %s"), index, name);
+    StringFormatUnsafe(buffer, "A%d: %s", index, name);
     break;
 
   case TaskPointType::FINISH:
-    StringFormatUnsafe(buffer, _T("F: %s"), name);
+    StringFormatUnsafe(buffer, "F: %s", name);
     break;
 
   default:
@@ -153,60 +153,60 @@ OrderedTaskPointLabel(TaskPointType type, const TCHAR *name,
 }
 
 void
-OrderedTaskPointRadiusLabel(const ObservationZonePoint &ozp, TCHAR* buffer)
+OrderedTaskPointRadiusLabel(const ObservationZonePoint &ozp, char* buffer)
 {
   switch (ozp.GetShape()) {
   case ObservationZone::Shape::FAI_SECTOR:
-    _tcscpy(buffer, _("FAI quadrant"));
+    strcpy(buffer, _("FAI quadrant"));
     return;
 
   case ObservationZone::Shape::SECTOR:
   case ObservationZone::Shape::ANNULAR_SECTOR:
-    StringFormatUnsafe(buffer,_T("%s - %s: %.1f%s"), _("Sector"), _("Radius"),
+    StringFormatUnsafe(buffer,"%s - %s: %.1f%s", _("Sector"), _("Radius"),
                        (double)Units::ToUserDistance(((const SectorZone &)ozp).GetRadius()),
                        Units::GetDistanceName());
     return;
 
   case ObservationZone::Shape::LINE:
-    StringFormatUnsafe(buffer,_T("%s - %s: %.1f%s"), _("Line"), _("Gate width"),
+    StringFormatUnsafe(buffer,"%s - %s: %.1f%s", _("Line"), _("Gate width"),
                        (double)Units::ToUserDistance(((const LineSectorZone &)ozp).GetLength()),
                        Units::GetDistanceName());
     return;
 
   case ObservationZone::Shape::CYLINDER:
-    StringFormatUnsafe(buffer,_T("%s - %s: %.1f%s"), _("Cylinder"), _("Radius"),
+    StringFormatUnsafe(buffer,"%s - %s: %.1f%s", _("Cylinder"), _("Radius"),
                        (double)Units::ToUserDistance(((const CylinderZone &)ozp).GetRadius()),
                        Units::GetDistanceName());
     return;
 
   case ObservationZone::Shape::MAT_CYLINDER:
-    _tcscpy(buffer, _("MAT cylinder"));
+    strcpy(buffer, _("MAT cylinder"));
     return;
 
   case ObservationZone::Shape::CUSTOM_KEYHOLE:
-    StringFormatUnsafe(buffer,_T("%s - %s: %.1f%s"), _("Keyhole"), _("Radius"),
+    StringFormatUnsafe(buffer,"%s - %s: %.1f%s", _("Keyhole"), _("Radius"),
                        (double)Units::ToUserDistance(((const KeyholeZone &)ozp).GetRadius()),
                        Units::GetDistanceName());
     return;
 
   case ObservationZone::Shape::DAEC_KEYHOLE:
-    _tcscpy(buffer, _("DAeC Keyhole"));
+    strcpy(buffer, _("DAeC Keyhole"));
     return;
 
   case ObservationZone::Shape::BGAFIXEDCOURSE:
-    _tcscpy(buffer, _("BGA Fixed Course"));
+    strcpy(buffer, _("BGA Fixed Course"));
     return;
 
   case ObservationZone::Shape::BGAENHANCEDOPTION:
-    _tcscpy(buffer, _("BGA Enhanced Option"));
+    strcpy(buffer, _("BGA Enhanced Option"));
     return;
 
   case ObservationZone::Shape::BGA_START:
-    _tcscpy(buffer, _("BGA Start Sector"));
+    strcpy(buffer, _("BGA Start Sector"));
     return;
 
   case ObservationZone::Shape::SYMMETRIC_QUADRANT:
-    _tcscpy(buffer, _("Symmetric quadrant"));
+    strcpy(buffer, _("Symmetric quadrant"));
     return;
   }
 
@@ -217,13 +217,13 @@ OrderedTaskPointRadiusLabel(const ObservationZonePoint &ozp, TCHAR* buffer)
 bool
 OrderedTaskSave(OrderedTask &task)
 {
-  TCHAR fname[69] = _T("");
+  char fname[69] = "";
   if (!TextEntryDialog(fname, 64, _("Enter a task name")))
     return false;
 
-  const auto tasks_path = MakeLocalPath(_T("tasks"));
+  const auto tasks_path = MakeLocalPath("tasks");
 
-  _tcscat(fname, _T(".tsk"));
+  strcat(fname, ".tsk");
   task.SetName(fname);
   SaveTask(AllocatedPath::Build(tasks_path, fname), task);
   return true;

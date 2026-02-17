@@ -22,8 +22,6 @@ static inline void DisallowLanguage() {}
 
 #else // !USE_LIBINTL
 
-#include <tchar.h>
-
 class MOFile;
 extern const MOFile *mo_file;
 
@@ -36,13 +34,13 @@ void DisallowLanguage();
 #endif
 
 [[gnu::const]]
-const TCHAR* gettext(const TCHAR* text);
+const char* gettext(const char* text);
 
 /**
  * For source compatibility with GNU gettext.
  */
-#define _(x) gettext(_T(x))
-#define N_(x) _T(x)
+#define _(x) gettext(x)
+#define N_(x) x
 
 void reset_gettext_cache();
 

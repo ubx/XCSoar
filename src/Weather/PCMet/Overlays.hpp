@@ -5,11 +5,9 @@
 
 #include "system/Path.hpp"
 #include "time/BrokenDateTime.hpp"
-#include "util/tstring.hpp"
 
+#include <string>
 #include <list>
-
-#include <tchar.h>
 
 struct PCMetSettings;
 class CurlGlobal;
@@ -35,7 +33,7 @@ struct OverlayInfo {
   unsigned level;
   unsigned step;
 
-  tstring label;
+  std::string label;
   AllocatedPath path;
 };
 

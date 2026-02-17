@@ -5,12 +5,12 @@
 #include "util/StringAPI.hxx"
 
 [[gnu::pure]]
-static const TCHAR *
-LastSeparator(const TCHAR *path)
+static const char *
+LastSeparator(const char *path)
 {
-  const auto *p = StringFindLast(path, _T('/'));
+  const auto *p = StringFindLast(path, '/');
 #ifdef _WIN32
-  const auto *backslash = StringFindLast(path, _T('\\'));
+  const auto *backslash = StringFindLast(path, '\\');
   if (p == nullptr || backslash > p)
     p = backslash;
 #endif
@@ -18,19 +18,19 @@ LastSeparator(const TCHAR *path)
 }
 
 [[gnu::pure]]
-static TCHAR *
-LastSeparator(TCHAR *path)
+static char *
+LastSeparator(char *path)
 {
-  return const_cast<TCHAR *>(LastSeparator((const TCHAR *)path));
+  return const_cast<char *>(LastSeparator((const char *)path));
 }
 
 void
-ReplaceBaseName(TCHAR *path, const TCHAR *new_base)
+ReplaceBaseName(char *path, const char *new_base)
 {
-  TCHAR *q = LastSeparator(path);
+  char *q = LastSeparator(path);
   if (q != nullptr)
     ++q;
   else
     q = path;
-  _tcscpy(q, new_base);
+  strcpy(q, new_base);
 }

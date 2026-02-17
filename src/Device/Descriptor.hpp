@@ -19,7 +19,6 @@
 #include "thread/Mutex.hxx"
 #include "thread/Debug.hpp"
 #include "time/FloatDuration.hxx"
-#include "util/tstring.hpp"
 #include "util/StaticFifoBuffer.hxx"
 
 #ifdef HAVE_INTERNAL_GPS
@@ -29,13 +28,13 @@
 #include "Math/SelfTimingKalmanFilter1d.hpp"
 #include "Math/WindowFilter.hpp"
 
+#include <string>
 #include <array>
 #include <atomic>
 #include <chrono>
 #include <memory>
 
 #include <cassert>
-#include <tchar.h>
 #include <stdio.h>
 
 namespace Java { class GlobalCloseable; }
@@ -232,7 +231,7 @@ class DeviceDescriptor final
    * If this device has failed, then this attribute may contain an
    * error message.
    */
-  tstring error_message;
+  std::string error_message;
 
   /**
    * Number of port failures since the device was last reset.
@@ -293,7 +292,7 @@ public:
   [[gnu::pure]]
   PortState GetState() const noexcept;
 
-  tstring GetErrorMessage() const noexcept {
+  std::string GetErrorMessage() const noexcept {
     const std::lock_guard lock{mutex};
     return error_message;
   }
@@ -421,12 +420,12 @@ public:
    */
   bool EnableNMEA(OperationEnvironment &env) noexcept;
 
-  const TCHAR *GetDisplayName() const noexcept;
+  const char *GetDisplayName() const noexcept;
 
   /**
    * Compares the driver's name.
    */
-  bool IsDriver(const TCHAR *name) const noexcept;
+  bool IsDriver(const char *name) const noexcept;
 
   [[gnu::pure]]
   bool CanDeclare() const noexcept;
@@ -435,11 +434,11 @@ public:
   bool IsLogger() const noexcept;
 
   bool IsCondor() const noexcept {
-    return IsDriver(_T("Condor"));
+    return IsDriver("Condor");
   }
 
   bool IsVega() const noexcept {
-    return IsDriver(_T("Vega"));
+    return IsDriver("Vega");
   }
 
   bool IsNMEAOut() const noexcept;
@@ -537,12 +536,12 @@ public:
   bool PutVolume(unsigned volume, OperationEnvironment &env) noexcept;
   bool PutPilotEvent(OperationEnvironment &env) noexcept;
   bool PutActiveFrequency(RadioFrequency frequency,
-                          const TCHAR *name,
+                          const char *name,
                           OperationEnvironment &env) noexcept;
   bool ExchangeRadioFrequencies(OperationEnvironment &env,
                                 NMEAInfo &info) noexcept;
   bool PutStandbyFrequency(RadioFrequency frequency,
-                           const TCHAR *name,
+                           const char *name,
                            OperationEnvironment &env) noexcept;
   bool PutTransponderCode(TransponderCode code, OperationEnvironment &env) noexcept;
   bool PutQNH(AtmosphericPressure pres,
@@ -580,7 +579,7 @@ public:
                           const DerivedInfo &calculated) noexcept;
 
 private:
-  void LockSetErrorMessage(const TCHAR *msg) noexcept;
+  void LockSetErrorMessage(const char *msg) noexcept;
   void OnJobFinished() noexcept;
 
   /* virtual methods from class PortListener */

@@ -798,7 +798,7 @@ MainWindow::OnMouseUp(PixelPoint p) noexcept
   if (dragging) {
     StopDragging();
 
-    const TCHAR *gesture = gestures.Finish();
+    const char *gesture = gestures.Finish();
     if (gesture && InputEvents::processGesture(gesture))
       return true;
   }
@@ -884,7 +884,7 @@ MainWindow::RunTimer() noexcept
   if (CommonInterface::GetUISettings().thermal_assistant_position == UISettings::ThermalAssistantPosition::OFF) {
     thermal_assistant.Clear();
   } else if (!CommonInterface::Calculated().circling ||
-             InputEvents::IsFlavour(_T("TA"))) {
+             InputEvents::IsFlavour("TA")) {
     thermal_assistant.Hide();
   } else if (!HasDialog()) {
     if (!thermal_assistant.IsDefined())
@@ -1253,7 +1253,7 @@ MainWindow::SetWidget(Widget *_widget) noexcept
 }
 
 Widget *
-MainWindow::GetFlavourWidget(const TCHAR *flavour) noexcept
+MainWindow::GetFlavourWidget(const char *flavour) noexcept
 {
   return InputEvents::IsFlavour(flavour)
     ? widget
@@ -1304,7 +1304,7 @@ MainWindow::UpdateTrafficGaugeVisibility() noexcept
     !CommonInterface::GetUIState().screen_blanked &&
     /* hide the traffic gauge while the traffic widget is visible, to
        avoid showing the same information twice */
-    !InputEvents::IsFlavour(_T("Traffic"));
+    !InputEvents::IsFlavour("Traffic");
 
   if (traffic_visible && suppress_traffic_gauge) {
     if (flarm.status.available &&

@@ -148,60 +148,60 @@ static GeoPoint location;
 static Angle last_heading;
 
 static constexpr StaticEnumChoice type_filter_list[] = {
-  { WILDCARD, _T("*") },
-  { OTHER, _T("Unknown") },
-  { RESTRICTED, _T("Restricted areas") },
-  { PROHIBITED, _T("Prohibited areas") },
-  { DANGER, _T("Danger areas") },
-  { CLASSA, _T("Class A") },
-  { CLASSB, _T("Class B") },
-  { CLASSC, _T("Class C") },
-  { CLASSD, _T("Class D") },
-  { NOGLIDER, _T("No gliders") },
-  { CTR, _T("CTR") },
-  { WAVE, _T("Wave") },
-  { AATASK, _T("Task Area") },
-  { CLASSE, _T("Class E") },
-  { CLASSF, _T("Class F") },
-  { TMZ, _T("TMZ") },
-  { CLASSG, _T("Class G") },
-  { MATZ, _T("MATZ") },
-  { RMZ, _T("RMZ") },
-  { UNCLASSIFIED, _T("UNCLASSIFIED") },
-  { TMA, _T("TMA") },
-  { TRA, _T("TRA") },
-  { TSA, _T("TSA") },
-  { FIR, _T("FIR") },
-  { UIR, _T("UIR") },
-  { ADIZ, _T("ADIZ") },
-  { ATZ, _T("ATZ") },
-  { AWY, _T("AWY") },
-  { MTR, _T("MTR") },
-  { ALERT, _T("ALERT") },
-  { WARNING, _T("WARNING") },
-  { PROTECTED, _T("PROTECTED") },
-  { HTZ, _T("HTZ") },
-  { GLIDING_SECTOR, _T("Gliding Sector") },
-  { TRP, _T("TRP") },
-  { TIZ, _T("TIZ") },
-  { TIA, _T("TIA") },
-  { MTA, _T("MTA") },
-  { CTA, _T("CTA") },
-  { ACC_SECTOR, _T("ACC Sector") },
-  { AERIAL_SPORTING_RECREATIONAL, _T("Aerial Sporting Recreational") },
-  { OVERFLIGHT_RESTRICTION, _T("Overflight Restriction") },
-  { MRT, _T("MRT") },
-  { TFR, _T("TFR") },
-  { VFR_ROUTE, _T("Designated Route for VFR") },
-  { VFR_SECTOR, _T("VFR Sector") },
-  { FIS_SECTOR, _T("FIS Sector") },
-  { LTA, _T("Lower Traffic Area") },
-  { UTA, _T("Upper Traffic Area") },
-  { ASRA, _T("Aerial Sporting Or Recreational Activity") },
-  { NOTAM, _T("NTOAM Affected Area") },
-  { NONE, _T("None") },
-  { TRAFR, _T("TRA/TSA Feeding Route") },
-  { TRZ, _T("Transponder Recommended Zone") },
+  { WILDCARD, "*" },
+  { OTHER, "Unknown" },
+  { RESTRICTED, "Restricted areas" },
+  { PROHIBITED, "Prohibited areas" },
+  { DANGER, "Danger areas" },
+  { CLASSA, "Class A" },
+  { CLASSB, "Class B" },
+  { CLASSC, "Class C" },
+  { CLASSD, "Class D" },
+  { NOGLIDER, "No gliders" },
+  { CTR, "CTR" },
+  { WAVE, "Wave" },
+  { AATASK, "Task Area" },
+  { CLASSE, "Class E" },
+  { CLASSF, "Class F" },
+  { TMZ, "TMZ" },
+  { CLASSG, "Class G" },
+  { MATZ, "MATZ" },
+  { RMZ, "RMZ" },
+  { UNCLASSIFIED, "UNCLASSIFIED" },
+  { TMA, "TMA" },
+  { TRA, "TRA" },
+  { TSA, "TSA" },
+  { FIR, "FIR" },
+  { UIR, "UIR" },
+  { ADIZ, "ADIZ" },
+  { ATZ, "ATZ" },
+  { AWY, "AWY" },
+  { MTR, "MTR" },
+  { ALERT, "ALERT" },
+  { WARNING, "WARNING" },
+  { PROTECTED, "PROTECTED" },
+  { HTZ, "HTZ" },
+  { GLIDING_SECTOR, "Gliding Sector" },
+  { TRP, "TRP" },
+  { TIZ, "TIZ" },
+  { TIA, "TIA" },
+  { MTA, "MTA" },
+  { CTA, "CTA" },
+  { ACC_SECTOR, "ACC Sector" },
+  { AERIAL_SPORTING_RECREATIONAL, "Aerial Sporting Recreational" },
+  { OVERFLIGHT_RESTRICTION, "Overflight Restriction" },
+  { MRT, "MRT" },
+  { TFR, "TFR" },
+  { VFR_ROUTE, "Designated Route for VFR" },
+  { VFR_SECTOR, "VFR Sector" },
+  { FIS_SECTOR, "FIS Sector" },
+  { LTA, "Lower Traffic Area" },
+  { UTA, "Upper Traffic Area" },
+  { ASRA, "Aerial Sporting Or Recreational Activity" },
+  { NOTAM, "NTOAM Affected Area" },
+  { NONE, "None" },
+  { TRAFR, "TRA/TSA Feeding Route" },
+  { TRZ, "Transponder Recommended Zone" },
    nullptr
 };
 
@@ -252,7 +252,7 @@ AirspaceListWidget::UpdateList()
   if (dialog_state.class_and_type != WILDCARD)
     data.cls = (AirspaceClass)dialog_state.class_and_type;
 
-  const TCHAR *name_filter = filter_widget.GetValueString(NAME);
+  const char *name_filter = filter_widget.GetValueString(NAME);
   if (!StringIsEmpty(name_filter))
     data.name_prefix = name_filter;
 
@@ -294,7 +294,7 @@ AirspaceListWidget::FilterMode(bool direction)
     filter_widget.LoadValueEnum(DISTANCE, WILDCARD);
     filter_widget.LoadValueEnum(DIRECTION, WILDCARD);
   } else {
-    filter_widget.LoadValue(NAME, _T(""));
+    filter_widget.LoadValue(NAME, "");
   }
 }
 
@@ -343,14 +343,14 @@ AirspaceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
 }
 
 [[gnu::pure]]
-static const TCHAR *
-GetHeadingString(TCHAR *buffer)
+static const char *
+GetHeadingString(char *buffer)
 {
-  TCHAR heading[32];
+  char heading[32];
   FormatBearing(heading, ARRAY_SIZE(heading),
                 CommonInterface::Basic().attitude.heading);
 
-  StringFormatUnsafe(buffer, _T("%s (%s)"), _("Heading"), heading);
+  StringFormatUnsafe(buffer, "%s (%s)", _("Heading"), heading);
   return buffer;
 }
 
@@ -376,7 +376,7 @@ AirspaceFilterWidget::Update()
   DataFieldEnum &direction_df = *(DataFieldEnum *)
     direction_control.GetDataField();
 
-  TCHAR buffer[64];
+  char buffer[64];
   direction_df.replaceEnumText(0, GetHeadingString(buffer));
   direction_control.RefreshDisplay();
 }
@@ -384,16 +384,16 @@ AirspaceFilterWidget::Update()
 static void
 FillDistanceEnum(DataFieldEnum &df)
 {
-  df.AddChoice(0, _T("*"));
+  df.AddChoice(0, "*");
 
   static constexpr unsigned distances[] = {
     25, 50, 75, 100, 150, 250, 500, 1000
   };
 
-  TCHAR buffer[64];
-  const TCHAR *unit = Units::GetDistanceName();
+  char buffer[64];
+  const char *unit = Units::GetDistanceName();
   for (unsigned i = 0; i < ARRAY_SIZE(distances); ++i) {
-    StringFormatUnsafe(buffer, _T("%u %s"), distances[i], unit);
+    StringFormatUnsafe(buffer, "%u %s", distances[i], unit);
     df.AddChoice(distances[i], buffer);
   }
 
@@ -403,9 +403,9 @@ FillDistanceEnum(DataFieldEnum &df)
 static void
 FillDirectionEnum(DataFieldEnum &df)
 {
-  TCHAR buffer[64];
+  char buffer[64];
 
-  df.AddChoice(WILDCARD, _T("*"));
+  df.AddChoice(WILDCARD, "*");
   df.AddChoice(0, GetHeadingString(buffer));
 
   static constexpr unsigned directions[] = {
@@ -421,7 +421,7 @@ FillDirectionEnum(DataFieldEnum &df)
 static DataField *
 CreateNameDataField(DataFieldListener *listener)
 {
-  return new PrefixDataField(_T(""), listener);
+  return new PrefixDataField("", listener);
 }
 
 static DataField *

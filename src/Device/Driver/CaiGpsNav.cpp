@@ -13,8 +13,6 @@
 #include "Device/Port/Port.hpp"
 #include "Operation/Operation.hpp"
 
-#include <tchar.h>
-
 static constexpr char CtrlC = '\x03';
 
 class CaiGpsNavDevice : public AbstractDevice {
@@ -50,8 +48,8 @@ CaiGpsNavCreateOnPort([[maybe_unused]] const DeviceConfig &config, Port &com_por
 }
 
 const struct DeviceRegister gps_nav_driver = {
-  _T("CAI GPS-NAV"),
-  _T("Cambridge CAI GPS-NAV"),
+  "CAI GPS-NAV",
+  "Cambridge CAI GPS-NAV",
   0,
   CaiGpsNavCreateOnPort,
 };

@@ -49,15 +49,15 @@ WaypointReaderOzi::ParseLine(const char *line, Waypoints &way_points)
   ParseIntegerTo(NextColumn(rest), number);
 
   // Field 2 : Name
-  tstring name{string_converter.Convert(NextColumn(rest))};
+  std::string name{string_converter.Convert(NextColumn(rest))};
 
   GeoPoint location;
   // Latitude (e.g. 5115.900N)
-  if (!ParseAngle(NarrowString<40>(NextColumn(rest)), location.latitude))
+  if (!ParseAngle(StaticString<40>(NextColumn(rest)), location.latitude))
     return false;
 
   // Longitude (e.g. 00715.900W)
-  if (!ParseAngle(NarrowString<40>(NextColumn(rest)), location.longitude))
+  if (!ParseAngle(StaticString<40>(NextColumn(rest)), location.longitude))
     return false;
 
   location.Normalize(); // ensure longitude is within -180:180
@@ -70,7 +70,7 @@ WaypointReaderOzi::ParseLine(const char *line, Waypoints &way_points)
   NextColumn(rest); // Field 10 : Background Color
 
   // Field 11 : Description
-  tstring comment{string_converter.Convert(NextColumn(rest))};
+  std::string comment{string_converter.Convert(NextColumn(rest))};
 
   NextColumn(rest); // Field 12 : Pointer Direction
   NextColumn(rest); // Field 13 : Garmin Display Format

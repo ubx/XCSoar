@@ -8,12 +8,10 @@
 #include "util/RadixTree.hpp"
 #include "util/StaticString.hxx"
 #include "util/TrivialArray.hxx"
-#include "util/tstring_view.hxx"
 
+#include <string_view>
 #include <array>
 #include <cassert>
-#include <tchar.h>
-
 struct InputConfig {
   // Sensible maximums
 
@@ -30,14 +28,14 @@ struct InputConfig {
 #endif
   static constexpr std::size_t MAX_EVENTS = 2048;
 
-  typedef void (*pt2Event)(const TCHAR *);
+  typedef void (*pt2Event)(const char *);
 
   // Events - What do you want to DO
   struct Event {
     // Which function to call (can be any, but should be here)
     pt2Event event;
     // Parameters
-    const TCHAR *misc;
+    const char *misc;
     // Next in event list - eg: Macros
     unsigned next;
   };
@@ -77,7 +75,7 @@ struct InputConfig {
   void SetDefaults() noexcept;
 
   [[gnu::pure]]
-  int LookupMode(tstring_view name) const noexcept {
+  int LookupMode(std::string_view name) const noexcept {
     for (std::size_t i = 0, size = modes.size(); i < size; ++i)
       if (name == modes[i].c_str())
         return i;
@@ -85,7 +83,7 @@ struct InputConfig {
     return -1;
   }
 
-  int AppendMode(tstring_view name) noexcept {
+  int AppendMode(std::string_view name) noexcept {
     if (modes.full())
       return -1;
 
@@ -94,7 +92,7 @@ struct InputConfig {
   }
 
   [[gnu::pure]]
-  int MakeMode(tstring_view name) noexcept {
+  int MakeMode(std::string_view name) noexcept {
     int mode = LookupMode(name);
     if (mode < 0)
       mode = AppendMode(name);
@@ -102,7 +100,7 @@ struct InputConfig {
     return mode;
   }
 
-  std::size_t AppendEvent(pt2Event handler, const TCHAR *misc,
+  std::size_t AppendEvent(pt2Event handler, const char *misc,
                           unsigned next) noexcept {
     if (events.full())
       return 0;
@@ -115,7 +113,7 @@ struct InputConfig {
     return events.size() - 1;
   }
 
-  void AppendMenu(std::size_t mode_id, const TCHAR *label,
+  void AppendMenu(std::size_t mode_id, const char *label,
                   unsigned location, unsigned event_id) noexcept {
     assert(mode_id < MAX_MODE);
 

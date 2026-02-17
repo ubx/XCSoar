@@ -13,8 +13,6 @@
 #include "Rough/RoughAngle.hpp"
 
 #include <type_traits>
-#include <tchar.h>
-
 struct FlarmTraffic {
   enum class AlarmType: uint8_t {
     NONE = 0,
@@ -164,7 +162,7 @@ struct FlarmTraffic {
   }
 
   [[gnu::const]]
-  static const TCHAR *GetTypeString(AircraftType type) noexcept;
+  static const char *GetTypeString(AircraftType type) noexcept;
 
   void Update(const FlarmTraffic &other) noexcept;
 };

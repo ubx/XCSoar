@@ -105,7 +105,7 @@ TeamCodeWidget::Update(const MoreData &basic, const DerivedInfo &calculated)
   SetText(RELATIVE_BEARING,
           teamcode_info.teammate_available && basic.track_available
           ? FormatAngleDelta(teamcode_info.teammate_vector.bearing - basic.track).c_str()
-          : _T("---"));
+          : "---");
 
   if (teamcode_info.teammate_available) {
     SetText(BEARING,
@@ -120,7 +120,7 @@ TeamCodeWidget::Update(const MoreData &basic, const DerivedInfo &calculated)
   SetText(FLARM_LOCK,
           settings.team_flarm_id.IsDefined()
           ? settings.team_flarm_callsign.c_str()
-          : _T(""));
+          : "");
 }
 
 void
@@ -145,7 +145,7 @@ TeamCodeWidget::OnSetWaypointClicked()
 inline void
 TeamCodeWidget::OnCodeClicked()
 {
-  TCHAR newTeammateCode[10];
+  char newTeammateCode[10];
 
   CopyTruncateString(newTeammateCode, ARRAY_SIZE(newTeammateCode),
                      CommonInterface::GetComputerSettings().team_code.team_code.GetCode());
@@ -167,8 +167,8 @@ TeamCodeWidget::OnFlarmLockClicked()
 {
   TeamCodeSettings &settings =
     CommonInterface::SetComputerSettings().team_code;
-  TCHAR newTeamFlarmCNTarget[decltype(settings.team_flarm_callsign)::capacity()];
-  _tcscpy(newTeamFlarmCNTarget, settings.team_flarm_callsign.c_str());
+  char newTeamFlarmCNTarget[decltype(settings.team_flarm_callsign)::capacity()];
+  strcpy(newTeamFlarmCNTarget, settings.team_flarm_callsign.c_str());
 
   if (!TextEntryDialog(newTeamFlarmCNTarget, 4))
     return;

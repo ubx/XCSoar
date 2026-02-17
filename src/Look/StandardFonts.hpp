@@ -3,18 +3,16 @@
 
 #pragma once
 
-#include <tchar.h>
-
 [[gnu::const]]
-static inline const TCHAR *
+static inline const char *
 GetStandardMonospaceFontFace() noexcept
 {
-  return _T("Consolas");
+  return "Consolas";
 }
 
 [[gnu::const]]
-static inline const TCHAR *
+static inline const char *
 GetStandardFontFace() noexcept
 {
-  return _T("Segeo UI");
+  return "Segeo UI";
 }

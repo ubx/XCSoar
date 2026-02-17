@@ -98,7 +98,7 @@ protected:
   const OrderedTask *get_cursor_task();
 
   [[gnu::pure]]
-  const TCHAR *get_cursor_name();
+  const char *get_cursor_name();
 
 private:
   /* virtual methods from class ListControl::Handler */
@@ -141,12 +141,12 @@ TaskListPanel::get_cursor_task()
   return ordered_task;
 }
 
-const TCHAR *
+const char *
 TaskListPanel::get_cursor_name()
 {
   const unsigned cursor_index = GetList().GetCursorIndex();
   if (cursor_index >= task_store.Size())
-    return _T("");
+    return "";
 
   return task_store.GetName(cursor_index);
 }
@@ -171,9 +171,9 @@ TaskListPanel::RefreshView()
   dialog.ShowTaskView(ordered_task);
 
   if (ordered_task == nullptr) {
-    summary.SetText(_T(""));
+    summary.SetText("");
   } else {
-    TCHAR text[300];
+    char text[300];
     OrderedTaskSummary(ordered_task, text, false);
     summary.SetText(text);
   }
@@ -190,11 +190,11 @@ TaskListPanel::LoadTask()
     return;
 
   StaticString<1024> text;
-  text.Format(_T("%s\n(%s)"), _("Load the selected task?"),
+  text.Format("%s\n(%s)", _("Load the selected task?"),
               get_cursor_name());
 
   if (const auto errors = orig->CheckTask(); !errors.IsEmpty()) {
-    text.append(_T("\n"));
+    text.append("\n");
     text.append(getTaskValidationErrors(errors));
   }
 
@@ -222,16 +222,16 @@ TaskListPanel::DeleteTask()
     return;
 
   const auto path = task_store.GetPath(cursor_index);
-  if (StringEndsWithIgnoreCase(path.c_str(), _T(".cup"))) {
+  if (StringEndsWithIgnoreCase(path.c_str(), ".cup")) {
     ShowMessageBox(_("Can't delete .CUP files"), _("Error"),
                    MB_OK | MB_ICONEXCLAMATION);
     return;
   }
 
-  const TCHAR *fname = task_store.GetName(cursor_index);
+  const char *fname = task_store.GetName(cursor_index);
 
   StaticString<1024> text;
-  text.Format(_T("%s\n(%s)"), _("Delete the selected task?"), fname);
+  text.Format("%s\n(%s)", _("Delete the selected task?"), fname);
   if (ShowMessageBox(text.c_str(), _("Task Browser"),
                   MB_YESNO | MB_ICONQUESTION) != IDYES)
     return;
@@ -243,18 +243,18 @@ TaskListPanel::DeleteTask()
 }
 
 static bool
-ClearSuffix(TCHAR *p, const TCHAR *suffix)
+ClearSuffix(char *p, const char *suffix)
 {
-  size_t length = _tcslen(p);
-  size_t suffix_length = _tcslen(suffix);
+  size_t length = strlen(p);
+  size_t suffix_length = strlen(suffix);
   if (length <= suffix_length)
     return false;
 
-  TCHAR *q = p + length - suffix_length;
+  char *q = p + length - suffix_length;
   if (!StringIsEqualIgnoreCase(q, suffix))
     return false;
 
-  *q = _T('\0');
+  *q = '\0';
   return true;
 }
 
@@ -265,23 +265,23 @@ TaskListPanel::RenameTask()
   if (cursor_index >= task_store.Size())
     return;
 
-  const TCHAR *oldname = task_store.GetName(cursor_index);
+  const char *oldname = task_store.GetName(cursor_index);
   StaticString<40> newname(oldname);
 
-  if (ClearSuffix(newname.buffer(), _T(".cup"))) {
+  if (ClearSuffix(newname.buffer(), ".cup")) {
     ShowMessageBox(_("Can't rename .CUP files"), _("Rename Error"),
         MB_ICONEXCLAMATION);
     return;
   }
 
-  ClearSuffix(newname.buffer(), _T(".tsk"));
+  ClearSuffix(newname.buffer(), ".tsk");
 
   if (!TextEntryDialog(newname))
     return;
 
-  newname.append(_T(".tsk"));
+  newname.append(".tsk");
 
-  const auto tasks_path = MakeLocalPath(_T("tasks"));
+  const auto tasks_path = MakeLocalPath("tasks");
 
   File::Rename(task_store.GetPath(cursor_index),
                AllocatedPath::Build(tasks_path, newname));

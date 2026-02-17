@@ -20,7 +20,6 @@
 #include "lib/fmt/RuntimeError.hxx"
 #include "io/BufferedReader.hxx"
 #include "io/StringConverter.hpp"
-#include "util/ConvertString.hpp"
 #include "util/StaticString.hxx"
 #include "util/StringCompare.hxx"
 #include "util/StringSplit.hxx"
@@ -159,8 +158,8 @@ struct TempAirspace
   }
 
   // General
-  tstring name;
-  tstring station_name;
+  std::string name;
+  std::string station_name;
   RadioFrequency radio_frequency;
   TransponderCode transponder_code;
   AirspaceClass asclass;
@@ -762,8 +761,8 @@ ParseLine(Airspaces &airspace_database, unsigned line_number,
     case 'X':
     case 'x':
       if (input.SkipWhitespace()) {
-        tstring tempString = tstring(
-            string_converter.Convert(input.c_str())); // Convert to tstring
+        std::string tempString = std::string(
+            string_converter.Convert(input.c_str())); // Convert to std::string
         temp_area.transponder_code =
             TransponderCode::Parse(tempString.c_str());
       }
@@ -1063,7 +1062,7 @@ ParseAirspaceFile(Airspaces &airspaces,
   }
 
   if (filetype == AirspaceFileType::UNKNOWN)
-    throw std::runtime_error(WideToUTF8Converter(_("Unknown airspace filetype")));
+    throw std::runtime_error(_("Unknown airspace filetype"));
 
   // Process final area (if any)
   temp_area.Commit(airspaces);

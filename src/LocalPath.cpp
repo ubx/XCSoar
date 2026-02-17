@@ -25,8 +25,6 @@
 
 #ifdef _WIN32
 #include "system/PathName.hpp"
-#else
-#include "util/tstring.hpp"
 #endif
 
 #include <algorithm>
@@ -80,7 +78,7 @@ SetPrimaryDataPath(Path path) noexcept
   data_paths.emplace_front(path);
 
 #ifndef ANDROID
-  cache_path = LocalPath(_T("cache"));
+  cache_path = LocalPath("cache");
 #endif
 }
 
@@ -94,7 +92,7 @@ SetSingleDataPath(Path path) noexcept
   data_paths.emplace_front(path);
 
 #ifndef ANDROID
-  cache_path = LocalPath(_T("cache"));
+  cache_path = LocalPath("cache");
 #endif
 }
 
@@ -107,13 +105,13 @@ LocalPath(Path file) noexcept
 }
 
 AllocatedPath
-LocalPath(const TCHAR *file) noexcept
+LocalPath(const char *file) noexcept
 {
   return LocalPath(Path(file));
 }
 
 AllocatedPath
-MakeLocalPath(const TCHAR *name)
+MakeLocalPath(const char *name)
 {
   auto path = LocalPath(name);
   Directory::Create(path);
@@ -126,17 +124,17 @@ RelativePath(Path path) noexcept
   return path.RelativeTo(GetPrimaryDataPath());
 }
 
-static constexpr TCHAR local_path_code[] = _T("%LOCAL_PATH%\\");
+static constexpr char local_path_code[] = "%LOCAL_PATH%\\";
 
 [[gnu::pure]]
-static const TCHAR *
-AfterLocalPathCode(const TCHAR *p) noexcept
+static const char *
+AfterLocalPathCode(const char *p) noexcept
 {
   p = StringAfterPrefix(p, local_path_code);
   if (p == nullptr)
     return nullptr;
 
-  while (*p == _T('/') || *p == _T('\\'))
+  while (*p == '/' || *p == '\\')
     ++p;
 
   if (StringIsEmpty(p))
@@ -149,13 +147,13 @@ AllocatedPath
 ExpandLocalPath(Path src) noexcept
 {
   // Get the relative file name and location (ptr)
-  const TCHAR *ptr = AfterLocalPathCode(src.c_str());
+  const char *ptr = AfterLocalPathCode(src.c_str());
   if (ptr == nullptr)
     return src;
 
 #ifndef _WIN32
   // Convert backslashes to slashes on platforms where it matters
-  tstring src2(ptr);
+  std::string src2(ptr);
   std::replace(src2.begin(), src2.end(), '\\', '/');
   ptr = src2.c_str();
 #endif
@@ -185,11 +183,11 @@ ContractLocalPath(Path src) noexcept
 static AllocatedPath
 FindDataPathAtModule(HMODULE hModule) noexcept
 {
-  TCHAR buffer[MAX_PATH];
+  char buffer[MAX_PATH];
   if (GetModuleFileName(hModule, buffer, MAX_PATH) <= 0)
     return nullptr;
 
-  ReplaceBaseName(buffer, PRODUCT_DATA_DIR_T);
+  ReplaceBaseName(buffer, PRODUCT_DATA_DIR);
   return Directory::Exists(Path(buffer))
     ? AllocatedPath(buffer)
     : nullptr;
@@ -204,7 +202,7 @@ FindDataPaths() noexcept
 
   /* Kobo: hard-coded product data path */
   if constexpr (IsKobo()) {
-    result.emplace_back(_T(KOBO_USER_DATA DIR_SEPARATOR_S PRODUCT_DATA_DIR));
+    result.emplace_back(KOBO_USER_DATA DIR_SEPARATOR_S PRODUCT_DATA_DIR);
     return result;
   }
 
@@ -274,10 +272,10 @@ FindDataPaths() noexcept
 
   /* Windows: use "My Documents\<ProductDataDir>" */
   {
-    TCHAR buffer[MAX_PATH];
+    char buffer[MAX_PATH];
     if (SHGetSpecialFolderPath(nullptr, buffer, CSIDL_PERSONAL,
                                result.empty()))
-      result.emplace_back(AllocatedPath::Build(buffer, PRODUCT_DATA_DIR_T));
+      result.emplace_back(AllocatedPath::Build(buffer, PRODUCT_DATA_DIR));
   }
 #endif // _WIN32
 
@@ -320,7 +318,7 @@ FindDataPaths() noexcept
 }
 
 void
-VisitDataFiles(const TCHAR* filter, File::Visitor &visitor)
+VisitDataFiles(const char* filter, File::Visitor &visitor)
 {
   for (const auto &i : data_paths)
     Directory::VisitSpecificFiles(i, filter, visitor, true);
@@ -333,7 +331,7 @@ GetCachePath() noexcept
 }
 
 AllocatedPath
-MakeCacheDirectory(const TCHAR *name) noexcept
+MakeCacheDirectory(const char *name) noexcept
 {
   Directory::Create(cache_path);
   auto path = AllocatedPath::Build(cache_path, Path(name));
@@ -359,7 +357,7 @@ InitialiseDataPath()
 
   // TODO: delete the old cache directory in product data directory?
 #else
-  cache_path = LocalPath(_T("cache"));
+  cache_path = LocalPath("cache");
 #endif
 }
 

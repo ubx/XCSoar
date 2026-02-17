@@ -8,8 +8,6 @@
 
 #include <cassert>
 #include <memory>
-#include <tchar.h>
-
 class MaskedIcon;
 class TabDisplay;
 
@@ -114,11 +112,11 @@ public:
       LargeExtra();
   }
 
-  void AddTab(std::unique_ptr<Widget> widget, const TCHAR *caption,
+  void AddTab(std::unique_ptr<Widget> widget, const char *caption,
               const MaskedIcon *icon=nullptr) noexcept;
 
   [[gnu::pure]]
-  const TCHAR *GetButtonCaption(unsigned i) const noexcept;
+  const char *GetButtonCaption(unsigned i) const noexcept;
 
 public:
   /* virtual methods from class Widget */

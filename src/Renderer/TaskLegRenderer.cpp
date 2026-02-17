@@ -43,7 +43,7 @@ RenderTaskLegs(ChartRenderer &chart,
   if (!task_stats.start.HasStarted())
     return;
 
-  TCHAR sTmp[5];
+  char sTmp[5];
 
   const OrderedTask &task = task_manager.GetOrderedTask();
   for (unsigned i = 0, n = task.TaskSize(); i < n; ++i) {
@@ -68,7 +68,7 @@ RenderTaskLegs(ChartRenderer &chart,
         }
       }
       if (y>=0 && x>chart.GetXMin()) {
-        StringFormatUnsafe(sTmp, _T("%d"), i);
+        StringFormatUnsafe(sTmp, "%d", i);
         chart.DrawLabel({x, chart.GetYMax()*y + chart.GetYMin()*(1-y)},
                         sTmp);
       }

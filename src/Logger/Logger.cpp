@@ -68,16 +68,16 @@ Logger::GUIStartLogger(const NMEAInfo& gps_info,
 
   if (task) {
     if (!noAsk) {
-      TCHAR TaskMessage[1024];
-      _tcscpy(TaskMessage, _T("Start Logger With Declaration\r\n"));
+      char TaskMessage[1024];
+      strcpy(TaskMessage, "Start Logger With Declaration\r\n");
       
       if (decl.Size()) {
         for (unsigned i = 0; i< decl.Size(); ++i) {
-          _tcscat(TaskMessage, decl.GetName(i));
-          _tcscat(TaskMessage, _T("\r\n"));
+          strcat(TaskMessage, decl.GetName(i));
+          strcat(TaskMessage, "\r\n");
         }
       } else {
-        _tcscat(TaskMessage, _T("None"));
+        strcat(TaskMessage, "None");
       }
       
       if (ShowMessageBox(TaskMessage, _("Start Logger"),
@@ -87,7 +87,7 @@ Logger::GUIStartLogger(const NMEAInfo& gps_info,
   }
 
   const std::lock_guard protect{lock};
-  logger.StartLogger(gps_info, settings.logger, _T(""), decl);
+  logger.StartLogger(gps_info, settings.logger, "", decl);
 }
 
 void
@@ -117,7 +117,7 @@ Logger::GUIStopLogger(const NMEAInfo &gps_info,
 }
 
 void
-Logger::LoggerNote(const TCHAR *text)
+Logger::LoggerNote(const char *text)
 {
   const std::lock_guard protect{lock};
   logger.LoggerNote(text);

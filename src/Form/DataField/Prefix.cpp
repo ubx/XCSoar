@@ -5,60 +5,60 @@
 #include "util/StringAPI.hxx"
 #include "util/StringCompare.hxx"
 
-const TCHAR *
+const char *
 PrefixDataField::GetAsDisplayString() const noexcept
 {
-  const TCHAR *s = DataFieldString::GetAsDisplayString();
+  const char *s = DataFieldString::GetAsDisplayString();
   if (StringIsEmpty(s))
-    s = _T("*");
+    s = "*";
   return s;
 }
 
 void
 PrefixDataField::Inc() noexcept
 {
-  const TCHAR *chars = GetAllowedCharacters();
+  const char *chars = GetAllowedCharacters();
   if (StringIsEmpty(chars))
     return;
 
-  const TCHAR current = GetAsString()[0];
-  const TCHAR *p = current != _T('\0')
+  const char current = GetAsString()[0];
+  const char *p = current != '\0'
     ? StringFind(chars, current)
     : nullptr;
 
-  TCHAR next;
+  char next;
   if (p == nullptr)
     next = chars[0];
   else
     next = p[1];
 
-  const TCHAR new_value[2] = { next, _T('\0') };
+  const char new_value[2] = { next, '\0' };
   ModifyValue(new_value);
 }
 
 void
 PrefixDataField::Dec() noexcept
 {
-  const TCHAR *chars = GetAllowedCharacters();
+  const char *chars = GetAllowedCharacters();
   if (StringIsEmpty(chars))
     return;
 
-  const TCHAR current = GetAsString()[0];
+  const char current = GetAsString()[0];
 
-  TCHAR next;
-  if (current == _T('\0'))
-    next = chars[_tcslen(chars) - 1];
+  char next;
+  if (current == '\0')
+    next = chars[strlen(chars) - 1];
   else {
-    const TCHAR *p = current != _T('\0')
+    const char *p = current != '\0'
       ? StringFind(chars, current)
       : nullptr;
 
     if (p > chars)
       next = p[-1];
     else
-      next = _T('\0');
+      next = '\0';
   }
 
-  const TCHAR new_value[2] = { next, _T('\0') };
+  const char new_value[2] = { next, '\0' };
   ModifyValue(new_value);
 }

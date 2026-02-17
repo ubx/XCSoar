@@ -7,8 +7,6 @@
 #include "event/PipeEvent.hxx"
 
 #include <atomic>
-#include <tchar.h>
-
 /**
  * A serial port class for POSIX (/dev/ttyS*, /dev/ttyUSB*).
  */
@@ -38,7 +36,7 @@ public:
    *
    * Throws on error.
    */
-  void Open(const TCHAR *path, unsigned baud_rate);
+  void Open(const char *path, unsigned baud_rate);
 
   /**
    * Opens this object with a new pseudo-terminal.  This is only used

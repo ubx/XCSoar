@@ -45,10 +45,10 @@ MapItemListBuilder::AddSkyLinesTraffic()
         location.DistanceS(i.second.location) < range) {
       const uint32_t id = i.first;
       auto name_i = data.user_names.find(id);
-      const TCHAR *name;
+      const char *name;
       if (name_i == data.user_names.end()) {
         /* no name found */
-        buffer.UnsafeFormat(_T("SkyLines %u"), (unsigned)id);
+        buffer.UnsafeFormat("SkyLines %u", (unsigned)id);
         name = buffer;
       } else
         /* we know the name */

@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
-
 #ifdef _WIN32
 #include <windef.h> // for HWND (needed by winuser.h)
 #include <winuser.h>
@@ -44,5 +42,5 @@ enum {
  * @return
  */
 int
-ShowMessageBox(const TCHAR *text, const TCHAR *caption,
+ShowMessageBox(const char *text, const char *caption,
                unsigned flags) noexcept;

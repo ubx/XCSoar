@@ -4,7 +4,6 @@
 #pragma once
 
 #include "util/TriState.hpp"
-#include "util/tstring.hpp"
 #include "AirspaceAltitude.hpp"
 #include "AirspaceClass.hpp"
 #include "AirspaceActivity.hpp"
@@ -16,8 +15,7 @@
 #ifdef DO_PRINT
 #include <iosfwd>
 #endif
-
-#include <tchar.h>
+#include <string>
 
 struct AircraftState;
 struct AltitudeState;
@@ -53,13 +51,13 @@ protected:
   AirspaceAltitude altitude_top;
 
   /** Airspace name (identifier) */
-  tstring name;
+  std::string name;
 
   /** Airspace type */
   AirspaceClass astype;
 
   /** Airspace Station name */
-  tstring station_name;
+  std::string station_name;
 
   /** Radio frequency (optional) */
   RadioFrequency radio_frequency = RadioFrequency::Null();
@@ -205,7 +203,7 @@ public:
    * @param _top Upper limit
    */
 
-  void SetProperties(tstring &&_name, tstring &&_station_name,
+  void SetProperties(std::string &&_name, std::string &&_station_name,
                      TransponderCode &&_transponder_code,
                      const AirspaceClass _class, const AirspaceClass _type,
                      const AirspaceAltitude &_base,
@@ -361,12 +359,12 @@ public:
 #endif
 
   [[gnu::pure]]
-  const TCHAR *GetName() const noexcept {
+  const char *GetName() const noexcept {
     return name.c_str();
   }
 
   [[gnu::pure]]
-  const TCHAR *GetStationName() const noexcept {
+  const char *GetStationName() const noexcept {
     return station_name.c_str();
   }
 
@@ -374,7 +372,7 @@ public:
    * Returns true if the name begins with the specified string.
    */
   [[gnu::pure]]
-  bool MatchNamePrefix(const TCHAR *prefix) const noexcept;
+  bool MatchNamePrefix(const char *prefix) const noexcept;
 
   [[gnu::pure]]
   RadioFrequency GetRadioFrequency() const noexcept {

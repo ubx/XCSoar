@@ -208,7 +208,7 @@ FlarmTrafficWindow::PaintRadarNoTraffic(Canvas &canvas) const noexcept
   if (small)
     return;
 
-  const TCHAR* str = _("No Traffic");
+  const char* str = _("No Traffic");
   canvas.Select(look.no_traffic_font);
   PixelSize ts = canvas.CalcTextSize(str);
   canvas.SetTextColor(look.default_color);
@@ -276,7 +276,7 @@ FlarmTrafficWindow::PaintNoPositionTarget(Canvas &canvas,
   canvas.DrawCircle(target_point, dot_radius);
   // No position target - print exclamation mark in the middle over the dot
   if (!small) {
-    const TCHAR em[] = _T("!");
+    const char em[] = "!";
     const PixelSize text_size = canvas.CalcTextSize(em);
     const PixelPoint text_position {
       target_point.x - int(text_size.width / 2),
@@ -432,7 +432,7 @@ FlarmTrafficWindow::PaintRadarTarget(Canvas &canvas,
     // Select font; prepare object sizes and distances by text height as reference
     canvas.SetBackgroundTransparent();
     canvas.Select(look.label_font);
-    const PixelSize sx = canvas.CalcTextSize(_T("X"));
+    const PixelSize sx = canvas.CalcTextSize("X");
      // No position targets - Paint the dot
     PaintNoPositionTarget(canvas, sc[i], radar_mid, scale, small, sx, target_pen, text_color);
    } else
@@ -462,7 +462,7 @@ FlarmTrafficWindow::PaintRadarTarget(Canvas &canvas,
   canvas.Select(look.side_info_font);
 
   // Format string
-  TCHAR tmp[10];
+  char tmp[10];
 
   if (side_display_type == SideInfoType::VARIO)
     FormatUserVerticalSpeed(traffic.climb_rate_avg30s, tmp, false);
@@ -498,7 +498,7 @@ FlarmTrafficWindow::PaintTargetInfoSmall(Canvas &canvas,
 
   // Write the relativ altitude devided by 100 to the Buffer
   StaticString<10> buffer;
-  const auto relalt_s = buffer.Format(_T("%d"), abs(relalt));
+  const auto relalt_s = buffer.Format("%d", abs(relalt));
 
   // Select font
   canvas.SetBackgroundTransparent();
@@ -655,16 +655,16 @@ FlarmTrafficWindow::PaintNorth(Canvas &canvas) const noexcept
   canvas.SetBackgroundTransparent();
   canvas.Select(look.label_font);
 
-  PixelSize s = canvas.CalcTextSize(_T("N"));
+  PixelSize s = canvas.CalcTextSize("N");
   const auto radar_mid = radar_renderer.GetCenter();
   const PixelPoint q = radar_mid + iround(p * (radar_renderer.GetRadius() + (s.height * 2 / 3)));
   canvas.SetTextColor(look.radar_color);
-  canvas.DrawText(q - s / 2u, _T("N"));
+  canvas.DrawText(q - s / 2u, "N");
 }
 
 static void
 DrawCircleLabel(Canvas &canvas, PixelPoint p,
-                tstring_view text) noexcept
+                std::string_view text) noexcept
 {
   const auto size = canvas.CalcTextSize(text);
   p.x -= size.width / 2;

@@ -12,7 +12,6 @@
 #include "Engine/Task/Ordered/Points/ASTPoint.hpp"
 #include "Engine/Waypoint/Ptr.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
-#include "util/ConvertString.hpp"
 
 #include <boost/json/value.hpp>
 
@@ -50,7 +49,7 @@ DecodeXCTrackZ(std::string_view src)
 }
 
 static WaypointPtr
-MakeWaypoint(GeoPoint location, const TCHAR *name)
+MakeWaypoint(GeoPoint location, const char *name)
 {
   Waypoint *wp = new Waypoint(location);
   wp->name = name;
@@ -95,12 +94,8 @@ DecodeXCTrackTask(const boost::json::value &_j,
     if (name.empty())
       throw std::invalid_argument{"Name is empty"};
 
-    const UTF8ToWideConverter name_t{name.c_str()};
-    if (!name_t.IsValid())
-      throw std::invalid_argument{"Malfored name"};
-
     auto oz = std::make_unique<CylinderZone>(z.location, z.radius);
-    auto wp = MakeWaypoint(z.location, name_t.c_str());
+    auto wp = MakeWaypoint(z.location, name.c_str());
 
     std::unique_ptr<OrderedTaskPoint> tp;
 

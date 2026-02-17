@@ -6,8 +6,6 @@
 #include "util/StaticString.hxx"
 
 #include <cstdint>
-#include <tchar.h>
-
 /**
  * Configuration structure for serial devices
  */
@@ -333,7 +331,7 @@ struct DeviceConfig {
   }
 
   [[gnu::pure]]
-  static bool MaybeBluetooth(PortType port_type, const TCHAR *path) noexcept;
+  static bool MaybeBluetooth(PortType port_type, const char *path) noexcept;
 
   [[gnu::pure]]
   bool MaybeBluetooth() const noexcept;
@@ -429,11 +427,12 @@ struct DeviceConfig {
   }
 
   bool IsDriver(const TCHAR *name) const {
+  constexpr bool IsDriver(const char *name) const noexcept {
     return UsesDriver() && driver_name.equals(name);
   }
 
   bool IsVega() const noexcept {
-    return IsDriver(_T("Vega"));
+    return IsDriver("Vega");
   }
 
   constexpr bool IsAndroidInternalGPS() const noexcept {
@@ -484,5 +483,5 @@ struct DeviceConfig {
    * Generates a human-readable (localised) port name.
    */
   [[gnu::pure]]
-  const TCHAR *GetPortName(TCHAR *buffer, size_t max_size) const noexcept;
+  const char *GetPortName(char *buffer, size_t max_size) const noexcept;
 };

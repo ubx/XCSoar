@@ -9,8 +9,6 @@
 #include <windef.h>
 #endif
 
-#include <tchar.h>
-
 class ResourceId;
 
 namespace ResourceLoader {
@@ -23,7 +21,7 @@ Init(HINSTANCE hInstance);
 using Data = std::span<const std::byte>;
 
 Data
-Load(const TCHAR *name, const TCHAR *type);
+Load(const char *name, const char *type);
 
 #ifndef ANDROID
 Data

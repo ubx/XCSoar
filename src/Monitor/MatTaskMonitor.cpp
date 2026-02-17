@@ -28,8 +28,8 @@ class MatTaskAddWidget final
   StaticString<256> buffer;
 
   [[gnu::pure]]
-  const TCHAR *MakeMessage(const Waypoint &wp) {
-    buffer.Format(_T("%s\n%s"), wp.name.c_str(), _("Add this turn point?"));
+  const char *MakeMessage(const Waypoint &wp) {
+    buffer.Format("%s\n%s", wp.name.c_str(), _("Add this turn point?"));
     return buffer;
   }
 

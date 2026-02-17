@@ -16,7 +16,7 @@ FontDescription::FontDescription(unsigned height,
 }
 
 void
-FontDescription::Init(const TCHAR *face,
+FontDescription::Init(const char *face,
                       int height,
                       bool bold, bool italic,
                       bool monospace)
@@ -37,7 +37,7 @@ FontDescription::Init(const TCHAR *face,
   logfont.lfPitchAndFamily = (monospace ? FIXED_PITCH : VARIABLE_PITCH)
     | FF_DONTCARE;
 
-  _tcscpy(logfont.lfFaceName, face);
+  strcpy(logfont.lfFaceName, face);
 }
 
 #endif

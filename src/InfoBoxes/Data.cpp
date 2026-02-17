@@ -24,25 +24,25 @@ void
 InfoBoxData::SetValueInvalid() noexcept
 {
   SetValueColor(0);
-  SetValue(_T("---"));
+  SetValue("---");
   SetValueUnit(Unit::UNDEFINED);
 }
 
 void
-InfoBoxData::SetTitle(const TCHAR *_title) noexcept
+InfoBoxData::SetTitle(const char *_title) noexcept
 {
   title = _title;
   title.CropIncompleteUTF8();
 }
 
 void
-InfoBoxData::SetValue(const TCHAR *_value) noexcept
+InfoBoxData::SetValue(const char *_value) noexcept
 {
   value = _value;
 }
 
 void
-InfoBoxData::SetComment(const TCHAR *_comment) noexcept
+InfoBoxData::SetComment(const char *_comment) noexcept
 {
   comment = _comment;
   comment.CropIncompleteUTF8();

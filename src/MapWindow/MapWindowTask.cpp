@@ -129,8 +129,8 @@ MapWindow::DrawTaskOffTrackIndicator(Canvas &canvas) noexcept
     int idist = iround((distance - 1) * 100);
     
     if ((idist != ilast) && (idist > 0) && (idist < 1000)) {
-      TCHAR Buffer[5];
-      _stprintf(Buffer, _T("%d"), idist);
+      char Buffer[5];
+      sprintf(Buffer, "%d", idist);
       auto sc = render_projection.GeoToScreen(dloc);
       PixelSize tsize = canvas.CalcTextSize(Buffer);
       canvas.DrawText(sc - tsize / 2u, Buffer);

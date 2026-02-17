@@ -19,7 +19,6 @@
 #include <termios.h>
 
 #include <cassert>
-#include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -170,7 +169,7 @@ TTYPort::Drain()
 }
 
 void
-TTYPort::Open(const TCHAR *path, unsigned baud_rate)
+TTYPort::Open(const char *path, unsigned baud_rate)
 {
   auto fd = OpenTTY(path, baud_rate);
   ::SetBaudrate(TTYDescriptor(fd), baud_rate);

@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <tchar.h>
-
 struct DeviceRegister;
 
 [[gnu::const]]
@@ -18,12 +16,12 @@ GetDriverByIndex(unsigned i);
 
 [[gnu::pure]]
 const DeviceRegister *
-FindDriverByName(const TCHAR *name);
+FindDriverByName(const char *name);
 
 /**
  * Find the driver with the specified name, and return its display
  * name.  If no such driver was found, the specified name is returned.
  */
 [[gnu::pure]]
-const TCHAR *
-FindDriverDisplayName(const TCHAR *name);
+const char *
+FindDriverDisplayName(const char *name);

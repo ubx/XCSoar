@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
-
 struct UnitSetting;
 
 /**
@@ -13,7 +11,7 @@ struct UnitSetting;
 namespace Units::Store {
 
 [[gnu::const]]
-const TCHAR *
+const char *
 GetName(unsigned i) noexcept;
 
 [[gnu::const]]

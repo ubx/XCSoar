@@ -4,9 +4,10 @@
 #include "Dialogs.hpp"
 #include "Catch.hpp"
 #include "Error.hxx"
-#include "util/ConvertString.hpp"
 #include "Dialogs/Message.hpp"
 #include "Dialogs/Error.hpp"
+
+#include <utility>
 
 extern "C" {
 #include <lua.h>
@@ -17,9 +18,7 @@ l_alert(lua_State *L)
 {
   const char *message = lua_tostring(L, 1);
   if (message != nullptr) {
-    const UTF8ToWideConverter c_message(message);
-    if (c_message.IsValid())
-      ShowMessageBox(c_message, _T("Lua"), MB_OK|MB_ICONINFORMATION);
+    ShowMessageBox(message, "Lua", MB_OK|MB_ICONINFORMATION);
   }
 
   return 0;
@@ -28,7 +27,7 @@ l_alert(lua_State *L)
 static void
 DialogCatchCallback(Lua::Error &&error)
 {
-  ShowError(std::make_exception_ptr(std::move(error)), _T("Lua"));
+  ShowError(std::make_exception_ptr(std::move(error)), "Lua");
 }
 
 void

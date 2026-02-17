@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
-
 struct PixelRect;
 class Canvas;
 struct ChartLook;
@@ -16,4 +14,4 @@ RenderTemperatureChart(Canvas &canvas, const PixelRect rc,
                        const CuSonde &cu_sonde);
 
 void
-TemperatureChartCaption(TCHAR *buffer, const CuSonde &cu_sonde);
+TemperatureChartCaption(char *buffer, const CuSonde &cu_sonde);

@@ -6,8 +6,6 @@
 #include "Types.hpp"
 #include "Device/Declaration.hpp"
 
-#include <tchar.h>
-
 class Angle;
 struct BrokenDateTime;
 struct Waypoint;
@@ -31,7 +29,7 @@ struct AngleConverter {
 };
 
 void
-ConvertToChar(const TCHAR* unicode, char* ascii, int outSize);
+ConvertToChar(const char* unicode, char* ascii, int outSize);
 
 BrokenDateTime
 ConvertToDateTime(IMIDATETIMESEC in);

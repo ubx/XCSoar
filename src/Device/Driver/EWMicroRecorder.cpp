@@ -58,7 +58,7 @@ ReadAltitude(NMEAInputLine &line, double &value_r)
   if (!available)
     return false;
 
-  if (unit == _T('f') || unit == _T('F'))
+  if (unit == 'f' || unit == 'F')
     value = Units::ToSysUnit(value, Unit::FEET);
 
   value_r = value;
@@ -179,11 +179,11 @@ CleanString(char *p)
  * Clean a string and write it to the Port.
  */
 static void
-WriteCleanString(Port &port, const TCHAR *p,
+WriteCleanString(Port &port, const char *p,
                  OperationEnvironment &env,
                  std::chrono::steady_clock::duration timeout)
 {
-  NarrowString<256> buffer;
+  StaticString<256> buffer;
   buffer.SetASCII(p);
 
   CleanString(buffer.buffer());
@@ -202,7 +202,7 @@ WriteLabel(Port &port, const char *name, OperationEnvironment &env)
  * Write a name/value pair to the EW microRecorder.
  */
 static void
-WritePair(Port &port, const char *name, const TCHAR *value,
+WritePair(Port &port, const char *name, const char *value,
           OperationEnvironment &env)
 {
   WriteLabel(port, name, env);
@@ -215,14 +215,14 @@ WriteGeoPoint(Port &port, const GeoPoint &value, OperationEnvironment &env)
 {
   int DegLat, DegLon;
   double tmp, MinLat, MinLon;
-  TCHAR NoS, EoW;
+  char NoS, EoW;
 
   // prepare latitude
   tmp = (double)value.latitude.Degrees();
-  NoS = _T('N');
+  NoS = 'N';
   if (tmp < 0)
     {
-      NoS = _T('S');
+      NoS = 'S';
       tmp = -tmp;
     }
 
@@ -231,10 +231,10 @@ WriteGeoPoint(Port &port, const GeoPoint &value, OperationEnvironment &env)
 
   // prepare long
   tmp = (double)value.longitude.Degrees();
-  EoW = _T('E');
+  EoW = 'E';
   if (tmp < 0)
     {
-      EoW = _T('W');
+      EoW = 'W';
       tmp = -tmp;
     }
 
@@ -293,7 +293,7 @@ DeclareInner(Port &port, const Declaration &declaration,
   port.FullWrite("\r\nFLIGHT DECLARATION\r\n-------------------\r\n\r\n",
                  env, std::chrono::seconds(1));
 
-  WritePair(port, "Description", _T("XCSoar task declaration"), env);
+  WritePair(port, "Description", "XCSoar task declaration", env);
 
   for (unsigned i = 0; i < 11; i++) {
     if (i+1>= declaration.Size()) {
@@ -343,8 +343,8 @@ EWMicroRecorderCreateOnPort([[maybe_unused]] const DeviceConfig &config, Port &c
 }
 
 const struct DeviceRegister ew_microrecorder_driver = {
-  _T("EW MicroRecorder"),
-  _T("EW microRecorder"),
+  "EW MicroRecorder",
+  "EW microRecorder",
   DeviceRegister::DECLARE,
   EWMicroRecorderCreateOnPort,
 };

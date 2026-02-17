@@ -79,12 +79,12 @@ ProgressWindow::UpdateLayout(PixelRect rc) noexcept
 }
 
 void
-ProgressWindow::SetMessage(const TCHAR *text) noexcept
+ProgressWindow::SetMessage(const char *text) noexcept
 {
   AssertThread();
 
   if (text == nullptr)
-    text = _T("");
+    text = "";
 
   message = text;
   Invalidate(message_position);

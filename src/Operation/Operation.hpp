@@ -10,8 +10,6 @@
 #include <exception>
 #include <functional>
 
-#include <tchar.h>
-
 /**
  * An environment a complex operation runs in.  The operation may run
  * in a separate thread, and this class provides a bridge to the
@@ -44,13 +42,13 @@ public:
    * Show a human-readable (localized) short text describing the
    * error condition.
    */
-  virtual void SetErrorMessage(const TCHAR *text) noexcept = 0;
+  virtual void SetErrorMessage(const char *text) noexcept = 0;
 
   /**
    * Show a human-readable (localized) short text describing the
    * current state of the operation.
    */
-  virtual void SetText(const TCHAR *text) noexcept = 0;
+  virtual void SetText(const char *text) noexcept = 0;
 };
 
 class NullOperationEnvironment : public OperationEnvironment {
@@ -59,8 +57,8 @@ public:
   bool IsCancelled() const noexcept override;
   void SetCancelHandler(std::function<void()> handler) noexcept override;
   void Sleep(std::chrono::steady_clock::duration duration) noexcept override;
-  void SetErrorMessage(const TCHAR *text) noexcept override;
-  void SetText(const TCHAR *text) noexcept override;
+  void SetErrorMessage(const char *text) noexcept override;
+  void SetText(const char *text) noexcept override;
   void SetProgressRange(unsigned range) noexcept override;
   void SetProgressPosition(unsigned position) noexcept override;
 };

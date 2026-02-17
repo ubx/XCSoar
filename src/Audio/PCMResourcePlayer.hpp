@@ -8,7 +8,6 @@
 #include "PCMPlayer.hpp"
 #include "thread/Mutex.hxx"
 
-#include <tchar.h>
 #include <memory>
 
 /**
@@ -28,5 +27,5 @@ public:
   PCMResourcePlayer(PCMResourcePlayer &) = delete;
   PCMResourcePlayer &operator=(PCMResourcePlayer &) = delete;
 
-  bool PlayResource(const TCHAR *resource_name);
+  bool PlayResource(const char *resource_name);
 };

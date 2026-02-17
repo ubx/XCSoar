@@ -6,8 +6,6 @@
 #include "ui/dim/Point.hpp"
 #include "util/StaticString.hxx"
 
-#include <tchar.h>
-
 /**
  * A manager class that can detect mouse gesture
  * @see http://en.wikipedia.org/wiki/Pointing_device_gesture
@@ -34,13 +32,13 @@ public:
    * Returns the recognized gesture
    * @return NULL or recognized gesture string
    */
-  const TCHAR* GetGesture() const;
+  const char* GetGesture() const;
 
   /**
    * Stops the GestureManager and returns the recognized gesture
    * @return NULL or recognized gesture string
    */
-  const TCHAR* Finish();
+  const char* Finish();
 
   /**
    * Starts the GestureManager at the given coordinates

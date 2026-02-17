@@ -24,13 +24,13 @@ ToQuarterHours(BrokenTime t)
   return t.hour * 4u + t.minute / 15;
 }
 
-const TCHAR *
+const char *
 RaspCache::GetMapName() const
 {
   return store.GetItemInfo(parameter).name;
 }
 
-const TCHAR *
+const char *
 RaspCache::GetMapLabel() const
 {
   const auto &info = store.GetItemInfo(parameter);
@@ -92,7 +92,7 @@ RaspCache::Reload(BrokenTime time_local, OperationEnvironment &operation)
     return;
 
   char new_name[MAX_PATH];
-  store.NarrowWeatherFilename(new_name, Path(store.GetItemInfo(parameter).name),
+  store.WeatherFilename(new_name, Path(store.GetItemInfo(parameter).name),
                               effective_time);
 
   auto new_map = std::make_unique<RasterMap>();

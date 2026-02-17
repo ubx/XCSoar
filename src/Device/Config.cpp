@@ -116,7 +116,7 @@ DeviceConfig::ShouldReopenOnTimeout() const noexcept
 }
 
 bool
-DeviceConfig::MaybeBluetooth(PortType port_type, [[maybe_unused]] const TCHAR *path) noexcept
+DeviceConfig::MaybeBluetooth(PortType port_type, [[maybe_unused]] const char *path) noexcept
 {
   /* note: RFCOMM_SERVER is not considered here because this
      function is used to check for the K6-Bt protocol, but the K6-Bt
@@ -126,7 +126,7 @@ DeviceConfig::MaybeBluetooth(PortType port_type, [[maybe_unused]] const TCHAR *p
     return true;
 
 #ifdef HAVE_POSIX
-  if (port_type == PortType::SERIAL && _tcsstr(path, _T("/rfcomm")) != nullptr)
+  if (port_type == PortType::SERIAL && strstr(path, "/rfcomm") != nullptr)
     return true;
 #endif
 
@@ -144,7 +144,7 @@ DeviceConfig::MaybeBluetooth() const noexcept
     return true;
 
 #ifdef HAVE_POSIX
-  if (port_type == PortType::SERIAL && path.Contains(_T("/rfcomm")))
+  if (port_type == PortType::SERIAL && path.Contains("/rfcomm"))
     return true;
 #endif
 
@@ -193,8 +193,8 @@ DeviceConfig::Clear() noexcept
 #endif
 }
 
-const TCHAR *
-DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
+const char *
+DeviceConfig::GetPortName(char *buffer, size_t max_size) const noexcept
 {
   switch (port_type) {
   case PortType::DISABLED:
@@ -204,7 +204,7 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
     return path.c_str();
 
   case PortType::BLE_SENSOR: {
-    const TCHAR *name = bluetooth_mac.c_str();
+    const char *name = bluetooth_mac.c_str();
 #ifdef ANDROID
     if (bluetooth_helper != nullptr) {
       const char *name2 =
@@ -214,13 +214,13 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
     }
 #endif
 
-    StringFormat(buffer, max_size, _T("%s: %s"),
+    StringFormat(buffer, max_size, "%s: %s",
                  _("BLE sensor"), name);
     return buffer;
     }
 
   case PortType::BLE_HM10: {
-    const TCHAR *name = bluetooth_mac.c_str();
+    const char *name = bluetooth_mac.c_str();
 #ifdef ANDROID
     if (bluetooth_helper != nullptr) {
       const char *name2 =
@@ -230,13 +230,13 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
     }
 #endif
 
-    StringFormat(buffer, max_size, _T("%s: %s"),
+    StringFormat(buffer, max_size, "%s: %s",
                  _("BLE port"), name);
     return buffer;
     }
 
   case PortType::RFCOMM: {
-    const TCHAR *name = bluetooth_mac.c_str();
+    const char *name = bluetooth_mac.c_str();
 #ifdef ANDROID
     if (bluetooth_helper != nullptr) {
       const char *name2 =
@@ -246,7 +246,7 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
     }
 #endif
 
-    StringFormat(buffer, max_size, _T("Bluetooth %s"), name);
+    StringFormat(buffer, max_size, "Bluetooth %s", name);
     return buffer;
     }
 
@@ -254,20 +254,20 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
     return _("Bluetooth server");
 
   case PortType::IOIOUART:
-    StringFormat(buffer, max_size, _T("IOIO UART %d"), ioio_uart_id);
+    StringFormat(buffer, max_size, "IOIO UART %d", ioio_uart_id);
     return buffer;
 
   case PortType::DROIDSOAR_V2:
-    return _T("DroidSoar V2");
+    return "DroidSoar V2";
 
   case PortType::NUNCHUCK:
-    return _T("Nunchuck");
+    return "Nunchuck";
 
   case PortType::I2CPRESSURESENSOR:
-    return _T("IOIO i2c pressure sensor");
+    return "IOIO i2c pressure sensor";
 
   case PortType::IOIOVOLTAGE:
-    return _T("IOIO voltage sensor");
+    return "IOIO voltage sensor";
 
   case PortType::AUTO:
     return _("GPS Intermediate Driver");
@@ -279,16 +279,16 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
     return _("GliderLink traffic receiver");
 
   case PortType::TCP_CLIENT:
-    StringFormat(buffer, max_size, _T("TCP client %s:%u"),
+    StringFormat(buffer, max_size, "TCP client %s:%u",
                  ip_address.c_str(), tcp_port);
     return buffer;
 
   case PortType::TCP_LISTENER:
-    StringFormat(buffer, max_size, _T("TCP port %d"), tcp_port);
+    StringFormat(buffer, max_size, "TCP port %d", tcp_port);
     return buffer;
 
   case PortType::UDP_LISTENER:
-    StringFormat(buffer, max_size, _T("UDP port %d"), tcp_port);
+    StringFormat(buffer, max_size, "UDP port %d", tcp_port);
     return buffer;
 
   case PortType::CAN_INTERFACE:
@@ -296,11 +296,11 @@ DeviceConfig::GetPortName(TCHAR *buffer, size_t max_size) const noexcept
     return buffer;
 
   case PortType::PTY:
-    StringFormat(buffer, max_size, _T("Pseudo-terminal %s"), path.c_str());
+    StringFormat(buffer, max_size, "Pseudo-terminal %s", path.c_str());
     return buffer;
 
   case PortType::ANDROID_USB_SERIAL:
-    StringFormat(buffer, max_size, _T("%s: %s"),
+    StringFormat(buffer, max_size, "%s: %s",
                  _("USB serial"), path.c_str());
     return buffer;
   }

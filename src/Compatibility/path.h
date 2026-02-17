@@ -3,8 +3,6 @@
 
 #pragma once
 
-#include <tchar.h>
-
 #ifdef _WIN32
 
 #define DIR_SEPARATOR '\\'
@@ -18,11 +16,11 @@
 #endif /* !_WIN32 */
 
 static inline bool
-IsDirSeparator(TCHAR ch)
+IsDirSeparator(char ch)
 {
 #ifdef _WIN32
-  return ch == _T('\\');
+  return ch == '\\';
 #else
-  return ch == _T('/');
+  return ch == '/';
 #endif
 }

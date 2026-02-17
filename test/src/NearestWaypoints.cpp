@@ -11,8 +11,6 @@
 
 #include <cstdint>
 #include <stdio.h>
-#include <tchar.h>
-
 static void
 LoadWaypoints(Path path, Waypoints &waypoints)
 {
@@ -94,7 +92,7 @@ PrintWaypoint(const Waypoint *waypoint)
   if (!waypoint)
     printf("\n");
   else
-    _ftprintf(stdout, _T("%f %f %.0f %s\n"),
+    fprintf(stdout, "%f %f %.0f %s\n",
               (double)waypoint->location.latitude.Degrees(),
               (double)waypoint->location.longitude.Degrees(),
               (double)waypoint->GetElevationOrZero(),

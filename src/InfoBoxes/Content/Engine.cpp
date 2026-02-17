@@ -9,8 +9,6 @@
 #include "Formatter/LocalTimeFormatter.hpp"
 #include "Language/Language.hpp"
 
-#include <tchar.h>
-
 void
 UpdateInfoBoxContentCHT(InfoBoxData &data) noexcept
 {
@@ -21,7 +19,7 @@ UpdateInfoBoxContentCHT(InfoBoxData &data) noexcept
     return;
   }
 
-  data.FmtValue(_T("{:3.0f}"), basic.engine.cht_temperature.ToUser());
+  data.FmtValue("{:3.0f}", basic.engine.cht_temperature.ToUser());
   data.SetValueUnit(Units::current.temperature_unit);
 }
 
@@ -35,7 +33,7 @@ UpdateInfoBoxContentEGT(InfoBoxData &data) noexcept
     return;
   }
 
-  data.FmtValue(_T("{:3.0f}"), basic.engine.egt_temperature.ToUser());
+  data.FmtValue("{:3.0f}", basic.engine.egt_temperature.ToUser());
   data.SetValueUnit(Units::current.temperature_unit);
 }
 
@@ -49,6 +47,6 @@ UpdateInfoBoxContentRPM(InfoBoxData &data) noexcept
     return;
   }  
 
-  data.FmtValue(_T("{}"), Units::ToUserRotation(basic.engine.revolutions_per_second));
+  data.FmtValue("{}", Units::ToUserRotation(basic.engine.revolutions_per_second));
   data.SetValueUnit(Units::current.rotation_unit);
 }

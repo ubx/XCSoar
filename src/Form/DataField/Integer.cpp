@@ -11,22 +11,22 @@ static bool datafield_key_up = false;
 
 [[gnu::pure]]
 static int
-ParseString(const TCHAR *s) noexcept
+ParseString(const char *s) noexcept
 {
   return ParseInt(s);
 }
 
-const TCHAR *
+const char *
 DataFieldInteger::GetAsString() const noexcept
 {
-  _stprintf(output_buffer, edit_format, value);
+  sprintf(output_buffer, edit_format, value);
   return output_buffer;
 }
 
-const TCHAR *
+const char *
 DataFieldInteger::GetAsDisplayString() const noexcept
 {
-  _stprintf(output_buffer, display_format, value);
+  sprintf(output_buffer, display_format, value);
   return output_buffer;
 }
 
@@ -83,14 +83,14 @@ void
 DataFieldInteger::AppendComboValue(ComboList &combo_list,
                                    int value) const noexcept
 {
-  TCHAR a[decltype(edit_format)::capacity()], b[decltype(display_format)::capacity()];
-  _stprintf(a, edit_format, value);
-  _stprintf(b, display_format, value);
+  char a[decltype(edit_format)::capacity()], b[decltype(display_format)::capacity()];
+  sprintf(a, edit_format, value);
+  sprintf(b, display_format, value);
   combo_list.Append(combo_list.size(), a, b);
 }
 
 ComboList
-DataFieldInteger::CreateComboList(const TCHAR *reference_string) const noexcept
+DataFieldInteger::CreateComboList(const char *reference_string) const noexcept
 {
   const int reference = reference_string != nullptr
     ? ParseString(reference_string)
@@ -107,7 +107,7 @@ DataFieldInteger::CreateComboList(const TCHAR *reference_string) const noexcept
   int first = corrected_value - (int)surrounding_items * step;
   if (first > min)
     /* there are values before "first" - give the user a choice */
-    combo_list.Append(ComboList::Item::PREVIOUS_PAGE, _T("<<More Items>>"));
+    combo_list.Append(ComboList::Item::PREVIOUS_PAGE, "<<More Items>>");
   else if (first < min)
     first = min;
 
@@ -137,14 +137,14 @@ DataFieldInteger::CreateComboList(const TCHAR *reference_string) const noexcept
 
   if (last < max)
     /* there are values after "last" - give the user a choice */
-    combo_list.Append(ComboList::Item::NEXT_PAGE, _T("<<More Items>>"));
+    combo_list.Append(ComboList::Item::NEXT_PAGE, "<<More Items>>");
 
   return combo_list;
 }
 
 void
 DataFieldInteger::SetFromCombo([[maybe_unused]] int index,
-                               const TCHAR *value) noexcept
+                               const char *value) noexcept
 {
   SetAsInteger(ParseString(value));
 }

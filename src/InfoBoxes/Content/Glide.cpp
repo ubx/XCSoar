@@ -6,8 +6,6 @@
 #include "InfoBoxes/Data.hpp"
 #include "Interface.hpp"
 
-#include <tchar.h>
-
 void
 UpdateInfoBoxGRInstant(InfoBoxData &data) noexcept
 {
@@ -55,9 +53,9 @@ UpdateInfoBoxGRAvg(InfoBoxData &data) noexcept
 
   // Set Value
   if (average_gr < 0)
-    data.SetValue(_T("^^^"));
+    data.SetValue("^^^");
   else if (!::GradientValid(average_gr))
-    data.SetValue(_T("+++"));
+    data.SetValue("+++");
   else
     data.SetValueFromGlideRatio(average_gr);
 }

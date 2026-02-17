@@ -14,7 +14,6 @@
 #include "IGC/IGCWriter.hpp"
 #include "util/CharUtil.hxx"
 
-#include <tchar.h>
 #include <algorithm>
 
 const struct LoggerImpl::PreTakeoffBuffer &
@@ -72,7 +71,7 @@ LoggerImpl::StopLogger([[maybe_unused]] const NMEAInfo &gps_info)
 
   writer->Flush();
 
-  LogFormat(_T("Stopped logger: %s"), filename.c_str());
+  LogFormat("Stopped logger: %s", filename.c_str());
 
   // Logger off
   writer.reset();
@@ -202,7 +201,7 @@ LoggerImpl::StartLogger(const NMEAInfo &gps_info,
 
   assert(writer == nullptr);
 
-  const auto logs_path = MakeLocalPath(_T("logs"));
+  const auto logs_path = MakeLocalPath("logs");
 
   const BrokenDate today = gps_info.date_time_utc.IsDatePlausible()
     ? gps_info.date_time_utc.GetDate()
@@ -226,50 +225,50 @@ LoggerImpl::StartLogger(const NMEAInfo &gps_info,
     return false;
   }
 
-  LogFormat(_T("Started logger: %s"), filename.c_str());
+  LogFormat("Started logger: %s", filename.c_str());
   return true;
 }
 
 void
-LoggerImpl::LoggerNote(const TCHAR *text)
+LoggerImpl::LoggerNote(const char *text)
 {
   if (writer != nullptr)
     writer->LoggerNote(text);
 }
 
 [[gnu::pure]]
-static const TCHAR *
+static const char *
 GetGPSDeviceName() noexcept
 {
   if (is_simulator())
-    return _T("Simulator");
+    return "Simulator";
 
   const DeviceConfig &device = CommonInterface::GetSystemSettings().devices[0];
   if (device.UsesDriver())
     return device.driver_name;
 
   if (device.IsAndroidInternalGPS())
-    return _T("Internal GPS (Android)");
+    return "Internal GPS (Android)";
 
-  return _T("Unknown");
+  return "Unknown";
 }
 
 // TODO: fix scope so only gui things can start it
 void
 LoggerImpl::StartLogger(const NMEAInfo &gps_info,
                         const LoggerSettings &settings,
-                        const TCHAR *asset_number, const Declaration &decl)
+                        const char *asset_number, const Declaration &decl)
 {
   if (!settings.logger_id.empty())
     asset_number = settings.logger_id.c_str();
 
   // chars must be legal in file names
   char logger_id[4];
-  unsigned asset_length = _tcslen(asset_number);
+  unsigned asset_length = strlen(asset_number);
   for (unsigned i = 0; i < 3; i++)
     logger_id[i] = i < asset_length && IsAlphaNumericASCII(asset_number[i]) ?
-                   asset_number[i] : _T('A');
-  logger_id[3] = _T('\0');
+                   asset_number[i] : 'A';
+  logger_id[3] = '\0';
 
   if (!StartLogger(gps_info, settings, logger_id))
     return;

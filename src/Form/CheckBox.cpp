@@ -57,7 +57,7 @@ DrawCheckBox(Canvas &canvas, const DialogLook &look,
 
 void
 CheckBoxControl::Create(ContainerWindow &parent, const DialogLook &_look,
-                        tstring::const_pointer _caption,
+                        std::string::const_pointer _caption,
                         const PixelRect &rc,
                         const WindowStyle style,
                         Callback _callback) noexcept
@@ -73,7 +73,7 @@ CheckBoxControl::Create(ContainerWindow &parent, const DialogLook &_look,
 
 unsigned
 CheckBoxControl::GetMinimumWidth(const DialogLook &look, unsigned height,
-                                 tstring::const_pointer caption) noexcept
+                                 std::string::const_pointer caption) noexcept
 {
   const unsigned padding = Layout::GetTextPadding();
   return 3 * padding + height + look.check_box.font->TextSize(caption).width;
@@ -206,14 +206,12 @@ CheckBoxControl::OnPaint(Canvas &canvas) noexcept
 
   const bool focused = HasCursorKeys() && HasFocus();
 
-  if (HaveClipping()) {
+  if (focused)
+    canvas.Clear(cb_look.focus_background_brush);
+  else if (HaveClipping())
     /* with clipping, the parent's background does not extend into
        child windows, so we must fill the background ourselves */
-    if (focused)
-      canvas.Clear(cb_look.focus_background_brush);
-    else
-      canvas.Clear(look->background_brush);
-  }
+    canvas.Clear(look->background_brush);
 
   const auto &state_look = IsEnabled()
     ? (pressed

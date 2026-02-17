@@ -11,15 +11,15 @@
 #include <cassert>
 
 void
-HelpDialog(const TCHAR *Caption, const TCHAR *HelpText)
+HelpDialog(const char *Caption, const char *HelpText)
 {
   assert(HelpText != nullptr);
 
-  const TCHAR *prefix = _("Help");
+  const char *prefix = _("Help");
 
   StaticString<100> full_caption;
   if (Caption != nullptr) {
-    full_caption.Format(_T("%s: %s"), prefix, Caption);
+    full_caption.Format("%s: %s", prefix, Caption);
     Caption = full_caption.c_str();
   } else
     Caption = prefix;

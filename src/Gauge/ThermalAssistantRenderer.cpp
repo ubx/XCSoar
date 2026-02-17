@@ -80,7 +80,7 @@ ThermalAssistantRenderer::NormalizeLift(double lift, double max_lift) noexcept
 
 static void
 DrawCircleLabel(Canvas &canvas, PixelPoint p,
-                tstring_view text) noexcept
+                std::string_view text) noexcept
 {
   const auto size = canvas.CalcTextSize(text);
   p.x -= size.width / 2;
@@ -92,7 +92,7 @@ DrawCircleLabel(Canvas &canvas, PixelPoint p,
 static void
 DrawCircleLabelVSpeed(Canvas &canvas, PixelPoint p, double value) noexcept
 {
-  TCHAR buffer[10];
+  char buffer[10];
   FormatUserVerticalSpeed(value, buffer);
   DrawCircleLabel(canvas, p, buffer);
 }
@@ -177,7 +177,7 @@ ThermalAssistantRenderer::PaintNotCircling(Canvas &canvas) const
   if (small)
     return;
 
-  const TCHAR* str = _("Not Circling");
+  const char* str = _("Not Circling");
   canvas.Select(look.overlay_font);
   PixelSize ts = canvas.CalcTextSize(str);
   canvas.SetTextColor(look.text_color);

@@ -5,8 +5,6 @@
 
 #include <span>
 
-#include <tchar.h>
-
 struct BrokenDateTime;
 struct GeoPoint;
 
@@ -41,4 +39,4 @@ FormatIGCLocation(char *buffer, const GeoPoint &location) noexcept;
 
 void
 FormatIGCTaskTurnPoint(std::span<char> dest, const GeoPoint &location,
-                       const TCHAR *name) noexcept;
+                       const char *name) noexcept;

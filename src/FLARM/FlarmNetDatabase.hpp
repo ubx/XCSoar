@@ -7,8 +7,6 @@
 #include "FlarmNetRecord.hpp"
 
 #include <map>
-#include <tchar.h>
-
 /**
  * An in-memory representation of the FlarmNet.org database.
  */
@@ -46,12 +44,12 @@ public:
    * @return FLARMNetRecord object
    */
   [[gnu::pure]]
-  const FlarmNetRecord *FindFirstRecordByCallSign(const TCHAR *cn) const noexcept;
+  const FlarmNetRecord *FindFirstRecordByCallSign(const char *cn) const noexcept;
 
-  unsigned FindRecordsByCallSign(const TCHAR *cn,
+  unsigned FindRecordsByCallSign(const char *cn,
                                  const FlarmNetRecord *array[],
                                  unsigned size) const noexcept;
-  unsigned FindIdsByCallSign(const TCHAR *cn, FlarmId array[],
+  unsigned FindIdsByCallSign(const char *cn, FlarmId array[],
                              unsigned size) const noexcept;
 
   [[gnu::pure]]

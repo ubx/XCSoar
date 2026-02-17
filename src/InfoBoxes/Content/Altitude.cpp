@@ -12,8 +12,6 @@
 #include "Interface.hpp"
 #include "Language/Language.hpp"
 
-#include <tchar.h>
-
 /*
  * Subpart callback function pointers
  */
@@ -148,10 +146,10 @@ UpdateInfoBoxAltitudeFlightLevel(InfoBoxData &data) noexcept
     data.SetTitleColor(0);
 
     // Set Value
-    data.FmtValue(_T("{:03}"), iround(Altitude / 100));
+    data.FmtValue("{:03}", iround(Altitude / 100));
 
     // Set Comment
-    data.FmtComment(_T("{}ft"), iround(Altitude));
+    data.FmtComment("{}ft", iround(Altitude));
 
   } else if (basic.gps_altitude_available &&
              settings_computer.pressure_available) {
@@ -163,10 +161,10 @@ UpdateInfoBoxAltitudeFlightLevel(InfoBoxData &data) noexcept
     data.SetTitleColor(1);
 
     // Set Value
-    data.FmtValue(_T("{:03}"), iround(Altitude / 100));
+    data.FmtValue("{:03}", iround(Altitude / 100));
 
     // Set Comment
-    data.FmtComment(_T("{}ft"), iround(Altitude));
+    data.FmtComment("{}ft", iround(Altitude));
 
   } else if ((basic.baro_altitude_available || basic.gps_altitude_available) &&
              !settings_computer.pressure_available) {

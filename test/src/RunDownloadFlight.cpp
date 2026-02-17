@@ -16,7 +16,6 @@
 #include "io/async/GlobalAsioThread.hpp"
 #include "io/async/AsioThread.hpp"
 #include "io/NullDataHandler.hpp"
-#include "util/ConvertString.hpp"
 #include "util/PrintException.hxx"
 
 #include <stdio.h>
@@ -63,21 +62,20 @@ PrintFlightList(const RecordedFlightList &flight_list)
 
 int main(int argc, char **argv)
 try {
-  NarrowString<1024> usage;
+  StaticString<1024> usage;
   usage = "DRIVER PORT BAUD FILE.igc [FLIGHT NR]\n\n"
           "Where DRIVER is one of:";
   {
     const DeviceRegister *driver;
     for (unsigned i = 0; (driver = GetDriverByIndex(i)) != NULL; ++i) {
       if (driver->IsLogger()) {
-        WideToUTF8Converter driver_name(driver->name);
-        usage.AppendFormat("\n\t%s", (const char *)driver_name);
+        usage.AppendFormat("\n\t%s", driver->name);
       }
     }
   }
 
   Args args(argc, argv, usage);
-  tstring driver_name = args.ExpectNextT();
+  std::string driver_name = args.ExpectNextT();
   DebugPort debug_port(args);
 
   const auto path = args.ExpectNextPath();

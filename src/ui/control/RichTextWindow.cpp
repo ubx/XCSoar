@@ -19,6 +19,7 @@
 #endif
 #include <algorithm>
 #include <cstdint>
+#include <string_view>
 
 /**
  * Safe proxy for "is this a touch device with larger controls".
@@ -42,11 +43,14 @@ IsTouchLayout() noexcept
  * Content margin for the rich text area (top, left, right, bottom).
  * Larger than GetTextPadding() for comfortable reading.
  * Touch layouts get extra padding for easier interaction.
+ * Includes extra right-side margin so link spacing (added during
+ * rendering but not accounted for by the text wrapper) does not
+ * push characters past the visible edge.
  */
 static int
 GetContentPadding() noexcept
 {
-  return Layout::Scale(IsTouchLayout() ? 12 : 8);
+  return Layout::Scale(IsTouchLayout() ? 14 : 10);
 }
 
 /**
@@ -512,6 +516,35 @@ RichTextWindow::EnsureSegmentedLines() const noexcept
   bool in_list_paragraph = false;
   const auto &text = parsed.text;
 
+  /* Check if a paragraph starts with a numbered list marker
+     (e.g. "1. ", "12. ") in the processed text.  These are not
+     tracked by the markdown parser as styled spans. */
+  auto StartsWithNumberedList = [&text](std::size_t start,
+                                        std::size_t length) noexcept {
+    const std::size_t end = start + length;
+    std::size_t i = start;
+    if (i >= end || text[i] < '0' || text[i] > '9')
+      return false;
+    while (i < end && text[i] >= '0' && text[i] <= '9')
+      ++i;
+    return i < end && text[i] == '.' &&
+           i + 1 < end && text[i + 1] == ' ';
+  };
+
+  /* Detect if a new paragraph starts with a list marker, checkbox,
+     or numbered item so wrapped continuation lines get indented. */
+  auto IsListParagraphStart =
+    [&StartsWithNumberedList](const SegmentedLine &seg_line,
+                              std::size_t line_start,
+                              std::size_t line_length) noexcept {
+    if (!seg_line.segments.empty()) {
+      const auto &first = seg_line.segments.front();
+      if (first.IsListItem() || first.IsCheckbox())
+        return true;
+    }
+    return StartsWithNumberedList(line_start, line_length);
+  };
+
   // If no links and no styles, each line is a single normal segment
   if (parsed.links.empty() && parsed.styles.empty()) {
     for (const auto &line : wrapped_text->lines) {
@@ -523,7 +556,8 @@ RichTextWindow::EnsureSegmentedLines() const noexcept
         seg_line.segments.push_back({line.start, line.length, SIZE_MAX, TextStyle::Normal});
 
       if (is_new_para)
-        in_list_paragraph = false;
+        in_list_paragraph =
+          IsListParagraphStart(seg_line, line.start, line.length);
       else if (in_list_paragraph)
         seg_line.is_list_continuation = true;
 
@@ -567,10 +601,11 @@ RichTextWindow::EnsureSegmentedLines() const noexcept
       pos = seg_end;
     }
 
-    /* Detect list-item paragraph continuations */
+    /* Detect list-item paragraph continuations (including
+       checkboxes and numbered lists like "1. item") */
     if (is_new_para) {
-      in_list_paragraph = !seg_line.segments.empty() &&
-        seg_line.segments.front().IsListItem();
+      in_list_paragraph =
+        IsListParagraphStart(seg_line, line.start, line.length);
     } else if (in_list_paragraph) {
       seg_line.is_list_continuation = true;
     }
@@ -690,7 +725,7 @@ RichTextWindow::RenderLinkSegment(Canvas &canvas,
                                   int visible_top,
                                   int text_line_height) noexcept
 {
-  tstring_view seg_text(text_data + seg.start, seg.length);
+  std::string_view seg_text(text_data + seg.start, seg.length);
   const bool is_focused = IsLinkFocused(seg.link_index);
 
   if (dark_mode)
@@ -775,7 +810,7 @@ RichTextWindow::RenderPlainSegment(Canvas &canvas,
                                    const char *text_data,
                                    int &x, int text_y) const noexcept
 {
-  tstring_view seg_text(text_data + seg.start, seg.length);
+  std::string_view seg_text(text_data + seg.start, seg.length);
 
   if (seg.IsHeading())
     canvas.SetTextColor(GetAdmonitionColor(seg.start));

@@ -34,7 +34,7 @@ class QuickMenuButtonRenderer final : public ButtonRenderer {
 
 public:
   explicit QuickMenuButtonRenderer(const DialogLook &_look,
-                                   const TCHAR *_caption) noexcept
+                                   const char *_caption) noexcept
     :look(_look), caption(_caption) {
     text_renderer.SetCenter();
     text_renderer.SetVCenter();
@@ -191,7 +191,7 @@ QuickMenu::Prepare(ContainerWindow &parent, [[maybe_unused]] const PixelRect &rc
     if (!menuItem.IsDefined())
       continue;
 
-    TCHAR buffer[100];
+    char buffer[100];
     const auto expanded =
       ButtonLabel::Expand(menuItem.label, std::span{buffer});
     if (!expanded.visible)
@@ -300,10 +300,10 @@ QuickMenu::UpdateCaption() noexcept
   unsigned currentPage = std::min(grid_view.GetCurrentPage(), lastPage - 1u);
 
   if (lastPage > 1) {
-    buffer.Format(_T("Quick Menu  %d/%d"),
+    buffer.Format("Quick Menu  %d/%d",
                   currentPage + 1, lastPage);
   } else {
-    buffer = _T("Quick Menu");
+    buffer = "Quick Menu";
   }
   dialog.SetCaption(buffer);
 
@@ -433,7 +433,7 @@ class QuickMenuDialog final : public WidgetDialog {
 
 public:
   QuickMenuDialog(Full, UI::SingleWindow &parent, const DialogLook &look,
-                  const TCHAR *caption) noexcept
+                  const char *caption) noexcept
     :WidgetDialog(Full{}, parent, look, caption) {}
 
   template<typename... Args>
@@ -488,11 +488,11 @@ ShowQuickMenu(UI::SingleWindow &parent, const Menu &menu) noexcept
   dialog.PrepareWidget();
 
   auto &quick_menu = dialog.GetWidget();
-  Button *prev_button = dialog.AddSymbolButton(_T("<"), [&quick_menu]() {
+  Button *prev_button = dialog.AddSymbolButton("<", [&quick_menu]() {
     quick_menu.NavigatePage(GridView::Direction::LEFT);
   });
 
-  Button *next_button = dialog.AddSymbolButton(_T(">"), [&quick_menu]() {
+  Button *next_button = dialog.AddSymbolButton(">", [&quick_menu]() {
     quick_menu.NavigatePage(GridView::Direction::RIGHT);
   });
 
@@ -511,7 +511,7 @@ ShowQuickMenu(UI::SingleWindow &parent, const Menu &menu) noexcept
 void
 dlgQuickMenuShowModal(UI::SingleWindow &parent) noexcept
 {
-  const auto *menu = InputEvents::GetMenu(_T("RemoteStick"));
+  const auto *menu = InputEvents::GetMenu("RemoteStick");
   if (menu == nullptr)
     return;
 

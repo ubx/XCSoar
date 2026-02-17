@@ -10,8 +10,6 @@
 #include <span>
 #include <string_view>
 
-#include <tchar.h>
-
 class KeyValueFileWriter;
 
 namespace Profile {
@@ -49,7 +47,7 @@ Get(std::string_view key, const char *default_value=nullptr) noexcept;
  * @param max_size Maximum size of the output buffer
  */
 bool
-Get(std::string_view key, std::span<TCHAR> value) noexcept;
+Get(std::string_view key, std::span<char> value) noexcept;
 
 /**
  * Writes a value to the profile map
@@ -95,7 +93,7 @@ GetEnum(std::string_view key, T &value) noexcept
 static inline void
 Set(std::string_view key, bool value) noexcept
 {
-  Set(key, value ? _T("1") : _T("0"));
+  Set(key, value ? "1" : "0");
 }
 
 void
@@ -125,7 +123,7 @@ SetEnum(std::string_view key, T value) noexcept
 
 template<std::size_t max>
 static inline bool
-Get(std::string_view key, BasicStringBuffer<TCHAR, max> &value) noexcept
+Get(std::string_view key, BasicStringBuffer<char, max> &value) noexcept
 {
   return Get(key, std::span{value.data(), value.capacity()});
 }

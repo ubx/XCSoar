@@ -52,10 +52,10 @@ int main(int argc, char **argv)
                           replay->SetCalculated());
 
     if (calculated.estimated_wind_available.Modified(last)) {
-      TCHAR time_buffer[32];
+      char time_buffer[32];
       FormatTime(time_buffer, replay->Basic().time);
 
-      _tprintf(_T("%s %d %g\n"),
+      printf("%s %d %g\n",
                time_buffer, (int)calculated.estimated_wind.bearing.Degrees(),
                (double)calculated.estimated_wind.norm);
     }

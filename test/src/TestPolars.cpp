@@ -11,7 +11,6 @@
 #include "Polar/Parser.hpp"
 #include "Polar/PolarFileGlue.hpp"
 #include "Polar/PolarStore.hpp"
-#include "util/ConvertString.hpp"
 #include "util/Macros.hpp"
 #include "util/PrintException.hxx"
 #include "util/StringAPI.hxx"
@@ -59,7 +58,7 @@ TestFileImport()
 {
   // Test LoadFromFile()
   PolarInfo polar;
-  PolarGlue::LoadFromFile(polar, Path(_T("test/data/test.plr")));
+  PolarGlue::LoadFromFile(polar, Path("test/data/test.plr"));
   ok1(equals(polar.shape.reference_mass, 318));
   ok1(equals(polar.max_ballast, 100));
   ok1(equals(polar.shape[0].v, 22.2222222));
@@ -76,14 +75,12 @@ TestBuiltInPolars()
 {
   for (const auto &i : PolarStore::GetAll()) {
     PolarInfo polar = i.ToPolarInfo();
-
-    WideToUTF8Converter narrow(i.name);
-    ok(polar.IsValid(), narrow);
+    ok(polar.IsValid(), i.name);
   }
 }
 
 struct PerformanceItem {
-  const TCHAR* name;
+  const char* name;
   bool check_best_LD;
   double best_LD;
   bool check_best_LD_speed;
@@ -96,23 +93,23 @@ struct PerformanceItem {
 
 static const PerformanceItem performanceData[] = {
   /* 206 Hornet         */
-  {  _T("206 Hornet"), true, 38,   true,  103, true,  0.6,  true,   74 },
+  {  "206 Hornet", true, 38,   true,  103, true,  0.6,  true,   74 },
   /* Discus             */
-  {  _T("Discus"), true, 43,   false,   0, true,  0.59, false,   0 },
+  {  "Discus", true, 43,   false,   0, true,  0.59, false,   0 },
   /* G-103 TWIN II (PIL)*/
-  {  _T("G 103 Twin 2"), true, 38.5, true,   95, true,  0.64, true,   80 },
+  {  "G 103 Twin 2", true, 38.5, true,   95, true,  0.64, true,   80 },
   /* H-201 Std. Libelle */
-  {  _T("H-201 Std Libelle"), true, 38,   true,   90, true,  0.6,  true,   75 },
+  {  "H-201 Std Libelle", true, 38,   true,   90, true,  0.6,  true,   75 },
   /* Ka6 CR             */
-  {  _T("Ka 6CR"), true, 30,   true,   85, true,  0.65, true,   72 },
+  {  "Ka 6CR", true, 30,   true,   85, true,  0.65, true,   72 },
   /* K8                 */
-  {  _T("Ka 8"), true, 25,   true,   75, false, 0,    true,   62 },
+  {  "Ka 8", true, 25,   true,   75, false, 0,    true,   62 },
   /* LS-4               */
-  {  _T("LS-4"), true, 40.5, false,   0, true,  0.60, false,   0 },
+  {  "LS-4", true, 40.5, false,   0, true,  0.60, false,   0 },
   /* Std. Cirrus        */
-  {  _T("Std Cirrus"), true, 38.5, false,   0, true,  0.6,  false,   0 },
+  {  "Std Cirrus", true, 38.5, false,   0, true,  0.6,  false,   0 },
   /* LS-1f              */
-  { _T("LS-1f"), true, 38.2, false,   0, true,  0.64, false,   0 },
+  { "LS-1f", true, 38.2, false,   0, true,  0.64, false,   0 },
 };
 
 static bool
@@ -125,7 +122,7 @@ ValuePlausible(double ref, double used, double threshold = 0.05)
 
 [[gnu::pure]]
 static auto
-GetPolarByName(const TCHAR *name) noexcept
+GetPolarByName(const char *name) noexcept
 {
   for (const auto &i : PolarStore::GetAll())
     if (StringIsEqual(i.name, name))
@@ -138,9 +135,8 @@ static void
 TestBuiltInPolarsPlausibility()
 {
   for(unsigned i = 0; i < ARRAY_SIZE(performanceData); i++) {
-    const TCHAR *si = performanceData[i].name;
-    WideToUTF8Converter polarName(si);
-    const auto polar = GetPolarByName(si);
+    const char *polarName = performanceData[i].name;
+    const auto polar = GetPolarByName(polarName);
     PolarCoefficients pc = polar.CalculateCoefficients();
 
     ok(pc.IsValid(), polarName);

@@ -9,7 +9,6 @@
 #include "NMEA/InputLine.hpp"
 #include "NMEA/Checksum.hpp"
 
-#include <tchar.h>
 #include <stdio.h>
 
 using std::string_view_literals::operator""sv;
@@ -172,8 +171,8 @@ WesterboerCreateOnPort([[maybe_unused]] const DeviceConfig &config, Port &com_po
 }
 
 const struct DeviceRegister westerboer_driver = {
-  _T("Westerboer VW1150"),
-  _T("Westerboer VW1150"),
+  "Westerboer VW1150",
+  "Westerboer VW1150",
   DeviceRegister::RECEIVE_SETTINGS | DeviceRegister::SEND_SETTINGS,
   WesterboerCreateOnPort,
 };

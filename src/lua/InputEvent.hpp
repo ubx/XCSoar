@@ -4,8 +4,6 @@
 #pragma once
 
 #include "util/Compiler.h"
-#include <tchar.h>
-
 struct lua_State;
 
 namespace Lua {
@@ -23,12 +21,12 @@ bool
 FireNMEAEvent(unsigned event);
 
 bool
-FireGesture(const TCHAR *gesture);
+FireGesture(const char *gesture);
 
 bool
 FireKey(unsigned key);
 
 bool
-IsGesture(const TCHAR *gesture);
+IsGesture(const char *gesture);
 
 }

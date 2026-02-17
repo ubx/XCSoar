@@ -9,7 +9,6 @@
 #include "system/Path.hpp"
 #include "LogFile.hpp"
 #include "Profile/Profile.hpp"
-#include "util/ConvertString.hpp"
 #include "util/ScopeExit.hxx"
 #include "util/StringCompare.hxx"
 #include "util/StringAPI.hxx"
@@ -66,7 +65,7 @@ FindLanguage(WORD language) noexcept
 
 [[gnu::pure]]
 static const BuiltinLanguage *
-FindLanguage(const TCHAR *resource) noexcept
+FindLanguage(const char *resource) noexcept
 {
   assert(resource != nullptr);
 
@@ -194,21 +193,20 @@ InitNativeGettext(const char *locale) noexcept
 static bool
 ReadBuiltinLanguage(const BuiltinLanguage &language) noexcept
 {
-  const WideToUTF8Converter resource_utf8(language.resource);
-  LogFmt("Language: loading resource '{}'", resource_utf8.IsValid() ? resource_utf8.c_str() : "(invalid)");
+  LogFmt("Language: loading resource '{}'", language.resource);
 
 #ifdef HAVE_BUILTIN_LANGUAGES
   // Load MO file from resource
   delete mo_loader;
   mo_loader = new MOLoader({language.begin, (size_t)language.size});
   if (mo_loader->error()) {
-    LogFmt("Language: could not load resource '{}'", resource_utf8.IsValid() ? resource_utf8.c_str() : "(invalid)");
+    LogFmt("Language: could not load resource '{}'", language.resource);
     delete mo_loader;
     mo_loader = nullptr;
     return false;
   }
 
-  LogFmt("Loaded translations from resource '{}'", resource_utf8.IsValid() ? resource_utf8.c_str() : "(invalid)");
+  LogFmt("Loaded translations from resource '{}'", language.resource);
 
   mo_file = &mo_loader->get();
 #else
@@ -219,7 +217,7 @@ ReadBuiltinLanguage(const BuiltinLanguage &language) noexcept
 }
 
 static bool
-ReadResourceLanguageFile(const TCHAR *resource) noexcept
+ReadResourceLanguageFile(const char *resource) noexcept
 {
   auto language = FindLanguage(resource);
   return language != nullptr && ReadBuiltinLanguage(*language);
@@ -295,12 +293,12 @@ ReadLanguageFile() noexcept
 
   auto value = Profile::GetPath(ProfileKeys::LanguageFile);
 
-  if (value == nullptr || value.empty() || value == Path(_T("auto"))) {
+  if (value == nullptr || value.empty() || value == Path("auto")) {
     AutoDetectLanguage();
     return;
   }
 
-  if (value == Path(_T("none")))
+  if (value == Path("none"))
     return;
 
   Path base = value.GetBase();

@@ -457,19 +457,19 @@ WaypointDetailsWidget::Prepare(ContainerWindow &parent,
 
   if (!images.empty()) {
     magnify_button.Create(parent, layout.magnify_button, button_style,
-                          std::make_unique<SymbolButtonRenderer>(look.button, _T("+")),
+                          std::make_unique<SymbolButtonRenderer>(look.button, "+"),
                           [this](){ OnMagnifyClicked(); });
     shrink_button.Create(parent, layout.shrink_button, button_style,
-                         std::make_unique<SymbolButtonRenderer>(look.button, _T("-")),
+                         std::make_unique<SymbolButtonRenderer>(look.button, "-"),
                          [this](){ OnShrinkClicked(); });
   }
 
   previous_button.Create(parent, layout.previous_button, button_style,
-                         std::make_unique<SymbolButtonRenderer>(look.button, _T("<")),
+                         std::make_unique<SymbolButtonRenderer>(look.button, "<"),
                          [this](){ NextPage(-1); });
 
   next_button.Create(parent, layout.next_button, button_style,
-                     std::make_unique<SymbolButtonRenderer>(look.button, _T(">")),
+                     std::make_unique<SymbolButtonRenderer>(look.button, ">"),
                      [this](){ NextPage(1); });
 
   close_button.Create(parent, look.button, _("Close"), layout.close_button,
@@ -480,11 +480,11 @@ WaypointDetailsWidget::Prepare(ContainerWindow &parent,
 
   details_panel.Create(parent, look, layout.main, dock_style);
   details_text.Create(details_panel, layout.details_text);
-  details_text.SetFont(look.text_font);
 #ifndef USE_WINUSER
+  details_text.SetFont(look.text_font);
+#endif
   details_text.SetColors(look.background_color, look.text_color,
                          look.dark_mode ? COLOR_GRAY : COLOR_BLACK);
-#endif
   details_text.SetText(waypoint->details.c_str());
 
 #ifdef HAVE_RUN_FILE
@@ -807,17 +807,17 @@ static void
 UpdateCaption(WndForm *form, const Waypoint &waypoint)
 {
   StaticString<256> buffer;
-  buffer.Format(_T("%s: %s"), _("Waypoint"), waypoint.name.c_str());
+  buffer.Format("%s: %s", _("Waypoint"), waypoint.name.c_str());
 
   std::string_view key{};
-  const TCHAR *name = nullptr;
+  const char *name = nullptr;
 
   switch (waypoint.origin) {
   case WaypointOrigin::NONE:
     break;
 
   case WaypointOrigin::USER:
-    name = _T("user.cup");
+    name = "user.cup";
     break;
 
   case WaypointOrigin::PRIMARY:
@@ -840,10 +840,10 @@ UpdateCaption(WndForm *form, const Waypoint &waypoint)
       const auto &path = paths[waypoint.file_num];
       const auto filename = path.GetBase();
       if (filename != nullptr)
-        buffer.AppendFormat(_T(" (%s)"), filename.c_str());
+        buffer.AppendFormat(" (%s)", filename.c_str());
     }
   } else if (name != nullptr)
-    buffer.AppendFormat(_T(" (%s)"), name);
+    buffer.AppendFormat(" (%s)", name);
 
   form->SetCaption(buffer);
 }
