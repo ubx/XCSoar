@@ -380,7 +380,7 @@ CANaerospaceDevice::DataReceived(std::span<const std::byte> s, NMEAInfo &info) n
 
   case OUTSIDE_AIR_TEMP_ID:
     if (canasNetworkToHost(&canasMessage.data, canData, 4, CANAS_DATATYPE_FLOAT) > 0) {
-      info.temperature_available = true;
+      info.temperature_available.Update(info.clock);
       info.temperature =
           Temperature::FromKelvin(canasMessage.data.container.FLOAT);
       return true;
