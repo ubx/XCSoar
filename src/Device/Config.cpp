@@ -292,7 +292,7 @@ DeviceConfig::GetPortName(char *buffer, size_t max_size) const noexcept
     return buffer;
 
   case PortType::CAN_INTERFACE:
-    StringFormat(buffer, max_size, _T("CAN port %s"), can_interface.c_str());
+    StringFormat(buffer, max_size, "CAN port %s", can_interface.c_str());
     return buffer;
 
   case PortType::PTY:

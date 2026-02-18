@@ -99,8 +99,8 @@ FillEngineType(DataFieldEnum &dfe) noexcept
 static void
 FillCANDevices(DataFieldEnum &dfe) noexcept
 {
-  dfe.addEnumText(_T("can0"), 0U);
-  dfe.addEnumText(_T("vcan0"), 1U);
+  dfe.addEnumText("can0", 0U);
+  dfe.addEnumText("vcan0", 1U);
 }
 
 static bool
@@ -432,7 +432,7 @@ FinishPortField(DeviceConfig &config, const DataFieldEnum &df) noexcept
 
     config.port_type = new_type;
     //config.can_interface = df.GetAsString(); // todo -- fix this!!
-    config.can_interface = _T("can0");
+    config.can_interface = "can0";
     return true;
 
   }

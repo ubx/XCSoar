@@ -6,7 +6,6 @@
 #include "BufferedPort.hpp"
 #include "event/SocketEvent.hxx"
 #include "net/UniqueSocketDescriptor.hxx"
-#include "unix/tchar.h"
 
 /**
  * A CAN listener port class.

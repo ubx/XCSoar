@@ -396,8 +396,8 @@ CANaerospaceDevice::DataReceived(std::span<const std::byte> s, NMEAInfo &info) n
 }
 
 const struct DeviceRegister can_aerospace_driver = {
-    _T("CANaerospace"),
-    _T("CANaerospace"),
+    "CANaerospace",
+    "CANaerospace",
     DeviceRegister::NO_TIMEOUT |
         DeviceRegister::RAW_GPS_DATA, // TODO: Put the right flags
     CANaerospaceCreateOnPort,
