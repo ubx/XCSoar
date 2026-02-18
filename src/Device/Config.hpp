@@ -426,7 +426,7 @@ struct DeviceConfig {
     return UsesCANPort(port_type);
   }
 
-  bool IsDriver(const TCHAR *name) const {
+  bool IsDriver(const char *name) const {
   constexpr bool IsDriver(const char *name) const noexcept {
     return UsesDriver() && driver_name.equals(name);
   }
