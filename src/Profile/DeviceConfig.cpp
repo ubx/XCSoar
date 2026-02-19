@@ -204,6 +204,11 @@ Profile::GetDeviceConfig(const ProfileMap &map, unsigned n,
       unsigned(config.engine_type) >= unsigned(DeviceConfig::EngineType::MAX))
     config.engine_type = DeviceConfig::EngineType::NONE;
 
+  MakeDeviceSettingName(buffer, "Port", n, "PolarSync");
+  if (!map.GetEnum(buffer, config.polar_sync) ||
+      unsigned(config.polar_sync) >= unsigned(DeviceConfig::PolarSync::COUNT))
+    config.polar_sync = DeviceConfig::PolarSync::OFF;
+
   MakeDeviceSettingName(buffer, "Port", n, "CANPortName");
   map.Get(buffer, config.can_interface);
 
@@ -308,6 +313,6 @@ Profile::SetDeviceConfig(ProfileMap &map,
   MakeDeviceSettingName(buffer, "Port", n, "EngineType");
   map.Set(buffer, static_cast<unsigned>(config.engine_type));
 
-  MakeDeviceSettingName(buffer, "Port", n, "CANPortName");
-  map.Set(buffer, config.can_interface);
+  MakeDeviceSettingName(buffer, "Port", n, "PolarSync");
+  map.Set(buffer, static_cast<unsigned>(config.polar_sync));
 }
