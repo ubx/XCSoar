@@ -21,8 +21,6 @@ enum ControlIndex {
   TCPPort,
   I2CBus, I2CAddr, PressureUsage, Driver, UseSecondDriver, SecondDriver,
   SyncFromDevice, SyncToDevice, PolarSyncMode,
-  K6Bt,
-  SyncFromDevice, SyncToDevice,
   K6Bt, CAN_INTERFACE,
 };
 
