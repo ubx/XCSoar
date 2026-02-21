@@ -16,8 +16,9 @@
 #include "util/StringCompare.hxx"
 
 #include <algorithm>
-#include <stdio.h>
 #include <stdlib.h>
+
+#include <fmt/format.h>
 
 using std::string_view_literals::operator""sv;
 
@@ -94,7 +95,9 @@ ReadDate(NMEAInputLine &line, BrokenDate &date)
   if (endptr == p || *endptr != 0)
     return false;
 
-  return date.IsPlausible();
+  /* accept implausible dates (e.g. 00.00.1980) from devices
+     without an RTC -- the flight is still downloadable */
+  return true;
 }
 
 static bool
@@ -118,17 +121,15 @@ ReadTime(NMEAInputLine &line, BrokenTime &time)
   if (endptr == p || *endptr != 0)
     return false;
 
-  return time.IsPlausible();
+  return true;
 }
 
 static void
 RequestLogbookContents(Port &port, unsigned start, unsigned end,
                        OperationEnvironment &env)
 {
-  char buffer[32];
-  sprintf(buffer, "PLXVC,LOGBOOK,R,%u,%u,", start, end);
-
-  PortWriteNMEA(port, buffer, env);
+  const auto cmd = fmt::format("PLXVC,LOGBOOK,R,{},{},", start, end);
+  PortWriteNMEA(port, cmd.c_str(), env);
 }
 
 static bool
@@ -153,27 +154,24 @@ ParseLogbookContent(const char *_line, RecordedFlightInfo &info)
     ReadTime(line, info.end_time);
 }
 
-static bool
-ReadLogbookContent(PortNMEAReader &reader, RecordedFlightInfo &info,
-                   TimeoutClock timeout)
-{
-  while (true) {
-    const char *line = ReadLogbookLine(reader, timeout);
-    if (line == nullptr)
-      return false;
-
-    if (ParseLogbookContent(line, info))
-      return true;
-  }
-}
-
+/**
+ * Read exactly @p n logbook response lines, appending parseable
+ * entries to @p flight_list.  Entries with implausible dates
+ * (e.g. 00.00.1980 from devices without an RTC) are still
+ * included so the user can download those flights.
+ */
 static bool
 ReadLogbookContents(PortNMEAReader &reader, RecordedFlightList &flight_list,
                     unsigned n, TimeoutClock timeout)
 {
   while (n-- > 0) {
-    if (!ReadLogbookContent(reader, flight_list.append(), timeout))
+    const char *line = ReadLogbookLine(reader, timeout);
+    if (line == nullptr)
       return false;
+
+    RecordedFlightInfo info;
+    if (ParseLogbookContent(line, info) && !flight_list.full())
+      flight_list.append() = info;
   }
 
   return true;
@@ -241,10 +239,9 @@ RequestFlight(Port &port, const char *filename,
               unsigned start_row, unsigned end_row,
               OperationEnvironment &env)
 {
-  char buffer[64];
-  sprintf(buffer, "PLXVC,FLIGHT,R,%s,%u,%u,", filename, start_row, end_row);
-
-  PortWriteNMEA(port, buffer, env);
+  const auto cmd = fmt::format("PLXVC,FLIGHT,R,{},{},{},",
+                               filename, start_row, end_row);
+  PortWriteNMEA(port, cmd.c_str(), env);
 }
 
 static bool
