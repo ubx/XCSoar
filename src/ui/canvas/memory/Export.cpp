@@ -215,8 +215,8 @@ CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
                             [](const BGRA8Color &c) { return ToRGB565(c); });
         }
   } else {
-    uint32_t *dest_pixels = reinterpret_cast<uint32_t *>(_dest_pixels);
-    const uint32_t *src_pixels = reinterpret_cast<const uint32_t *>(src.data);
+    BGRA8Color *dest_pixels = reinterpret_cast<BGRA8Color *>(_dest_pixels);
+    const BGRA8Color *src_pixels = src.data;
     RotateCopy(dest_pixels, dest_pitch, src_pixels, src_pitch,
                src.size.width, src.size.height, orientation);
   }
@@ -228,8 +228,8 @@ CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
                    (const BGRA8Color *)src_pixels,
                    src.size.width);
   } else {
-    uint32_t *dest_pixels = reinterpret_cast<uint32_t *>(_dest_pixels);
-    const uint32_t *src_pixels = reinterpret_cast<const uint32_t *>(src.data);
+    BGRA8Color *dest_pixels = reinterpret_cast<BGRA8Color *>(_dest_pixels);
+    const BGRA8Color *src_pixels = src.data;
 
     for (unsigned row = src.size.height; row > 0;
          --row, src_pixels += src_pitch, dest_pixels += dest_pitch)
