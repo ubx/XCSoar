@@ -23,8 +23,10 @@ Display::LoadOrientation(VerboseOperationEnvironment &env)
 
   Display::RotateInitialize();
 
+#if !defined(COLIBRI)
   DisplayOrientation orientation =
     CommonInterface::GetUISettings().display.orientation;
+#endif
 
 #if defined(KOBO) || defined(COLIBRI)
   /* on the Kobo, the display orientation must be loaded explicitly

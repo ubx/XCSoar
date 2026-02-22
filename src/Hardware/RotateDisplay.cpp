@@ -46,12 +46,6 @@ Display::RotateSupported()
 bool
 Display::Rotate(DisplayOrientation orientation)
 {
-#if !defined(ANDROID) && !defined(KOBO) && !defined(COLIBRI)
-  if (orientation == DisplayOrientation::DEFAULT)
-    /* leave it as it is */
-    return true;
-#endif
-
 #if defined(ANDROID)
   if (native_view == nullptr)
     return false;
@@ -76,13 +70,14 @@ Display::Rotate(DisplayOrientation orientation)
 
   default:
     android_orientation = NativeView::ScreenOrientation::LOCKED;
+    break;
   };
 
   return native_view->SetRequestedOrientation(Java::GetEnv(),
                                               android_orientation);
 #elif defined(KOBO)
-  const char *rotate = "3";
   KoboModel kobo_model = DetectKoboModel();
+  const char *rotate;
 
   switch (orientation) {
   case DisplayOrientation::DEFAULT:
@@ -99,6 +94,7 @@ Display::Rotate(DisplayOrientation orientation)
       break;
     }
     break;
+
   case DisplayOrientation::REVERSE_PORTRAIT:
     switch(kobo_model) {
     case KoboModel::LIBRA2:
@@ -140,16 +136,17 @@ Display::Rotate(DisplayOrientation orientation)
       break;
     }
     break;
+
+  default:
+    return false;
   };
 
   return File::WriteExisting(Path("/sys/class/graphics/fb0/rotate"), rotate);
 #elif defined(SOFTWARE_ROTATE_DISPLAY)
-  if (!RotateSupported())
-    return false;
-
   UIGlobals::GetMainWindow().SetDisplayOrientation(orientation);
   return true;
 #else
+  (void)orientation;
   return false;
 #endif
 }
