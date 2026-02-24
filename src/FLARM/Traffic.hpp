@@ -28,10 +28,23 @@ struct FlarmTraffic {
    */
   enum class SourceType: uint8_t {
     FLARM = 0,
-    ADSB = 2,
+    ADSB = 1,
     ADSR = 3,
     TISB = 4,
-    MODES = 5,
+    MODES = 6,
+  };
+
+  /**
+   * PFLAA ID type: interpretation of the <ID> field.
+   * Wire values are 0/1/2 with empty meaning unknown;
+   * offset by 1 so UNKNOWN maps to 0.
+   * @see FTD-012 Data Port ICD, PFLAA <IDType>
+   */
+  enum class IdType : uint8_t {
+    UNKNOWN = 0,
+    RANDOM = 1,
+    ICAO = 2,
+    FLARM = 3,
   };
 
   /**
@@ -103,8 +116,11 @@ struct FlarmTraffic {
   /** Type of the aircraft */
   AircraftType type;
 
-  /** Traffic source (PFLAA field 12, v7+) */
+  /** Traffic source (PFLAA v9+) */
   SourceType source;
+
+  /** ID type: how to interpret the FLARM id (PFLAA <IDType>) */
+  IdType id_type;
 
   /**
    * Signal strength in dBm (PFLAA field 13, v9+).
@@ -162,6 +178,7 @@ struct FlarmTraffic {
     valid.Clear();
     name.clear();
     source = SourceType::FLARM;
+    id_type = IdType::UNKNOWN;
     rssi = 0;
     rssi_available = false;
     no_track = false;
