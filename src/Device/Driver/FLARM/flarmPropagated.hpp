@@ -24,7 +24,7 @@ extern "C"
 #define FLATOBSTACLEALARM 3
 
 bool
-canasFlarmStatePropagated(const CanasMessage *phost, int altitude, FlarmMostImportantObjectData *objectData, FlarmState *flarmState);
+canasFlarmStatePropagated(const CanasMessage *phost, int altitude, FlarmMostImportantObjectData *objectData, CanasFlarmState *flarmState);
 bool canasFlarmObjectPropagated(const CanasMessage *phost, int canid, FlarmObjectData *flarmObjectData);
 
 

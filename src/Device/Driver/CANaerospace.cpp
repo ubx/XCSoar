@@ -26,7 +26,7 @@ public:
 
 auto last_fix = GeoPoint::Invalid();
 SpeedVector last_wind = SpeedVector::Zero();
-static FlarmState flarmState;
+static CanasFlarmState flarmState;
 static FlarmMostImportantObjectData objectData;
 static FlarmObjectData flarmObjectData;
 static bool slcan_port;

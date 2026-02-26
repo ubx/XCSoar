@@ -27,7 +27,7 @@ uint32_t getFlarmId(const CanasMessage *canasMessage);
  * return: true wenn daten komplet
  */
 bool canasFlarmStatePropagated(const CanasMessage *canasMessage, int altitude, FlarmMostImportantObjectData *objectData,
-                               FlarmState *flarmState) {
+                               CanasFlarmState *flarmState) {
 
     switch (canasMessage->service_code) {
         case 0: {
