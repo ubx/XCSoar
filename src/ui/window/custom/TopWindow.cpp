@@ -95,7 +95,25 @@ TopWindow::SetDisplayOrientation(DisplayOrientation orientation) noexcept
 {
   assert(screen != nullptr);
 
-  Resize(screen->SetDisplayOrientation(orientation));
+  const PixelSize new_size = screen->SetDisplayOrientation(orientation);
+  const bool resize_needed = new_size != GetSize();
+
+#ifdef ENABLE_OPENGL
+  /* Re-read the current drawable size after orientation changes.
+     On some UNIX backends, output/orientation changes don't always
+     deliver a fresh configure event immediately. */
+  const PixelSize native_size = screen->GetNativeSize();
+  if (native_size.width > 0 && native_size.height > 0 &&
+      screen->CheckResize(native_size)) {
+    Resize(screen->GetSize());
+    return;
+  }
+#endif
+
+  if (!resize_needed)
+    BumpRenderStateToken();
+
+  Resize(new_size);
 }
 
 #endif

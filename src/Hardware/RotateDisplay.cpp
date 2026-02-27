@@ -46,6 +46,12 @@ Display::RotateSupported()
 bool
 Display::Rotate(DisplayOrientation orientation)
 {
+#if !defined(ANDROID) && !defined(KOBO) && !defined(SOFTWARE_ROTATE_DISPLAY)
+  if (orientation == DisplayOrientation::DEFAULT)
+    /* leave it as it is */
+    return true;
+#endif
+
 #if defined(ANDROID)
   if (native_view == nullptr)
     return false;
@@ -70,14 +76,13 @@ Display::Rotate(DisplayOrientation orientation)
 
   default:
     android_orientation = NativeView::ScreenOrientation::LOCKED;
-    break;
   };
 
   return native_view->SetRequestedOrientation(Java::GetEnv(),
                                               android_orientation);
 #elif defined(KOBO)
+  const char *rotate = "3";
   KoboModel kobo_model = DetectKoboModel();
-  const char *rotate;
 
   switch (orientation) {
   case DisplayOrientation::DEFAULT:
@@ -94,7 +99,6 @@ Display::Rotate(DisplayOrientation orientation)
       break;
     }
     break;
-
   case DisplayOrientation::REVERSE_PORTRAIT:
     switch(kobo_model) {
     case KoboModel::LIBRA2:

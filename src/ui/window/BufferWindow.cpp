@@ -2,6 +2,7 @@
 // Copyright The XCSoar Project
 
 #include "BufferWindow.hpp"
+#include "TopWindow.hpp"
 
 #ifndef ENABLE_OPENGL
 #include "ui/canvas/WindowCanvas.hpp"
@@ -58,13 +59,24 @@ BufferWindow::OnPaint(Canvas &canvas) noexcept
 #endif
 
 #ifdef ENABLE_OPENGL
+  if (auto *top = dynamic_cast<UI::TopWindow *>(GetRootOwner())) {
+    const uint32_t current_render_state_token = top->GetRenderStateToken();
+    if (!render_state_token_known ||
+        current_render_state_token != last_render_state_token) {
+      dirty = true;
+      last_render_state_token = current_render_state_token;
+      render_state_token_known = true;
+    }
+  }
+
+  /* Keep cached content, but always use Begin()/Commit() to keep OpenGL
+     viewport/orientation state synchronized after display rotation changes. */
+  buffer.Begin(canvas);
   if (dirty) {
     dirty = false;
-    buffer.Begin(canvas);
     OnPaintBuffer(buffer);
-    buffer.Commit(canvas);
-  } else
-    buffer.CopyTo(canvas);
+  }
+  buffer.Commit(canvas);
 
 #else
 

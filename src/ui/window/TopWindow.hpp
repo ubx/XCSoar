@@ -11,6 +11,7 @@
 
 #ifdef ENABLE_OPENGL
 #include "ui/opengl/Features.hpp"
+#include <cstdint>
 #endif
 
 #include "ui/canvas/Features.hpp" // for DRAW_MOUSE_CURSOR
@@ -157,6 +158,8 @@ public:
   void MarkFirstConfigureReceived() noexcept {
     received_first_configure = true;
   }
+
+  void OnNativeConfigure(PixelSize new_native_size) noexcept;
 #elif defined(ENABLE_SDL)
   SDL_Window *window;
 #endif
@@ -170,6 +173,10 @@ public:
   TopCanvas *screen = nullptr;
 
   bool invalidated;
+
+#ifdef ENABLE_OPENGL
+  uint32_t render_state_token = 0;
+#endif
 
 #ifdef ANDROID
   Mutex paused_mutex;
@@ -237,6 +244,13 @@ public:
 #endif
 
 public:
+#ifdef ENABLE_OPENGL
+  [[gnu::pure]]
+  uint32_t GetRenderStateToken() const noexcept {
+    return render_state_token;
+  }
+#endif
+
 #ifdef ANDROID
   explicit TopWindow(UI::Display &_display) noexcept;
 #else
@@ -455,6 +469,12 @@ private:
 #endif
 
 protected:
+#ifdef ENABLE_OPENGL
+  void BumpRenderStateToken() noexcept {
+    ++render_state_token;
+  }
+#endif
+
   PixelPoint PointToReal(PixelPoint p) const noexcept {
 #ifdef HAVE_HIGHDPI_SUPPORT
     p.x = int(static_cast<float>(p.x) * point_to_real_x);
