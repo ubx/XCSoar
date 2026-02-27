@@ -58,7 +58,6 @@ BufferWindow::OnPaint(Canvas &canvas) noexcept
   }
 #endif
 
-#ifdef ENABLE_OPENGL
   if (auto *top = dynamic_cast<UI::TopWindow *>(GetRootOwner())) {
     const uint32_t current_render_state_token = top->GetRenderStateToken();
     if (!render_state_token_known ||
@@ -69,6 +68,7 @@ BufferWindow::OnPaint(Canvas &canvas) noexcept
     }
   }
 
+#ifdef ENABLE_OPENGL
   /* Keep cached content, but always use Begin()/Commit() to keep OpenGL
      viewport/orientation state synchronized after display rotation changes. */
   buffer.Begin(canvas);
