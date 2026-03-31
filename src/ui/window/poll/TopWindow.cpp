@@ -5,6 +5,7 @@
 #include "ui/canvas/Features.hpp" // for DRAW_MOUSE_CURSOR
 #include "ui/event/Queue.hpp"
 #include "ui/event/Globals.hpp"
+#include "ui/event/Idle.hpp"
 #include "ui/dim/Size.hpp"
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
@@ -23,11 +24,14 @@ namespace UI {
 void
 TopWindow::OnResize(PixelSize new_size) noexcept
 {
+#ifdef ENABLE_OPENGL
   BumpRenderStateToken();
+#endif
 
   PixelSize native_size = new_size;
 #if defined(ENABLE_OPENGL) && defined(SOFTWARE_ROTATE_DISPLAY) && defined(USE_LIBINPUT)
-  if (AreAxesSwapped(OpenGL::display_orientation))
+  if (!event_queue->UsesSystemRotatedInput() &&
+      AreAxesSwapped(OpenGL::display_orientation))
     native_size = PixelSize(new_size.height, new_size.width);
 #endif
 
@@ -51,6 +55,7 @@ TopWindow::OnEvent(const Event &event)
     break;
 
   case Event::KEY_DOWN:
+    ResetUserIdle();
     w = GetFocusedWindow();
     if (w == nullptr)
       w = this;
@@ -58,6 +63,7 @@ TopWindow::OnEvent(const Event &event)
     return w->OnKeyDown(event.param);
 
   case Event::KEY_UP:
+    ResetUserIdle();
     w = GetFocusedWindow();
     if (w == nullptr)
       w = this;
@@ -65,6 +71,7 @@ TopWindow::OnEvent(const Event &event)
     return w->OnKeyUp(event.param);
 
   case Event::MOUSE_MOTION:
+    ResetUserIdle();
 #ifdef DRAW_MOUSE_CURSOR
     cursor_visible_until = std::chrono::steady_clock::now() + std::chrono::seconds(10);
     /* redraw to update the mouse cursor position */
@@ -75,16 +82,19 @@ TopWindow::OnEvent(const Event &event)
     return OnMouseMove(event.point, 0);
 
   case Event::MOUSE_DOWN:
+    ResetUserIdle();
     return double_click.Check(event.point)
       ? OnMouseDouble(event.point)
       : OnMouseDown(event.point);
 
   case Event::MOUSE_UP:
+    ResetUserIdle();
     double_click.Moved(event.point);
 
     return OnMouseUp(event.point);
 
   case Event::MOUSE_WHEEL:
+    ResetUserIdle();
     return OnMouseWheel(event.point, (int)event.param);
 
 #ifdef USE_X11

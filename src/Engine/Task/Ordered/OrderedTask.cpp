@@ -529,12 +529,11 @@ OrderedTask::CheckTransitions(const AircraftState &state,
 
   if (TaskStarted()) {
     const AircraftState &start_state = taskpoint_start->GetExitedState();
-    if (start_state.HasTime()) {
-      stats.start.SetStarted(start_state);
+    assert(start_state.HasTime());
+    stats.start.SetStarted(start_state);
 
-      if (taskpoint_finish != nullptr)
-        taskpoint_finish->SetFaiFinishHeight(start_state.altitude - 1000);
-    }
+    if (taskpoint_finish != nullptr)
+      taskpoint_finish->SetFaiFinishHeight(start_state.altitude - 1000);
   }
 
   if (task_events != nullptr) {

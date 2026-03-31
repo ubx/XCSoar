@@ -10,6 +10,10 @@
 #include <SDL_video.h>
 #include <SDL_events.h>
 
+#if defined(ENABLE_OPENGL) && defined(SOFTWARE_ROTATE_DISPLAY)
+#include "ui/event/shared/TransformCoordinates.hpp"
+#endif
+
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #endif
@@ -151,12 +155,24 @@ TopWindow::OnEvent(const SDL_Event &event)
 
   case SDL_MOUSEMOTION:
     // XXX keys
-    return OnMouseMove(PointToReal(PixelPoint(event.motion.x, event.motion.y)),
-                       0);
+    {
+      auto p = PointToReal(PixelPoint(event.motion.x, event.motion.y));
+#if defined(ENABLE_OPENGL) && defined(SOFTWARE_ROTATE_DISPLAY)
+      if(OpenGL::window_size.x > 0 && OpenGL::window_size.y > 0)
+        p = TransformCoordinates(p, PixelSize{OpenGL::window_size.x,
+                                              OpenGL::window_size.y});
+#endif
+      return OnMouseMove(p, 0);
+    }
 
   case SDL_MOUSEBUTTONDOWN:
     {
-      const auto p = PointToReal(PixelPoint(event.button.x, event.button.y));
+      auto p = PointToReal(PixelPoint(event.button.x, event.button.y));
+#if defined(ENABLE_OPENGL) && defined(SOFTWARE_ROTATE_DISPLAY)
+      if(OpenGL::window_size.x > 0 && OpenGL::window_size.y > 0)
+        p = TransformCoordinates(p, PixelSize{OpenGL::window_size.x,
+                                              OpenGL::window_size.y});
+#endif
       return double_click.Check(p)
         ? OnMouseDouble(p)
         : OnMouseDown(p);
@@ -164,7 +180,12 @@ TopWindow::OnEvent(const SDL_Event &event)
 
   case SDL_MOUSEBUTTONUP:
     {
-      const auto p = PointToReal(PixelPoint(event.button.x, event.button.y));
+      auto p = PointToReal(PixelPoint(event.button.x, event.button.y));
+#if defined(ENABLE_OPENGL) && defined(SOFTWARE_ROTATE_DISPLAY)
+      if(OpenGL::window_size.x > 0 && OpenGL::window_size.y > 0)
+        p = TransformCoordinates(p, PixelSize{OpenGL::window_size.x,
+                                              OpenGL::window_size.y});
+#endif
       double_click.Moved(p);
       return OnMouseUp(p);
     }

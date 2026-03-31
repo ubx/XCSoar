@@ -140,17 +140,16 @@ Display::Rotate(DisplayOrientation orientation)
       break;
     }
     break;
-
-  default:
-    return false;
   };
 
   return File::WriteExisting(Path("/sys/class/graphics/fb0/rotate"), rotate);
 #elif defined(SOFTWARE_ROTATE_DISPLAY)
+  if (!RotateSupported())
+    return false;
+
   UIGlobals::GetMainWindow().SetDisplayOrientation(orientation);
   return true;
 #else
-  (void)orientation;
   return false;
 #endif
 }

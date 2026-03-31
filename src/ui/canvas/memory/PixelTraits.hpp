@@ -349,26 +349,45 @@ struct BGRAPixelTraits {
   }
 
   static color_type ReadPixel(const_pointer p) {
-    integer_type i;
-    const auto *pb = reinterpret_cast<const unsigned char *>(p);
-    memcpy(&i, pb, sizeof(i));
-    return FromInteger(i);
+    const integer_type *const pi = reinterpret_cast<const integer_type *>(p);
+    return FromInteger(*pi);
   }
 
   static void WritePixel(pointer p, color_type c) {
-    const integer_type i = ToInteger(c);
-    auto *pb = reinterpret_cast<unsigned char *>(p);
-    memcpy(pb, &i, sizeof(i));
+    integer_type *const pi = reinterpret_cast<integer_type *>(p);
+    *pi = ToInteger(c);
   }
 
   static void FillPixels(pointer p, unsigned n, color_type c) {
     /* gcc is pretty bad at optimising BGRA8Color assignment; the
        following switches to 32 bit integer operations */
+    integer_type *const pi = reinterpret_cast<integer_type *>(p);
     const integer_type ci = ToInteger(c);
-    auto *pb = reinterpret_cast<unsigned char *>(p);
 
-    for (unsigned i = 0; i < n; ++i, pb += sizeof(ci))
-      memcpy(pb, &ci, sizeof(ci));
+#if defined(__GNUC__) && defined(__x86_64__)
+    const uint64_t cl = (uint64_t(ci) << 32) | uint64_t(ci);
+
+    [[maybe_unused]] size_t dummy0, dummy1;
+    asm volatile("cld\n"
+
+                 /* n /= 2 (remainder is moved to the "Carry Flag") */
+                 "shr %3\n"
+
+                 /* fill two pixels at a time */
+                 "rep stosq\n"
+
+                 /* fill the remaining pixel (if any) */
+                 "jnc 0f\n"
+                 "stosl\n"
+                 "0:\n"
+
+                 : "=&c"(dummy0), "=&D"(dummy1)
+                 : "a"(cl), "0"(size_t(n)), "1"(pi)
+                 : "memory"
+                 );
+#else
+    std::fill_n(pi, n, ci);
+#endif
   }
 
   static void CopyPixels(rpointer p,

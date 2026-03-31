@@ -6,22 +6,70 @@
 #include "ui/event/Queue.hpp"
 #include "ui/event/shared/Event.hpp"
 #include "ui/event/poll/linux/Translate.hpp"
-
-#if defined(ENABLE_OPENGL) && defined(SOFTWARE_ROTATE_DISPLAY)
-#include "ui/event/shared/TransformCoordinates.hpp"
-#endif
+#include "LogFile.hpp"
 
 #include <libinput.h>
 
 #include <algorithm> // for std::clamp()
+#include <cstdarg>
+#include <cstdio>
 
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <termios.h>
+#include <cstdlib>
+#include <cstring>
 
 namespace UI {
+
+static void
+LogLibInputMessage(libinput *, libinput_log_priority,
+                   const char *format, va_list args) noexcept
+{
+  char buffer[512];
+  const int n = vsnprintf(buffer, sizeof(buffer), format, args);
+  if (n <= 0)
+    return;
+
+  std::size_t len = std::min<std::size_t>(n, sizeof(buffer) - 1);
+  while (len > 0 && (buffer[len - 1] == '\n' || buffer[len - 1] == '\r')) {
+    buffer[len - 1] = '\0';
+    --len;
+  }
+
+  LogFormat("libinput: %s", buffer);
+}
+
+[[gnu::pure]]
+static InputTransformMode
+ParseInputTransformMode() noexcept
+{
+  const char *value = std::getenv("XCSOAR_KMS_INPUT_TRANSFORM");
+  if (value != nullptr &&
+      (std::strcmp(value, "system") == 0 ||
+       std::strcmp(value, "native") == 0 ||
+       std::strcmp(value, "none") == 0))
+    return InputTransformMode::SYSTEM_ROTATED;
+
+  if (value != nullptr &&
+      (std::strcmp(value, "xcsoar") == 0 ||
+       std::strcmp(value, "software") == 0))
+    return InputTransformMode::XCSOAR_ROTATED;
+
+#ifdef MESA_KMS
+  return InputTransformMode::SYSTEM_ROTATED;
+#else
+  return InputTransformMode::XCSOAR_ROTATED;
+#endif
+}
+
+void
+LibInputHandler::SetDisplayOrientation(DisplayOrientation orientation) noexcept
+{
+  display_orientation = orientation;
+}
 
 PixelPoint
 LibInputHandler::GetPosition() const noexcept
@@ -33,15 +81,16 @@ PixelPoint
 LibInputHandler::MaybeTransformPoint(PixelPoint p) const noexcept
 {
 #if defined(ENABLE_OPENGL) && defined(SOFTWARE_ROTATE_DISPLAY)
-  p = TransformCoordinates(p, screen_size);
+  p = TransformInputPointForMode(p, screen_size, display_orientation,
+                                 input_transform_mode);
 #else
   return p;
 #endif
 
 #if defined(ENABLE_OPENGL) && defined(SOFTWARE_ROTATE_DISPLAY)
-  PixelSize logical_size = screen_size;
-  if (AreAxesSwapped(OpenGL::display_orientation))
-    logical_size = PixelSize(screen_size.height, screen_size.width);
+  PixelSize logical_size = GetLogicalInputSizeForMode(screen_size,
+                                                      display_orientation,
+                                                      input_transform_mode);
 
   if (logical_size.width > 0 && unsigned(p.x) >= logical_size.width)
     p.x = logical_size.width - 1;
@@ -54,7 +103,8 @@ LibInputHandler::MaybeTransformPoint(PixelPoint p) const noexcept
 
 LibInputHandler::LibInputHandler(EventQueue &_queue) noexcept
   :queue(_queue),
-   fd(queue.GetEventLoop(), BIND_THIS_METHOD(OnSocketReady)) {}
+   fd(queue.GetEventLoop(), BIND_THIS_METHOD(OnSocketReady)),
+   input_transform_mode(ParseInputTransformMode()) {}
 
 bool
 LibInputHandler::Open() noexcept
@@ -68,6 +118,7 @@ LibInputHandler::Open() noexcept
   if (nullptr == udev_context) {
     udev_context = new UdevContext(UdevContext::NewRef());
     if ((nullptr == udev_context) || (nullptr == udev_context->Get())) {
+      Close();
       return false;
     }
   }
@@ -84,16 +135,25 @@ LibInputHandler::Open() noexcept
   };
 
   li = libinput_udev_create_context(li_if, this, udev_context->Get());
-  if (nullptr == li)
+  if (nullptr == li) {
+    Close();
     return false;
+  }
+
+  libinput_log_set_handler(li, LogLibInputMessage);
+  libinput_log_set_priority(li, LIBINPUT_LOG_PRIORITY_ERROR);
 
   int assign_seat_ret = libinput_udev_assign_seat(li, UDEV_DEFAULT_SEAT);
-  if (0 != assign_seat_ret)
+  if (0 != assign_seat_ret) {
+    Close();
     return false;
+  }
 
   int _fd = libinput_get_fd(li);
-  if (_fd < 0)
+  if (_fd < 0) {
+    Close();
     return false;
+  }
 
   fd.Open(FileDescriptor{_fd});
   fd.ScheduleRead();
@@ -140,13 +200,15 @@ LibInputHandler::CloseDevice(int fd) noexcept
 void
 LibInputHandler::Suspend() noexcept
 {
-  libinput_suspend(li);
+  if (li != nullptr)
+    libinput_suspend(li);
 }
 
 void
 LibInputHandler::Resume() noexcept
 {
-  libinput_resume(li);
+  if (li != nullptr)
+    libinput_resume(li);
 }
 
 inline void
@@ -157,6 +219,7 @@ LibInputHandler::HandleEvent(struct libinput_event *li_event) noexcept
   case LIBINPUT_EVENT_DEVICE_ADDED:
   case LIBINPUT_EVENT_DEVICE_REMOVED:
     {
+      const bool is_added = type == LIBINPUT_EVENT_DEVICE_ADDED;
       libinput_device *event_device = libinput_event_get_device(li_event);
       assert(nullptr != event_device);
       const bool is_pointer = libinput_device_has_capability(
@@ -167,13 +230,22 @@ LibInputHandler::HandleEvent(struct libinput_event *li_event) noexcept
         event_device, LIBINPUT_DEVICE_CAP_KEYBOARD);
 
       if (is_pointer) {
-        n_pointers += (LIBINPUT_EVENT_DEVICE_ADDED == type) ? 1 : -1;
+        if (is_added)
+          ++n_pointers;
+        else if (n_pointers > 0)
+          --n_pointers;
       }
       if (is_touch) {
-        n_touch_screens += (LIBINPUT_EVENT_DEVICE_ADDED == type) ? 1 : -1;
+        if (is_added)
+          ++n_touch_screens;
+        else if (n_touch_screens > 0)
+          --n_touch_screens;
       }
       if (is_keyboard) {
-        n_keyboards += (LIBINPUT_EVENT_DEVICE_ADDED == type) ? 1 : -1;
+        if (is_added)
+          ++n_keyboards;
+        else if (n_keyboards > 0)
+          --n_keyboards;
       }
     }
     break;
@@ -210,6 +282,7 @@ LibInputHandler::HandleEvent(struct libinput_event *li_event) noexcept
       x = std::clamp<double>(x, 0, screen_size.width);
       y += libinput_event_pointer_get_dy(ptr_li_event);
       y = std::clamp<double>(y, 0, screen_size.height);
+      queue.Purge(Event::MOUSE_MOTION);
       queue.Push(Event(Event::MOUSE_MOTION, GetPosition()));
     }
     break;
@@ -221,6 +294,7 @@ LibInputHandler::HandleEvent(struct libinput_event *li_event) noexcept
                                                             screen_size.width);
       y = libinput_event_pointer_get_absolute_y_transformed(ptr_li_event,
                                                             screen_size.height);
+      queue.Purge(Event::MOUSE_MOTION);
       queue.Push(Event(Event::MOUSE_MOTION, GetPosition()));
     }
     break;
@@ -279,6 +353,7 @@ LibInputHandler::HandleEvent(struct libinput_event *li_event) noexcept
                                                  screen_size.width);
       y = libinput_event_touch_get_y_transformed(touch_li_event,
                                                  screen_size.height);
+      queue.Purge(Event::MOUSE_MOTION);
       queue.Push(Event(Event::MOUSE_MOTION, GetPosition()));
     }
     break;
@@ -288,11 +363,16 @@ LibInputHandler::HandleEvent(struct libinput_event *li_event) noexcept
 inline void
 LibInputHandler::HandlePendingEvents() noexcept
 {
+  if (li == nullptr)
+    return;
+
   libinput_dispatch(li);
   for (libinput_event *li_event = libinput_get_event(li);
        nullptr != li_event;
-       li_event = libinput_get_event(li))
+       li_event = libinput_get_event(li)) {
     HandleEvent(li_event);
+    libinput_event_destroy(li_event);
+  }
 }
 
 void

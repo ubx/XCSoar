@@ -174,7 +174,9 @@ public:
 
   bool invalidated;
 
+#ifdef ENABLE_OPENGL
   uint32_t render_state_token = 0;
+#endif
 
 #ifdef ANDROID
   Mutex paused_mutex;
@@ -242,10 +244,12 @@ public:
 #endif
 
 public:
+#ifdef ENABLE_OPENGL
   [[gnu::pure]]
   uint32_t GetRenderStateToken() const noexcept {
     return render_state_token;
   }
+#endif
 
 #ifdef ANDROID
   explicit TopWindow(UI::Display &_display) noexcept;
@@ -465,9 +469,11 @@ private:
 #endif
 
 protected:
+#ifdef ENABLE_OPENGL
   void BumpRenderStateToken() noexcept {
     ++render_state_token;
   }
+#endif
 
   PixelPoint PointToReal(PixelPoint p) const noexcept {
 #ifdef HAVE_HIGHDPI_SUPPORT
