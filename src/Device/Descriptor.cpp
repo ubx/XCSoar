@@ -29,6 +29,7 @@
 #include "Input/InputQueue.hpp"
 #include "LogFile.hpp"
 #include "Job/Job.hpp"
+#include "Operation/MessageOperationEnvironment.hpp"
 
 #ifdef ANDROID
 #include "java/Closeable.hxx"
@@ -42,6 +43,7 @@
 #endif
 
 #include <cassert>
+#include <optional>
 
 class OpenDeviceJob final : public Job {
   DeviceDescriptor &device;
@@ -55,6 +57,9 @@ public:
     device.DoOpen(env);
   };
 };
+
+static void
+FlushPortBeforePassThroughSwitch(Port &port, OperationEnvironment &env);
 
 DeviceDescriptor::DeviceDescriptor(DeviceBlackboard &_blackboard,
                                    NMEALogger *_nmea_logger,
@@ -543,6 +548,34 @@ DeviceDescriptor::Reopen(OperationEnvironment &env)
 }
 
 void
+DeviceDescriptor::OnReopenTimer() noexcept
+{
+  assert(InMainThread());
+  
+  // This runs after the 5-second delay
+  try {
+    static MessageOperationEnvironment env;
+    Open(env);
+  } catch (...) {
+    LogError(std::current_exception(), "Failed to reopen device after delay");
+  }
+  waiting_to_call_open = false;
+}
+
+void
+DeviceDescriptor::SlowReopen()
+{
+  assert(InMainThread());
+  assert(!IsBorrowed());
+
+  waiting_to_call_open = true;
+
+  Close();
+  // Schedule the Open() call after 5 seconds instead of blocking
+  reopen_timer.Schedule(std::chrono::seconds(5));
+}
+
+void
 DeviceDescriptor::AutoReopen(OperationEnvironment &env)
 {
   assert(InMainThread());
@@ -571,6 +604,13 @@ DeviceDescriptor::EnableNMEA(OperationEnvironment &env) noexcept
   bool success = false;
 
   try {
+    if (port != nullptr && driver != nullptr &&
+        driver->HasPassThrough() && config.use_second_device) {
+      /* Flush stale bytes before leaving DIRECT/passthrough mode so
+         the mode switch command is sent on a clean transport. */
+      FlushPortBeforePassThroughSwitch(*port, env);
+    }
+
     success = device->EnableNMEA(env);
   } catch (OperationCancelled) {
   } catch (...) {
@@ -1224,18 +1264,124 @@ DeclareToFLARM(const struct Declaration &declaration, Port &port,
   return FlarmDevice(port).Declare(declaration, home, env);
 }
 
+static void
+FlushPortBeforePassThroughSwitch(Port &port, OperationEnvironment &env)
+{
+  port.StopRxThread();
+  port.FullFlush(env, std::chrono::milliseconds(50),
+                 std::chrono::milliseconds(300));
+  port.StartRxThread();
+}
+
+static std::optional<unsigned>
+ReadLXGPSBaudrate(Device &device, std::optional<unsigned> &cached_baudrate,
+                  OperationEnvironment &env)
+{
+  auto *lx = dynamic_cast<LXDevice *>(&device);
+  if (lx == nullptr)
+    return std::nullopt;
+
+  if (!lx->ShouldSwitchHostBaudForPassThrough())
+    return std::nullopt;
+
+  unsigned baudrate = 0;
+  if (!lx->ReadLXGPSBaudrate(baudrate, env))
+    return cached_baudrate;
+
+  cached_baudrate = baudrate;
+  return baudrate;
+}
+
+class ScopeRestorePassThroughBaud final {
+  Port *port = nullptr;
+  unsigned old_baudrate = 0;
+  bool active = false;
+
+public:
+  void Arm(Port &_port, unsigned _old_baudrate) noexcept {
+    port = &_port;
+    old_baudrate = _old_baudrate;
+    /* Some Port backends may report 0 when baudrate is unknown.
+       Don't try to restore such values later. */
+    active = old_baudrate != 0;
+  }
+
+  void Restore(OperationEnvironment &env) noexcept {
+    if (!active || port == nullptr)
+      return;
+
+    try {
+      const unsigned current_baudrate = port->GetBaudrate();
+      if (current_baudrate != old_baudrate) {
+        FlushPortBeforePassThroughSwitch(*port, env);
+        port->SetBaudrate(old_baudrate);
+      }
+    } catch (...) {
+      LogError(std::current_exception(),
+               "Failed to restore passthrough baudrate");
+    }
+
+    active = false;
+  }
+
+  ~ScopeRestorePassThroughBaud() noexcept {
+    if (!active || port == nullptr)
+      return;
+
+    try {
+      const unsigned current_baudrate = port->GetBaudrate();
+      if (current_baudrate != old_baudrate)
+        port->SetBaudrate(old_baudrate);
+    } catch (...) {
+      LogError(std::current_exception(),
+               "Failed to restore passthrough baudrate");
+    }
+  }
+};
+
+static bool
+EnablePassThroughWithLXGPSBaud(Device &device, Port &port,
+                               OperationEnvironment &env,
+                               ScopeRestorePassThroughBaud &restore,
+                               std::optional<unsigned> &cached_baudrate)
+{
+  const auto gps_baudrate = ReadLXGPSBaudrate(device, cached_baudrate, env);
+  const unsigned old_baudrate = port.GetBaudrate();
+  restore.Arm(port, old_baudrate);
+
+  FlushPortBeforePassThroughSwitch(port, env);
+  if (!device.EnablePassThrough(env))
+    return false;
+
+  if (gps_baudrate.has_value()) {
+    /* Flush on the current baud first, then switch to the passthrough
+       target baud.  This avoids carrying stale bytes across rates. */
+    FlushPortBeforePassThroughSwitch(port, env);
+    port.SetBaudrate(*gps_baudrate);
+  }
+
+  return true;
+}
+
 static bool
 DeclareToFLARM(const struct Declaration &declaration,
                Port &port, const DeviceRegister &driver, Device *device,
                const Waypoint *home,
                OperationEnvironment &env)
 {
-  /* enable pass-through mode in the "front" device */
-  if (driver.HasPassThrough() && device != nullptr &&
-      !device->EnablePassThrough(env))
-    return false;
+  ScopeRestorePassThroughBaud restore_baud;
+  std::optional<unsigned> cached_baudrate;
 
-  return DeclareToFLARM(declaration, port, home, env);
+  /* enable pass-through mode in the "front" device */
+  if (driver.HasPassThrough() && device != nullptr) {
+    if (!EnablePassThroughWithLXGPSBaud(*device, port, env, restore_baud,
+                                        cached_baudrate))
+      return false;
+  }
+
+  const bool result = DeclareToFLARM(declaration, port, home, env);
+  restore_baud.Restore(env);
+  return result;
 }
 
 bool
@@ -1269,7 +1415,10 @@ DeviceDescriptor::Declare(const struct Declaration &declaration,
        to be drained while the mode switch settles. */
     port->StartRxThread();
 
-    device->EnablePassThrough(env);
+    ScopeRestorePassThroughBaud restore_baud;
+    if (!EnablePassThroughWithLXGPSBaud(*device, *port, env, restore_baud,
+                                        cached_lxgps_baudrate))
+      return result;
 
     /* Stop the Rx thread and flush all stale data from the serial
        buffers.  Then send a FLARM version request as a "ping" to
@@ -1290,7 +1439,19 @@ DeviceDescriptor::Declare(const struct Declaration &declaration,
     }
     port->StartRxThread();
 
+    /* Force protocol re-sync for each new pass-through session. */
+    second_device->LinkTimeout();
+
     result |= second_device->Declare(declaration, home, env);
+    if (result &&
+        dynamic_cast<FlarmDevice *>(second_device) != nullptr) {
+      /* Ensure PFLAR,0 (restart request) has been sent before we
+         restore baudrate / leave DIRECT mode. */
+      (void)port->Drain();
+      env.Sleep(std::chrono::milliseconds(250));
+    }
+
+    restore_baud.Restore(env);
   } else {
     /* no explicit passthrough device; try the "muxed FLARM" hack
        if FLARM sentences were detected in the NMEA stream */
@@ -1325,8 +1486,17 @@ DeviceDescriptor::ReadFlightList(RecordedFlightList &flight_list,
                 second_driver->display_name);
     env.SetText(text);
 
-    device->EnablePassThrough(env);
-    return second_device->ReadFlightList(flight_list, env);
+    ScopeRestorePassThroughBaud restore_baud;
+    if (!EnablePassThroughWithLXGPSBaud(*device, *port, env, restore_baud,
+                                        cached_lxgps_baudrate))
+      return false;
+
+    /* Force protocol re-sync for each new pass-through session. */
+    second_device->LinkTimeout();
+
+    const bool result = second_device->ReadFlightList(flight_list, env);
+    restore_baud.Restore(env);
+    return result;
   } else {
     text.Format("%s: %s.", _("Reading flight list"), driver->display_name);
     env.SetText(text);
@@ -1356,14 +1526,54 @@ DeviceDescriptor::DownloadFlight(const RecordedFlightInfo &flight,
                 second_driver->display_name);
     env.SetText(text);
 
-    device->EnablePassThrough(env);
-    return second_device->DownloadFlight(flight, path, env);
+    ScopeRestorePassThroughBaud restore_baud;
+    if (!EnablePassThroughWithLXGPSBaud(*device, *port, env, restore_baud,
+                                        cached_lxgps_baudrate))
+      return false;
+
+    /* Force protocol re-sync for each new pass-through session. */
+    second_device->LinkTimeout();
+
+    const bool result = second_device->DownloadFlight(flight, path, env);
+    restore_baud.Restore(env);
+    return result;
   } else {
     text.Format("%s: %s.", _("Downloading flight log"),
                 driver->display_name);
     env.SetText(text);
 
     return device->DownloadFlight(flight, path, env);
+  }
+}
+
+bool
+DeviceDescriptor::EnableSecondDeviceNMEA(OperationEnvironment &env) noexcept
+{
+  assert(borrowed);
+  assert(port != nullptr);
+  assert(driver != nullptr);
+  assert(device != nullptr);
+
+  if (port == nullptr || driver == nullptr || device == nullptr)
+    return false;
+
+  if (!driver->HasPassThrough() || second_device == nullptr)
+    return true;
+
+  try {
+    ScopeRestorePassThroughBaud restore_baud;
+    if (!EnablePassThroughWithLXGPSBaud(*device, *port, env, restore_baud,
+                                        cached_lxgps_baudrate))
+      return false;
+
+    const bool result = second_device->EnableNMEA(env);
+    restore_baud.Restore(env);
+    return result;
+  } catch (OperationCancelled) {
+    return false;
+  } catch (...) {
+    LogError(std::current_exception(), "EnableSecondDeviceNMEA() failed");
+    return false;
   }
 }
 

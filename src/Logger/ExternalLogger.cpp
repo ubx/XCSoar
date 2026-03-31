@@ -245,7 +245,22 @@ ShowFlightList(const RecordedFlightList &flight_list)
 void
 ExternalLogger::DownloadFlightFrom(DeviceDescriptor &device)
 {
+  class ScopeEnableSecondDeviceNMEA {
+    DeviceDescriptor &device;
+    OperationEnvironment &env;
+
+  public:
+    ScopeEnableSecondDeviceNMEA(DeviceDescriptor &_device,
+                                OperationEnvironment &_env) noexcept
+      :device(_device), env(_env) {}
+
+    ~ScopeEnableSecondDeviceNMEA() noexcept {
+      (void)device.EnableSecondDeviceNMEA(env);
+    }
+  };
+
   MessageOperationEnvironment env;
+  const ScopeEnableSecondDeviceNMEA enable_second_device_nmea{device, env};
 
   // Download the list of flights that the logger contains
   RecordedFlightList flight_list;
@@ -299,7 +314,7 @@ ExternalLogger::DownloadFlightFrom(DeviceDescriptor &device)
       case TriStateJobResult::ERROR:
         ShowMessageBox(_("Failed to download flight."),
                        _("Download flight"), MB_OK | MB_ICONERROR);
-        continue;
+        return;
 
       case TriStateJobResult::CANCELLED:
         continue;
@@ -310,7 +325,7 @@ ExternalLogger::DownloadFlightFrom(DeviceDescriptor &device)
       ShowError(_("Failed to download flight."),
                 std::current_exception(),
                 _("Download flight"));
-      continue;
+      return;
     }
 
     /* read the IGC header and build the final IGC file name with it */

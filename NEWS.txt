@@ -1,8 +1,21 @@
-Version 7.44 - not yet released
+Version 7.45 - not yet released
+* map
+  - obstacles hidden at wider map scales than other non-landables (5000 vs 10000)
+  - draw up to 1024 waypoints at once (was 256) #2327
+  - terrain: fix fluctuating hill-shading strength #2262
+* ui
+  - infoboxen: refresh titles after changing the interface language #2314
+  - infoboxen: add "Home" InfoBox (waypoint name, arrival height at home,
+    distance; tap to change home waypoint) #2320
+  - terrain: add new terrain shading orientation "fixed (Top Left)"
+* calculations
+  - restore FFVV NetCoupe contest optimisation #2330
+
+Version 7.44 - 2026-03-22
 * WaypointDetails
   - Add pan capability to the waypoint details image #1127
+  - Show waypoint type and runway width
 * calculations
-  - remove FFVV NetCoupe #1259
   - update sprint/league time window to 2 hours (as per OLC and DMSt rules)
   - update OLC League calculation to latest ruleset
   - improved circling wind algorithm: uses cosine curve fitting with True
@@ -23,6 +36,7 @@ Version 7.44 - not yet released
   - fix problem (introduced in v7.42) of first waypoint in user.cup waypoint
     file being ignored or being overwritten by any Waypoint Editor dialog
     function.
+  - add CUPX read support for waypoint detail data and embedded files
   - read PG landing waypoint type correctly in cup files #1539
   - fix line zone gate width from CUP file R1 parameter #2029
   - CUP files: correctly parse radius values with units (m, nm, ml) and
@@ -36,7 +50,7 @@ Version 7.44 - not yet released
   - fix text field truncation in waypoint editor (32-character limit
     removed) #1541
   - fix waypoint editor silently discarding altitude and type changes
-  - checklist: use .xcc extension, fix crash with empty profile path #2094
+  - checklists: use .xcc extension, fix crash with empty profile path #2094
   - checklists: add Markdown support (bold, links, checkboxes)
   - fix home waypoint lost on restart due to async terrain loading #2169
   - fix profile migration ordering of old waypoint/airspace keys
@@ -119,6 +133,7 @@ Version 7.44 - not yet released
   - fix UTF-8 text wrapping crash with non-ASCII characters #2184 #2185
   - display "---" instead of "???" for invalid map item values
   - fix profile not saved after team code, plane, or NOAA changes #2171
+  - gettext/po: translate updated entries in 32 language catalogs
 
 * Android
   - add Google Play compliant permission disclosure pages for location,

@@ -20,6 +20,7 @@
 #include "thread/Debug.hpp"
 #include "time/FloatDuration.hxx"
 #include "util/StaticFifoBuffer.hxx"
+#include "ui/event/Timer.hpp"
 
 #include <optional>
 
@@ -77,6 +78,11 @@ class DeviceDescriptor final
   DeviceFactory &factory;
 
   UI::Notify job_finished_notify{[this]{ OnJobFinished(); }};
+
+  /**
+   * Timer for delayed device reopening (used by SlowReopen).
+   */
+  UI::Timer reopen_timer{[this]{ OnReopenTimer(); }};
 
   /**
    * This mutex protects modifications of the attribute "device".  If
@@ -232,6 +238,15 @@ class DeviceDescriptor final
   ExternalSettings settings_received;
 
   /**
+   * Cached LXNAV BRGPS baudrate for passthrough sessions.
+   *
+   * If reading BRGPS fails intermittently, this keeps the last known
+   * value so repeated DIRECT transitions can still switch the host
+   * port to the downstream device's baudrate.
+   */
+  std::optional<unsigned> cached_lxgps_baudrate;
+
+  /**
    * If this device has failed, then this attribute may contain an
    * error message.
    */
@@ -270,6 +285,8 @@ class DeviceDescriptor final
    * @see CanBorrow(), Borrow()
    */
   bool borrowed = false;
+
+  bool waiting_to_call_open = false;
 
 public:
   DeviceDescriptor(DeviceBlackboard &_blackboard,
@@ -406,6 +423,8 @@ public:
    */
   void Reopen(OperationEnvironment &env);
 
+  void SlowReopen();
+
   /**
    * Call this periodically to auto-reopen a failed device after a
    * certain delay.
@@ -447,6 +466,10 @@ public:
 
   bool IsNMEAOut() const noexcept;
   bool IsManageable() const noexcept;
+
+  bool IsWaitingToCallOpen() const noexcept {
+    return waiting_to_call_open;
+  }
 
   bool IsBorrowed() const noexcept {
     return borrowed;
@@ -577,6 +600,14 @@ public:
   bool DownloadFlight(const RecordedFlightInfo &flight, Path path,
                       OperationEnvironment &env);
 
+  /**
+   * Caller is responsible for calling Borrow() and Return().
+   *
+   * For passthrough configurations, this temporarily enables
+   * passthrough and asks the second device to switch back to NMEA.
+   */
+  bool EnableSecondDeviceNMEA(OperationEnvironment &env) noexcept;
+
   void OnSysTicker() noexcept;
 
   /**
@@ -603,6 +634,8 @@ private:
 
   /* virtual methods from PortLineHandler */
   bool LineReceived(const char *line) noexcept override;
+
+  void OnReopenTimer() noexcept;
 
 #ifdef HAVE_INTERNAL_GPS
   /* methods from SensorListener */

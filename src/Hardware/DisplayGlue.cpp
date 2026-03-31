@@ -28,6 +28,13 @@ Display::LoadOrientation(VerboseOperationEnvironment &env)
     CommonInterface::GetUISettings().display.orientation;
 #endif
 
+#ifdef MESA_KMS
+  /* In KMS mode, DEFAULT follows the detected initial orientation so
+     DEFAULT still runs through the orientation pipeline. */
+  if (orientation == DisplayOrientation::DEFAULT)
+    orientation = DetectInitialOrientation();
+#endif
+
 #if defined(KOBO) || defined(COLIBRI)
   /* on the Kobo, the display orientation must be loaded explicitly
      (portrait), because the hardware default is landscape */

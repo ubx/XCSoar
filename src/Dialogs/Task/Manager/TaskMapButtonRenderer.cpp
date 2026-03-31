@@ -66,6 +66,8 @@ TaskMapButtonRenderer::DrawButton(Canvas &canvas, const PixelRect &rc,
     buffer.Begin(canvas);
 #endif
 
+    buffer.Clear(UIGlobals::GetDialogLook().background_color);
+
     const PixelRect map_rc = CenteredSquare(PixelRect{new_size});
     DrawTask(buffer, map_rc, look, *task);
 

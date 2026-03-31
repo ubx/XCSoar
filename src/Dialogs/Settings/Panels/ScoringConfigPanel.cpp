@@ -3,6 +3,7 @@
 
 #include "ScoringConfigPanel.hpp"
 #include "Profile/Keys.hpp"
+#include "Profile/Profile.hpp"
 #include "Form/DataField/Enum.hpp"
 #include "Form/DataField/Boolean.hpp"
 #include "Form/DataField/Listener.hpp"
@@ -95,6 +96,14 @@ ScoringConfigPanel::Prepare([[maybe_unused]] ContainerWindow &parent,
     { Contest::SIS_AT, ContestToString(Contest::SIS_AT),
       N_("Austrian online glider contest. Tracks around max. six waypoints are scored. The "
           "bounding box part with 1 km = 1.0 point and the additional zick-zack part with 1 km = 0.5 p.") },
+    { Contest::NET_COUPE, ContestToString(Contest::NET_COUPE),
+      N_("FFVP Federal Cup (NetCoupe) on WeGlide. The scored path has at most "
+          "three turnpoints between start and finish and at least 25 km total. "
+          "Points are proportional to credited distance, 100 divided by the "
+          "glider handicap (DAeC-style index), and a success factor of 1.0 for "
+          "a free flight or 1.2 for a task declared electronically before "
+          "takeoff. XCSoar live scoring uses a success factor of 1.0 only, not "
+          "the 1.2 multiplier for declared tasks.") },
     { Contest::WEGLIDE_FREE, ContestToString(Contest::WEGLIDE_FREE),
       N_("WeGlide combines multiple scoring systems in the WeGlide Free contest. The free score is a combination "
           "of the free distance score and the area bonus. For the area bonus, the scoring program determines the "
@@ -168,6 +177,14 @@ ScoringConfigPanel::Save(bool &_changed) noexcept
   changed |= SaveValue(SHOW_95_PERCENT_RULE_HELPERS,
                        ProfileKeys::Show95PercentRuleHelpers,
                        map_settings.show_95_percent_rule_helpers);
+
+  /* Mark profile as using current Contest enum encoding (see ContestProfile). */
+  unsigned contest_enum_layout = 0;
+  if (!Profile::Get(ProfileKeys::ContestEnumLayout, contest_enum_layout) ||
+      contest_enum_layout < 2U) {
+    Profile::Set(ProfileKeys::ContestEnumLayout, 2U);
+    changed = true;
+  }
 
   _changed |= changed;
 

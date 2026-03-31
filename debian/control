@@ -4,6 +4,8 @@ Priority: extra
 Maintainer: XCSoar Project <maintainer@xcsoar.org>
 Build-Depends: debhelper (>= 12~),
  g++ (>= 4:10),
+ xvfb,
+ xauth,
  libfmt-dev (>= 7),
  libdbus-1-dev,
  libraspberrypi-dev | libegl1-mesa-dev | libsdl2-dev,
@@ -25,7 +27,8 @@ Build-Depends: debhelper (>= 12~),
  bzip2,
  quilt,
  sox,
- gettext
+ gettext,
+ python3-polib
 Standards-Version: 3.9.1.0
 Homepage: https://xcsoar.org/
 

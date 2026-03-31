@@ -263,6 +263,28 @@ To compile with the iOS simulator SDK, run::
 
   make TARGET=IOS64SIM ipa
 
+To build and run simulator tests automatically, run::
+
+  make check-ios-sim
+
+This target builds simulator artifacts (``TARGET=IOS64SIM``), installs
+``XCSoar.app`` into an available simulator (default: ``iPhone 16 Pro``), and
+executes selected test binaries in the simulator runtime.
+
+Implementation note: the runner uses a Python script
+(``darwin/check-ios-sim.py``) and discovers simulators via
+``xcrun simctl list devices available --json``.
+Execution is delegated to the existing Perl TAP harness
+(``test/src/testall.pl``) using generated simulator wrapper executables.
+
+Optional environment variables::
+
+  SIM_DEVICE_NAME="iPhone 16"      # Choose simulator model
+  SIM_TESTS_MODE=all               # Default mode: run all test_* / Test* binaries
+  SIM_TESTS_MODE=smoke             # Run only smoke subset from SIM_SMOKE_TESTS
+  SIM_SMOKE_TESTS="TestCRC8 ..."  # Override smoke test selection
+  SIM_SKIP_TESTS="TestWrapText"    # Space-separated tests to skip in simulator
+
 To compile for iOS / ARMv7, run::
 
   make TARGET=IOS32 ipa
@@ -425,22 +447,22 @@ Defaults shown are from the build system (they can be overridden with
    - Notes
  * - ``UNIX``
    - Linux/Unix (native)
-   - yes
+   - no
    - OpenGL
    - Default on Unix-like hosts; main desktop build.
  * - ``UNIX32``
    - Linux/Unix 32-bit
-   - yes
+   - no
    - OpenGL
    - ``UNIX`` with ``-m32``.
  * - ``UNIX64``
    - Linux/Unix 64-bit
-   - yes
+   - no
    - OpenGL
    - ``UNIX`` with ``-m64``.
  * - ``OPT``
    - Linux/Unix optimized
-   - yes
+   - no
    - OpenGL
    - Alias for ``UNIX`` with ``DEBUG=n`` (set ``TARGET_OUTPUT_DIR`` if
      you want a separate output tree).

@@ -2,6 +2,7 @@
 // Copyright The XCSoar Project
 
 #include "Contests.hpp"
+#include "../Settings.hpp"
 #include "util/Macros.hpp"
 
 static const char *const contest_to_string[] = {
@@ -19,8 +20,13 @@ static const char *const contest_to_string[] = {
   "WeGlide FAI",
   "WeGlide O&R",
   "Charron",
+  "FFVV NetCoupe",
   "None",
 };
+
+static_assert(
+    ARRAY_SIZE(contest_to_string) == unsigned(Contest::NONE) + 1,
+    "contest_to_string must follow Contest enum order");
 
 const char*
 ContestToString(Contest contest) noexcept

@@ -32,6 +32,12 @@ enum class Contest : uint8_t {
 
   CHARRON,
 
+  /**
+   * FFVP Federal Cup (NetCoupe); placed before #NONE so profile values
+   * 0..13 stay aligned with v7.44 after NET_COUPE was removed from the enum.
+   */
+  NET_COUPE,
+
   NONE,
 };
 

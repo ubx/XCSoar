@@ -76,6 +76,7 @@ TEST_NAMES = \
 	TestWaypoints \
 	test_pressure \
 	test_task \
+	TestInputTransformMode \
 	TestOverwritingRingBuffer \
 	TestDateTime TestRoughTime TestWrapClock \
 	TestPolylineDecoder \
@@ -121,6 +122,7 @@ TEST_NAMES = \
 	TestPackedFloat \
 	TestVersionNumber \
 	TestWeglideScoring \
+	TestNetCoupeScoring \
 	TestDMStScoring \
 	TestHttpsVerify
 
@@ -580,6 +582,12 @@ TEST_INPUT_CONFIG_CPPFLAGS = $(SCREEN_CPPFLAGS)
 TEST_INPUT_CONFIG_DEPENDS = IO OS UTIL
 $(eval $(call link-program,TestInputConfig,TEST_INPUT_CONFIG))
 
+TEST_INPUT_TRANSFORM_MODE_SOURCES = \
+	$(TEST_SRC_DIR)/tap.c \
+	$(TEST_SRC_DIR)/TestInputTransformMode.cpp
+TEST_INPUT_TRANSFORM_MODE_DEPENDS = UTIL
+$(eval $(call link-program,TestInputTransformMode,TEST_INPUT_TRANSFORM_MODE))
+
 TEST_POLARS_SOURCES = \
 	$(SRC)/Polar/Shape.cpp \
 	$(SRC)/Polar/Polar.cpp \
@@ -733,6 +741,11 @@ TEST_DRIVER_SOURCES = \
 	$(SRC)/FLARM/Calculations.cpp \
 	$(SRC)/FLARM/List.cpp \
 	$(SRC)/FLARM/Details.cpp \
+	$(IO_SRC_DIR)/DataFile.cpp \
+	$(SRC)/FLARM/MessagingFile.cpp \
+	$(SRC)/LocalPath.cpp \
+	$(SRC)/Profile/FlarmProfile.cpp \
+	$(SRC)/Profile/Profile.cpp \
 	$(SRC)/IGC/IGCParser.cpp \
 	$(SRC)/IGC/Generator.cpp \
 	$(SRC)/Computer/ClimbAverageCalculator.cpp \
@@ -742,6 +755,7 @@ TEST_DRIVER_SOURCES = \
 	$(SRC)/TransponderCode.cpp \
 	$(SRC)/TransponderMode.cpp \
 	$(SRC)/Formatter/NMEAFormatter.cpp \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(ENGINE_SRC_DIR)/Waypoint/Waypoint.cpp \
 	$(SRC)/Engine/GlideSolvers/GlidePolar.cpp \
 	$(TEST_SRC_DIR)/tap.c \
@@ -788,6 +802,9 @@ check: $(TESTS) | $(OUT)/test/dirstamp
 
 check-no-build: $(OUT)/test/dirstamp
 	$(PERL) $(TEST_SRC_DIR)/testall.pl $(TESTS)
+
+check-ios-sim:
+	$(Q)/usr/bin/env python3 $(topdir)/darwin/check-ios-sim.py
 
 DEBUG_PROGRAM_NAMES = \
 	test_reach \
@@ -945,6 +962,7 @@ DEBUG_REPLAY_SOURCES = \
 	$(SRC)/Engine/Task/Stats/TaskStats.cpp \
 	$(SRC)/Engine/Task/Stats/CommonStats.cpp \
 	$(SRC)/Engine/Task/Stats/ElementStat.cpp \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/FakeMessage.cpp \
 	$(TEST_SRC_DIR)/FakeLanguage.cpp \
 	$(TEST_SRC_DIR)/FakeGeoid.cpp \
@@ -1333,6 +1351,7 @@ RUN_DEVICE_DRIVER_SOURCES = \
 	$(SRC)/Atmosphere/Pressure.cpp \
 	$(SRC)/TransponderCode.cpp \
 	$(SRC)/Formatter/NMEAFormatter.cpp \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/FakeMessage.cpp \
 	$(TEST_SRC_DIR)/FakeLanguage.cpp \
 	$(TEST_SRC_DIR)/FakeGeoid.cpp \
@@ -1355,6 +1374,7 @@ RUN_DECLARE_SOURCES = \
 	$(SRC)/Atmosphere/Pressure.cpp \
 	$(SRC)/TransponderCode.cpp \
 	$(SRC)/Formatter/NMEAFormatter.cpp \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/FakeLanguage.cpp \
 	$(TEST_SRC_DIR)/FakeGeoid.cpp \
 	$(TEST_SRC_DIR)/FakeMessage.cpp \
@@ -2516,6 +2536,12 @@ TEST_WEGLIDE_SCORING_SOURCES = \
 	$(TEST_SRC_DIR)/TestWeglideScoring.cpp
 TEST_WEGLIDE_SCORING_DEPENDS = MATH
 $(eval $(call link-program,TestWeglideScoring,TEST_WEGLIDE_SCORING))
+
+TEST_NETCOUPE_SCORING_SOURCES = \
+	$(TEST_SRC_DIR)/tap.c \
+	$(TEST_SRC_DIR)/TestNetCoupeScoring.cpp
+TEST_NETCOUPE_SCORING_DEPENDS = MATH
+$(eval $(call link-program,TestNetCoupeScoring,TEST_NETCOUPE_SCORING))
 
 TEST_DMST_SCORING_SOURCES = \
 	$(TEST_SRC_DIR)/tap.c \

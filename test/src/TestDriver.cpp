@@ -53,6 +53,7 @@
 #include "FaultInjectionPort.hpp"
 #include "Input/InputEvents.hpp"
 #include "Logger/Settings.hpp"
+#include "LocalPath.hpp"
 #include "NMEA/Info.hpp"
 #include "Operation/Operation.hpp"
 #include "Plane/Plane.hpp"
@@ -60,12 +61,46 @@
 #include "TestUtil.hpp"
 #include "Units/System.hpp"
 #include "io/NullDataHandler.hpp"
+#include "system/Path.hpp"
+#include "util/StaticString.hxx"
 #include "util/ByteOrder.hxx"
 #include "util/PackedFloat.hxx"
 
+#include <chrono>
 #include <memory>
 
+#ifdef _WIN32
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
+
 static const DeviceConfig dummy_config = DeviceConfig();
+
+static unsigned long
+GetProcessId() noexcept
+{
+#ifdef _WIN32
+  return (unsigned long)_getpid();
+#else
+  return (unsigned long)getpid();
+#endif
+}
+
+static AllocatedPath
+MakeTestDriverDataPath() noexcept
+{
+  using namespace std::chrono;
+
+  const auto timestamp = duration_cast<microseconds>(
+    system_clock::now().time_since_epoch()).count();
+
+  StaticString<96> name;
+  name.Format("TestDriverDataPath-%lld-%lu",
+              (long long)timestamp,
+              GetProcessId());
+  return AllocatedPath::Build(Path("output"), name.c_str());
+}
 
 /*
  * Unit tests
@@ -1832,7 +1867,8 @@ TestLXNavDeclare()
     const auto oz_line = LXNavDeclare::FormatOZLine(decl_line, 0);
     ok1(oz_line.find("Line=1") != std::string::npos);
     ok1(oz_line.find("R1=3000m") != std::string::npos);
-    ok1(oz_line.find("A1=90.0") != std::string::npos);
+    ok1(oz_line.find("A1=45.0") != std::string::npos);
+    ok1(oz_line.find("A2=0.0") != std::string::npos);
 
     const auto oz_cyl = LXNavDeclare::FormatOZLine(decl_line, 1);
     ok1(oz_cyl.find("Line=1") == std::string::npos);
@@ -1904,7 +1940,7 @@ TestLXNavDeclare()
     ok1(oz_kh.find("R1=10000m") != std::string::npos);
     ok1(oz_kh.find("R2=500m") != std::string::npos);
     ok1(oz_kh.find("A2=180.0") != std::string::npos);
-    ok1(oz_kh.find("A1=90.0") != std::string::npos);
+    ok1(oz_kh.find("A1=45.0") != std::string::npos);
   }
 
   /* Test C-record with elevation */
@@ -2857,10 +2893,14 @@ TestMalformedInput()
 
 int main()
 {
+  const auto data_path = MakeTestDriverDataPath();
+  SetSingleDataPath(data_path);
+  CreateDataPath();
+
   plan_tests(1032 /* drivers */ + 29 /* PFLAU extended */
              + 37 /* PFLAA v7+ */ + 12 /* PFLAE */ + 10 /* PFLAJ */
              + 16 /* PFLAQ */
-             + 106 /* LXNav protocol 1.05 */
+             + 107 /* LXNav protocol 1.05 */
              + 8 /* SubSecond */ + 4 /* MWVStatus */
              + 5 /* MWVRelativeTrue */ + 4 /* StallRatio */
              + 12 /* TempHumidityValidity */ + 2 /* ReadGeoAngleNoDot */
@@ -2930,5 +2970,6 @@ int main()
   TestGSA();
   TestMalformedInput();
 
+  DeinitialiseDataPath();
   return exit_status();
 }
