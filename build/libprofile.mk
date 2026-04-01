@@ -12,4 +12,8 @@ PROFILE_SOURCES = \
 
 PROFILE_DEPENDS = FMT
 
+ifeq ($(TARGET_IS_COLIBRI),y)
+$(call SRC_TO_OBJ,$(SRC)/Profile/File.cpp): CXXFLAGS += -fno-merge-constants
+endif
+
 $(eval $(call link-library,profile,PROFILE))
