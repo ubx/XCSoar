@@ -261,11 +261,9 @@ TopCanvas::Flip()
 #endif
                     );
 #else
-  CopyFromBGRA(map, map_pitch, map_bpp, buffer,
+  CopyFromBGRA(map, map_pitch, map_bpp, buffer
 #ifdef SOFTWARE_ROTATE_DISPLAY
-               orientation
-#else
-               DisplayOrientation::DEFAULT
+               , orientation
 #endif
                );
 #endif
@@ -301,21 +299,17 @@ TopCanvas::Flip()
   };
 
   ioctl(fd, MXCFB_SEND_UPDATE, &epd_update_data);
-#elif defined(COLIBRI)
-  Wait();
 #endif
 
 #endif /* USE_FB */
 }
 
-#if defined(KOBO) || defined(COLIBRI)
+#if defined(KOBO)
 
 void
 TopCanvas::Wait() noexcept
 {
-#ifdef KOBO
   ioctl(fd, MXCFB_WAIT_FOR_UPDATE_COMPLETE, &epd_update_marker);
-#endif
 }
 
 #endif

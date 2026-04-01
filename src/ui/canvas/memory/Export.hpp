@@ -7,6 +7,7 @@
 #include "PixelTraits.hpp"
 #include "DisplayOrientation.hpp"
 #include "ui/canvas/PortableColor.hpp"
+#include "ui/canvas/Features.hpp"
 #include "util/Compiler.h"
 
 #ifdef DITHER
@@ -65,6 +66,7 @@ BGRAToRGB565(RGB565Color *dest, const BGRA8Color *src, unsigned n)
 
 #ifdef GREYSCALE
 
+#ifdef SOFTWARE_ROTATE_DISPLAY
 void
 CopyFromGreyscale(
 #ifdef DITHER
@@ -73,20 +75,26 @@ CopyFromGreyscale(
 #ifdef KOBO
                   bool enable_dither,
 #endif
-
-#ifdef COLIBRI
                   void *dest_pixels, unsigned dest_pitch, unsigned dest_bpp,
                   ConstImageBuffer<GreyscalePixelTraits> src,
                   DisplayOrientation orientation);
 #else
+void
+CopyFromGreyscale(
+#ifdef DITHER
+                  Dither &dither,
+#endif
+#ifdef KOBO
+                  bool enable_dither,
+#endif
                   void *dest_pixels, unsigned dest_pitch, unsigned dest_bpp,
                   ConstImageBuffer<GreyscalePixelTraits> src);
-                  #endif
+#endif
 
 
 #else
 
-#ifdef COLIBRI
+#ifdef SOFTWARE_ROTATE_DISPLAY
 void
 CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
              ConstImageBuffer<BGRAPixelTraits> src,

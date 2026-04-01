@@ -10,7 +10,7 @@
 
 #include <cassert>
 
-#ifdef COLIBRI
+#ifdef SOFTWARE_ROTATE_DISPLAY
 #include <algorithm>
 
 template<typename D, typename S, typename C>
@@ -105,7 +105,7 @@ CopyFromGreyscale(
 #endif
                   void *dest_pixels, unsigned dest_pitch, [[maybe_unused]] unsigned dest_bpp,
                   ConstImageBuffer<GreyscalePixelTraits> src
-#ifdef COLIBRI
+#ifdef SOFTWARE_ROTATE_DISPLAY
                   ,DisplayOrientation orientation)
 
   if (orientation != DisplayOrientation::DEFAULT &&
@@ -183,7 +183,7 @@ CopyFromGreyscale(
 void
 CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
              ConstImageBuffer<BGRAPixelTraits> src
-#ifdef COLIBRI
+#ifdef SOFTWARE_ROTATE_DISPLAY
              ,DisplayOrientation orientation)
 #else
 )
@@ -200,7 +200,7 @@ CopyFromBGRA(void *_dest_pixels, unsigned _dest_pitch, unsigned dest_bpp,
     RGB565Color *dest_pixels = reinterpret_cast<RGB565Color *>(_dest_pixels);
     const BGRA8Color *src_pixels = src.data;
 
-#ifdef COLIBRI
+#ifdef SOFTWARE_ROTATE_DISPLAY
     if (orientation == DisplayOrientation::DEFAULT ||
         orientation == DisplayOrientation::LANDSCAPE) {
       for (unsigned row = src.size.height; row > 0;

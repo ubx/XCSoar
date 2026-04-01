@@ -349,22 +349,19 @@ struct BGRAPixelTraits {
   }
 
   static color_type ReadPixel(const_pointer p) {
-    const integer_type *const pi = reinterpret_cast<const integer_type *>(p);
-    return FromInteger(*pi);
+    integer_type ci;
+    memcpy(&ci, p, sizeof(ci));
+    return FromInteger(ci);
   }
 
   static void WritePixel(pointer p, color_type c) {
-    integer_type *const pi = reinterpret_cast<integer_type *>(p);
-    *pi = ToInteger(c);
+    integer_type ci = ToInteger(c);
+    memcpy(p, &ci, sizeof(ci));
   }
 
   static void FillPixels(pointer p, unsigned n, color_type c) {
-    /* gcc is pretty bad at optimising BGRA8Color assignment; the
-       following switches to 32 bit integer operations */
-    integer_type *const pi = reinterpret_cast<integer_type *>(p);
-    const integer_type ci = ToInteger(c);
-
 #if defined(__GNUC__) && defined(__x86_64__)
+    const integer_type ci = ToInteger(c);
     const uint64_t cl = (uint64_t(ci) << 32) | uint64_t(ci);
 
     [[maybe_unused]] size_t dummy0, dummy1;
@@ -382,11 +379,12 @@ struct BGRAPixelTraits {
                  "0:\n"
 
                  : "=&c"(dummy0), "=&D"(dummy1)
-                 : "a"(cl), "0"(size_t(n)), "1"(pi)
+                 : "a"(cl), "0"(size_t(n)), "1"(p)
                  : "memory"
                  );
 #else
-    std::fill_n(pi, n, ci);
+    for (unsigned i = 0; i < n; ++i)
+      WritePixel(Next(p, i), c);
 #endif
   }
 

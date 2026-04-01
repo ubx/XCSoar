@@ -9,10 +9,7 @@
 #include <TargetConditionals.h>
 #endif
 
-#ifdef COLIBRI
 #include "ui/canvas/Features.hpp"
-#endif
-
 #ifdef USE_MEMORY_CANVAS
 #include "ui/canvas/memory/PixelTraits.hpp"
 #include "ui/canvas/memory/ActivePixelTraits.hpp"
@@ -44,13 +41,7 @@
 
 #include <cstdint>
 
-#ifdef SOFTWARE_ROTATE_DISPLAY
-#ifdef COLIBRI
 #include "DisplayOrientation.hpp"
-#else
-enum class DisplayOrientation : uint8_t;
-#endif
-#endif
 
 struct SDL_Window;
 struct SDL_Renderer;
@@ -59,7 +50,7 @@ class Canvas;
 struct PixelSize;
 namespace UI { class Display; }
 
-#if defined(USE_FB) && !defined(KOBO) && !defined(COLIBRI)
+#if defined(USE_FB) && !defined(KOBO)
 /* defined if we need to initialise /dev/tty to graphics mode, see
    TopCanvas::InitialiseTTY() */
 #define USE_TTY
@@ -116,8 +107,10 @@ class TopCanvas
 #endif
 #endif /* USE_MEMORY_CANVAS */
 
-#if defined(SOFTWARE_ROTATE_DISPLAY) && defined(COLIBRI)
+#ifdef SOFTWARE_ROTATE_DISPLAY
   DisplayOrientation orientation = DisplayOrientation::DEFAULT;
+#else
+  static constexpr DisplayOrientation orientation = DisplayOrientation::DEFAULT;
 #endif
 
 #ifdef USE_FB
@@ -129,7 +122,7 @@ class TopCanvas
   uint32_t epd_update_marker;
 #endif // USE_FB
 
-#if defined(KOBO) || defined(COLIBRI)
+#ifdef KOBO
   /**
    * Runtime flag that can be used to disable dithering at runtime for
    * some situations.
@@ -270,7 +263,7 @@ public:
 
   void Flip();
 
-#if defined(KOBO) || defined(COLIBRI)
+#ifdef KOBO
   /**
    * Wait until the screen update is complete.
    */
@@ -282,7 +275,7 @@ public:
 #endif
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
-  PixelSize SetDisplayOrientation(DisplayOrientation orientation) noexcept;
+  PixelSize SetDisplayOrientation(DisplayOrientation _orientation) noexcept;
 #endif
 
 private:
