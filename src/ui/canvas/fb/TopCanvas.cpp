@@ -299,17 +299,21 @@ TopCanvas::Flip()
   };
 
   ioctl(fd, MXCFB_SEND_UPDATE, &epd_update_data);
+#elif defined(COLIBRI)
+  Wait();
 #endif
 
 #endif /* USE_FB */
 }
 
-#if defined(KOBO)
+#if defined(KOBO) || defined(COLIBRI)
 
 void
 TopCanvas::Wait() noexcept
 {
+#ifdef KOBO
   ioctl(fd, MXCFB_WAIT_FOR_UPDATE_COMPLETE, &epd_update_marker);
+#endif
 }
 
 #endif
