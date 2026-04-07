@@ -13,7 +13,7 @@ from build.musl import MuslProject
 
 binutils = BinutilsProject(
     (
-        "https://ftpmirror.gnu.org/binutils/binutils-2.42.tar.xz",
+        "https://ftp.gnu.org/gnu/binutils/binutils-2.42.tar.xz",
         "https://sourceware.org/pub/binutils/releases/binutils-2.42.tar.xz",
     ),
     "f6e4d41fd5fc778b06b7891457b3620da5ecea1006c6a4a41ae998109f85a800",
@@ -29,7 +29,7 @@ binutils = BinutilsProject(
 
 linux_headers = SabotageLinuxHeadersProject(
     (
-        "http://ftp.barfooze.de/pub/sabotage/tarballs/linux-headers-4.19.88.tar.xz",
+        "https://ftp.barfooze.de/pub/sabotage/tarballs/linux-headers-4.19.88.tar.xz",
         "https://mirrors.2f30.org/sabotage/tarballs/linux-headers-4.19.88.tar.xz",
     ),
     "5a975ba49b577869f2338aa80f44efd4e94f76e5b4bda11a6a1761a6d646848fdeaad7c820339b2c1c20d55f9bbf0e686121d621ac1cfa1dfc6cd71a166ade3a",
@@ -198,10 +198,10 @@ libsodium = AutotoolsProject(
 
 zlib = ZlibProject(
     (
-        "http://zlib.net/zlib-1.3.1.tar.xz",
-        "https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.xz",
+        "http://zlib.net/zlib-1.3.2.tar.xz",
+        "https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.xz",
     ),
-    "38ef96b8dfe510d42707d9c781877914792541133e1870841463bfa73f883e32",
+    "d7a0654783a4da529d1bb793b7ad9c3318020af77667bcae35f95d0e42a792f3",
     "lib/libz.a",
 )
 
@@ -347,7 +347,7 @@ libpng = CmakeProject(
 libjpeg = CmakeProject(
     (
         "http://downloads.sourceforge.net/project/libjpeg-turbo/3.0.1/libjpeg-turbo-3.0.1.tar.gz",
-        "https://netcologne.dl.sourceforge.net/project/libjpeg-turbo/3.0.1/libjpeg-turbo-3.0.1.tar.gz",
+        "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.0.1/libjpeg-turbo-3.0.1.tar.gz",
     ),
     "22429507714ae147b3acacd299e82099fce5d9f456882fc28e252e4579ba2a75",
     "lib/libjpeg.a",
@@ -498,8 +498,8 @@ lua = LuaProject(
 
 libsalsa = AutotoolsProject(
     (
+        "https://ftp.suse.com/pub/people/tiwai/salsa-lib/salsa-lib-0.1.6.tar.bz2",
         "ftp://ftp.suse.com/pub/people/tiwai/salsa-lib/salsa-lib-0.1.6.tar.bz2",
-        "https://mirror.linux-ia64.org/ftp_suse_com/people/tiwai/salsa-lib/salsa-lib-0.1.6.tar.bz2",
     ),
     "08a6481cdbf4c79e05a9cba3b6c48375",
     "lib/libsalsa.a",

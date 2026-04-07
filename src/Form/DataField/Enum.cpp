@@ -8,8 +8,6 @@
 
 #include <algorithm>
 
-#include <stdlib.h>
-
 DataFieldEnum::Entry::~Entry() noexcept
 {
   free(string);
@@ -23,6 +21,9 @@ DataFieldEnum::Entry::~Entry() noexcept
 void
 DataFieldEnum::Entry::SetString(const char *_string) noexcept
 {
+  if (_string == nullptr)
+    _string = "";
+
   free(string);
   if (display_string != string)
     free(display_string);
@@ -35,7 +36,11 @@ DataFieldEnum::Entry::SetDisplayString(const char *_string) noexcept
 {
   if (display_string != string)
     free(display_string);
-  display_string = strdup(_string);
+
+  if (_string == nullptr)
+    display_string = string;
+  else
+    display_string = strdup(_string);
 }
 
 void
@@ -70,47 +75,59 @@ DataFieldEnum::replaceEnumText(std::size_t i, const char *Text) noexcept
 bool
 DataFieldEnum::AddChoice(unsigned id, const char *text,
                          const char *display_string,
-                         const char *help) noexcept
+                         const char *help)
 {
-  if (entries.full())
+  if (text == nullptr)
     return false;
 
-  Entry &entry = entries.append();
+  Entry &entry = entries.emplace_back();
   entry.Set(id, text, display_string, help);
   return true;
 }
 
 void
-DataFieldEnum::AddChoices(const StaticEnumChoice *p) noexcept
+DataFieldEnum::AddChoices(const StaticEnumChoice *p)
 {
+  if (p == nullptr)
+    return;
+
   while (p->display_string != nullptr) {
     const char *help = p->help;
     if (help != nullptr)
       help = gettext(help);
 
-    AddChoice(p->id, gettext(p->display_string), nullptr, help);
+    if (p->display_string[0] != '\0')
+      AddChoice(p->id, gettext(p->display_string), nullptr, help);
+
     ++p;
   }
 }
 
 unsigned
 DataFieldEnum::addEnumText(const char *Text, const char *display_string,
-                           const char *_help) noexcept
+                           const char *_help)
 {
-  if (entries.full())
-    return 0;
+  if (Text == nullptr)
+    return entries.size();
 
   unsigned i = entries.size();
-  Entry &entry = entries.append();
+  Entry &entry = entries.emplace_back();
   entry.Set(i, Text, display_string, _help);
   return i;
 }
 
 void
-DataFieldEnum::addEnumTexts(const char *const*list) noexcept
+DataFieldEnum::addEnumTexts(const char *const*list)
 {
-  while (*list != nullptr)
-    addEnumText(*list++);
+  if (list == nullptr)
+    return;
+
+  while (*list != nullptr) {
+    if ((*list)[0] != '\0')
+      addEnumText(*list);
+
+    ++list;
+  }
 }
 
 const char *
@@ -190,8 +207,11 @@ DataFieldEnum::ModifyValue(const char *text) noexcept
 }
 
 int
-DataFieldEnum::SetStringAutoAdd(const char *text) noexcept
+DataFieldEnum::SetStringAutoAdd(const char *text)
 {
+  if (text == nullptr || text[0] == '\0')
+    return -1;
+
   int index = Find(text);
   if (index >= 0) {
     SetIndex(index, false);
