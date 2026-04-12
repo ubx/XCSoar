@@ -5,7 +5,7 @@
 #include "../shared/Event.hpp"
 #include "DisplayOrientation.hpp"
 
-#if defined(KOBO) || defined(COLIBRI)
+#ifndef USE_LIBINPUT
 #include <cstdio>
 #endif
 
@@ -13,12 +13,13 @@ namespace UI {
 
 InputEventQueue::InputEventQueue(EventQueue &queue) noexcept
   :
-#if defined(KOBO) || defined(COLIBRI)
+#ifndef USE_LIBINPUT
    merge_mouse()
 #else
    libinput_handler(queue)
 #endif
 {
+#ifndef USE_LIBINPUT
 #ifdef KOBO
   devices.emplace_front(queue, merge_mouse);
   /* power button */
@@ -50,6 +51,16 @@ InputEventQueue::InputEventQueue(EventQueue &queue) noexcept
       devices.pop_front();
   }
 #else
+  for (unsigned i = 0; i < 32; ++i) {
+    char path[64];
+    std::sprintf(path, "/dev/input/event%u", i);
+
+    devices.emplace_front(queue, merge_mouse);
+    if (!devices.front().Open(path))
+      devices.pop_front();
+  }
+#endif
+#else
   libinput_handler.Open();
 #endif
 }
@@ -59,7 +70,7 @@ InputEventQueue::~InputEventQueue() noexcept = default;
 bool
 InputEventQueue::Generate([[maybe_unused]] Event &event) noexcept
 {
-#if defined(KOBO) || defined(COLIBRI)
+#ifndef USE_LIBINPUT
   event = merge_mouse.Generate();
   if (event.type != Event::Type::NOP)
     return true;

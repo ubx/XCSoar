@@ -3,7 +3,7 @@
 
 #pragma once
 
-#if defined(KOBO) || defined(COLIBRI)
+#ifndef USE_LIBINPUT
 #include "linux/MergeMouse.hpp"
 #include "linux/Input.hpp"
 #include <forward_list>
@@ -23,7 +23,7 @@ class EventQueue;
 struct Event;
 
 class InputEventQueue final {
-#if defined(KOBO) || defined(COLIBRI)
+#ifndef USE_LIBINPUT
   MergeMouse merge_mouse;
   std::forward_list<LinuxInputDevice> devices;
 #else
