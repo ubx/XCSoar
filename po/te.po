@@ -426,7 +426,7 @@ msgstr "సర్చిన ఆకారం"
 msgid "Loading Airspace File..."
 msgstr "వాయు అవకాశం ఫైల్‌ని లోడ్ చేస్తుంది..."
 
-#: src/Airspace/AirspaceParser.cpp:1065
+#: src/Airspace/AirspaceParser.cpp:1066
 msgid "Unknown airspace filetype"
 msgstr "అయోర్ ఆప్టీట్‌ ఫైల్‌ రకం నిశ్చయం లేదు"
 
@@ -464,7 +464,7 @@ msgid "Upload Flight"
 msgstr "ఫ్లాయ్థ్ అప్లోడ్"
 
 #: src/net/client/WeGlide/UploadIGCFile.cpp:158 src/Dialogs/FileManager.cpp:451
-#: src/Dialogs/FileManager.cpp:734 src/Dialogs/Device/DeviceListDialog.cpp:485
+#: src/Dialogs/FileManager.cpp:734 src/Dialogs/Device/DeviceListDialog.cpp:490
 #: src/Dialogs/Device/ManageFlarmDialog.cpp:145
 #: src/Dialogs/Device/ManageFlarmDialog.cpp:193
 #: src/Dialogs/Plane/PlaneListDialog.cpp:199
@@ -563,7 +563,7 @@ msgstr "క్షమాపణం, నిర్భృతం"
 
 #: src/Gauge/BigThermalAssistantWidget.cpp:56
 #: src/Gauge/BigTrafficWidget.cpp:614 src/Dialogs/InternalLink.cpp:44
-#: src/Dialogs/FileManager.cpp:746 src/Dialogs/Device/DeviceListDialog.cpp:781
+#: src/Dialogs/FileManager.cpp:746 src/Dialogs/Device/DeviceListDialog.cpp:786
 #: src/Dialogs/Device/PortMonitor.cpp:166
 #: src/Dialogs/Device/ManageCAI302Dialog.cpp:139
 #: src/Dialogs/Device/ManageFlarmDialog.cpp:208
@@ -574,16 +574,16 @@ msgstr "క్షమాపణం, నిర్భృతం"
 #: src/Dialogs/Device/LX/ManageLX16xxDialog.cpp:69
 #: src/Dialogs/Device/Vega/VegaDemoDialog.cpp:109
 #: src/Dialogs/Device/Vega/SwitchesDialog.cpp:136
-#: src/Dialogs/MapItemListDialog.cpp:170
+#: src/Dialogs/MapItemListDialog.cpp:192
 #: src/Dialogs/Airspace/dlgAirspace.cpp:144
 #: src/Dialogs/Airspace/dlgAirspaceDetails.cpp:135
-#: src/Dialogs/Airspace/AirspaceList.cpp:134
+#: src/Dialogs/Airspace/AirspaceList.cpp:136
 #: src/Dialogs/Airspace/dlgAirspaceWarnings.cpp:469
 #: src/Dialogs/Settings/WindSettingsDialog.cpp:21
 #: src/Dialogs/Settings/dlgBasicSettings.cpp:386
 #: src/Dialogs/Settings/dlgConfigInfoboxes.cpp:257
 #: src/Dialogs/Traffic/TrafficList.cpp:348
-#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:352
+#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:351
 #: src/Dialogs/Traffic/TeamCodeDialog.cpp:210 src/Dialogs/dlgAnalysis.cpp:306
 #: src/Dialogs/ProfileListDialog.cpp:318
 #: src/Dialogs/Plane/PlaneListDialog.cpp:362 src/Dialogs/HelpDialog.cpp:30
@@ -596,7 +596,7 @@ msgstr "క్షమాపణం, నిర్భృతం"
 #: src/Dialogs/Task/OptionalStartsDialog.cpp:42
 #: src/Dialogs/Task/TaskPointDialog.cpp:515
 #: src/Dialogs/Task/TargetDialog.cpp:395
-#: src/Dialogs/Task/AlternatesListDialog.cpp:169
+#: src/Dialogs/Task/AlternatesListDialog.cpp:249
 #: src/Dialogs/KnobTextEntry.cpp:225 src/Dialogs/Weather/WeatherDialog.cpp:41
 #: src/Dialogs/dlgQuickGuide.cpp:502 src/Dialogs/dlgGestureHelp.cpp:45
 #: src/Dialogs/Weather/PCMetDialog.cpp:36
@@ -609,8 +609,8 @@ msgid "No Traffic"
 msgstr "నిరంతర పన్నులైనదా"
 
 #: src/Gauge/BigTrafficWidget.cpp:315 src/Gauge/BigTrafficWidget.cpp:316
-#: src/Renderer/MapItemListRenderer.cpp:361
-#: src/Dialogs/Device/DeviceListDialog.cpp:426
+#: src/Renderer/MapItemListRenderer.cpp:360
+#: src/Dialogs/Device/DeviceListDialog.cpp:428
 #: src/Dialogs/Device/CAI302/UnitsEditor.cpp:18
 #: src/Dialogs/Settings/dlgConfiguration.cpp:98
 #: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:119
@@ -622,12 +622,12 @@ msgstr "వేరియోమీటర్"
 #: src/Gauge/BigTrafficWidget.cpp:394 src/Renderer/MapItemListRenderer.cpp:60
 #: src/Renderer/MapItemListRenderer.cpp:66
 #: src/Renderer/WaypointListRenderer.cpp:142
-#: src/Renderer/FlightStatisticsRenderer.cpp:215
-#: src/Renderer/FlightStatisticsRenderer.cpp:234
-#: src/Renderer/FlightStatisticsRenderer.cpp:261
+#: src/Renderer/FlightStatisticsRenderer.cpp:216
+#: src/Renderer/FlightStatisticsRenderer.cpp:235
+#: src/Renderer/FlightStatisticsRenderer.cpp:262
 #: src/Dialogs/Device/CAI302/UnitsEditor.cpp:51
 #: src/Dialogs/Airspace/dlgAirspaceDetails.cpp:104
-#: src/Dialogs/Airspace/AirspaceList.cpp:448
+#: src/Dialogs/Airspace/AirspaceList.cpp:456
 #: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:117
 #: src/Dialogs/StatusPanels/FlightStatusPanel.cpp:69
 #: src/Dialogs/Waypoint/WaypointList.cpp:402
@@ -640,12 +640,12 @@ msgstr "దూరం"
 msgid "Rel. Alt."
 msgstr "సంబంధిత అభివేశం"
 
-#: src/Gauge/BigTrafficWidget.cpp:611 src/Dialogs/MapItemListDialog.cpp:156
-#: src/Dialogs/Airspace/AirspaceList.cpp:130
+#: src/Gauge/BigTrafficWidget.cpp:611 src/Dialogs/MapItemListDialog.cpp:174
+#: src/Dialogs/Airspace/AirspaceList.cpp:132
 #: src/Dialogs/Traffic/TrafficList.cpp:346
 #: src/Dialogs/Waypoint/WaypointList.cpp:215
 #: src/Dialogs/Task/TaskPointDialog.cpp:220
-#: src/Dialogs/Task/AlternatesListDialog.cpp:155
+#: src/Dialogs/Task/AlternatesListDialog.cpp:229
 #: src/Dialogs/Weather/NOAAList.cpp:97
 msgid "Details"
 msgstr "వिस్తరణలు"
@@ -817,7 +817,7 @@ msgstr "ఫల్యాంక్"
 #: src/Input/InputEventsSettings.cpp:497
 #: src/Dialogs/Device/DeviceEditWidget.cpp:109
 #: src/Dialogs/Device/ManageFlarmDialog.cpp:127
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:95
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:101
 #: src/Dialogs/Settings/Panels/GaugesConfigPanel.cpp:27
 #: src/Dialogs/Settings/Panels/GaugesConfigPanel.cpp:68
 #: src/Dialogs/Settings/Panels/InterfaceConfigPanel.cpp:172
@@ -830,7 +830,7 @@ msgstr "ఫల్యాంక్"
 #: src/Dialogs/Settings/Panels/SymbolsConfigPanel.cpp:115
 #: src/Dialogs/Settings/Panels/SymbolsConfigPanel.cpp:122
 #: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:269
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:299
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:302
 #: src/Dialogs/Task/Manager/TaskActionsPanel.cpp:160
 #: src/Dialogs/Device/Vega/HardwareParameters.hpp:11
 #, no-c-format
@@ -841,13 +841,13 @@ msgstr "ఆవ్వీ"
 #: src/Menu/ExpandMacros.cpp:366 src/Menu/ExpandMacros.cpp:412
 #: src/Input/InputEventsSettings.cpp:455 src/Input/InputEventsSettings.cpp:456
 #: src/Input/InputEventsSettings.cpp:493 src/Input/InputEventsSettings.cpp:497
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:94
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:100
 #: src/Dialogs/Settings/Panels/GaugesConfigPanel.cpp:29
 #: src/Dialogs/Settings/Panels/InterfaceConfigPanel.cpp:173
 #: src/Dialogs/Settings/Panels/LayoutConfigPanel.cpp:145
 #: src/Dialogs/Settings/Panels/LoggerConfigPanel.cpp:43
 #: src/Dialogs/Settings/Panels/SymbolsConfigPanel.cpp:66
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:300
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:303
 #: src/Dialogs/Task/Manager/TaskActionsPanel.cpp:160
 #: src/Dialogs/Device/Vega/HardwareParameters.hpp:12
 #, no-c-format
@@ -1055,13 +1055,13 @@ msgid "Ordered task"
 msgstr "నిర్వహణం చేసిన టాస్క్‌"
 
 #: src/Input/InputEventsTask.cpp:249
-#: src/Renderer/FlightStatisticsRenderer.cpp:356
+#: src/Renderer/FlightStatisticsRenderer.cpp:357
 #: src/Dialogs/Task/Manager/TaskActionsPanel.cpp:116
 #: src/Dialogs/Task/Manager/WeGlideTasksPanel.cpp:290
 msgid "No task"
 msgstr "టాస్క్‌ లేదు"
 
-#: src/Input/InputEventsTask.cpp:336 src/Renderer/MapItemListRenderer.cpp:357
+#: src/Input/InputEventsTask.cpp:336 src/Renderer/MapItemListRenderer.cpp:356
 #: src/Dialogs/Device/CAI302/UnitsEditor.cpp:26
 #: src/Dialogs/Settings/dlgBasicSettings.cpp:338
 #: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:118
@@ -1074,9 +1074,9 @@ msgid "Altitude"
 msgstr "Altitude ఉత్తరాలోని తరగతి"
 
 #: src/Input/InputEventsTask.cpp:337
-#: src/Renderer/FlightStatisticsRenderer.cpp:221
-#: src/Renderer/FlightStatisticsRenderer.cpp:240
-#: src/Renderer/FlightStatisticsRenderer.cpp:266
+#: src/Renderer/FlightStatisticsRenderer.cpp:222
+#: src/Renderer/FlightStatisticsRenderer.cpp:241
+#: src/Renderer/FlightStatisticsRenderer.cpp:267
 #: src/Dialogs/Device/CAI302/UnitsEditor.cpp:60
 #: src/Dialogs/Settings/WindSettingsPanel.cpp:67
 msgid "Speed"
@@ -1086,9 +1086,9 @@ msgstr "Speed గ్లైడర్ వేగం"
 #. unit-dependent because they will be saved after their units may have changed.
 #. ToDo: implement API that controls order in which pages are saved
 #: src/Input/InputEventsTask.cpp:338
-#: src/Renderer/FlightStatisticsRenderer.cpp:219
-#: src/Renderer/FlightStatisticsRenderer.cpp:238
-#: src/Renderer/FlightStatisticsRenderer.cpp:264
+#: src/Renderer/FlightStatisticsRenderer.cpp:220
+#: src/Renderer/FlightStatisticsRenderer.cpp:239
+#: src/Renderer/FlightStatisticsRenderer.cpp:265
 #: src/Dialogs/InternalLink.cpp:63
 #: src/Dialogs/Settings/dlgConfiguration.cpp:125
 #: src/Dialogs/Weather/RASPDialog.cpp:129
@@ -1229,14 +1229,14 @@ msgstr "FLARM రాదర్"
 #: src/Dialogs/Settings/Panels/GaugesConfigPanel.cpp:149
 #: src/Dialogs/Settings/Panels/PagesConfigPanel.cpp:177
 #: src/Dialogs/Settings/Panels/PagesConfigPanel.cpp:360
-#: src/InfoBoxes/Content/Factory.cpp:912
+#: src/InfoBoxes/Content/Factory.cpp:918
 #, no-c-format
 msgid "Thermal assistant"
 msgstr "థర్మల్ సాహాజయొత్తం"
 
 #: src/PageSettings.cpp:31 src/Dialogs/Settings/Panels/PagesConfigPanel.cpp:178
 #: src/Dialogs/Settings/Panels/PagesConfigPanel.cpp:364
-#: src/InfoBoxes/Content/Factory.cpp:826
+#: src/InfoBoxes/Content/Factory.cpp:832
 #, no-c-format
 msgid "Horizon"
 msgstr "అధికారపు వేశాయం"
@@ -1260,13 +1260,13 @@ msgid "Map (Full screen)"
 msgstr "రింగ్‌లైన్‌లో సమాచారం (పులం నిర్దిష్టం)"
 
 #: src/Renderer/ChartRenderer.cpp:232
-#: src/Dialogs/Device/DeviceListDialog.cpp:471
+#: src/Dialogs/Device/DeviceListDialog.cpp:476
 msgid "No data"
 msgstr "డాటా లేదు"
 
 #: src/Renderer/MapItemListRenderer.cpp:62
 #: src/Renderer/MapItemListRenderer.cpp:66
-#: src/Dialogs/Airspace/AirspaceList.cpp:449
+#: src/Dialogs/Airspace/AirspaceList.cpp:457
 #: src/Dialogs/Settings/WindSettingsPanel.cpp:79
 #: src/Dialogs/Waypoint/WaypointList.cpp:403
 msgid "Direction"
@@ -1315,7 +1315,7 @@ msgid "Your Position"
 msgstr "నియమిత స్థానం"
 
 #: src/Renderer/MapItemListRenderer.cpp:250
-#: src/InfoBoxes/Content/Factory.cpp:913
+#: src/InfoBoxes/Content/Factory.cpp:919
 #, no-c-format
 msgid "Thermal"
 msgstr "థర్మల్"
@@ -1329,7 +1329,7 @@ msgid "FLARM Traffic"
 msgstr "FLARM ట్రాన్జిక్"
 
 #. valid but unknown number of sats
-#: src/Renderer/MapItemListRenderer.cpp:348 src/FLARM/Details.cpp:136
+#: src/Renderer/MapItemListRenderer.cpp:347 src/FLARM/Details.cpp:136
 #: src/Dialogs/Device/Vega/SwitchesDialog.cpp:15
 #: src/Dialogs/Device/Vega/SwitchesDialog.cpp:24
 #: src/Dialogs/Device/Vega/SwitchesDialog.cpp:32
@@ -1343,7 +1343,7 @@ msgstr "FLARM ట్రాన్జిక్"
 msgid "Unknown"
 msgstr "అసలు"
 
-#: src/Renderer/MapItemListRenderer.cpp:408
+#: src/Renderer/MapItemListRenderer.cpp:407
 #: src/Dialogs/Traffic/TrafficList.cpp:675
 #, c-format
 msgid "%u minutes ago"
@@ -1514,39 +1514,39 @@ msgstr ""
 msgid "blcwbase"
 msgstr "బ్లిక్‌బేస్"
 
-#: src/Renderer/FlightStatisticsRenderer.cpp:218
-#: src/Renderer/FlightStatisticsRenderer.cpp:237
-#: src/Renderer/FlightStatisticsRenderer.cpp:263
+#: src/Renderer/FlightStatisticsRenderer.cpp:219
+#: src/Renderer/FlightStatisticsRenderer.cpp:238
+#: src/Renderer/FlightStatisticsRenderer.cpp:264
 msgid "Score"
 msgstr "సూచన"
 
-#: src/Renderer/FlightStatisticsRenderer.cpp:218
-#: src/Renderer/FlightStatisticsRenderer.cpp:237
-#: src/Renderer/FlightStatisticsRenderer.cpp:263
+#: src/Renderer/FlightStatisticsRenderer.cpp:219
+#: src/Renderer/FlightStatisticsRenderer.cpp:238
+#: src/Renderer/FlightStatisticsRenderer.cpp:264
 msgid "pts"
 msgstr "ప్టీస్"
 
-#: src/Renderer/FlightStatisticsRenderer.cpp:366
-#: src/Renderer/FlightStatisticsRenderer.cpp:376
-#: src/Renderer/FlightStatisticsRenderer.cpp:387
+#: src/Renderer/FlightStatisticsRenderer.cpp:367
+#: src/Renderer/FlightStatisticsRenderer.cpp:377
+#: src/Renderer/FlightStatisticsRenderer.cpp:388
 msgid "Task to go"
 msgstr "టాస్క్ తీసుకోవాల్సినది"
 
-#: src/Renderer/FlightStatisticsRenderer.cpp:367
-#: src/Renderer/FlightStatisticsRenderer.cpp:377
+#: src/Renderer/FlightStatisticsRenderer.cpp:368
+#: src/Renderer/FlightStatisticsRenderer.cpp:378
 msgid "AAT to go"
 msgstr "AAT తీసుకోవాల్సినది"
 
 #. landscape: info above buttons
-#: src/Renderer/FlightStatisticsRenderer.cpp:368
-#: src/Renderer/FlightStatisticsRenderer.cpp:378
-#: src/Renderer/FlightStatisticsRenderer.cpp:389
+#: src/Renderer/FlightStatisticsRenderer.cpp:369
+#: src/Renderer/FlightStatisticsRenderer.cpp:379
+#: src/Renderer/FlightStatisticsRenderer.cpp:390
 #: src/Dialogs/dlgAnalysis.cpp:231
 msgid "Distance to go"
 msgstr "వేగం తీసుకోవాల్సినది"
 
-#: src/Renderer/FlightStatisticsRenderer.cpp:370
-#: src/Renderer/FlightStatisticsRenderer.cpp:381
+#: src/Renderer/FlightStatisticsRenderer.cpp:371
+#: src/Renderer/FlightStatisticsRenderer.cpp:382
 msgid "Target speed"
 msgstr "కొరకు వేగం"
 
@@ -1723,27 +1723,27 @@ msgstr "అంతర్జాతీయం, ప్రొఫైల్‌ను న
 msgid "Shutdown, saving task..."
 msgstr "అంతర్జాతీయం, టాస్క్‌ను నివృత్తి చేయండి..."
 
-#: src/Device/Descriptor.cpp:407 src/Device/Descriptor.cpp:419
+#: src/Device/Descriptor.cpp:406 src/Device/Descriptor.cpp:418
 msgid "Unable to open port"
 msgstr "పార్టు నివేదికలో వస్తున్నాయి"
 
 #. explicitly configured passthrough device (e.g. FLARM behind
 #. LXNAV vario): enable passthrough and declare to it
-#: src/Device/Descriptor.cpp:1399 src/Device/Descriptor.cpp:1407
-#: src/Device/Descriptor.cpp:1462
+#: src/Device/Descriptor.cpp:1406 src/Device/Descriptor.cpp:1414
+#: src/Device/Descriptor.cpp:1469
 msgid "Sending declaration"
 msgstr "అనూహెతి పాఠం పంపడం"
 
-#: src/Device/Descriptor.cpp:1485 src/Device/Descriptor.cpp:1501
+#: src/Device/Descriptor.cpp:1492 src/Device/Descriptor.cpp:1508
 msgid "Reading flight list"
 msgstr "ఫైట్ లిస్ట్‌ను చదివడం"
 
-#: src/Device/Descriptor.cpp:1525 src/Device/Descriptor.cpp:1541
+#: src/Device/Descriptor.cpp:1532 src/Device/Descriptor.cpp:1548
 msgid "Downloading flight log"
 msgstr "ఫైట్ లోగ్‌ను డొల్యాడ్‌కం"
 
 #: src/Device/Config.cpp:198 src/Dialogs/Device/PortDataField.cpp:32
-#: src/Dialogs/Device/DeviceListDialog.cpp:467
+#: src/Dialogs/Device/DeviceListDialog.cpp:472
 #: src/Dialogs/Device/Vega/AudioModeParameters.hpp:19
 #, no-c-format
 msgid "Disabled"
@@ -1787,7 +1787,7 @@ msgstr "సైట్‌ ఫైల్స్"
 
 #: src/Dialogs/InternalLink.cpp:62
 #: src/Dialogs/Settings/dlgConfiguration.cpp:120
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:122
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:128
 #: Data/Input/default.xci:770 Data/Input/default.xci:1394
 #, no-c-format
 msgid "Logger"
@@ -1894,6 +1894,7 @@ msgstr "నమోదు చేయడం"
 #: src/Dialogs/ListPicker.cpp:55 src/Dialogs/Device/PortPicker.cpp:293
 #: src/Dialogs/Traffic/TrafficList.cpp:779
 #: src/Dialogs/ProfileListDialog.cpp:331
+#: src/Dialogs/Task/AlternatesListDialog.cpp:203
 msgid "Select"
 msgstr "ఎంచుకోండి"
 
@@ -2103,7 +2104,7 @@ msgstr ""
 msgid "Whether you use a K6Bt to connect the device."
 msgstr "మీరు K6Bt ను ఇఫ్‌బస్‌ కొన్ని ఉద్యవాటికి ఉపయోగించడానికి అవధిని తెలిపాలి."
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:299
+#: src/Dialogs/Device/DeviceListDialog.cpp:301
 #: src/Dialogs/Plane/PlaneListDialog.cpp:133
 #: src/Dialogs/Waypoint/WaypointCommandsWidget.cpp:273
 #: src/Dialogs/Waypoint/Manager.cpp:101 src/InfoBoxes/Content/MacCready.cpp:28
@@ -2112,98 +2113,98 @@ msgstr "మీరు K6Bt ను ఇఫ్‌బస్‌ కొన్ని ఉ
 msgid "Edit"
 msgstr "సమాయత్తం"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:303
+#: src/Dialogs/Device/DeviceListDialog.cpp:305
 msgid "Flight download"
 msgstr "ఫైట్‌డొన్‌లోడ్"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:307
-#: src/Dialogs/Device/DeviceListDialog.cpp:587
-#: src/Dialogs/Device/DeviceListDialog.cpp:593
-#: src/Dialogs/Device/DeviceListDialog.cpp:668
-#: src/Dialogs/Device/DeviceListDialog.cpp:674
+#: src/Dialogs/Device/DeviceListDialog.cpp:309
+#: src/Dialogs/Device/DeviceListDialog.cpp:592
+#: src/Dialogs/Device/DeviceListDialog.cpp:598
+#: src/Dialogs/Device/DeviceListDialog.cpp:673
+#: src/Dialogs/Device/DeviceListDialog.cpp:679
 #: src/Dialogs/Task/Manager/TaskManagerDialog.cpp:111
 msgid "Manage"
 msgstr "మానేజ్‌"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:311
+#: src/Dialogs/Device/DeviceListDialog.cpp:313
 msgid "Monitor"
 msgstr "మీద పరిశోధించండి"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:315
-#: src/Dialogs/Device/DeviceListDialog.cpp:556
-#: src/Dialogs/Device/DeviceListDialog.cpp:564
+#: src/Dialogs/Device/DeviceListDialog.cpp:317
+#: src/Dialogs/Device/DeviceListDialog.cpp:561
+#: src/Dialogs/Device/DeviceListDialog.cpp:569
 #: src/Dialogs/Device/PortMonitor.cpp:120
 #: src/Dialogs/Device/PortMonitor.cpp:128
 msgid "Reconnect"
 msgstr "రెకొన్‌కోన్"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:319
-#: src/Dialogs/Device/DeviceListDialog.cpp:338
+#: src/Dialogs/Device/DeviceListDialog.cpp:321
+#: src/Dialogs/Device/DeviceListDialog.cpp:340
 #: src/Dialogs/Weather/MapOverlayWidget.cpp:210
 msgid "Disable"
 msgstr "డిసేబుల్"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:323
-#: src/Dialogs/Device/DeviceListDialog.cpp:456
-#: src/Dialogs/Device/DeviceListDialog.cpp:475
-#: src/Dialogs/Device/DeviceListDialog.cpp:762
+#: src/Dialogs/Device/DeviceListDialog.cpp:325
+#: src/Dialogs/Device/DeviceListDialog.cpp:461
+#: src/Dialogs/Device/DeviceListDialog.cpp:480
+#: src/Dialogs/Device/DeviceListDialog.cpp:767
 msgid "Debug"
 msgstr "డీగ్రీబుల్"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:338
+#: src/Dialogs/Device/DeviceListDialog.cpp:340
+#: src/Dialogs/MapItemListDialog.cpp:184
 #: src/Dialogs/Airspace/dlgAirspaceDetails.cpp:132
 #: src/Dialogs/Airspace/dlgAirspaceWarnings.cpp:68
 #: src/Dialogs/Settings/Panels/WeGlideConfigPanel.cpp:69
 msgid "Enable"
 msgstr "అనేకందరు"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:387
+#: src/Dialogs/Device/DeviceListDialog.cpp:389
 #, c-format
 msgid "%s on %s"
 msgstr "%s ఉంటుంది %s"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:401
+#: src/Dialogs/Device/DeviceListDialog.cpp:403
 msgid "GPS fix"
 msgstr "GPS ఫిక్కెన్స్"
 
 #. device sends GPGGA, but no valid location
-#: src/Dialogs/Device/DeviceListDialog.cpp:404
+#: src/Dialogs/Device/DeviceListDialog.cpp:406
 msgid "Bad GPS"
 msgstr "బాగ్‌GPS"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:406
+#: src/Dialogs/Device/DeviceListDialog.cpp:408
 #: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:44
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:76
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:79
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:85
 #, no-c-format
 msgid "Connected"
 msgstr "కలిపివెళ్ళినా"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:411
+#: src/Dialogs/Device/DeviceListDialog.cpp:413
 msgid "Baro"
 msgstr "బరో"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:416
+#: src/Dialogs/Device/DeviceListDialog.cpp:418
 #: src/Dialogs/Device/ManageI2CPitotDialog.cpp:108
 msgid "Pitot"
 msgstr "పిటోట్"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:421
+#: src/Dialogs/Device/DeviceListDialog.cpp:423
 #: src/Dialogs/Device/Vega/VegaDemoDialog.cpp:88
 msgid "Airspeed"
 msgstr "వయస్పీ"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:439
+#: src/Dialogs/Device/DeviceListDialog.cpp:441
 msgid "IMU"
 msgstr "IMU"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:461
+#: src/Dialogs/Device/DeviceListDialog.cpp:466
 #: src/InfoBoxes/Content/Factory.cpp:640
 #, no-c-format
 msgid "Battery"
 msgstr "బాటరీ"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:469
+#: src/Dialogs/Device/DeviceListDialog.cpp:474
 #: src/InfoBoxes/Panel/AltitudeInfo.cpp:41
 #: src/InfoBoxes/Panel/AltitudeInfo.cpp:45
 #: src/InfoBoxes/Panel/AltitudeInfo.cpp:49
@@ -2211,41 +2212,41 @@ msgstr "బాటరీ"
 msgid "N/A"
 msgstr "గ్లైడర్ | glider | 1"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:480
-#: src/Dialogs/Device/DeviceListDialog.cpp:556
+#: src/Dialogs/Device/DeviceListDialog.cpp:485
+#: src/Dialogs/Device/DeviceListDialog.cpp:561
 msgid "Bluetooth is disabled"
 msgstr "బ్లైథ్‌కింగ్‌ డివైజన్‌ అధికారికత లో ప్రారంభమైనది"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:482
+#: src/Dialogs/Device/DeviceListDialog.cpp:487
 msgid "Duplicate"
 msgstr "ఇచ్చినట్లు సమానం"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:489
+#: src/Dialogs/Device/DeviceListDialog.cpp:494
 msgid "Not connected"
 msgstr "కలిపివెళ్ళినా"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:564
-#: src/Dialogs/Device/DeviceListDialog.cpp:593
-#: src/Dialogs/Device/DeviceListDialog.cpp:674
+#: src/Dialogs/Device/DeviceListDialog.cpp:569
+#: src/Dialogs/Device/DeviceListDialog.cpp:598
+#: src/Dialogs/Device/DeviceListDialog.cpp:679
 #: src/Dialogs/Device/PortMonitor.cpp:128
 msgid "Device is occupied"
 msgstr "డైవైజన్‌ ఎదిగితే"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:587
-#: src/Dialogs/Device/DeviceListDialog.cpp:668
+#: src/Dialogs/Device/DeviceListDialog.cpp:592
+#: src/Dialogs/Device/DeviceListDialog.cpp:673
 msgid "Device is not connected"
 msgstr "డైవైజన్‌ కలిపివెళ్ళినా"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:615
+#: src/Dialogs/Device/DeviceListDialog.cpp:620
 msgid "Edit device"
 msgstr "డైవైజన్‌ సమాయకీకరణ"
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:760
+#: src/Dialogs/Device/DeviceListDialog.cpp:765
 #, c-format
 msgid "Communication with this device will be logged for the next %u minutes."
 msgstr "ఇంట్‌డి డైవైజన్‌లతో జరిగిన వ్యవహారాన్ని క్రమం లో ప్రారంభించడం తదుపరి %u నిమిషాలకు సెన్టీవేన్‌లో కార్యక్రమంలో వచ్చినది."
 
-#: src/Dialogs/Device/DeviceListDialog.cpp:777 Data/Input/default.xci:686
+#: src/Dialogs/Device/DeviceListDialog.cpp:782 Data/Input/default.xci:686
 #: Data/Input/default.xci:1409
 msgid "Devices"
 msgstr "డైవైజన్ల"
@@ -2392,7 +2393,7 @@ msgstr "IGC రికార్డర్"
 #: src/Dialogs/Device/LX/ManageNanoDialog.cpp:65
 #: src/Dialogs/Settings/dlgConfiguration.cpp:147
 #: src/InfoBoxes/Content/Altitude.cpp:26 src/InfoBoxes/Content/MacCready.cpp:29
-#: src/InfoBoxes/Content/Places.cpp:100
+#: src/InfoBoxes/Content/Places.cpp:182
 #, no-c-format
 msgid "Setup"
 msgstr "నిర్వహణ"
@@ -2800,23 +2801,23 @@ msgstr "ADSB రణనిష్ఠత"
 msgid "ADSB vertical range"
 msgstr "ADSB ఊరుగుల రణనిష్ఠత"
 
-#: src/Dialogs/MapItemListDialog.cpp:158
-#: src/Dialogs/Task/AlternatesListDialog.cpp:141
+#: src/Dialogs/MapItemListDialog.cpp:176
+#: src/Dialogs/Task/AlternatesListDialog.cpp:186
 msgid "Goto"
 msgstr "గోటో"
 
-#: src/Dialogs/MapItemListDialog.cpp:162
+#: src/Dialogs/MapItemListDialog.cpp:180
 #: src/Dialogs/Airspace/dlgAirspaceDetails.cpp:132
 msgid "Ack Day"
 msgstr "అక్కడ నాయక దినం"
 
-#: src/Dialogs/MapItemListDialog.cpp:166 src/Dialogs/dlgAnalysis.cpp:474
+#: src/Dialogs/MapItemListDialog.cpp:188 src/Dialogs/dlgAnalysis.cpp:474
 #: src/Dialogs/dlgAnalysis.cpp:518 src/Dialogs/dlgAnalysis.cpp:527
 #: src/Dialogs/dlgAnalysis.cpp:536
 msgid "Settings"
 msgstr "సెటింగ్స్"
 
-#: src/Dialogs/MapItemListDialog.cpp:311
+#: src/Dialogs/MapItemListDialog.cpp:353
 #: src/MapWindow/GlueMapWindowItems.cpp:114
 msgid "Map elements at this location"
 msgstr "ఈ స్థానంలో మాపార్ట్‌ల నిర్వహణ"
@@ -2891,13 +2892,13 @@ msgstr "సెట్ స్టేశన్"
 
 #: src/Dialogs/Airspace/dlgAirspaceDetails.cpp:79
 #: src/Dialogs/Waypoint/WaypointCommandsWidget.cpp:263
-#: src/Dialogs/Task/AlternatesListDialog.cpp:157
+#: src/Dialogs/Task/AlternatesListDialog.cpp:231
 msgid "Set Active Frequency"
 msgstr "అктив్ ఫ్రీకెన్చ్ వాటికి నిర్వహించండి"
 
 #: src/Dialogs/Airspace/dlgAirspaceDetails.cpp:84
 #: src/Dialogs/Waypoint/WaypointCommandsWidget.cpp:268
-#: src/Dialogs/Task/AlternatesListDialog.cpp:163
+#: src/Dialogs/Task/AlternatesListDialog.cpp:240
 msgid "Set Standby Frequency"
 msgstr "స్టాబ్లైడ్ ఫ్రీకెన్చ్ వాటికి నిర్వహించండి"
 
@@ -2917,16 +2918,16 @@ msgstr "శరీరమైన పేరు"
 msgid "Airspace Details"
 msgstr "క్లాస్/కాల్స్ టైప్"
 
-#: src/Dialogs/Airspace/AirspaceList.cpp:330
+#: src/Dialogs/Airspace/AirspaceList.cpp:332
 #: src/Dialogs/Waypoint/WaypointList.cpp:454
 msgid "No Match!"
 msgstr "అద్వితీయం!"
 
-#: src/Dialogs/Airspace/AirspaceList.cpp:353
+#: src/Dialogs/Airspace/AirspaceList.cpp:361
 msgid "Heading"
 msgstr "వచ్చే దశాబంది"
 
-#: src/Dialogs/Airspace/AirspaceList.cpp:447
+#: src/Dialogs/Airspace/AirspaceList.cpp:455
 #: src/Dialogs/Settings/dlgConfigInfoboxes.cpp:218
 #: src/Dialogs/Plane/PlanePolarDialog.cpp:105
 #: src/Dialogs/Waypoint/dlgWaypointEdit.cpp:75
@@ -2934,11 +2935,11 @@ msgstr "వచ్చే దశాబంది"
 msgid "Name"
 msgstr "నమ్మకం"
 
-#: src/Dialogs/Airspace/AirspaceList.cpp:450
+#: src/Dialogs/Airspace/AirspaceList.cpp:458
 msgid "Class/Type"
 msgstr "క్లాస్/కాల్స్ టైప్"
 
-#: src/Dialogs/Airspace/AirspaceList.cpp:464
+#: src/Dialogs/Airspace/AirspaceList.cpp:472
 msgid "Select Airspace"
 msgstr "వాయు అవకాశం ఎంపిక నియంత్రణ"
 
@@ -3196,7 +3197,7 @@ msgstr "గ్లైడ్ కంపెనీ"
 #: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:272
 #: src/Weather/NOAAFormatter.cpp:78 src/Weather/NOAAFormatter.cpp:81
 #: src/InfoBoxes/Content/Factory.cpp:319 src/InfoBoxes/Content/Factory.cpp:327
-#: src/InfoBoxes/Content/Factory.cpp:906 Data/Input/default.xci:702
+#: src/InfoBoxes/Content/Factory.cpp:912 Data/Input/default.xci:702
 #, no-c-format
 msgid "Wind"
 msgstr "తండ్రి"
@@ -3285,7 +3286,7 @@ msgid "The name of this InfoBox panel configuration."
 msgstr "ఈ InfoBox ప్యానెల్ కాన్ఫిగరేషన్ పేరు."
 
 #: src/Dialogs/Settings/dlgConfigInfoboxes.cpp:230
-#: src/InfoBoxes/InfoBoxManager.cpp:201
+#: src/InfoBoxes/InfoBoxManager.cpp:208
 msgid "InfoBox"
 msgstr "సమాచార బ్యాక్స్"
 
@@ -3334,7 +3335,7 @@ msgid "Team"
 msgstr "కట్టుబడి"
 
 #: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:114
-#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:316
+#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:315
 msgid "Callsign"
 msgstr "కాల్సైన్‌"
 
@@ -3372,29 +3373,29 @@ msgid "Traffic source"
 msgstr "ట్రాఫిక్ మూలం"
 
 #: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:214
-#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:347
+#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:346
 msgid "FLARM Traffic Details"
 msgstr "FLARM ట్రావైజ్ డటెలీస్"
+
+#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:280
+#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:303
+#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:328
+msgid "This target has NoTrack enabled and may not be persisted."
+msgstr "ఈ లక్ష్యం NoTrack ప్రారంభించబడింది మరియు కొనసాగించబడకపోవచ్చు."
 
 #: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:281
 #: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:304
 #: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:329
-msgid "This target has NoTrack enabled and may not be persisted."
-msgstr "ఈ లక్ష్యం NoTrack ప్రారంభించబడింది మరియు కొనసాగించబడకపోవచ్చు."
-
-#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:282
-#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:305
-#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:330
 #: src/Dialogs/Device/Vega/FlarmIdentificationParameters.hpp:31
 #, no-c-format
 msgid "Privacy"
 msgstr "ప్రావిద్యత"
 
-#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:286
+#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:285
 msgid "Do you want to set this FLARM contact as your new teammate?"
 msgstr "ఈ FLARM కంట్యూట్‌ను నవమైన తిరుగుబాటుకథ లేదు?"
 
-#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:287
+#: src/Dialogs/Traffic/FlarmTrafficDetails.cpp:286
 msgid "New Teammate"
 msgstr "నవమైన తిరుగుబాటుకథ"
 
@@ -3872,8 +3873,8 @@ msgstr "శారీరిక సహకారం"
 
 #: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:32
 #: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:43
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:76
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:80
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:82
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:86
 #: src/InfoBoxes/Content/Other.cpp:168
 #, no-c-format
 msgid "Disconnected"
@@ -3903,23 +3904,23 @@ msgstr "3D ఫిక్స్"
 msgid "Roaming"
 msgstr "రోమీనగా"
 
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:118
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:124
 msgid "GPS lock"
 msgstr "GPS లోక్షణం"
 
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:119
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:125
 msgid "Satellites in view"
 msgstr "పరివేత్తా గ్లాట్లు"
 
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:120
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:126
 msgid "Variometer"
 msgstr "వేరియోమీటర్"
 
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:123
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:129
 msgid "Supply voltage"
 msgstr "సహకారం విలోమం"
 
-#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:124
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:130
 msgid "Network"
 msgstr "నెట్వర్క్"
 
@@ -5987,6 +5988,8 @@ msgid "The sorting will also take the current task direction into account."
 msgstr "తెలిపడం కోసం కొనసాగిన దశల దికం నుండి మరణావాదం"
 
 #: src/Dialogs/Settings/Panels/SafetyFactorsConfigPanel.cpp:64
+#: src/InfoBoxes/Content/Factory.cpp:1168
+#: src/InfoBoxes/Content/Factory.cpp:1169 src/InfoBoxes/Content/Places.cpp:107
 #, no-c-format
 msgid "Home"
 msgstr "గ్రహీత"
@@ -6397,7 +6400,7 @@ msgid "Aircraft symbol"
 msgstr "వాహన చిత్రం"
 
 #: src/Dialogs/Settings/Panels/SymbolsConfigPanel.cpp:177
-#: src/InfoBoxes/Content/Factory.cpp:905
+#: src/InfoBoxes/Content/Factory.cpp:911
 #, no-c-format
 msgid "Wind arrow"
 msgstr "విషయ శాఖ"
@@ -6606,152 +6609,101 @@ msgid ""
 "task at the minimum time plus this margin time."
 msgstr "AAT టాస్క్ ఉత్పాదన కార్యక్రమంలో భద్రత పరిష్కారం. అధీన పరిష్కారం సమావేశం లో కనిపించుతుంది."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:75
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:76
 #, no-c-format
 msgid "Disable contest calculations"
 msgstr "నట్యాల గణనాన్ని బయటకరించండి"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:77
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:78
 #, no-c-format
-msgid ""
-"Conforms to FAI triangle rules. Three turns and common start and finish. No "
-"leg less than 28% of total except for tasks longer than 500km: No leg less "
-"than 25% or larger than 45%."
-msgstr ""
-"FAI త్రిభుజ నియమాలకు అనుగుణంగా ఉంటుంది. మూడు మలుపులు మరియు సాధారణ ప్రారంభం మరియు ముగింపు. "
-"500km కంటే ఎక్కువ పనులు మినహా మొత్తంలో 28% కంటే తక్కువ కాలు ఉండకూడదు: కాలు 25% కంటే "
-"తక్కువ లేదా 45% కంటే పెద్దది కాదు."
+msgid "Conforms to FAI triangle rules. Three turns and common start and finish. No leg less than 28% of total except for tasks longer than 500km: No leg less than 25% or larger than 45%."
+msgstr "FAI త్రిభుజ నియమాలకు అనుగుణంగా ఉంటుంది. మూడు మలుపులు మరియు సాధారణ ప్రారంభం మరియు ముగింపు. 500km కంటే ఎక్కువ పనులు మినహా మొత్తంలో 28% కంటే తక్కువ కాలు ఉండకూడదు: కాలు 25% కంటే తక్కువ లేదా 45% కంటే పెద్దది కాదు."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:80
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:81
 #, no-c-format
-msgid ""
-"Up to seven points including start and finish, finish height must not be "
-"lower than start height less 1000 meters."
-msgstr ""
-"శీఖరాల మొత్తం బిందువుల వాటిలో ఎన్నిక పై త్రిభుజాలు, ఫినిష్ ఉత్తరం శీఖరాల మొత్తం బిందువుల వాటిలో ఎన్నిక పై "
-"త్రిభుజాలు, శీఖరాల మొత్తం బిందువుల వాటిలో 1000 మెట్రీల తక్కువ ఫినిష్ ఉత్తరం."
+msgid "Up to seven points including start and finish, finish height must not be lower than start height less 1000 meters."
+msgstr "శీఖరాల మొత్తం బిందువుల వాటిలో ఎన్నిక పై త్రిభుజాలు, ఫినిష్ ఉత్తరం శీఖరాల మొత్తం బిందువుల వాటిలో ఎన్నిక పై త్రిభుజాలు, శీఖరాల మొత్తం బిందువుల వాటిలో 1000 మెట్రీల తక్కువ ఫినిష్ ఉత్తరం."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:83
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:84
 #, no-c-format
 msgid "The most recent contest with Sprint task rules."
-msgstr ""
-"స్ప్రింట్ టాస్క్ నియమాలను అవసరంగా పరిష్కరించినా సహాయం కాదు. FAI నియమాలను 30% వాటిలో కనిపించుతుంది."
+msgstr "స్ప్రింట్ టాస్క్ నియమాలను అవసరంగా పరిష్కరించినా సహాయం కాదు. FAI నియమాలను 30% వాటిలో కనిపించుతుంది."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:85
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:86
 #, no-c-format
-msgid ""
-"A combination of Classic and FAI rules. 30% of the FAI score are added to "
-"the Classic score."
+msgid "A combination of Classic and FAI rules. 30% of the FAI score are added to the Classic score."
 msgstr "క్లాసిక్ మరియు FAI నియమాల కలయిక. FAI స్కోర్‌లో 30% క్లాసిక్ స్కోర్‌కి జోడించబడింది."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:90
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:91
 #, no-c-format
-msgid ""
-"PG online contest with different track values: Free flight - 1 km = 1.0 "
-"point; flat triangle - 1 km = 1.2 p; FAI triangle - 1 km = 1.4 p."
-msgstr ""
-"DHV సంస్థ నిర్వహిత ప్రాక్టీకలు ఉన్న ఇంటోనెన్ కాల్స్. 1 km = 1.5 points, 1.75 p and 2.0 p "
-"for FAI triangles."
+msgid "PG online contest with different track values: Free flight - 1 km = 1.0 point; flat triangle - 1 km = 1.2 p; FAI triangle - 1 km = 1.4 p."
+msgstr "DHV సంస్థ నిర్వహిత ప్రాక్టీకలు ఉన్న ఇంటోనెన్ కాల్స్. 1 km = 1.5 points, 1.75 p and 2.0 p for FAI triangles."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:93
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:94
 #, no-c-format
-msgid ""
-"European PG online contest of the DHV organization. Pretty much the same as "
-"the XContest rules, but with different track values: 1 km = 1.5 points, 1.75 "
-"p and 2.0 p for FAI triangles respectively."
-msgstr ""
-"యురోపీ డిజిటల్‌గ్‌హై కంటెస్ట్‌లోని ఒక అందాల లేబర్‌. డిజిటల్‌గ్‌విహాజి ఆసుపత్రి నియమాలను అనుభద్రపడింది. 1 కిమీ = "
-"1.5 బిట్‌, FAI త్రికోణలకు 1.75 బిట్‌ మరియు 2.0 బిట్‌లేదు."
+msgid "European PG online contest of the DHV organization. Pretty much the same as the XContest rules, but with different track values: 1 km = 1.5 points, 1.75 p and 2.0 p for FAI triangles respectively."
+msgstr "యురోపీ డిజిటల్‌గ్‌హై కంటెస్ట్‌లోని ఒక అందాల లేబర్‌. డిజిటల్‌గ్‌విహాజి ఆసుపత్రి నియమాలను అనుభద్రపడింది. 1 కిమీ = 1.5 బిట్‌, FAI త్రికోణలకు 1.75 బిట్‌ మరియు 2.0 బిట్‌లేదు."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:96
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:97
 #, no-c-format
-msgid ""
-"Austrian online glider contest. Tracks around max. six waypoints are scored. "
-"The bounding box part with 1 km = 1.0 point and the additional zick-zack "
-"part with 1 km = 0.5 p."
+msgid "Austrian online glider contest. Tracks around max. six waypoints are scored. The bounding box part with 1 km = 1.0 point and the additional zick-zack part with 1 km = 0.5 p."
 msgstr "WeGlide ఫ్రీ నట్యంలో ముఖ్యంగా కళాకథ మరియు FAI నియమాలను అవసరంగా"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:99
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:108
 #, no-c-format
-msgid ""
-"WeGlide combines multiple scoring systems in the WeGlide Free contest. The "
-"free score is a combination of the free distance score and the area bonus. "
-"For the area bonus, the scoring program determines the largest FAI triangle "
-"and the largest Out & Return distance that can be fitted into the flight "
-"route."
-msgstr ""
-"WELLGlide విలేచిన మరuvu సోంతాల అవసరమైన పద్ధతులను కలిగి ఉంది. జరుగుతే నిబియట సోంతా మరియు ప్రాంత "
-"బొన్నికి సంబంధించిన నిబియట రెండు శాఖలు తమరికవచ్చతాయి. ప్రాంత బొన్నికి సంబంధించిన సోంతాలకు, సోంతా "
-"ప్రవేశాన్ని కార్యక్రమం ఫైట్‌ర్‌ల రణ రేస్‌లో ప్రతిస్థాపిత దీవ్యామ్ల చెక్‌బుక్‌ని నిర్వహించుతుంది."
+msgid "WeGlide combines multiple scoring systems in the WeGlide Free contest. The free score is a combination of the free distance score and the area bonus. For the area bonus, the scoring program determines the largest FAI triangle and the largest Out & Return distance that can be fitted into the flight route."
+msgstr "WELLGlide విలేచిన మరuvu సోంతాల అవసరమైన పద్ధతులను కలిగి ఉంది. జరుగుతే నిబియట సోంతా మరియు ప్రాంత బొన్నికి సంబంధించిన నిబియట రెండు శాఖలు తమరికవచ్చతాయి. ప్రాంత బొన్నికి సంబంధించిన సోంతాలకు, సోంతా ప్రవేశాన్ని కార్యక్రమం ఫైట్‌ర్‌ల రణ రేస్‌లో ప్రతిస్థాపిత దీవ్యామ్ల చెక్‌బుక్‌ని నిర్వహించుతుంది."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:103
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:112
 #, no-c-format
-msgid ""
-"A start point, one turn point and a finish point are chosen from the flight "
-"path such that the distance between the start point and the turn point is "
-"maximized."
-msgstr ""
-"ప్రారంభ బిందువు, ఒక టర్న్ బిందువు మరియు అవసరమైన పోల్‌లో ఒక ప్రారంభ బిందువు ఎలా చేరాలని "
-"నిర్ధారిస్తున్నారో విశ్లేషణకు, ప్రారంభ బిందువు మరియు టర్న్ బిందువు వచ్చిన దూరం అతి పెద్దదానికి "
-"నిర్ధారిస్తుంది."
+msgid "A start point, one turn point and a finish point are chosen from the flight path such that the distance between the start point and the turn point is maximized."
+msgstr "ప్రారంభ బిందువు, ఒక టర్న్ బిందువు మరియు అవసరమైన పోల్‌లో ఒక ప్రారంభ బిందువు ఎలా చేరాలని నిర్ధారిస్తున్నారో విశ్లేషణకు, ప్రారంభ బిందువు మరియు టర్న్ బిందువు వచ్చిన దూరం అతి పెద్దదానికి నిర్ధారిస్తుంది."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:106
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:115
 #, no-c-format
-msgid ""
-"LVZC Charron.online, 5 legs under 200km 6 legs above. Minimum leg distance "
-"is 20km, 5 points per km."
-msgstr ""
-"LVZC చారోనల్.online, 5 మైగ్రెట్‌లు 200కిమీ కంటే, 6 మైగ్రెట్‌లు 200కిమీ అయో. నాణ్య మైగ్రెట్ దూరం 20కిమీ, "
-"5 కిమీ లేదా తల్లి పునరుత్పత్తులో ఒక నిష్పత్తి 5."
+msgid "LVZC Charron.online, 5 legs under 200km 6 legs above. Minimum leg distance is 20km, 5 points per km."
+msgstr "LVZC చారోనల్.online, 5 మైగ్రెట్‌లు 200కిమీ కంటే, 6 మైగ్రెట్‌లు 200కిమీ అయో. నాణ్య మైగ్రెట్ దూరం 20కిమీ, 5 కిమీ లేదా తల్లి పునరుత్పత్తులో ఒక నిష్పత్తి 5."
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:109
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:118
 msgid "Contest"
 msgstr "పర్యావరణ శాస్త్రం"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:110
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:119
 msgid "Select the rules used for calculating optimal points for a contest."
 msgstr "ఫలితాలను కన్ఫైడెల్చర్ ద్వారా నిర్ణయపరమైన నియంత్రణలను ఎంచేసిన రెక్టీవ్"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:113
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:122
 msgid "Predict Contest"
 msgstr "ఫలితాలను ప్రదర్శించడానికి నిర్ణయాలను కన్ఫైడెల్చర్"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:114
-msgid ""
-"If enabled, then the next task point is included in the score calculation, "
-"assuming that you will reach it."
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:123
+msgid "If enabled, then the next task point is included in the score calculation, assuming that you will reach it."
 msgstr "ఇప్పుడు తదుపరి వేపాయింట్‌ను సహకారంతో ఫలితాలను నిర్ణయాలో ఎంచేసిన రెక్టీవ్"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:121
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:130
 msgid "FAI triangle areas"
 msgstr "FAI త్రిభుజాలు"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:122
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:131
 msgid "Show FAI triangle areas on the map."
 msgstr "FAI త్రిభుజాలను మండలపు పేర్కొనుతూ ప్రదర్శించడం"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:126
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:135
 msgid "FAI triangle threshold"
 msgstr "FAI త్రిభుజాల గరిష్ఠ విలోమం"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:127
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:136
 msgid "Specifies which threshold is used for \"large\" FAI triangles."
 msgstr "గరిష్ఠ\" FAI త్రిభుజాలకు ఉపయోగించాలను సూచించే విలోమం"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:136
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:145
 #, no-c-format
 msgid "95% dist. rule helpers"
 msgstr "95% జిల్లా. పాలన సహాయకులు"
 
-#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:137
-msgid ""
-"Show helpers for Argentinean Federation \"95% distance\" rule. The AAT "
-"Distance Around Target InfoBox will show projected distance vs. maximum and "
-"change colors as you approach 95%."
-msgstr ""
-"అర్జెంటీనా ఫెడరేషన్ \"95% దూరం\" నియమం కోసం సహాయకులను చూపు. టార్గెట్ ఇన్ఫోబాక్స్ చుట్టూ ఉన్న AAT "
-"దూరం గరిష్టంగా అంచనా వేసిన దూరాన్ని చూపుతుంది మరియు మీరు 95%కి చేరుకున్నప్పుడు రంగులను "
-"మారుస్తుంది."
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:146
+msgid "Show helpers for Argentinean Federation \"95% distance\" rule. The AAT Distance Around Target InfoBox will show projected distance vs. maximum and change colors as you approach 95%."
+msgstr "అర్జెంటీనా ఫెడరేషన్ \"95% దూరం\" నియమం కోసం సహాయకులను చూపు. టార్గెట్ ఇన్ఫోబాక్స్ చుట్టూ ఉన్న AAT దూరం గరిష్టంగా అంచనా వేసిన దూరాన్ని చూపుతుంది మరియు మీరు 95%కి చేరుకున్నప్పుడు రంగులను మారుస్తుంది."
 
 #: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:231
 msgid "Terrain display"
@@ -6867,72 +6819,38 @@ msgstr "తరణం రంగులు"
 msgid "Defines the color ramp used in terrain rendering."
 msgstr "తరణం నిర్దిష్ట రంగు పనికి ఉపయోగించబడే రంగు విలోమాలు నిర్వహిస్తున్నది."
 
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:270
-#, no-c-format
-msgid "Fixed"
-msgstr "నిర్ణయపడే"
-
 #: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:271
 #, no-c-format
 msgid "Sun"
 msgstr "సూర్యం"
 
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:276
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:277
 msgid "Slope shading"
 msgstr "కోట్ల రాశికం"
 
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:277
-msgid ""
-"The terrain can be shaded among slopes to indicate either wind direction, "
-"sun position or a fixed shading from North-West."
-msgstr "తరణం నిర్దిష్ట రంగు పనికి ఉపయోగించబడే కోట్ల రాశికం."
-
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:282
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:285
 msgid "Terrain contrast"
 msgstr "తరణం నిర్దారణ"
 
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:283
-msgid ""
-"Defines the amount of Phong shading in the terrain rendering. Use large "
-"values to emphasise terrain slope, smaller values if flying in steep "
-"mountains."
-msgstr ""
-"తరణం పనికి ఉపయోగించబడే Phong రాశికం విలోమాలు నిర్వహిస్తున్నది. కొంత పెద్ద విలోమాలను ఉపయోగించడం దృష్టిలో "
-"తరణం కోట్లను వివరిస్తున్నాయి, మెదక్ ప్రాంతాలలో చేర్చడం దృష్టిలో కొంత కనిపిస్తున్నాయి."
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:286
+msgid "Defines the amount of Phong shading in the terrain rendering. Use large values to emphasise terrain slope, smaller values if flying in steep mountains."
+msgstr "తరణం పనికి ఉపయోగించబడే Phong రాశికం విలోమాలు నిర్వహిస్తున్నది. కొంత పెద్ద విలోమాలను ఉపయోగించడం దృష్టిలో తరణం కోట్లను వివరిస్తున్నాయి, మెదక్ ప్రాంతాలలో చేర్చడం దృష్టిలో కొంత కనిపిస్తున్నాయి."
 
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:289
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:292
 msgid "Terrain brightness"
 msgstr "తరణం వీభవం"
 
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:290
-msgid ""
-"Defines the brightness (whiteness) of the terrain rendering. This controls "
-"the average illumination of the terrain."
-msgstr ""
-"తర్ణాత్మక విస్తరణల ఆవశ్యకతను (హైటీస్) నిర్వహించు. ఇది తర్ణాత్మక విస్తరణల ప్రారంభ ఆవశ్యకతల నిర్ధారణను "
-"కంటైనీ విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను "
-"నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్"
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:293
+msgid "Defines the brightness (whiteness) of the terrain rendering. This controls the average illumination of the terrain."
+msgstr "తర్ణాత్మక విస్తరణల ఆవశ్యకతను (హైటీస్) నిర్వహించు. ఇది తర్ణాత్మక విస్తరణల ప్రారంభ ఆవశ్యకతల నిర్ధారణను కంటైనీ విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్యకతలను నిర్వహించుటకే విస్తరణ తగ్గిన ప్రారంభ ఆవశ్"
 
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:304
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:307
 msgid "Contours"
 msgstr "కార్నోల్స్"
 
-#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:305
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:308
 msgid "If enabled, draws contour lines on the terrain."
-msgstr ""
-"ఇవ్యత్తం చిత్రపత్రాలను తీర్ణమానంలో గ్రాఫికల్ రేఖలు వ్యవహరిస్తూ చేర్యాలను తగ్గినా, ప్రదేశంలో కార్నోల్స్."
+msgstr "ఇవ్యత్తం చిత్రపత్రాలను తీర్ణమానంలో గ్రాఫికల్ రేఖలు వ్యవహరిస్తూ చేర్యాలను తగ్గినా, ప్రదేశంలో కార్నోల్స్."
 
 #: src/Dialogs/Settings/Panels/UnitsConfigPanel.cpp:109
 msgid "Preset"
@@ -7757,7 +7675,7 @@ msgstr ""
 "బిందులను రాసివాయటాన్ని తగ్గించడానికి ఉపయోగించబడతాయి. మరొకటి వాల్స్ తగ్గించడానికి పెద్ద వాల్స్ తగ్గించడానికి మరియు "
 "కుట్రా వాల్స్ తగ్గించడానికి నాణ్యవాదాలను మార్పించడానికి ఉపయోగించబడతాయి."
 
-#: src/Dialogs/Task/TargetDialog.cpp:365 src/InfoBoxes/Content/Factory.cpp:934
+#: src/Dialogs/Task/TargetDialog.cpp:365 src/InfoBoxes/Content/Factory.cpp:940
 #, no-c-format
 msgid "Radial"
 msgstr "రాదియోలు"
@@ -7822,11 +7740,13 @@ msgid "Optimized"
 msgstr "అధికారంగా నిర్వహణలో"
 
 #. no alternates: don't show the dialog
-#: src/Dialogs/Task/AlternatesListDialog.cpp:204
+#: src/Dialogs/Task/AlternatesListDialog.cpp:290
+#: src/Dialogs/Task/AlternatesListDialog.cpp:330
 msgid "No alternates available"
 msgstr "కానైవాల్ లాబ్ల్స్ ఉంది కాదు"
 
-#: src/Dialogs/Task/AlternatesListDialog.cpp:210 Data/Input/default.xci:509
+#: src/Dialogs/Task/AlternatesListDialog.cpp:294
+#: src/Dialogs/Task/AlternatesListDialog.cpp:336 Data/Input/default.xci:509
 #: Data/Input/default.xci:1294
 msgid "Alternates"
 msgstr "కానైవాల్ లాబ్ల్స్"
@@ -8975,15 +8895,10 @@ msgstr ""
 msgid "Wind speed"
 msgstr "వాతావరణ శ్కేట్"
 
-#: src/InfoBoxes/Content/Factory.cpp:320 src/InfoBoxes/Content/Factory.cpp:907
+#: src/InfoBoxes/Content/Factory.cpp:320 src/InfoBoxes/Content/Factory.cpp:913
 #, no-c-format
-msgid ""
-"Wind speed estimated by XCSoar. Manual adjustment is possible with the "
-"connected InfoBox dialogue. Pressing the up/down cursor keys to cycle "
-"through settings, adjust the values with left/right cursor keys."
-msgstr ""
-"XCSoar నిర్వహించిన వాతావరణ శ్కేట్. జతపడి InfoBox డయలాగ్‌లో మానుఫాక్చర్‌లో రావడం సాధ్యం. ఎడ్‌జ్‌యూపీ "
-"కోన్ట్రల్‌ తీర్చేందుకు అవ్వినా నెర్చుతుంది."
+msgid "Wind speed estimated by XCSoar. Manual adjustment is possible with the connected InfoBox dialogue. Pressing the up/down cursor keys to cycle through settings, adjust the values with left/right cursor keys."
+msgstr "XCSoar నిర్వహించిన వాతావరణ శ్కేట్. జతపడి InfoBox డయలాగ్‌లో మానుఫాక్చర్‌లో రావడం సాధ్యం. ఎడ్‌జ్‌యూపీ కోన్ట్రల్‌ తీర్చేందుకు అవ్వినా నెర్చుతుంది."
 
 #: src/InfoBoxes/Content/Factory.cpp:326
 #, no-c-format
@@ -9280,6 +9195,7 @@ msgstr "కేవలం మాక్ కెరెడీ వైరియోమీ
 msgid "Netto vario"
 msgstr "నేతో వేరియోమీటర్"
 
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:76
 #: src/InfoBoxes/Content/Factory.cpp:472
 #, no-c-format
 msgid "Netto"
@@ -9696,1039 +9612,871 @@ msgstr "అల్టన్ 1"
 msgid "Name and bearing to the best alternate landing location."
 msgstr "అసల్ క్షేత్రం నిర్దిష్ట దక్షణాంతరం"
 
-#: src/InfoBoxes/Content/Factory.cpp:663
+#: src/InfoBoxes/Content/Factory.cpp:665
 #, no-c-format
 msgid "Alternate 2"
 msgstr "Altn 2"
 
-#: src/InfoBoxes/Content/Factory.cpp:664
+#: src/InfoBoxes/Content/Factory.cpp:666
 #, no-c-format
 msgid "Altn 2"
 msgstr "అసల్ క్షేత్రం రెండవ నిర్ధారణ"
 
-#: src/InfoBoxes/Content/Factory.cpp:665
+#: src/InfoBoxes/Content/Factory.cpp:667
 #, no-c-format
 msgid "Name and bearing to the second-best alternate landing location."
 msgstr "అసల్ క్షేత్రం ముఖ్య లాండింగ్ పోల్ నిర్ధారణ"
 
-#: src/InfoBoxes/Content/Factory.cpp:671
+#: src/InfoBoxes/Content/Factory.cpp:675
 #, no-c-format
 msgid "Alternate 1 GR"
 msgstr "Altn 1 GR"
 
-#: src/InfoBoxes/Content/Factory.cpp:672
+#: src/InfoBoxes/Content/Factory.cpp:676
 #, no-c-format
 msgid "Altn 1 GR"
 msgstr "అసల్ క్షేత్రం ముఖ్య లాండింగ్ పోల్ గ్రీడ్ రేట్"
 
-#: src/InfoBoxes/Content/Factory.cpp:673
+#: src/InfoBoxes/Content/Factory.cpp:677
 #, no-c-format
-msgid ""
-"Geometric gradient to the arrival height above the best alternate landing "
-"location. This is not adjusted for total energy."
+msgid "Geometric gradient to the arrival height above the best alternate landing location. This is not adjusted for total energy."
 msgstr "అసల్ క్షేత్రం ముఖ్య లాండింగ్ పోల్ గ్రీడ్ రేట్"
 
-#: src/InfoBoxes/Content/Factory.cpp:679
+#: src/InfoBoxes/Content/Factory.cpp:685
 #, no-c-format
 msgid "Height above take-off"
 msgstr "తాక్‌సోఫ్ ఉద్యోగం నిర్వహణ"
 
-#: src/InfoBoxes/Content/Factory.cpp:680
+#: src/InfoBoxes/Content/Factory.cpp:686
 #, no-c-format
 msgid "H T/O"
 msgstr "హెచ్ టో/వేయింపు"
 
-#: src/InfoBoxes/Content/Factory.cpp:681
+#: src/InfoBoxes/Content/Factory.cpp:687
 #, no-c-format
-msgid ""
-"Height based on an automatic take-off reference elevation (like a QFE "
-"reference)."
+msgid "Height based on an automatic take-off reference elevation (like a QFE reference)."
 msgstr "QFE అనుష్ఠిత తలాన్ని ఆధारంగా సమానం"
 
-#: src/InfoBoxes/Content/Factory.cpp:688
+#: src/InfoBoxes/Content/Factory.cpp:694
 #, no-c-format
 msgid "GR average"
 msgstr "GR పరిమాణం"
 
-#: src/InfoBoxes/Content/Factory.cpp:689
+#: src/InfoBoxes/Content/Factory.cpp:695
 #, no-c-format
 msgid "GR Avg"
 msgstr "గ్లైడ్ నిష్పత్తి సగటు"
 
-#: src/InfoBoxes/Content/Factory.cpp:690
+#: src/InfoBoxes/Content/Factory.cpp:696
 #, no-c-format
-msgid ""
-"Distance flown during the configured averaging period divided by the "
-"altitude lost during that period. Negative values are shown as ^^^ and "
-"indicate climbing cruise (height gain). For GR >200, the value is shown as ++"
-"+. You can configure the averaging period in the system setup (suggested: "
-"60, 90 or 120s). Lower values will be closer to GR Inst, and higher values "
-"will be closer to GR Cruise. Note: The distance is not the straight line "
-"between your previous and current positions; it is the actual path distance "
-"flown (including zigzags). This value is not calculated while circling."
+msgid "Distance flown during the configured averaging period divided by the altitude lost during that period. Negative values are shown as ^^^ and indicate climbing cruise (height gain). For GR >200, the value is shown as +++. You can configure the averaging period in the system setup (suggested: 60, 90 or 120s). Lower values will be closer to GR Inst, and higher values will be closer to GR Cruise. Note: The distance is not the straight line between your previous and current positions; it is the actual path distance flown (including zigzags). This value is not calculated while circling."
 msgstr "నిర్వహణ పరిమాణంలో ఫైనల్ గ్లైడ్ దూరం విభజనం అతిసమానం"
 
-#: src/InfoBoxes/Content/Factory.cpp:696
+#: src/InfoBoxes/Content/Factory.cpp:702
 #, no-c-format
 msgid "Experimental 1"
 msgstr "పరిశీలన 1"
 
-#: src/InfoBoxes/Content/Factory.cpp:697
+#: src/InfoBoxes/Content/Factory.cpp:703
 #, no-c-format
 msgid "Exp1"
 msgstr "ఏక్స్పెట్ 1"
 
-#: src/InfoBoxes/Content/Factory.cpp:704
+#: src/InfoBoxes/Content/Factory.cpp:710
 #, no-c-format
 msgid "Contest distance"
 msgstr "కట్స్‌దిస్ట"
 
-#: src/InfoBoxes/Content/Factory.cpp:705
+#: src/InfoBoxes/Content/Factory.cpp:711
 #, no-c-format
 msgid "Cont Dist"
 msgstr "కంటాంట్ దీశాలైన దూరం"
 
-#: src/InfoBoxes/Content/Factory.cpp:706
+#: src/InfoBoxes/Content/Factory.cpp:712
 #, no-c-format
-msgid ""
-"Instantaneous evaluation of the flown distance according to the configured "
-"Contest rule set."
+msgid "Instantaneous evaluation of the flown distance according to the configured Contest rule set."
 msgstr "నిర్వహణ పరిమాణంలో ఫైనల్ గ్లైడ్ దూరం విభజనం"
 
-#: src/InfoBoxes/Content/Factory.cpp:712
+#: src/InfoBoxes/Content/Factory.cpp:718
 #, no-c-format
 msgid "Experimental 2"
 msgstr "ఏకమెంటరీ 2"
 
-#: src/InfoBoxes/Content/Factory.cpp:713
+#: src/InfoBoxes/Content/Factory.cpp:719
 #, no-c-format
 msgid "Exp2"
 msgstr "పరిస్థితిలోని అవసరం"
 
-#: src/InfoBoxes/Content/Factory.cpp:720
+#: src/InfoBoxes/Content/Factory.cpp:726
 #, no-c-format
 msgid "CPU load"
 msgstr "CPU లోడ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:721
+#: src/InfoBoxes/Content/Factory.cpp:727
 #, no-c-format
 msgid "CPU"
 msgstr "CPU"
 
-#: src/InfoBoxes/Content/Factory.cpp:722
+#: src/InfoBoxes/Content/Factory.cpp:728
 #, no-c-format
 msgid "CPU load consumed by XCSoar averaged over 5 seconds."
 msgstr "5 సైకల్‌వర் XCSoar ని పనిచే CPU లోడ్ యొక్క మధ్యగత వాణిజ్యం"
 
-#: src/InfoBoxes/Content/Factory.cpp:728
+#: src/InfoBoxes/Content/Factory.cpp:734
 #, no-c-format
 msgid "Next altitude arrival"
 msgstr "క్రమం ఉపరితలు"
 
-#: src/InfoBoxes/Content/Factory.cpp:729
+#: src/InfoBoxes/Content/Factory.cpp:735
 #, no-c-format
 msgid "WP AltA"
 msgstr "వేపాయింట్ ఉద్యానం"
 
-#: src/InfoBoxes/Content/Factory.cpp:730
+#: src/InfoBoxes/Content/Factory.cpp:736
 #, no-c-format
-msgid ""
-"Absolute arrival altitude at the next waypoint in final glide. For AAT "
-"tasks, the target within the AAT sector is used."
-msgstr ""
-"ఫైనల్ గ్లైడ్‌లో అग్రవాలం జరిగిన క్రమం ఉపరితలు. AAT టాస్క్‌లో, AAT సెక్టర్‌లో తదుపరి లక్ష్యం ఉపయోగించబడతాయి."
+msgid "Absolute arrival altitude at the next waypoint in final glide. For AAT tasks, the target within the AAT sector is used."
+msgstr "ఫైనల్ గ్లైడ్‌లో అग్రవాలం జరిగిన క్రమం ఉపరితలు. AAT టాస్క్‌లో, AAT సెక్టర్‌లో తదుపరి లక్ష్యం ఉపయోగించబడతాయి."
 
-#: src/InfoBoxes/Content/Factory.cpp:736 src/InfoBoxes/Content/Factory.cpp:737
+#: src/InfoBoxes/Content/Factory.cpp:742 src/InfoBoxes/Content/Factory.cpp:743
 #, no-c-format
 msgid "Free RAM"
 msgstr "క్లీన్ రామ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:738
+#: src/InfoBoxes/Content/Factory.cpp:744
 #, no-c-format
 msgid "Free RAM as reported by OS."
 msgstr "OS ని సహకరించి పేర్కొనబడిన క్లీన్ రామ్."
 
-#: src/InfoBoxes/Content/Factory.cpp:744
+#: src/InfoBoxes/Content/Factory.cpp:750
 #, no-c-format
 msgid "Flight level"
 msgstr "విమాన తోడ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:745
+#: src/InfoBoxes/Content/Factory.cpp:751
 #, no-c-format
 msgid "FL"
 msgstr "FL"
 
-#: src/InfoBoxes/Content/Factory.cpp:746
+#: src/InfoBoxes/Content/Factory.cpp:752
 #, no-c-format
-msgid ""
-"Pressure Altitude given as Flight Level. If barometric altitude is not "
-"available, FL is calculated from GPS altitude, given that the correct QNH is "
-"set. In case the FL is calculated from the GPS altitude, the FL label is "
-"coloured red."
-msgstr ""
-"పీడన ఎత్తు ఫ్లైట్ లెవల్ గా ఇవ్వబడుతుంది. బారోమెట్రిక్ ఎత్తు లేకపయినప్పుడు, సరైన QNH సెట్ చేయబడినప్పుడు "
-"GPS ఎత్తు నుండి FL లెవల్ కంప్యూట్ చేయబడుతుంది. ఫ్లైట్ లెవల్ కంప్యూట్ చేయబడినప్పుడు GPS ఎత్తు "
-"నుండి FL లేబుల్ రెడ్ క్రొవ్వుతారు."
+msgid "Pressure Altitude given as Flight Level. If barometric altitude is not available, FL is calculated from GPS altitude, given that the correct QNH is set. In case the FL is calculated from the GPS altitude, the FL label is coloured red."
+msgstr "పీడన ఎత్తు ఫ్లైట్ లెవల్ గా ఇవ్వబడుతుంది. బారోమెట్రిక్ ఎత్తు లేకపయినప్పుడు, సరైన QNH సెట్ చేయబడినప్పుడు GPS ఎత్తు నుండి FL లెవల్ కంప్యూట్ చేయబడుతుంది. ఫ్లైట్ లెవల్ కంప్యూట్ చేయబడినప్పుడు GPS ఎత్తు నుండి FL లేబుల్ రెడ్ క్రొవ్వుతారు."
 
-#: src/InfoBoxes/Content/Factory.cpp:753 src/InfoBoxes/Content/Factory.cpp:754
+#: src/InfoBoxes/Content/Factory.cpp:759 src/InfoBoxes/Content/Factory.cpp:760
 #, no-c-format
 msgid "Barogram"
 msgstr "బారోగ్రమ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:755
+#: src/InfoBoxes/Content/Factory.cpp:761
 #, no-c-format
 msgid "Trace of altitude during flight."
 msgstr "విమాన తోడ్ దౌరంలో ప్రవేశించిన స్థానం గ్రాఫ్."
 
-#: src/InfoBoxes/Content/Factory.cpp:761
+#: src/InfoBoxes/Content/Factory.cpp:767
 #, no-c-format
 msgid "Vario trace"
 msgstr "Vario గ్రాఫ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:762
+#: src/InfoBoxes/Content/Factory.cpp:768
 #, no-c-format
 msgid "Vario Trace"
 msgstr "Vario గ్రాఫ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:763
-#, no-c-format
-msgid ""
-"Trace of vertical speed, as reported by the GPS, or the intelligent vario "
-"total energy vario value if connected to one."
-msgstr ""
-"GPS ను సహకరించి పేర్కొనబడిన వెయ్యామైన ఉపరితల గతి గ్రాఫ్, లేదా GPS ను సహకరించి వెయ్యామైన ఉపరితల గతి "
-"కోసం ఏకాధికం విజీవంత వేరియోమీటర్‌ విలువ."
-
 #: src/InfoBoxes/Content/Factory.cpp:769
+#, no-c-format
+msgid "Trace of vertical speed, as reported by the GPS, or the intelligent vario total energy vario value if connected to one."
+msgstr "GPS ను సహకరించి పేర్కొనబడిన వెయ్యామైన ఉపరితల గతి గ్రాఫ్, లేదా GPS ను సహకరించి వెయ్యామైన ఉపరితల గతి కోసం ఏకాధికం విజీవంత వేరియోమీటర్‌ విలువ."
+
+#: src/InfoBoxes/Content/Factory.cpp:775
 #, no-c-format
 msgid "Netto vario trace"
 msgstr "నెట్టో Vario గ్రాఫ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:770
+#: src/InfoBoxes/Content/Factory.cpp:776
 #, no-c-format
 msgid "Netto Trace"
 msgstr "నెట్టో గ్రాఫ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:771
-#, no-c-format
-msgid ""
-"Trace of vertical speed of air-mass, equal to vario value less the glider's "
-"estimated sink rate."
-msgstr ""
-"వెయ్యామైన ఉపరితల గతి, అదన వాయు సమాంతరంగా నిర్ణయం చేసిన వెయ్యామైన ఉపరితల గతి కోసం వేరియోమీటర్‌ విలువ లేదా "
-"వాయు సమాంతరంగా నిర్ణయం చేసిన వెయ్యామైన ఉపరితల గతి."
-
 #: src/InfoBoxes/Content/Factory.cpp:777
+#, no-c-format
+msgid "Trace of vertical speed of air-mass, equal to vario value less the glider's estimated sink rate."
+msgstr "వెయ్యామైన ఉపరితల గతి, అదన వాయు సమాంతరంగా నిర్ణయం చేసిన వెయ్యామైన ఉపరితల గతి కోసం వేరియోమీటర్‌ విలువ లేదా వాయు సమాంతరంగా నిర్ణయం చేసిన వెయ్యామైన ఉపరితల గతి."
+
+#: src/InfoBoxes/Content/Factory.cpp:783
 #, no-c-format
 msgid "Thermal climb trace"
 msgstr "థర్మల్ ఉపరితల గ్రాఫ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:778
+#: src/InfoBoxes/Content/Factory.cpp:784
 #, no-c-format
 msgid "TC Trace"
 msgstr "TC ట్రాష్"
 
-#: src/InfoBoxes/Content/Factory.cpp:779
-#, no-c-format
-msgid ""
-"Trace of average climb rate each turn in circling, based of the reported GPS "
-"altitude, or vario if available."
-msgstr ""
-"చిర్కల్‌లో ప్రతి టర్న్‌లో సందర్భాలుగా GPS ఉద్గారం లైన్‌లో తనిఖీకరణ చేయబడిన ఔహాత్రత వారు యొక్క సగటు ఉద్గార "
-"దూరం."
-
 #: src/InfoBoxes/Content/Factory.cpp:785
+#, no-c-format
+msgid "Trace of average climb rate each turn in circling, based of the reported GPS altitude, or vario if available."
+msgstr "చిర్కల్‌లో ప్రతి టర్న్‌లో సందర్భాలుగా GPS ఉద్గారం లైన్‌లో తనిఖీకరణ చేయబడిన ఔహాత్రత వారు యొక్క సగటు ఉద్గార దూరం."
+
+#: src/InfoBoxes/Content/Factory.cpp:791
 #, no-c-format
 msgid "Climb band"
 msgstr "తీర్ణ బంద్"
 
-#: src/InfoBoxes/Content/Factory.cpp:786
+#: src/InfoBoxes/Content/Factory.cpp:792
 #, no-c-format
 msgid "Climb Band"
 msgstr "తీర్ణ బంద్"
 
-#: src/InfoBoxes/Content/Factory.cpp:787
-#, no-c-format
-msgid ""
-"Graph of average circling climb rate (horizontal axis) as a function of "
-"altitude (vertical axis)."
-msgstr ""
-"ఉత్తరణ దరం (అక్షర్థం: ఎడ్జెక్ట్) యొక్క చిత్రం, ఉత్తరణ దరం (అక్షర్థం: ఎడ్జెక్ట్) యొక్క తలపరి "
-"అవసరమైన వాహన ఉత్తరణ దరం (అక్షర్థం: ఎడ్జెక్ట్) యొక్క సంబంధంలో చేయబడిన ప్రధాన తీర్ణ దరం (అక్షర్థం: "
-"ఎడ్జెక్ట్) యొక్క చిత్రం."
-
 #: src/InfoBoxes/Content/Factory.cpp:793
+#, no-c-format
+msgid "Graph of average circling climb rate (horizontal axis) as a function of altitude (vertical axis)."
+msgstr "ఉత్తరణ దరం (అక్షర్థం: ఎడ్జెక్ట్) యొక్క చిత్రం, ఉత్తరణ దరం (అక్షర్థం: ఎడ్జెక్ట్) యొక్క తలపరి అవసరమైన వాహన ఉత్తరణ దరం (అక్షర్థం: ఎడ్జెక్ట్) యొక్క సంబంధంలో చేయబడిన ప్రధాన తీర్ణ దరం (అక్షర్థం: ఎడ్జెక్ట్) యొక్క చిత్రం."
+
+#: src/InfoBoxes/Content/Factory.cpp:799
 #, no-c-format
 msgid "Task progress"
 msgstr "టాస్క్ ప్రగతి"
 
-#: src/InfoBoxes/Content/Factory.cpp:794
+#: src/InfoBoxes/Content/Factory.cpp:800
 #, no-c-format
 msgid "Progress"
 msgstr "ప్రగతి"
 
-#: src/InfoBoxes/Content/Factory.cpp:795
+#: src/InfoBoxes/Content/Factory.cpp:801
 #, no-c-format
-msgid ""
-"Clock-like display of distance remaining along task, showing achieved task "
-"points."
+msgid "Clock-like display of distance remaining along task, showing achieved task points."
 msgstr "కోకిలుగా తీర్ణ వేstantsయం లో ఉన్న టాస్క్ నివారణ దూరం చెప్పిన క్లక్ విధానం."
 
-#: src/InfoBoxes/Content/Factory.cpp:801
+#: src/InfoBoxes/Content/Factory.cpp:807
 #, no-c-format
 msgid "Time under max. start height"
 msgstr "మaksయాస్ట్ ఉత్పాదన దీర్ఘాకారం"
 
-#: src/InfoBoxes/Content/Factory.cpp:802
+#: src/InfoBoxes/Content/Factory.cpp:808
 #, no-c-format
 msgid "Start Height"
 msgstr "శాఖా ఉత్పాదన"
 
-#: src/InfoBoxes/Content/Factory.cpp:803
+#: src/InfoBoxes/Content/Factory.cpp:809
 #, no-c-format
-msgid ""
-"Contiguous period during which the aircraft has been below the task start "
-"maximum height."
+msgid "Contiguous period during which the aircraft has been below the task start maximum height."
 msgstr "వాహనం కాలములో తీర్ణ విలేఖయిన శాఖా ఉత్పాదన దీర్ఘాకారం."
 
-#: src/InfoBoxes/Content/Factory.cpp:809
+#: src/InfoBoxes/Content/Factory.cpp:815
 #, no-c-format
 msgid "Task time to go (ground speed)"
 msgstr "టాస్క్ గ్రొండ్ స్పెడ్ యొక్క మaksయాస్ట్ వేstantsయం"
 
-#: src/InfoBoxes/Content/Factory.cpp:810
+#: src/InfoBoxes/Content/Factory.cpp:816
 #, no-c-format
 msgid "Fin ETE VMG"
 msgstr "ఫిన్ ETE VMG"
 
-#: src/InfoBoxes/Content/Factory.cpp:811
-#, no-c-format
-msgid ""
-"Estimated time required to complete task, assuming current ground speed is "
-"maintained."
-msgstr ""
-"కాలం నిర్ణయం, అన్ని పదాలు సమానంగా ఉత్పాదన దరం కొనసాగినట్లు నిర్వహించబడిన మaksయాస్ట్ వేstantsయం."
-
 #: src/InfoBoxes/Content/Factory.cpp:817
+#, no-c-format
+msgid "Estimated time required to complete task, assuming current ground speed is maintained."
+msgstr "కాలం నిర్ణయం, అన్ని పదాలు సమానంగా ఉత్పాదన దరం కొనసాగినట్లు నిర్వహించబడిన మaksయాస్ట్ వేstantsయం."
+
+#: src/InfoBoxes/Content/Factory.cpp:823
 #, no-c-format
 msgid "Next time to go (ground speed)"
 msgstr "కొకటి వేstantsయం"
 
-#: src/InfoBoxes/Content/Factory.cpp:818
+#: src/InfoBoxes/Content/Factory.cpp:824
 #, no-c-format
 msgid "WP ETE VMG"
 msgstr "వేపాయింట్ ఎటీఈ విజెన్‌గ్‌మెన్‌ వారు"
 
-#: src/InfoBoxes/Content/Factory.cpp:819
+#: src/InfoBoxes/Content/Factory.cpp:825
 #, no-c-format
-msgid ""
-"Estimated time required to reach next waypoint, assuming current ground "
-"speed is maintained."
+msgid "Estimated time required to reach next waypoint, assuming current ground speed is maintained."
 msgstr "అన్ని పదాలు సమానంగా ఉత్పాదన దరం కొనసాగినట్లు నిర్వహించబడిన మీడియం వేstantsయం."
 
-#: src/InfoBoxes/Content/Factory.cpp:825
+#: src/InfoBoxes/Content/Factory.cpp:831
 #, no-c-format
 msgid "Attitude indicator"
 msgstr "అతిపదక స్థాపన"
 
-#: src/InfoBoxes/Content/Factory.cpp:827
-#, no-c-format
-msgid ""
-"Attitude indicator (artificial horizon) display calculated from flight path, "
-"supplemented with acceleration and variometer data if available."
-msgstr ""
-"అతిపదక స్థాపన (రాష్ట్రములో కొనసాగిన హార్యూరికా) దిద్రేక్షన్ చిత్రం, అతిపదక స్థాపన (రాష్ట్రములో కొనసాగిన "
-"హార్యూరికా) దిద్రేక్షన్ చిత్రం నిర్వహించడానికి ప్రత్యక్ష దత్తాంశాలు (అక్షర్థం: వఞ్జం) లోని సమావేశాలు."
-
 #: src/InfoBoxes/Content/Factory.cpp:833
+#, no-c-format
+msgid "Attitude indicator (artificial horizon) display calculated from flight path, supplemented with acceleration and variometer data if available."
+msgstr "అతిపదక స్థాపన (రాష్ట్రములో కొనసాగిన హార్యూరికా) దిద్రేక్షన్ చిత్రం, అతిపదక స్థాపన (రాష్ట్రములో కొనసాగిన హార్యూరికా) దిద్రేక్షన్ చిత్రం నిర్వహించడానికి ప్రత్యక్ష దత్తాంశాలు (అక్షర్థం: వఞ్జం) లోని సమావేశాలు."
+
+#: src/InfoBoxes/Content/Factory.cpp:839
 #, no-c-format
 msgid "Nearest airspace horizontal"
 msgstr "కొకటి వహనా ద్రవ్యం నిర్ణయం (అక్షర్థం: సమతల ప్రదర్శన)"
 
-#: src/InfoBoxes/Content/Factory.cpp:834
+#: src/InfoBoxes/Content/Factory.cpp:840
 #, no-c-format
 msgid "Near AS H"
 msgstr "ఆస్‌ఎష్ కలవ"
 
-#: src/InfoBoxes/Content/Factory.cpp:835
+#: src/InfoBoxes/Content/Factory.cpp:841
 #, no-c-format
 msgid "Horizontal distance to the nearest airspace."
 msgstr "నేను పరికరం దగ్గర త్వరాత్మక విస్తరణ."
 
-#: src/InfoBoxes/Content/Factory.cpp:841
+#: src/InfoBoxes/Content/Factory.cpp:847
 #, no-c-format
 msgid "Nearest airspace vertical"
 msgstr "ఆస్‌ఎష్ కలవ ఊరు"
 
-#: src/InfoBoxes/Content/Factory.cpp:842
+#: src/InfoBoxes/Content/Factory.cpp:848
 #, no-c-format
 msgid "Near AS V"
 msgstr "ఆస్‌ఎష్ కలవ దగ్గర త్వరాత్మక విస్తరణ."
 
-#: src/InfoBoxes/Content/Factory.cpp:843
-#, no-c-format
-msgid ""
-"Vertical distance to the nearest airspace. A positive value means the "
-"airspace is above you; a negative value means the airspace is below you."
-msgstr ""
-"నేను పరికరం దగ్గర త్వరాత్మక విస్తరణ. ఏకసాంఖ్యం ధనాత్మక విలోమం అర్థం పై ఆస్‌ఎష్ కలవ; ఏకసాంఖ్యం "
-"నిహస్తమం ధనాత్మక విలోమం అర్థం కీలభేదం పై ఆస్‌ఎష్ కలవ."
-
 #: src/InfoBoxes/Content/Factory.cpp:849
+#, no-c-format
+msgid "Vertical distance to the nearest airspace. A positive value means the airspace is above you; a negative value means the airspace is below you."
+msgstr "నేను పరికరం దగ్గర త్వరాత్మక విస్తరణ. ఏకసాంఖ్యం ధనాత్మక విలోమం అర్థం పై ఆస్‌ఎష్ కలవ; ఏకసాంఖ్యం నిహస్తమం ధనాత్మక విలోమం అర్థం కీలభేదం పై ఆస్‌ఎష్ కలవ."
+
+#: src/InfoBoxes/Content/Factory.cpp:855
 #, no-c-format
 msgid "Next MC0 altitude difference"
 msgstr "ఏకచాలను 0 ని వాటికి తరహగా అభివృద్ధి దూరం"
 
-#: src/InfoBoxes/Content/Factory.cpp:850
+#: src/InfoBoxes/Content/Factory.cpp:856
 #, no-c-format
 msgid "WP MC0 AltD"
 msgstr "WP మీటర్‌కు అల్ట్‌డైనింగ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:851
-#, no-c-format
-msgid ""
-"Arrival altitude at the next waypoint with MC 0 setting relative to the "
-"safety arrival height. For AAT tasks, the target within the AAT sector is "
-"used."
-msgstr ""
-"ఏకచాలను 0 ని వాటికి తరహగా సభ్యత పర్వత లండింగ్‌ను కోల్చిన అభివృద్ధి దూరం. AAT తరస్సులకు, AAT "
-"ప్రాంతంలో ఉన్న వ్యవస్థానే ఉపయోగించబడుతుంది."
-
 #: src/InfoBoxes/Content/Factory.cpp:857
+#, no-c-format
+msgid "Arrival altitude at the next waypoint with MC 0 setting relative to the safety arrival height. For AAT tasks, the target within the AAT sector is used."
+msgstr "ఏకచాలను 0 ని వాటికి తరహగా సభ్యత పర్వత లండింగ్‌ను కోల్చిన అభివృద్ధి దూరం. AAT తరస్సులకు, AAT ప్రాంతంలో ఉన్న వ్యవస్థానే ఉపయోగించబడుతుంది."
+
+#: src/InfoBoxes/Content/Factory.cpp:863
 #, no-c-format
 msgid "Wind, head component"
 msgstr "తరణ, శీర్షక ఘటన"
 
-#: src/InfoBoxes/Content/Factory.cpp:858
+#: src/InfoBoxes/Content/Factory.cpp:864
 #, no-c-format
 msgid "Head Wind"
 msgstr "శీర్షక తరణ"
 
-#: src/InfoBoxes/Content/Factory.cpp:859
-#, no-c-format
-msgid ""
-"Current head wind component. Head wind is calculated from TAS and GPS ground "
-"speed if airspeed is available from an external device; otherwise, the "
-"estimated wind is used."
-msgstr ""
-"ప్రతికూల వాతావరణ సమన్రిహితం. ప్రతికూల వాతావరణ అత్యజత శ్రద్ధ దూరం (TAS) మరియు GPS వార్థ గ్రొన్డ్ "
-"సీక్వెన్స్ నుండి పాత్రంగతమైన వాతావరణ ద్వారా కలిగి ఉంటే, అలాగే ఒక పెన్సన్లోని వాతావరణం నిర్ణయించబడుతుంది."
-
 #: src/InfoBoxes/Content/Factory.cpp:865
+#, no-c-format
+msgid "Current head wind component. Head wind is calculated from TAS and GPS ground speed if airspeed is available from an external device; otherwise, the estimated wind is used."
+msgstr "ప్రతికూల వాతావరణ సమన్రిహితం. ప్రతికూల వాతావరణ అత్యజత శ్రద్ధ దూరం (TAS) మరియు GPS వార్థ గ్రొన్డ్ సీక్వెన్స్ నుండి పాత్రంగతమైన వాతావరణ ద్వారా కలిగి ఉంటే, అలాగే ఒక పెన్సన్లోని వాతావరణం నిర్ణయించబడుతుంది."
+
+#: src/InfoBoxes/Content/Factory.cpp:871
 #, no-c-format
 msgid "Terrain collision"
 msgstr "భూమి సమతలాన్ని నిర్ణయించిన పరిష్కరణ"
 
-#: src/InfoBoxes/Content/Factory.cpp:866
+#: src/InfoBoxes/Content/Factory.cpp:872
 #, no-c-format
 msgid "Terr Coll"
 msgstr "తర్వాత కళ్ల సమానం"
 
-#: src/InfoBoxes/Content/Factory.cpp:867
+#: src/InfoBoxes/Content/Factory.cpp:873
 #, no-c-format
-msgid ""
-"Distance to the next terrain collision along the current task leg. At this "
-"location, the altitude will be below the configured terrain clearance "
-"altitude."
-msgstr ""
-"కార్యకరమైన తరణ సమతలాన్ని నిర్ణయించిన పరిష్కరణ. కార్యకరమైన తరణ సమతలం దగ్గర నిర్ణయించబడుతుంది."
+msgid "Distance to the next terrain collision along the current task leg. At this location, the altitude will be below the configured terrain clearance altitude."
+msgstr "కార్యకరమైన తరణ సమతలాన్ని నిర్ణయించిన పరిష్కరణ. కార్యకరమైన తరణ సమతలం దగ్గర నిర్ణయించబడుతుంది."
 
-#: src/InfoBoxes/Content/Factory.cpp:872
+#: src/InfoBoxes/Content/Factory.cpp:878
 #, no-c-format
 msgid "Altitude (Auto)"
 msgstr "అభివృద్ధి (పెద్ద)"
 
-#: src/InfoBoxes/Content/Factory.cpp:873
+#: src/InfoBoxes/Content/Factory.cpp:879
 #, no-c-format
 msgid "Alt Auto"
 msgstr "ఆల్ట్ యొక్క డివేజన్‌"
 
-#: src/InfoBoxes/Content/Factory.cpp:874
+#: src/InfoBoxes/Content/Factory.cpp:880
 #, no-c-format
-msgid ""
-"Barometric altitude obtained from a device equipped with a pressure sensor, "
-"or GPS altitude if barometric altitude is not available."
-msgstr ""
-"బారోమెటరీ అవార్డైన్‌లో ఉన్న ప్రశ్నకరణ సంకేతం కనిపిస్తుంది, అయితే బారోమెటరీ ఉత్తాలం కనిపిస్తే, GPS ఉత్తాలం "
-"నిష్పత్తికి గల ఉత్తాలం కనిపిస్తుంది."
+msgid "Barometric altitude obtained from a device equipped with a pressure sensor, or GPS altitude if barometric altitude is not available."
+msgstr "బారోమెటరీ అవార్డైన్‌లో ఉన్న ప్రశ్నకరణ సంకేతం కనిపిస్తుంది, అయితే బారోమెటరీ ఉత్తాలం కనిపిస్తే, GPS ఉత్తాలం నిష్పత్తికి గల ఉత్తాలం కనిపిస్తుంది."
 
-#: src/InfoBoxes/Content/Factory.cpp:881
+#: src/InfoBoxes/Content/Factory.cpp:887
 #, no-c-format
 msgid "Thermal next leg equivalent"
 msgstr "తరణ క్రమం అక్షాన్ని నిర్ణయించిన పరిశోధన"
 
-#: src/InfoBoxes/Content/Factory.cpp:882
+#: src/InfoBoxes/Content/Factory.cpp:888
 #, no-c-format
 msgid "T Next Leg"
 msgstr "T అग్రమైన లెగ్‌కు తరువాత"
 
-#: src/InfoBoxes/Content/Factory.cpp:883
+#: src/InfoBoxes/Content/Factory.cpp:889
 #, no-c-format
-msgid ""
-"Thermal climb rate on the next leg that is equivalent to a thermal climb "
-"rate equal to the MacCready setting on the current leg."
+msgid "Thermal climb rate on the next leg that is equivalent to a thermal climb rate equal to the MacCready setting on the current leg."
 msgstr "క్రమం అక్షాన్ని నిర్ణయించిన తరణ ఉద్భవం, ప్రస్తావిత మాక్‌క్‌రెడీ నిర్ధారించబడుతుంది."
 
-#: src/InfoBoxes/Content/Factory.cpp:889
+#: src/InfoBoxes/Content/Factory.cpp:895
 #, no-c-format
 msgid "Wind, head component (simplified)"
 msgstr "విన్దులో పారమితి (క్షమంగా)"
 
-#: src/InfoBoxes/Content/Factory.cpp:890
+#: src/InfoBoxes/Content/Factory.cpp:896
 #, no-c-format
 msgid "Head Wind *"
 msgstr "హేడ్ విన్దు *"
 
-#: src/InfoBoxes/Content/Factory.cpp:891
+#: src/InfoBoxes/Content/Factory.cpp:897
 #, no-c-format
-msgid ""
-"Current head wind component. The simplified head wind is calculated by "
-"subtracting GPS ground speed from TAS if airspeed is available from an "
-"external device."
-msgstr ""
-"కాల్వ్ హేడ్ విన్దు పారమితి. క్షమంగా హేడ్ విన్దు పారమితిని GPS గ్రొండ్ సీప్ ను టెస్ట్ అయిన వాయుగత్స్ ద్వారా కొల్పిన "
-"వాయుగత్స్ ను రెండిట్ చేయడానికి లవాలి."
+msgid "Current head wind component. The simplified head wind is calculated by subtracting GPS ground speed from TAS if airspeed is available from an external device."
+msgstr "కాల్వ్ హేడ్ విన్దు పారమితి. క్షమంగా హేడ్ విన్దు పారమితిని GPS గ్రొండ్ సీప్ ను టెస్ట్ అయిన వాయుగత్స్ ద్వారా కొల్పిన వాయుగత్స్ ను రెండిట్ చేయడానికి లవాలి."
 
-#: src/InfoBoxes/Content/Factory.cpp:896
+#: src/InfoBoxes/Content/Factory.cpp:902
 #, no-c-format
 msgid "Task cruise efficiency"
 msgstr "టాస్క్ క్రూజ్ ఎఫిషన్"
 
-#: src/InfoBoxes/Content/Factory.cpp:897
+#: src/InfoBoxes/Content/Factory.cpp:903
 #, no-c-format
 msgid "Cruise Eff"
 msgstr "క్రూజ్ ఎఫిషన్"
 
-#: src/InfoBoxes/Content/Factory.cpp:898
+#: src/InfoBoxes/Content/Factory.cpp:904
 #, no-c-format
-msgid ""
-"Efficiency of cruise. 100 indicates perfect MacCready performance. This "
-"value estimates your cruise efficiency according to the current flight "
-"history with the set MC value. Calculation begins after task is started."
-msgstr ""
-"క్రూజ్ ఎఫిషన్ ను ప్రకటించాలని తెలియిన వాయుగత్స్. 100 అనేది మాక్షరీ పరిశోధన నిర్వహణలో కూడా తెలియిన "
-"వాయుగత్స్. ఈ మూలం ప్రకటించిన ఫైల్ ఇషిహాస్ ను కొనసాగిన వాయుగత్స్ ద్వారా ప్రకటించబడే క్రూజ్ ఎఫిషన్ ను "
-"తెలియినా వాయుగత్స్. ప్రకటించడం కోసం టాస్క్ ను ఆమోదంలో వేయబడిన దాశాలో ప్రారంభమైన కాలం తర్వాత."
+msgid "Efficiency of cruise. 100 indicates perfect MacCready performance. This value estimates your cruise efficiency according to the current flight history with the set MC value. Calculation begins after task is started."
+msgstr "క్రూజ్ ఎఫిషన్ ను ప్రకటించాలని తెలియిన వాయుగత్స్. 100 అనేది మాక్షరీ పరిశోధన నిర్వహణలో కూడా తెలియిన వాయుగత్స్. ఈ మూలం ప్రకటించిన ఫైల్ ఇషిహాస్ ను కొనసాగిన వాయుగత్స్ ద్వారా ప్రకటించబడే క్రూజ్ ఎఫిషన్ ను తెలియినా వాయుగత్స్. ప్రకటించడం కోసం టాస్క్ ను ఆమోదంలో వేయబడిన దాశాలో ప్రారంభమైన కాలం తర్వాత."
 
-#: src/InfoBoxes/Content/Factory.cpp:914
+#: src/InfoBoxes/Content/Factory.cpp:920
 #, no-c-format
-msgid ""
-"Circular thermal assistant that shows the lift distribution over each part "
-"of the circle."
+msgid "Circular thermal assistant that shows the lift distribution over each part of the circle."
 msgstr "చక్కా థర్మల్ సాహాయి ఏర్పడిన విభజనాన్ని కొత్త రంగానికి ఈ చక్కాలో ఉన్న లిఫ్ట్ పరిమాణాన్ని తెలియినా విడి."
 
-#: src/InfoBoxes/Content/Factory.cpp:919
+#: src/InfoBoxes/Content/Factory.cpp:925
 #, no-c-format
 msgid "Start open/close countdown"
 msgstr "ఆపార్‌కో నివేదిక"
 
-#: src/InfoBoxes/Content/Factory.cpp:920
+#: src/InfoBoxes/Content/Factory.cpp:926
 #, no-c-format
 msgid "Start open"
 msgstr "ఆపార్‌కో నివేదిక"
 
-#: src/InfoBoxes/Content/Factory.cpp:921
+#: src/InfoBoxes/Content/Factory.cpp:927
 #, no-c-format
 msgid "Time left until the start point opens or closes."
 msgstr "శుద్ధ స్థానం లో ఆమోదంలో వేయబడిన ప్రారంభ బిందువు నివేదిక కాలం."
 
-#: src/InfoBoxes/Content/Factory.cpp:926
+#: src/InfoBoxes/Content/Factory.cpp:932
 #, no-c-format
 msgid "Start open/close countdown at reaching"
 msgstr "ఆపార్‌కో నివేదిక"
 
-#: src/InfoBoxes/Content/Factory.cpp:927
+#: src/InfoBoxes/Content/Factory.cpp:933
 #, no-c-format
 msgid "Start reach"
 msgstr "శుద్ధ స్థానం లో ఆమోదంలో వేయబడిన ప్రారంభ బిందువు నివేదిక కాలం."
 
-#: src/InfoBoxes/Content/Factory.cpp:928
+#: src/InfoBoxes/Content/Factory.cpp:934
 #, no-c-format
-msgid ""
-"Time left until the start point opens or closes, minus the calculated time "
-"to reach the start point."
-msgstr ""
-"శుద్ధ స్థానం లో ఆమోదంలో వేయబడిన ప్రారంభ బిందువు నివేదిక కాలం, తర్వాత శీర్షం లో ప్రారంభ బిందువు నివేదిక "
-"కాలం."
+msgid "Time left until the start point opens or closes, minus the calculated time to reach the start point."
+msgstr "శుద్ధ స్థానం లో ఆమోదంలో వేయబడిన ప్రారంభ బిందువు నివేదిక కాలం, తర్వాత శీర్షం లో ప్రారంభ బిందువు నివేదిక కాలం."
 
-#: src/InfoBoxes/Content/Factory.cpp:933
+#: src/InfoBoxes/Content/Factory.cpp:939
 #, no-c-format
 msgid "Next radial"
 msgstr "తర్వాత వెళ్ళాలను సూచించే రాడియల్"
 
-#: src/InfoBoxes/Content/Factory.cpp:935
+#: src/InfoBoxes/Content/Factory.cpp:941
 #, no-c-format
 msgid "True bearing from the next waypoint to your position."
-msgstr ""
-"నిర్దిష్ట అక్షరం లో ప్రారంభ బిందువు నివేదిక తెలియిన వాయుగత్స ద్వారా ప్రారంభ బిందువు నివేదిక తెలియిన "
-"వాయుగత్స."
+msgstr "నిర్దిష్ట అక్షరం లో ప్రారంభ బిందువు నివేదిక తెలియిన వాయుగత్స ద్వారా ప్రారంభ బిందువు నివేదిక తెలియిన వాయుగత్స."
 
-#: src/InfoBoxes/Content/Factory.cpp:940 src/InfoBoxes/Content/Factory.cpp:941
+#: src/InfoBoxes/Content/Factory.cpp:946 src/InfoBoxes/Content/Factory.cpp:947
 #, no-c-format
 msgid "ATC radial"
 msgstr "ATC రాడియల్"
 
-#: src/InfoBoxes/Content/Factory.cpp:942
-#, no-c-format
-msgid ""
-"Bearing from the selected reference location to your position. The distance "
-"is displayed in nautical miles for communication with ATC. If declination is "
-"entered, magnetic bearing is given to match VOR radials."
-msgstr ""
-"ఎస్‌చూర్ట్ ఎస్‌లిఫేన్ట్ రెఫరెన్స్ లోకి నియతరాన్ని పరిమితిదారం. త్వరగా సహజ అభివృద్ధికి డిస్టాన్స్ ఎన్నికల మిల్జులలో "
-"పరిష్కరించబడినది కూడా రంగాల ద్వారా విదేశ సహకారంలో పాలీట్. మధ్యగతం నష్టం కంటే, అవిజుల్ట్ బహుళకాలను "
-"వద్ద మధ్యగత దర్శకం మారిపడే సరళాల నుండి మధ్యగత బహుళకం ఇవ్వబడుతోంది."
-
 #: src/InfoBoxes/Content/Factory.cpp:948
+#, no-c-format
+msgid "Bearing from the selected reference location to your position. The distance is displayed in nautical miles for communication with ATC. If declination is entered, magnetic bearing is given to match VOR radials."
+msgstr "ఎస్‌చూర్ట్ ఎస్‌లిఫేన్ట్ రెఫరెన్స్ లోకి నియతరాన్ని పరిమితిదారం. త్వరగా సహజ అభివృద్ధికి డిస్టాన్స్ ఎన్నికల మిల్జులలో పరిష్కరించబడినది కూడా రంగాల ద్వారా విదేశ సహకారంలో పాలీట్. మధ్యగతం నష్టం కంటే, అవిజుల్ట్ బహుళకాలను వద్ద మధ్యగత దర్శకం మారిపడే సరళాల నుండి మధ్యగత బహుళకం ఇవ్వబడుతోంది."
+
+#: src/InfoBoxes/Content/Factory.cpp:954
 #, no-c-format
 msgid "Speed task last hour"
 msgstr "టాస్క్ జరిగిన మొదటి గంట నిర్ణయం"
 
-#: src/InfoBoxes/Content/Factory.cpp:949
+#: src/InfoBoxes/Content/Factory.cpp:955
 #, no-c-format
 msgid "V Task H"
 msgstr "వటస్కరణ కోశాలు"
 
-#: src/InfoBoxes/Content/Factory.cpp:950
+#: src/InfoBoxes/Content/Factory.cpp:956
 #, no-c-format
-msgid ""
-"Average cross-country speed while on current task over the last hour, not "
-"compensated for altitude."
+msgid "Average cross-country speed while on current task over the last hour, not compensated for altitude."
 msgstr "క్రమంత: ప"
 
-#: src/InfoBoxes/Content/Factory.cpp:956
+#: src/InfoBoxes/Content/Factory.cpp:962
 #, no-c-format
 msgid "Next distance (nominal)"
 msgstr "మీడియం దూరం (నమోనల్)"
 
-#: src/InfoBoxes/Content/Factory.cpp:957
+#: src/InfoBoxes/Content/Factory.cpp:963
 #, no-c-format
 msgid "WP Dist-N"
 msgstr "WP దూరాన్ని-N"
 
-#: src/InfoBoxes/Content/Factory.cpp:958
+#: src/InfoBoxes/Content/Factory.cpp:964
 #, no-c-format
-msgid ""
-"Distance to the currently selected waypoint. For AAT tasks, this is the "
-"distance to the origin of the AAT sector."
-msgstr ""
-"తమిళ వేపాయింట్ ని ఎంచుకున్న దూరం. AAT టాస్కల్లో, ఈ దూరం అతిమిత ఆయన కేంద్రం ని ఎంచుకున్న దూరం."
+msgid "Distance to the currently selected waypoint. For AAT tasks, this is the distance to the origin of the AAT sector."
+msgstr "తమిళ వేపాయింట్ ని ఎంచుకున్న దూరం. AAT టాస్కల్లో, ఈ దూరం అతిమిత ఆయన కేంద్రం ని ఎంచుకున్న దూరం."
 
-#: src/InfoBoxes/Content/Factory.cpp:963
+#: src/InfoBoxes/Content/Factory.cpp:969
 #, no-c-format
 msgid "Circle diameter"
 msgstr "వృత్త వ్యాసం"
 
-#: src/InfoBoxes/Content/Factory.cpp:964
+#: src/InfoBoxes/Content/Factory.cpp:970
 #, no-c-format
 msgid "Circle D"
 msgstr "వృత్త డీ"
 
-#: src/InfoBoxes/Content/Factory.cpp:965
+#: src/InfoBoxes/Content/Factory.cpp:971
 #, no-c-format
-msgid ""
-"Circle diameter. Displays estimated circle diameter and full circle flight "
-"time. Useful for evaluating best thermalling mode with a glider at different "
-"wing loading."
-msgstr ""
-"వృత్త వ్యాసం. థర్మల్ పన్ను నిర్ణయించడానికి ఉపయోగించబడుతుంది. విభిన్న అశాంతి గాలిలో వివిధ పన్నుల నుండి "
-"కొనసాగిన బాలస్ట్ లను ఎంచే వైయెర్లు పరిశీలించడానికి ఉపయోగించబడుతుంది."
+msgid "Circle diameter. Displays estimated circle diameter and full circle flight time. Useful for evaluating best thermalling mode with a glider at different wing loading."
+msgstr "వృత్త వ్యాసం. థర్మల్ పన్ను నిర్ణయించడానికి ఉపయోగించబడుతుంది. విభిన్న అశాంతి గాలిలో వివిధ పన్నుల నుండి కొనసాగిన బాలస్ట్ లను ఎంచే వైయెర్లు పరిశీలించడానికి ఉపయోగించబడుతుంది."
 
-#: src/InfoBoxes/Content/Factory.cpp:970
+#: src/InfoBoxes/Content/Factory.cpp:976
 #, no-c-format
 msgid "Distance takeoff"
 msgstr "తేడా నిర్వహణ"
 
-#: src/InfoBoxes/Content/Factory.cpp:971
+#: src/InfoBoxes/Content/Factory.cpp:977
 #, no-c-format
 msgid "Takeoff Dist"
 msgstr "తాకోవాల దూరం"
 
-#: src/InfoBoxes/Content/Factory.cpp:972
+#: src/InfoBoxes/Content/Factory.cpp:978
 #, no-c-format
 msgid "Distance to where take-off was detected."
 msgstr "తేడా నిర్వహణలో ఎక్కువ దూరం."
 
-#: src/InfoBoxes/Content/Factory.cpp:978
+#: src/InfoBoxes/Content/Factory.cpp:984
 #, no-c-format
 msgid "Contest speed"
 msgstr "కంటెస్ట్ శీతం"
 
-#: src/InfoBoxes/Content/Factory.cpp:979
+#: src/InfoBoxes/Content/Factory.cpp:985
 #, no-c-format
 msgid "Cont Speed"
 msgstr "కట్టడమైన గతి"
 
-#: src/InfoBoxes/Content/Factory.cpp:980
+#: src/InfoBoxes/Content/Factory.cpp:986
 #, no-c-format
-msgid ""
-"Instantaneous evaluation of the flown speed according to the configured "
-"contest rule set."
+msgid "Instantaneous evaluation of the flown speed according to the configured contest rule set."
 msgstr "నిర్మాణంగా వచ్చిన కంటెస్ట్ రుల్‌కు అతిప్రాయంగా నడిసే శీతం."
 
-#: src/InfoBoxes/Content/Factory.cpp:985
+#: src/InfoBoxes/Content/Factory.cpp:991
 #, no-c-format
 msgid "Final MC0 altitude difference"
 msgstr "ఫైనల్ MC0 ఉద్ధవ దూరం"
 
-#: src/InfoBoxes/Content/Factory.cpp:986
+#: src/InfoBoxes/Content/Factory.cpp:992
 #, no-c-format
 msgid "Fin MC0 AltD"
 msgstr "ఫైనల్ MC0 ఉద్గారం"
 
-#: src/InfoBoxes/Content/Factory.cpp:987
+#: src/InfoBoxes/Content/Factory.cpp:993
 #, no-c-format
-msgid ""
-"Arrival altitude at the final waypoint with MC 0 setting relative to the "
-"safety arrival height."
+msgid "Arrival altitude at the final waypoint with MC 0 setting relative to the safety arrival height."
 msgstr "అతిమిత ఆయన కేంద్రం ని ఎంచుకున్న దూరం."
 
-#: src/InfoBoxes/Content/Factory.cpp:993 src/InfoBoxes/Content/Factory.cpp:994
+#: src/InfoBoxes/Content/Factory.cpp:999 src/InfoBoxes/Content/Factory.cpp:1000
 #: src/InfoBoxes/Content/Task.cpp:968
 #, no-c-format
 msgid "Next arrow"
 msgstr "తరువాత శీర్షిక"
 
-#: src/InfoBoxes/Content/Factory.cpp:995
+#: src/InfoBoxes/Content/Factory.cpp:1001
 #, no-c-format
-msgid ""
-"Arrow pointing to the currently selected waypoint. The name of the waypoint "
-"and the distance are also shown. The position used is the optimized position "
-"of the active waypoint in the current task, the center of a selected goto "
-"waypoint or the target within the AAT sector for AAT tasks."
-msgstr ""
-"వేపాయింట్ ని ఎన్నికించి నిర్వచించిన దశల తీర్ణ దూరాన్ని సేప్టు ఉన్నది. వేపాయింట్ నామం మరియు దూరం కూడా "
-"చూపబడతాయి. ఉన్నాయి సేప్టు అవసరమైన వేపాయింట్ దశల ఆకృతి నిర్ధారించిన కోణం, ఒక నిర్వచించిన గోటీ వేపాయింట్ "
-"దశల మధ్య కొత్త కోణం లేదా AAT సెక్టర్లో నిర్వచించిన వైట్ మీడియా దశల లబ్దం."
+msgid "Arrow pointing to the currently selected waypoint. The name of the waypoint and the distance are also shown. The position used is the optimized position of the active waypoint in the current task, the center of a selected goto waypoint or the target within the AAT sector for AAT tasks."
+msgstr "వేపాయింట్ ని ఎన్నికించి నిర్వచించిన దశల తీర్ణ దూరాన్ని సేప్టు ఉన్నది. వేపాయింట్ నామం మరియు దూరం కూడా చూపబడతాయి. ఉన్నాయి సేప్టు అవసరమైన వేపాయింట్ దశల ఆకృతి నిర్ధారించిన కోణం, ఒక నిర్వచించిన గోటీ వేపాయింట్ దశల మధ్య కొత్త కోణం లేదా AAT సెక్టర్లో నిర్వచించిన వైట్ మీడియా దశల లబ్దం."
 
-#: src/InfoBoxes/Content/Factory.cpp:1005
+#: src/InfoBoxes/Content/Factory.cpp:1011
 #, no-c-format
 msgid "Next waypoint arrival time (ground speed)"
 msgstr "తరువాత వేపాయింట్ ఉద్ధవ సమయం (భౌతిక శీతం)"
 
-#: src/InfoBoxes/Content/Factory.cpp:1006
+#: src/InfoBoxes/Content/Factory.cpp:1012
 #, no-c-format
 msgid "WP ETA VMG"
 msgstr "WP ETA VMG"
 
-#: src/InfoBoxes/Content/Factory.cpp:1007
+#: src/InfoBoxes/Content/Factory.cpp:1013
 #, no-c-format
-msgid ""
-"Estimated arrival time at next waypoint, assuming current ground speed is "
-"maintained."
+msgid "Estimated arrival time at next waypoint, assuming current ground speed is maintained."
 msgstr "తరువాత వేపాయింట్ ని ఎంచుకున్న సమయం, అన్ని భౌతిక శీతాలను బధాగా పరిష్కరించడం."
 
-#: src/InfoBoxes/Content/Factory.cpp:1013
+#: src/InfoBoxes/Content/Factory.cpp:1019
 #, no-c-format
 msgid "Percentage non-circling climb"
 msgstr "చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం"
 
-#: src/InfoBoxes/Content/Factory.cpp:1014
+#: src/InfoBoxes/Content/Factory.cpp:1020
 #, no-c-format
 msgid "% Str Climb"
 msgstr "% Str ఎక్కండి"
 
-#: src/InfoBoxes/Content/Factory.cpp:1015
-#, no-c-format
-msgid ""
-"Percentage of time spent climbing without circling. These statistics are "
-"reset upon starting the task."
-msgstr ""
-"చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం నిర్వహించిన సమయం వద్ద తీవ్రత శాంతి శాఖల శాతం. ఈ పరిష్కరణలు "
-"టాస్క్‌ని ఆమోదంగా పేర్కొనబడినట్లు రావాల్సిన వారికి రసాయనం తమ కథాపద్ధతిలో ఎదుర్పరచబడతాయి."
-
 #: src/InfoBoxes/Content/Factory.cpp:1021
+#, no-c-format
+msgid "Percentage of time spent climbing without circling. These statistics are reset upon starting the task."
+msgstr "చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం నిర్వహించిన సమయం వద్ద తీవ్రత శాంతి శాఖల శాతం. ఈ పరిష్కరణలు టాస్క్‌ని ఆమోదంగా పేర్కొనబడినట్లు రావాల్సిన వారికి రసాయనం తమ కథాపద్ధతిలో ఎదుర్పరచబడతాయి."
+
+#: src/InfoBoxes/Content/Factory.cpp:1027
 #, no-c-format
 msgid "Percentage climb chart"
 msgstr "చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం రూపొందిన చిత్రం"
 
-#: src/InfoBoxes/Content/Factory.cpp:1022
+#: src/InfoBoxes/Content/Factory.cpp:1028
 #, no-c-format
 msgid "Climb %"
 msgstr "చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం %"
 
-#: src/InfoBoxes/Content/Factory.cpp:1023
-#, no-c-format
-msgid ""
-"Pie chart of time circling and climbing, circling and descending, and "
-"climbing non-circling."
-msgstr ""
-"సైన్‌పాయింట్‌లో చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం, చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం మరియు "
-"చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం నిర్వహించిన సమయం వద్ద తీవ్రత శాంతి శాఖల శాతం"
-
 #: src/InfoBoxes/Content/Factory.cpp:1029
+#, no-c-format
+msgid "Pie chart of time circling and climbing, circling and descending, and climbing non-circling."
+msgstr "సైన్‌పాయింట్‌లో చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం, చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం మరియు చేరిక ఉన్నట్ల వంటి తీవ్రత శాంతి శాఖల శాతం నిర్వహించిన సమయం వద్ద తీవ్రత శాంతి శాఖల శాతం"
+
+#: src/InfoBoxes/Content/Factory.cpp:1035
 #, no-c-format
 msgid "Number of used satellites"
 msgstr "ఉపయోగించిన స్టాటివ్‌ల సంఖ్య"
 
-#: src/InfoBoxes/Content/Factory.cpp:1030
+#: src/InfoBoxes/Content/Factory.cpp:1036
 #, no-c-format
 msgid "Satellites"
 msgstr "స్టాటివ్‌లు"
 
-#: src/InfoBoxes/Content/Factory.cpp:1031
-#, no-c-format
-msgid ""
-"Number of satellites currently used by the GPS module. If this information "
-"is unavailable, the displayed value is '---'."
-msgstr ""
-"GPS మ౗లీకం ఉపయోగించిన కొత్త స్టాటివ్‌ల సంఖ్య. ఈ మార్కెట్‌పు తెలియని అయ్యేంతో, రాసే విలీనం '---' అవుతుంది."
-
 #: src/InfoBoxes/Content/Factory.cpp:1037
+#, no-c-format
+msgid "Number of satellites currently used by the GPS module. If this information is unavailable, the displayed value is '---'."
+msgstr "GPS మ౗లీకం ఉపయోగించిన కొత్త స్టాటివ్‌ల సంఖ్య. ఈ మార్కెట్‌పు తెలియని అయ్యేంతో, రాసే విలీనం '---' అవుతుంది."
+
+#: src/InfoBoxes/Content/Factory.cpp:1043
 #, no-c-format
 msgid "Active Radio Frequency"
 msgstr "పన్ను రెఫ్రెన్స్"
 
-#: src/InfoBoxes/Content/Factory.cpp:1038
+#: src/InfoBoxes/Content/Factory.cpp:1044
 #, no-c-format
 msgid "Act Freq"
 msgstr "అంట్‌ఫ్రీక్వెన్సీ"
 
-#: src/InfoBoxes/Content/Factory.cpp:1039
+#: src/InfoBoxes/Content/Factory.cpp:1045
 #, no-c-format
 msgid "Active radio frequency."
 msgstr "పన్ను రెఫ్రెన్స్."
 
-#: src/InfoBoxes/Content/Factory.cpp:1044
+#: src/InfoBoxes/Content/Factory.cpp:1050
 #, no-c-format
 msgid "Standby Radio Frequency"
 msgstr "బాయి రెఫ్రెన్స్"
 
-#: src/InfoBoxes/Content/Factory.cpp:1045
+#: src/InfoBoxes/Content/Factory.cpp:1051
 #, no-c-format
 msgid "Stby Freq"
 msgstr "త్వరిత వేలు"
 
-#: src/InfoBoxes/Content/Factory.cpp:1046
+#: src/InfoBoxes/Content/Factory.cpp:1052
 #, no-c-format
 msgid "Standby radio frequency."
 msgstr "బాయి రెఫ్రెన్స్."
 
-#: src/InfoBoxes/Content/Factory.cpp:1052
+#: src/InfoBoxes/Content/Factory.cpp:1058
 #, no-c-format
 msgid "Thermal time"
 msgstr "థర్మల్ సమయం"
 
-#: src/InfoBoxes/Content/Factory.cpp:1053
+#: src/InfoBoxes/Content/Factory.cpp:1059
 #, no-c-format
 msgid "TC Time"
 msgstr "కోర్స్ సమయం"
 
-#: src/InfoBoxes/Content/Factory.cpp:1054
+#: src/InfoBoxes/Content/Factory.cpp:1060
 #, no-c-format
 msgid "Time spent in the current thermal."
 msgstr "కాల్చిత థర్మల్లో వద్ద ఉన్న సమయం."
 
-#: src/InfoBoxes/Content/Factory.cpp:1060
+#: src/InfoBoxes/Content/Factory.cpp:1066
 #, no-c-format
 msgid "Alternate 2 GR"
 msgstr "అల్టేన్‌ 2 GR"
 
-#: src/InfoBoxes/Content/Factory.cpp:1061
+#: src/InfoBoxes/Content/Factory.cpp:1067
 #, no-c-format
 msgid "Altn 2 GR"
 msgstr "అల్టిన్‌ 2 గ్లైడ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:1062
-#, no-c-format
-msgid ""
-"Geometric gradient to the arrival height above the second-best alternate "
-"landing location. This is not adjusted for total energy."
-msgstr ""
-"ద్వితీయ ముఖ్య క్లాండింగ్ లాండింగ్ స్థానం తర్వాత పहాదికి వచ్చిన గ్లైడ్ నిష్పత్తి. ఇది మొత్తం ఎరెజ్ కావలసి ఉంది."
-
 #: src/InfoBoxes/Content/Factory.cpp:1068
+#, no-c-format
+msgid "Geometric gradient to the arrival height above the second-best alternate landing location. This is not adjusted for total energy."
+msgstr "ద్వితీయ ముఖ్య క్లాండింగ్ లాండింగ్ స్థానం తర్వాత పहాదికి వచ్చిన గ్లైడ్ నిష్పత్తి. ఇది మొత్తం ఎరెజ్ కావలసి ఉంది."
+
+#: src/InfoBoxes/Content/Factory.cpp:1076
 #, no-c-format
 msgid "Heart Rate"
 msgstr "హెయర్ రేట్"
 
-#: src/InfoBoxes/Content/Factory.cpp:1069
+#: src/InfoBoxes/Content/Factory.cpp:1077
 #, no-c-format
 msgid "Heart"
 msgstr "హెయర్"
 
-#: src/InfoBoxes/Content/Factory.cpp:1070
+#: src/InfoBoxes/Content/Factory.cpp:1078
 #, no-c-format
 msgid "Heart rate in beats per minute."
 msgstr "మినిటులలో నాక్వైన్‌ల సంఖ్య."
 
-#: src/InfoBoxes/Content/Factory.cpp:1076
+#: src/InfoBoxes/Content/Factory.cpp:1084
 #, no-c-format
 msgid "Transponder Code"
 msgstr "ప్రాంతియేస్ కోడ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:1077
+#: src/InfoBoxes/Content/Factory.cpp:1085
 #, no-c-format
 msgid "XPDR Code"
 msgstr "XPDR కోడ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:1078
+#: src/InfoBoxes/Content/Factory.cpp:1086
 #, no-c-format
 msgid "Currently set transponder code."
 msgstr "తొందరిన ప్రాంతియేస్ కోడ్."
 
-#: src/InfoBoxes/Content/Factory.cpp:1084
+#: src/InfoBoxes/Content/Factory.cpp:1092
 #, no-c-format
 msgid "Engine CHT"
 msgstr "పన్ను చిట్‌బార్ (CHT)"
 
-#: src/InfoBoxes/Content/Factory.cpp:1085
+#: src/InfoBoxes/Content/Factory.cpp:1093
 #, no-c-format
 msgid "CHT"
 msgstr "CHT"
 
-#: src/InfoBoxes/Content/Factory.cpp:1086
+#: src/InfoBoxes/Content/Factory.cpp:1094
 #, no-c-format
 msgid "Engine cylinder head temperature."
 msgstr "ఎంజిన్ క్యల్వర్ వాహన శీతమైన తల."
 
-#: src/InfoBoxes/Content/Factory.cpp:1092
+#: src/InfoBoxes/Content/Factory.cpp:1100
 #, no-c-format
 msgid "Engine EGT"
 msgstr "పన్ను ఎగ్‌టీ (EGT)"
 
-#: src/InfoBoxes/Content/Factory.cpp:1093
+#: src/InfoBoxes/Content/Factory.cpp:1101
 #, no-c-format
 msgid "EGT"
 msgstr "EGT"
 
-#: src/InfoBoxes/Content/Factory.cpp:1094
+#: src/InfoBoxes/Content/Factory.cpp:1102
 #, no-c-format
 msgid "Engine exhaust gas temperature."
 msgstr "ఎంజిన్ రవిలోపణల మినిటులో చర్యలైన కిలోవాత్."
 
-#: src/InfoBoxes/Content/Factory.cpp:1100
+#: src/InfoBoxes/Content/Factory.cpp:1108
 #, no-c-format
 msgid "Engine Revolutions Per Minute"
 msgstr "ఎంజిన్ రవిలోపణల మినిటులో చర్యలైన కిలోవాత్."
 
-#: src/InfoBoxes/Content/Factory.cpp:1101
+#: src/InfoBoxes/Content/Factory.cpp:1109
 #, no-c-format
 msgid "RPM"
 msgstr "RPM"
 
-#: src/InfoBoxes/Content/Factory.cpp:1102
+#: src/InfoBoxes/Content/Factory.cpp:1110
 #, no-c-format
 msgid "Engine revolutions per minute."
 msgstr "ఏస్‌పీడర్ కోడ్"
 
-#: src/InfoBoxes/Content/Factory.cpp:1108
+#: src/InfoBoxes/Content/Factory.cpp:1116
 #, no-c-format
 msgid "AAT dT and task ETA"
 msgstr "AAT dT మరియు టాస్క్ ఇటా తెలిపేదా (ETA)"
 
-#: src/InfoBoxes/Content/Factory.cpp:1109
+#: src/InfoBoxes/Content/Factory.cpp:1117
 #, no-c-format
 msgid "AATdeltaOrETA"
 msgstr "ఏరోటోవ్ డేల్టా కంటెన్స్ / ఎటిఏటా"
 
-#: src/InfoBoxes/Content/Factory.cpp:1110
+#: src/InfoBoxes/Content/Factory.cpp:1118
 #, no-c-format
-msgid ""
-"For AAT tasks: AAT delta time and estimated time of arrival; for racing "
-"tasks: estimated time of arrival."
-msgstr ""
-"AAT టాస్క్లు: AAT డెల్టా వaktం మరియు అస్థిరత పరీక్షణ నిర్ధారణ వaktం; రాసిన టాస్క్లు: అస్థిరత "
-"పరీక్షण నిర్ధారణ వaktం."
+msgid "For AAT tasks: AAT delta time and estimated time of arrival; for racing tasks: estimated time of arrival."
+msgstr "AAT టాస్క్లు: AAT డెల్టా వaktం మరియు అస్థిరత పరీక్షణ నిర్ధారణ వaktం; రాసిన టాస్క్లు: అస్థిరత పరీక్షण నిర్ధారణ వaktం."
 
-#: src/InfoBoxes/Content/Factory.cpp:1116
+#: src/InfoBoxes/Content/Factory.cpp:1124
 #, no-c-format
 msgid "Speed task estimated"
 msgstr "టాస్క్ ఆఇటా అస్థిరత"
 
-#: src/InfoBoxes/Content/Factory.cpp:1117
+#: src/InfoBoxes/Content/Factory.cpp:1125
 #, no-c-format
 msgid "V Task Est"
 msgstr "V టాస్క్ ఆఇటా"
 
-#: src/InfoBoxes/Content/Factory.cpp:1118
+#: src/InfoBoxes/Content/Factory.cpp:1126
 #, no-c-format
-msgid ""
-"Estimated average cross-country speed for current task as of task "
-"completion, assuming performance of ideal MacCready cruise/climb cycle."
+msgid "Estimated average cross-country speed for current task as of task completion, assuming performance of ideal MacCready cruise/climb cycle."
 msgstr "క్లాండింగ్ ప్రదర్శన ద్వారా నిర్ధారిత సమయం తర్వాత క్లాండింగ్ ప్రదర్శన ద్వారా నిర్ధారిత సమయం."
 
-#: src/InfoBoxes/Content/Factory.cpp:1124
+#: src/InfoBoxes/Content/Factory.cpp:1132
 #, no-c-format
 msgid "Home altitude difference"
 msgstr "హోమ్ ఆలిటోయేట్‌ ప్రదేశం అన్ని తరువాతి స్థానాల వాయు తల లబ్ధత."
 
-#: src/InfoBoxes/Content/Factory.cpp:1125
+#: src/InfoBoxes/Content/Factory.cpp:1133
 #, no-c-format
 msgid "Home AltD"
 msgstr "హోమ అల్ట్D"
 
-#: src/InfoBoxes/Content/Factory.cpp:1126
+#: src/InfoBoxes/Content/Factory.cpp:1134
 #, no-c-format
-msgid ""
-"Arrival altitude at the home waypoint relative to the safety arrival height."
+msgid "Arrival altitude at the home waypoint relative to the safety arrival height."
 msgstr "హోమ వేపాయింట్ నివారణ ఉత్తాపం లో పहుచడానికి అవసరమైన అల్ట్D"
 
-#: src/InfoBoxes/Content/Factory.cpp:1132
+#: src/InfoBoxes/Content/Factory.cpp:1140
 #, no-c-format
 msgid "Speed task leg"
 msgstr "వాయిపాయింట్ లో గతి"
 
-#: src/InfoBoxes/Content/Factory.cpp:1133
+#: src/InfoBoxes/Content/Factory.cpp:1141
 #, no-c-format
 msgid "V Task Leg"
 msgstr "V వాయిపాయింట్ లో గతి"
 
-#: src/InfoBoxes/Content/Factory.cpp:1134
+#: src/InfoBoxes/Content/Factory.cpp:1142
 #, no-c-format
-msgid ""
-"Average cross-country speed while on current task leg, not compensated for "
-"altitude."
+msgid "Average cross-country speed while on current task leg, not compensated for altitude."
 msgstr "క్రమంద సమయంలో దృష్టికోణం నాశన వేగం, ఉత్తాపం కారణంగా సమావేశించలేదు"
 
-#: src/InfoBoxes/Content/Factory.cpp:1140
+#: src/InfoBoxes/Content/Factory.cpp:1148
 #, no-c-format
 msgid "Alternate 1 altitude difference"
 msgstr "అల్టేట్ 1 ఉత్తాపం విరమణ"
 
-#: src/InfoBoxes/Content/Factory.cpp:1141
+#: src/InfoBoxes/Content/Factory.cpp:1149
 #, no-c-format
 msgid "Altn 1 AltD"
 msgstr "అల్టేట్ 1 అల్టD"
 
-#: src/InfoBoxes/Content/Factory.cpp:1142
+#: src/InfoBoxes/Content/Factory.cpp:1150
 #, no-c-format
-msgid ""
-"Arrival altitude at the best alternate landing location relative to the "
-"safety arrival height."
+msgid "Arrival altitude at the best alternate landing location relative to the safety arrival height."
 msgstr "సరాసరి క్రమంద సమయంలో ప్రకటన వేగం, ఉత్తాపం కారణంగా సమావేశించలేదు"
 
-#: src/InfoBoxes/Content/Factory.cpp:1148
+#: src/InfoBoxes/Content/Factory.cpp:1158
 #, no-c-format
 msgid "Alternate 2 altitude difference"
 msgstr "అల్టేట్ 2 ఉత్తాపం విరమణ"
 
-#: src/InfoBoxes/Content/Factory.cpp:1149
+#: src/InfoBoxes/Content/Factory.cpp:1159
 #, no-c-format
 msgid "Altn 2 AltD"
 msgstr "అల్టేట్ 2 అల్టD"
 
-#: src/InfoBoxes/Content/Factory.cpp:1150
+#: src/InfoBoxes/Content/Factory.cpp:1160
 #, no-c-format
-msgid ""
-"Arrival altitude at the second-best alternate landing location relative to "
-"the safety arrival height."
+msgid "Arrival altitude at the second-best alternate landing location relative to the safety arrival height."
 msgstr "దొనగా క్రమంద సమయంలో ప్రకటన వేగం, ఉత్తాపం కారణంగా సమావేశించలేదు"
-
-#: src/InfoBoxes/Content/Alternate.cpp:53
-#, c++-format
-msgid "Altn {}"
-msgstr "అల్టేట్ {} అల్టD"
-
-#: src/InfoBoxes/Content/Alternate.cpp:93
-#, c++-format
-msgid "Altn {} GR"
-msgstr "Altn {} GR"
-
-#: src/InfoBoxes/Content/Alternate.cpp:141
-#, c++-format
-msgid "Altn {} AltD"
-msgstr "Altn {} AltD"
 
 #: src/InfoBoxes/Content/Altitude.cpp:24
 #: src/MapWindow/GlueMapWindowOverlays.cpp:337
@@ -10793,7 +10541,7 @@ msgstr "అప్ని"
 msgid "Waiting"
 msgstr "ఆంతరిక్"
 
-#: src/InfoBoxes/Content/Places.cpp:99
+#: src/InfoBoxes/Content/Places.cpp:181
 #, no-c-format
 msgid "Reference"
 msgstr "తేదీ"
@@ -11728,9 +11476,87 @@ msgstr "ధ్రువ W"
 msgid "not found"
 msgstr "దొరకలేదు"
 
-#: src/InfoBoxes/Content/Factory.cpp:1173
+#: src/InfoBoxes/Content/Factory.cpp:1193
 #, no-c-format
 msgctxt "InfoBox caption (gravity/load factor)"
 msgid "G"
 msgstr "G"
+
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:78
+msgid "Total energy"
+msgstr ""
+
+#: src/Dialogs/StatusPanels/SystemStatusPanel.cpp:80
+msgid "Uncompensated"
+msgstr ""
+
+#: src/Dialogs/Settings/Panels/ScoringConfigPanel.cpp:100
+#, no-c-format
+msgid "FFVP Federal Cup (NetCoupe) on WeGlide. The scored path has at most three turnpoints between start and finish and at least 25 km total. Points are proportional to credited distance, 100 divided by the glider handicap (DAeC-style index), and a success factor of 1.0 for a free flight or 1.2 for a task declared electronically before takeoff. XCSoar live scoring uses a success factor of 1.0 only, not the 1.2 multiplier for declared tasks."
+msgstr ""
+
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:270
+#, no-c-format
+msgid "Fixed (North-West)"
+msgstr ""
+
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:273
+#, no-c-format
+msgid "Fixed (Top Left)"
+msgstr ""
+
+#: src/Dialogs/Settings/Panels/TerrainDisplayConfigPanel.cpp:278
+msgid "The terrain can be shaded among slopes to indicate either wind direction, sun position, a geographically fixed shading from North-West, or a screen-relative fixed shading from top left."
+msgstr ""
+
+#: src/Dialogs/Task/AlternatesListDialog.cpp:151
+msgid "Altn mode: MANUAL"
+msgstr ""
+
+#: src/Dialogs/Task/AlternatesListDialog.cpp:152
+msgid "Altn mode: AUTO"
+msgstr ""
+
+#: src/Dialogs/Task/AlternatesListDialog.cpp:217
+msgid "Select as Alternate"
+msgstr ""
+
+#: src/Dialogs/Task/AlternatesListDialog.cpp:296
+msgid "Alternates 1"
+msgstr ""
+
+#: src/Dialogs/Task/AlternatesListDialog.cpp:298
+msgid "Alternates 2"
+msgstr ""
+
+#: src/InfoBoxes/Content/Factory.cpp:1170
+#, no-c-format
+msgid "Home waypoint name, arrival altitude difference relative to the safety arrival height, and distance. Click to change the home waypoint."
+msgstr ""
+
+#: src/InfoBoxes/Content/Alternate.cpp:59
+msgid "MAN"
+msgstr ""
+
+#: src/InfoBoxes/Content/Alternate.cpp:60
+msgid "AUTO"
+msgstr ""
+
+#: src/InfoBoxes/Content/Alternate.cpp:168
+#, c++-format
+msgid "Altn {} {}"
+msgstr ""
+
+#: src/InfoBoxes/Content/Alternate.cpp:170
+#, c++-format
+msgid "Altn {} {} {}"
+msgstr ""
+
+#: src/InfoBoxes/Content/Alternate.cpp:259
+msgid "GR"
+msgstr ""
+
+#: src/InfoBoxes/Content/Alternate.cpp:289
+msgid "AltD"
+msgstr ""
 
