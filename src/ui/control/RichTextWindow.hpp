@@ -10,14 +10,34 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 class Font;
+struct DialogLook;
 struct WrappedText;
 struct SegmentedLine;
 struct TextSegment;
-struct FocusItem;
+
+/**
+ * A focusable item (link or checkbox) for keyboard navigation in
+ * RichTextWindow.  Sorted by vertical position so UP/DOWN moves in
+ * document order.
+ */
+struct FocusItem {
+  int y_pos;          ///< Content-space Y coordinate
+  int height;         ///< Approximate item height
+  bool is_checkbox;
+  std::size_t index;  ///< style_index for checkboxes, link_index for links
+
+  bool operator<(const FocusItem &other) const noexcept {
+    if (y_pos != other.y_pos)
+      return y_pos < other.y_pos;
+    /* Checkboxes before links at the same position */
+    return is_checkbox && !other.is_checkbox;
+  }
+};
 
 /**
  * A window showing multi-line text with Markdown formatting.
@@ -28,12 +48,13 @@ struct FocusItem;
  * - Headings: # H1, ## H2, ### H3
  * - List items: - item or * item
  * - Markdown links: [display text](url)
- * - Raw URL detection: http://, https://, xcsoar://
+ * - Raw URL detection: http://, https://, xcsoar://, vhf:
  * - Keyboard and mouse navigation (inherited from LinkableWindow)
  *
  * Keyboard navigation:
- * - Up/Down: navigate between links or scroll text
- * - Enter: activate focused link
+ * - Up/Down: navigate between links/checkboxes or scroll text
+ * - Enter: toggle a focused checkbox (then advance like Down) or activate a
+ *   focused link
  *
  * Mouse:
  * - Click on link to activate
@@ -51,6 +72,14 @@ class RichTextWindow : public LinkableWindow {
 
   /** Background color (from DialogLook) */
   Color background_color = COLOR_WHITE;
+
+  /**
+   * When set, Markdown list checkboxes use the same `DrawCheckBox` styling
+   * as `CheckBoxControl` (e.g. quick guide, configuration).  Otherwise
+   * a simple outline is drawn.  The embedding `RichTextWidget` sets this
+   * from the dialog look.
+   */
+  const DialogLook *dialog_look = nullptr;
 
   /** Parsed text with links and styles extracted */
   ParsedMarkdown parsed;
@@ -181,8 +210,8 @@ private:
 
   /** Render a checkbox segment with hit-rect registration. */
   void RenderCheckboxSegment(Canvas &canvas, const TextSegment &seg,
-                             int &x, int text_y, int visible_top,
-                             int text_line_height) noexcept;
+                             int &x, int y_line, int visible_top,
+                             int row_height) noexcept;
 
   /** Render a plain text segment (heading, bold, list item, normal). */
   void RenderPlainSegment(Canvas &canvas, const TextSegment &seg,
@@ -190,8 +219,15 @@ private:
                           int &x, int text_y) const noexcept;
 
   /** Set focus to a FocusItem and scroll to make it visible. */
-  void ScrollToFocusItem(const FocusItem &item,
-                         int text_line_height) noexcept;
+  void ScrollToFocusItem(const FocusItem &item) noexcept;
+
+  /**
+   * Move focus to the next link or checkbox (same rules as KEY_DOWN when
+   * focus is already set), including max_jump and end-of-list handling.
+   */
+  bool AdvanceFocusToNextFrom(const std::vector<FocusItem> &items,
+                              std::optional<std::size_t> current_pos,
+                              int max_jump) noexcept;
 
 public:
   RichTextWindow() noexcept;
@@ -227,6 +263,10 @@ public:
                    Color _background_color = COLOR_WHITE) noexcept {
     dark_mode = _dark_mode;
     background_color = _background_color;
+  }
+
+  void SetDialogLook(const DialogLook &look) noexcept {
+    dialog_look = &look;
   }
 
   [[gnu::pure]]
@@ -326,7 +366,7 @@ protected:
 
   /**
    * Called when a link is activated (clicked or Enter pressed).
-   * Override to handle custom URI schemes (e.g., xcsoar://).
+   * Override to handle custom URI schemes (e.g., xcsoar://, vhf:).
    * Default implementation handles http:// and https:// only.
    * @return true if the link was handled
    */

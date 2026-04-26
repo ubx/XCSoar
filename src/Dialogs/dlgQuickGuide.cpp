@@ -15,8 +15,8 @@
 #include "system/Path.hpp"
 #include "Language/Language.hpp"
 #include "Version.hpp"
+#include "QuickGuideNEWS.hpp"
 #include "Simulator.hpp"
-#include "Inflate.hpp"
 #include "Message.hpp"
 #include "Interface.hpp"
 #include "Device/Config.hpp"
@@ -27,17 +27,13 @@
 #ifdef ANDROID
 #include "Android/Permissions.hpp"
 #endif
-#include "util/AllocatedString.hxx"
 #include "util/StringCompare.hxx"
 #include "util/StaticString.hxx"
+#include "MapSettings.hpp"
+#include "Computer/Settings.hpp"
 
+#include <cmath>
 #include <vector>
-
-extern "C"
-{
-  extern const uint8_t NEWS_txt_gz[];
-  extern const size_t NEWS_txt_gz_size;
-}
 
 // Page indices for the can-advance guard
 static constexpr unsigned INVALID_PAGE = ~0u;
@@ -142,6 +138,54 @@ IsAnyDeviceConfigured() noexcept
   return false;
 }
 
+/**
+ * @return true when safety-related settings have been changed from
+ *         factory defaults (or when we cannot use defaults for comparison).
+ */
+static bool
+SafetyFactorsDifferFromDefaults() noexcept
+{
+  const auto &cs = CommonInterface::GetComputerSettings();
+  const auto &t = cs.task;
+  const auto &p = cs.polar;
+
+  TaskBehaviour d_task;
+  d_task.SetDefaults();
+  PolarSettings d_pol;
+  d_pol.SetDefaults();
+
+  static constexpr double eps = 1e-4;
+  if (std::abs(t.safety_height_arrival - d_task.safety_height_arrival) > eps)
+    return true;
+  if (std::abs(t.route_planner.safety_height_terrain -
+               d_task.route_planner.safety_height_terrain) > eps)
+    return true;
+  if (t.abort_task_mode != d_task.abort_task_mode)
+    return true;
+  if (std::abs(p.degradation_factor - d_pol.degradation_factor) > eps)
+    return true;
+  if (p.auto_bugs != d_pol.auto_bugs)
+    return true;
+  if (std::abs(t.safety_mc - d_task.safety_mc) > eps)
+    return true;
+  if (std::abs(t.risk_gamma - d_task.risk_gamma) > eps)
+    return true;
+  return false;
+}
+
+/**
+ * @return true when terrain or topography display was customized away from
+ *         the default look (ramp, shading, contours, enable flags, …).
+ */
+static bool
+TerrainDisplayDiffersFromDefaults() noexcept
+{
+  MapSettings d;
+  d.SetDefaults();
+  const auto &m = CommonInterface::GetMapSettings();
+  return m.terrain != d.terrain || m.topography_enabled != d.topography_enabled;
+}
+
 static const char *
 GetConfigurationHelpText()
 {
@@ -158,6 +202,9 @@ GetConfigurationHelpText()
 
   bool tim_enabled = false;
   Profile::Get(ProfileKeys::EnableThermalInformationMap, tim_enabled);
+
+  const bool has_safety = SafetyFactorsDifferFromDefaults();
+  const bool has_terrain_display = TerrainDisplayDiffersFromDefaults();
 
   static StaticString<1536> text;
   text.Format(
@@ -176,9 +223,9 @@ GetConfigurationHelpText()
     "Upload flights automatically to WeGlide\n\n"
     "- [%s] [Thermal Information Map](xcsoar://config/weather) - "
     "Show thermal locations from thermalmap.info on the map\n\n"
-    "- [ ] [Safety factors](xcsoar://config/safety) - "
+    "- [%s] [Safety factors](xcsoar://config/safety) - "
     "Set arrival height, terrain clearance and polar degradation\n\n"
-    "- [ ] [Terrain display](xcsoar://config/terrain) - "
+    "- [%s] [Terrain display](xcsoar://config/terrain) - "
     "Choose terrain colors, shading and contour lines\n\n"
     "- [ ] [Live tracking](xcsoar://config/tracking) *(optional)* - "
     "Share your position via SkyLines or LiveTrack24\n\n"
@@ -189,7 +236,9 @@ GetConfigurationHelpText()
     has_pilot ? "x" : " ",
     has_device ? "x" : " ",
     weglide_enabled ? "x" : " ",
-    tim_enabled ? "x" : " ");
+    tim_enabled ? "x" : " ",
+    has_safety ? "x" : " ",
+    has_terrain_display ? "x" : " ");
   return text.c_str();
 }
 
@@ -231,32 +280,6 @@ GetPostflightText() noexcept
 }
 
 /* ---- Helpers ---- */
-
-/**
- * Truncate the NEWS text to only the first (current) version
- * section.  Sections are delimited by lines starting with "Version ".
- * This avoids wrapping the entire multi-year release history which
- * would cause a multi-second stall on slow devices (e.g. RPi 3).
- */
-static void
-TruncateToCurrentVersion(char *text) noexcept
-{
-  /* Skip past the first "Version ..." line */
-  char *p = text;
-  while (*p != '\0' && *p != '\n')
-    ++p;
-  if (*p == '\n')
-    ++p;
-
-  /* Find the next "Version " line and terminate there */
-  while (*p != '\0') {
-    if (*p == '\n' && StringStartsWith(p + 1, "Version ")) {
-      *p = '\0';
-      return;
-    }
-    ++p;
-  }
-}
 
 /**
  * Check if the warranty has already been acknowledged for the
@@ -463,24 +486,11 @@ dlgQuickGuideShowModal(bool force_info)
   // Track page titles for the caption callback
   std::vector<const char *> titles;
 
-  /* Gesture callback for pager navigation via horizontal swipe */
-  auto pager_gesture = [pager_ptr](bool next) {
-    if (next) {
-      if (pager_ptr->CanAdvance())
-        pager_ptr->Next(true);
-    } else {
-      pager_ptr->Previous(true);
-    }
+  /* Helper: wrap content in VScrollWidget (horizontal swipe is wired in
+     ArrowPagerWidget::Prepare). */
+  auto make_scroll_page = [&look](std::unique_ptr<Widget> &&w) {
+    return std::make_unique<VScrollWidget>(std::move(w), look, true);
   };
-
-  /* Helper: create a VScrollWidget with swipe gesture support */
-  auto make_scroll_page =
-    [&look, &pager_gesture](std::unique_ptr<Widget> &&w) {
-      auto scroll =
-        std::make_unique<VScrollWidget>(std::move(w), look, true);
-      scroll->SetGestureCallback(pager_gesture);
-      return scroll;
-    };
 
   /* ---- Logo / Welcome page (always shown) ---- */
   pager->Add(make_scroll_page(
@@ -504,37 +514,25 @@ dlgQuickGuideShowModal(bool force_info)
       });
     state.warranty_widget = page.get();
 
-    /* QuickGuidePageWidget already has its own VScrollWidget
-       inside, so do NOT wrap it in another one (causes double
-       scrolling and inflated virtual height).  Set the gesture
-       callback directly instead. */
-    page->SetGestureCallback(pager_gesture);
-
     pager->Add(std::move(page));
     titles.push_back(_("Safety Disclaimer"));
   }
 
   /* ---- What's New page (conditional, shown on version change) ---- */
-  /* Inflate NEWS.txt at function scope so the text remains valid
-     until after ShowModal() returns. */
-  AllocatedString news_inflated;
-  if (news_needed) {
-    news_inflated = InflateToString(NEWS_txt_gz, NEWS_txt_gz_size);
-    TruncateToCurrentVersion(news_inflated.data());
-    if (!news_inflated.empty()) {
-      state.news_page_index = pager->GetSize();
+  /* Body is Markdown generated at build time from the first block of NEWS.txt
+     (see tools/news_to_quickguide_md.py and QuickGuideNEWS.hpp).  The Credits
+     dialog still loads the full gzipped NEWS history as plain text. */
+  if (news_needed && quick_guide_news_markdown[0] != '\0') {
+    state.news_page_index = pager->GetSize();
 
-      auto page = QuickGuidePageWidget::CreateCheckboxPage(
-        look, news_inflated.c_str(),
-        _("Don't show these release notes again"),
-        false,
-        [](bool) { /* state is read on dialog close */ });
-      page->SetParseLinks(false);
-      page->SetGestureCallback(pager_gesture);
+    auto page = QuickGuidePageWidget::CreateCheckboxPage(
+      look, quick_guide_news_markdown,
+      _("Don't show these release notes again"),
+      false,
+      [](bool) { /* state is read on dialog close */ });
 
-      pager->Add(std::move(page));
-      titles.push_back(_("What's New"));
-    }
+    pager->Add(std::move(page));
+    titles.push_back(_("What's New"));
   }
 
   /* ---- Cloud consent page (conditional, fly mode only) ---- */
@@ -551,7 +549,6 @@ dlgQuickGuideShowModal(bool force_info)
       _("Enable XCSoar Cloud"),
       cloud_currently_enabled,
       [](bool) { /* state is read on dialog close */ });
-    page->SetGestureCallback(pager_gesture);
 
     pager->Add(std::move(page));
     titles.push_back(_("XCSoar Cloud"));
@@ -589,7 +586,6 @@ dlgQuickGuideShowModal(bool force_info)
       },
       _("Not Now"),
       skip_permissions);
-    page->SetGestureCallback(pager_gesture);
 
     pager->Add(std::move(page));
     titles.push_back(_("Location Access"));
@@ -606,7 +602,6 @@ dlgQuickGuideShowModal(bool force_info)
       },
       _("Not Now"),
       skip_permissions);
-    page->SetGestureCallback(pager_gesture);
 
     pager->Add(std::move(page));
     titles.push_back(_("Notifications"));
@@ -657,7 +652,6 @@ dlgQuickGuideShowModal(bool force_info)
         _("Don't show this guide again"),
         IsQuickGuideHidden(),
         [](bool) { /* state is read on dialog close */ });
-      done_page->SetGestureCallback(pager_gesture);
       pager->Add(std::move(done_page));
     }
     titles.push_back(_("Done"));

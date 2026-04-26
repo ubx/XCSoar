@@ -19,11 +19,12 @@ struct DialogLook;
  * - List items: - item or * item
  * - Checkboxes: - [ ] unchecked, - [x] checked
  * - Links: [display text](url)
- * - Raw URLs: http://, https://, xcsoar://
+ * - Raw URLs: http://, https://, xcsoar://, vhf:
  *
  * Link handling:
  * - http:// and https:// URLs open in browser
  * - xcsoar:// URLs trigger internal dialogs (see Dialogs/InternalLink.hpp)
+ * - vhf:…#standby / vhf:…#active set COM frequencies (see Dialogs/VhfLink.hpp)
  *
  * Use with VScrollWidget for scrolling support.
  */
@@ -44,15 +45,15 @@ public:
    *
    * @param _look The dialog look for styling
    * @param _text The text to display (may be nullptr)
-   * @param _parse_markdown If true (default), Markdown formatting is
-   *                        parsed and rendered. Set to false for
-   *                        large texts where formatting is not needed.
+   * @param _parse_markdown If true (default), Markdown is parsed and rendered
+   *                        (lists, bold, links). If false, text is shown as
+   *                        plain characters only (member name is historical).
    */
   explicit RichTextWidget(const DialogLook &_look,
                           const char *_text = nullptr,
-                          bool _parse_links = true) noexcept
+                          bool _parse_markdown = true) noexcept
     : look(&_look), text(_text != nullptr ? _text : ""),
-      parse_links(_parse_links) {}
+      parse_links(_parse_markdown) {}
 
   /**
    * Update the displayed text.

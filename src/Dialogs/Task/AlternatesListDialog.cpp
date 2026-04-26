@@ -29,8 +29,6 @@
 #include <cassert>
 #include <optional>
 
-static constexpr int DETAILS_MODAL_RESULT = 100;
-
 class AlternatesListWidget final
   : public ListWidget {
   const DialogLook &dialog_look;
@@ -52,7 +50,7 @@ public:
   AlternateList alternates;
 
 public:
-  void CreateButtons(WidgetDialog &dialog);
+  void CreateButtons(WidgetDialog &dialog, Waypoints *waypoints_for_details = nullptr) noexcept;
 
 public:
   explicit
@@ -180,7 +178,8 @@ private:
 };
 
 void
-AlternatesListWidget::CreateButtons(WidgetDialog &dialog)
+AlternatesListWidget::CreateButtons(WidgetDialog &dialog,
+                                    Waypoints *waypoints_for_details) noexcept
 {
   if (!select_mode) {
     goto_button = dialog.AddButton(_("Goto"), [this](){
@@ -225,8 +224,31 @@ AlternatesListWidget::CreateButtons(WidgetDialog &dialog)
     });
   }
 
-  if (!select_mode)
-    details_button = dialog.AddButton(_("Details"), DETAILS_MODAL_RESULT);
+  if (!select_mode) {
+    details_button = dialog.AddButton(
+      _("Details"),
+      [this, &dialog, waypoints_for_details]() noexcept {
+        if (!HasValidSelection())
+          return;
+
+        Waypoints *wpts = waypoints_for_details;
+        if (wpts == nullptr && data_components != nullptr)
+          wpts = data_components->waypoints.get();
+        if (wpts == nullptr)
+          return;
+
+        WaypointPtr w(GetSelectedWaypointPtr());
+        if (w == nullptr)
+          return;
+
+        /* allow_navigation + allow_edit: like the persistent list;
+         * alternates are task-adjacent; editing user waypoints
+         * (e.g. user.cup) stays available from this entry point. */
+        if (dlgWaypointDetailsShowModalForBrowseParent(
+              wpts, std::move(w), true, true))
+          dialog.SetModalResult(mrOK);
+      });
+  }
 
   set_active_freq_button = dialog.AddButton(_("Set Active Frequency"), [this](){
     if (!HasValidSelection())
@@ -301,20 +323,11 @@ dlgAlternatesListShowModal(Waypoints *waypoints,
   TWidgetDialog<AlternatesListWidget>
     dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(), dialog_look,
            title);
-  widget->CreateButtons(dialog);
+  widget->CreateButtons(dialog, waypoints);
   dialog.FinishPreliminary(std::move(widget));
   dialog.EnableCursorSelection();
 
-  const int result = dialog.ShowModal();
-  if (result != DETAILS_MODAL_RESULT)
-    return;
-
-  int i = (int)dialog.GetWidget().GetCursorIndex();
-  if (i < 0 || (unsigned)i >= dialog.GetWidget().alternates.size())
-    return;
-
-  dlgWaypointDetailsShowModal(waypoints,
-                              dialog.GetWidget().alternates[i].waypoint, true);
+  dialog.ShowModal();
 }
 
 WaypointPtr

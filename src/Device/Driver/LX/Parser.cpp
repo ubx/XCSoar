@@ -2,6 +2,7 @@
 // Copyright The XCSoar Project
 
 #include "Internal.hpp"
+#include "Parsers.hpp"
 #include "NMEA/Checksum.hpp"
 #include "NMEA/InputLine.hpp"
 #include "NMEA/Info.hpp"
@@ -53,7 +54,9 @@ ShouldSwitchHostBaudForNinc(const DeviceInfo &device_info) noexcept
           device_info.hardware_version.equals("8"));
 }
 
-static bool
+namespace LX {
+
+bool
 LXWP0(NMEAInputLine &line, NMEAInfo &info)
 {
   /*
@@ -100,7 +103,7 @@ LXWP0(NMEAInputLine &line, NMEAInfo &info)
 }
 
 void
-LXDevice::LXWP1(NMEAInputLine &line, DeviceInfo &device)
+LXWP1(NMEAInputLine &line, DeviceInfo &device)
 {
   /*
    * $LXWP1,
@@ -118,7 +121,7 @@ LXDevice::LXWP1(NMEAInputLine &line, DeviceInfo &device)
   device.license = line.ReadView();
 }
 
-static bool
+bool
 LXWP2(NMEAInputLine &line, NMEAInfo &info)
 {
   /*
@@ -165,7 +168,7 @@ LXWP2(NMEAInputLine &line, NMEAInfo &info)
   return true;
 }
 
-static bool
+bool
 LXWP3(NMEAInputLine &line, NMEAInfo &info)
 {
   /*
@@ -196,6 +199,8 @@ LXWP3(NMEAInputLine &line, NMEAInfo &info)
 
   return true;
 }
+
+} // namespace LX
 
 /**
  * Parse double from a string_view value field.
@@ -479,7 +484,7 @@ PLXVC(NMEAInputLine &line, NMEAInfo &info,
 
     const auto name = line.ReadView();
     if (name == "LXWP1"sv) {
-      LXDevice::LXWP1(line, info.secondary_device);
+      LX::LXWP1(line, info.secondary_device);
     } else if (name == "INFO"sv) {
       const auto type2 = line.ReadView();
       if (type2.starts_with('A'))
@@ -692,22 +697,22 @@ LXDevice::ParseNMEA(const char *String, NMEAInfo &info)
 
   const auto type = line.ReadView();
   if (type == "$LXWP0"sv)
-    return LXWP0(line, info);
+    return LX::LXWP0(line, info);
 
   if (type == "$LXWP1"sv) {
     DeviceInfo &device_info = mode == Mode::PASS_THROUGH
       ? info.secondary_device
       : info.device;
-    LXWP1(line, device_info);
+    LX::LXWP1(line, device_info);
     UpdateDeviceFlags(device_info, mode == Mode::PASS_THROUGH);
     return true;
   }
 
   if (type == "$LXWP2"sv)
-    return LXWP2(line, info);
+    return LX::LXWP2(line, info);
 
   if (type == "$LXWP3"sv)
-    return LXWP3(line, info);
+    return LX::LXWP3(line, info);
 
   if (type == "$PLXV0"sv) {
     is_colibri = false;

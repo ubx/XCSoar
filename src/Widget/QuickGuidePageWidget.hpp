@@ -64,7 +64,7 @@ private:
 
   bool visible = false;
 
-  /** Whether to parse markdown links in the content text */
+  /** Passed to RichTextWidget as parse_markdown (full Markdown, not links only). */
   bool parse_links = true;
 
   /**
@@ -78,7 +78,8 @@ public:
                                 const char *_markdown_text) noexcept;
 
   /**
-   * Disable link parsing in the content text.
+   * When false, the inner #RichTextWidget passes parse_markdown=false to
+   * #RichTextWindow::SetText (no Markdown at all: no lists, bold, or links).
    * Must be called before Initialise().
    */
   void SetParseLinks(bool enabled) noexcept {
@@ -88,15 +89,11 @@ public:
 
 
   /**
-   * Set a callback for horizontal swipe gestures.
-   * Must be called before Initialise().
-   *
-   * @param cb Called with true for swipe-left (next page),
-   *           false for swipe-right (previous page)
+   * Set a callback for horizontal swipe gestures (same semantics as
+   * #VScrollWidget::SetGestureCallback).  May be called before or
+   * after #Initialise().
    */
-  void SetGestureCallback(std::function<void(bool)> cb) noexcept {
-    gesture_callback = std::move(cb);
-  }
+  void SetGestureCallback(std::function<void(bool)> cb) noexcept;
   ~QuickGuidePageWidget() noexcept override;
 
   /**

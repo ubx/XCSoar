@@ -3,6 +3,7 @@
 
 #include "RichTextWindow.hpp"
 #include "ui/canvas/TextWrapper.hpp"
+#include "ui/canvas/Font.hpp"
 #include "ui/canvas/Canvas.hpp"
 #include "ui/canvas/SubCanvas.hpp"
 #include "ui/canvas/AnyCanvas.hpp"
@@ -11,6 +12,7 @@
 #include "Screen/Layout.hpp"
 #include "Look/Colors.hpp"
 #include "ResourceLookup.hpp"
+#include "Form/CheckBox.hpp"
 #include "system/OpenLink.hpp"
 #include "util/StringCompare.hxx"
 #include "util/UriSchemes.hpp"
@@ -37,6 +39,44 @@ IsTouchLayout() noexcept
 {
   return Layout::GetMaximumControlHeight() >
          Layout::GetMinimumControlHeight();
+}
+
+/**
+ * The processed line starts a checkbox span (first line of a list item
+ * with "- [ ]" / "- [x]"), not a wrapped continuation line.
+ */
+[[gnu::pure]]
+static bool
+LineSpanStartsWithCheckbox(const ParsedMarkdown &p,
+                           std::size_t line_start) noexcept
+{
+  for (const auto &span : p.styles) {
+    if ((span.style == TextStyle::Checkbox ||
+         span.style == TextStyle::CheckboxChecked) &&
+        span.start == line_start)
+      return true;
+  }
+  return false;
+}
+
+/**
+ * Pixel size of the square checkbox cell (not including suffix gap).
+ * Touch layouts use at least the standard control row height so
+ * checkboxes are as tappable as buttons in dialogs.
+ */
+[[gnu::pure]]
+static int
+CheckboxBoxSize(const Font &font) noexcept
+{
+  const int text_line_height = font.GetLineSpacing();
+  const int box_margin = static_cast<int>(Layout::ScalePenWidth(2));
+  if (!IsTouchLayout())
+    return text_line_height - 2 * box_margin;
+
+  const int from_text = text_line_height - 2 * box_margin;
+  const int from_row = static_cast<int>(Layout::GetMaximumControlHeight()) -
+                       2 * box_margin;
+  return std::max({from_text, from_row, 4});
 }
 
 /**
@@ -101,6 +141,12 @@ struct SegmentedLine {
       paragraph (i.e. not the first line, but the paragraph starts
       with "- ").  Used to apply a hanging indent. */
   bool is_list_continuation = false;
+
+  /**
+   * For #is_list_continuation: x offset from #padding to where body text
+   * should start (same as x after drawing the list prefix on the first line).
+   */
+  int list_hang_offset = 0;
 };
 
 /**
@@ -337,6 +383,13 @@ RichTextWindow::EnsureLineLayout() const noexcept
       }
     }
 
+    if (IsTouchLayout() && font != nullptr &&
+        block_img == nullptr &&
+        LineSpanStartsWithCheckbox(parsed, line.start)) {
+      const int need = CheckboxBoxSize(*font) + Layout::Scale(4);
+      line_heights[i] = std::max(line_heights[i], need);
+    }
+
     y += line_heights[i];
   }
 
@@ -490,6 +543,79 @@ FindNextBoundary(const std::vector<MarkdownLink> &links,
   return next;
 }
 
+[[gnu::pure]]
+static bool
+TextStartsWithNumberedList(const std::string &text,
+                           std::size_t line_start,
+                           std::size_t line_length) noexcept
+{
+  const std::size_t end = line_start + line_length;
+  std::size_t i = line_start;
+  if (i >= end || text[i] < '0' || text[i] > '9')
+    return false;
+  while (i < end && text[i] >= '0' && text[i] <= '9')
+    ++i;
+  return i < end && text[i] == '.' &&
+         i + 1 < end && text[i + 1] == ' ';
+}
+
+[[gnu::pure]]
+static int
+MeasureNumberedListPrefixWidth(const Font &font, const std::string &text,
+                               std::size_t line_start,
+                               std::size_t line_length) noexcept
+{
+  const std::size_t end = line_start + line_length;
+  std::size_t i = line_start;
+  if (i >= end || text[i] < '0' || text[i] > '9')
+    return 0;
+  while (i < end && text[i] >= '0' && text[i] <= '9')
+    ++i;
+  if (i >= end || text[i] != '.' || i + 1 >= end || text[i + 1] != ' ')
+    return 0;
+  const std::size_t n = i + 2 - line_start;
+  return font.TextSize(std::string_view(text.c_str() + line_start, n)).width;
+}
+
+/**
+ * Width of checkbox + gap after it (must match #RenderCheckboxSegment).
+ */
+[[gnu::pure]]
+static int
+CheckboxPrefixWidth(const Font &font) noexcept
+{
+  const int box_size = CheckboxBoxSize(font);
+  return box_size + Layout::Scale(4);
+}
+
+/**
+ * Horizontal distance from content #padding to where body text begins on the
+ * first line of a list paragraph (same as x after drawing the list prefix).
+ */
+[[gnu::pure]]
+static int
+ComputeListBodyOffsetFromPadding(const Font &font,
+                                 const SegmentedLine &first_line,
+                                 const std::string &text,
+                                 std::size_t line_start,
+                                 std::size_t line_length,
+                                 int list_indent) noexcept
+{
+  if (!first_line.segments.empty()) {
+    const auto &first = first_line.segments.front();
+    if (first.IsListItem())
+      return list_indent + font.TextSize("- ").width +
+             font.TextSize(" ").width;
+    if (first.IsCheckbox())
+      return list_indent + CheckboxPrefixWidth(font);
+  }
+  if (TextStartsWithNumberedList(text, line_start, line_length))
+    return MeasureNumberedListPrefixWidth(font, text, line_start,
+                                          line_length);
+
+  return list_indent;
+}
+
 void
 RichTextWindow::EnsureSegmentedLines() const noexcept
 {
@@ -514,36 +640,31 @@ RichTextWindow::EnsureSegmentedLines() const noexcept
   /* Track whether the current paragraph is a list item so we can
      mark continuation (wrapped) lines for hanging-indent rendering. */
   bool in_list_paragraph = false;
+  int current_list_hang = 0;
   const auto &text = parsed.text;
 
-  /* Check if a paragraph starts with a numbered list marker
-     (e.g. "1. ", "12. ") in the processed text.  These are not
-     tracked by the markdown parser as styled spans. */
-  auto StartsWithNumberedList = [&text](std::size_t start,
-                                        std::size_t length) noexcept {
-    const std::size_t end = start + length;
-    std::size_t i = start;
-    if (i >= end || text[i] < '0' || text[i] > '9')
-      return false;
-    while (i < end && text[i] >= '0' && text[i] <= '9')
-      ++i;
-    return i < end && text[i] == '.' &&
-           i + 1 < end && text[i + 1] == ' ';
-  };
+  const int list_indent =
+    (font != nullptr) ? font->TextSize("  ").width : 0;
 
   /* Detect if a new paragraph starts with a list marker, checkbox,
      or numbered item so wrapped continuation lines get indented. */
   auto IsListParagraphStart =
-    [&StartsWithNumberedList](const SegmentedLine &seg_line,
-                              std::size_t line_start,
-                              std::size_t line_length) noexcept {
+    [&text](const SegmentedLine &seg_line,
+            std::size_t line_start,
+            std::size_t line_length) noexcept {
     if (!seg_line.segments.empty()) {
       const auto &first = seg_line.segments.front();
       if (first.IsListItem() || first.IsCheckbox())
         return true;
     }
-    return StartsWithNumberedList(line_start, line_length);
+    return TextStartsWithNumberedList(text, line_start, line_length);
   };
+
+  /* Plain-text "- " bullet (e.g. Credits NEWS without Markdown). */
+  auto PlainLineStartsWithBullet =
+    [&text](std::size_t start, std::size_t length) noexcept {
+      return length >= 2 && text[start] == '-' && text[start + 1] == ' ';
+    };
 
   // If no links and no styles, each line is a single normal segment
   if (parsed.links.empty() && parsed.styles.empty()) {
@@ -555,11 +676,24 @@ RichTextWindow::EnsureSegmentedLines() const noexcept
       if (line.length > 0)
         seg_line.segments.push_back({line.start, line.length, SIZE_MAX, TextStyle::Normal});
 
-      if (is_new_para)
+      if (is_new_para) {
         in_list_paragraph =
-          IsListParagraphStart(seg_line, line.start, line.length);
-      else if (in_list_paragraph)
+          IsListParagraphStart(seg_line, line.start, line.length) ||
+          PlainLineStartsWithBullet(line.start, line.length);
+        if (in_list_paragraph && font != nullptr) {
+          if (TextStartsWithNumberedList(text, line.start, line.length))
+            current_list_hang = MeasureNumberedListPrefixWidth(
+              *font, text, line.start, line.length);
+          else if (PlainLineStartsWithBullet(line.start, line.length))
+            current_list_hang = font->TextSize("- ").width;
+          else
+            current_list_hang = list_indent;
+        } else
+          current_list_hang = 0;
+      } else if (in_list_paragraph) {
         seg_line.is_list_continuation = true;
+        seg_line.list_hang_offset = current_list_hang;
+      }
 
       segmented_lines->push_back(std::move(seg_line));
     }
@@ -606,8 +740,14 @@ RichTextWindow::EnsureSegmentedLines() const noexcept
     if (is_new_para) {
       in_list_paragraph =
         IsListParagraphStart(seg_line, line.start, line.length);
+      if (in_list_paragraph && font != nullptr)
+        current_list_hang = ComputeListBodyOffsetFromPadding(
+          *font, seg_line, text, line.start, line.length, list_indent);
+      else
+        current_list_hang = 0;
     } else if (in_list_paragraph) {
       seg_line.is_list_continuation = true;
+      seg_line.list_hang_offset = current_list_hang;
     }
 
     segmented_lines->push_back(std::move(seg_line));
@@ -768,31 +908,37 @@ RichTextWindow::RenderLinkSegment(Canvas &canvas,
 void
 RichTextWindow::RenderCheckboxSegment(Canvas &canvas,
                                       const TextSegment &seg,
-                                      int &x, int text_y,
-                                      int visible_top,
-                                      int text_line_height) noexcept
+                                      int &x, int y_line, int visible_top,
+                                      int row_height) noexcept
 {
   const std::size_t style_idx = FindCheckboxStyleIndex(seg.start);
-
-  const int box_margin = Layout::ScalePenWidth(2);
-  const int box_size = IsTouchLayout()
-    ? std::max(text_line_height - box_margin,
-               static_cast<int>(
-                 Layout::GetMinimumControlHeight()) / 2)
-    : text_line_height - box_margin * 2;
-  const int box_y = text_y + (text_line_height - box_size) / 2;
+  const int box_size = CheckboxBoxSize(*font);
+  const int box_y = y_line + (row_height - box_size) / 2;
   PixelRect box_rc{x, box_y, x + box_size, box_y + box_size};
 
   bool checked = (style_idx != SIZE_MAX)
     ? IsCheckboxChecked(style_idx)
     : seg.IsCheckboxChecked();
-  bool focused = (style_idx != SIZE_MAX) &&
-                 IsCheckboxFocused(style_idx);
-  DrawSimpleCheckbox(canvas, box_rc, checked, focused, dark_mode);
+  const bool key_focused = (style_idx != SIZE_MAX) &&
+                          IsCheckboxFocused(style_idx);
+  if (dialog_look != nullptr) {
+    /* Outer focus square (same idea as #RenderLinkSegment); DrawCheckBox
+       only changes inner border, not a visible selection frame. */
+    if (key_focused && HasFocus()) {
+      const unsigned focus_w = Layout::ScalePenWidth(2);
+      PixelRect focus_rc = box_rc;
+      focus_rc.Grow((int)focus_w);
+      canvas.Select(Pen(focus_w, COLOR_XCSOAR_LIGHT));
+      canvas.SelectHollowBrush();
+      canvas.DrawRectangle(focus_rc);
+    }
+    DrawCheckBox(canvas, *dialog_look, box_rc, checked, key_focused, false, true);
+  } else
+    DrawSimpleCheckbox(canvas, box_rc, checked, key_focused, dark_mode);
 
   if (style_idx != SIZE_MAX) {
     /* Expand hit area on touch screens for easier tapping */
-    const int cb_expand = IsTouchLayout() ? Layout::Scale(4) : 0;
+    const int cb_expand = IsTouchLayout() ? Layout::Scale(6) : 0;
     PixelRect click_rc{x - cb_expand,
                        box_y + visible_top - cb_expand,
                        x + box_size + cb_expand,
@@ -944,8 +1090,8 @@ RichTextWindow::OnPaint(Canvas &canvas) noexcept
       y + (cur_line_height - effective_text_height) / 2;
     int x = padding;
     if (line.is_list_continuation) {
-      /* Hanging indent for wrapped continuation of a list item */
-      x += list_indent;
+      /* Align with body text after bullet / "1. " on the first line */
+      x += line.list_hang_offset > 0 ? line.list_hang_offset : list_indent;
     } else if (!line.segments.empty()) {
       const TextSegment &first_seg = line.segments.front();
       if (first_seg.IsCheckbox() || first_seg.IsListItem())
@@ -971,8 +1117,8 @@ RichTextWindow::OnPaint(Canvas &canvas) noexcept
                           text_line_height);
       else if (seg.IsCheckbox())
         RenderCheckboxSegment(sub_canvas, seg,
-                              x, text_y, visible_top,
-                              text_line_height);
+                              x, y, visible_top,
+                              cur_line_height);
       else
         RenderPlainSegment(sub_canvas, seg, text_data,
                            x, text_y);
@@ -1072,25 +1218,6 @@ RichTextWindow::IsCheckboxFocused(std::size_t style_index) const noexcept
 }
 
 /**
- * A focusable item (link or checkbox) identified during keyboard
- * navigation.  Sorted by vertical position so UP/DOWN moves in
- * document order.
- */
-struct FocusItem {
-  int y_pos;          ///< Content-space Y coordinate
-  int height;         ///< Approximate item height
-  bool is_checkbox;
-  std::size_t index;  ///< style_index for checkboxes, link_index for links
-
-  bool operator<(const FocusItem &other) const noexcept {
-    if (y_pos != other.y_pos)
-      return y_pos < other.y_pos;
-    /* Checkboxes before links at the same position */
-    return is_checkbox && !other.is_checkbox;
-  }
-};
-
-/**
  * Build a sorted list of all focusable items (links and checkboxes)
  * from the pre-computed segmented lines and line layout data.
  */
@@ -1166,8 +1293,7 @@ FindCurrentFocusIndex(
 }
 
 void
-RichTextWindow::ScrollToFocusItem(const FocusItem &item,
-                                  int text_line_height) noexcept
+RichTextWindow::ScrollToFocusItem(const FocusItem &item) noexcept
 {
   if (item.is_checkbox) {
     focused_checkbox_style = item.index;
@@ -1186,8 +1312,7 @@ RichTextWindow::ScrollToFocusItem(const FocusItem &item,
 
     /* Convert content-space Y to parent coordinates */
     const int item_top = item.y_pos + window_rect.top;
-    const int item_bottom =
-      item.y_pos + text_line_height + window_rect.top;
+    const int item_bottom = item.y_pos + item.height + window_rect.top;
 
     if (item_top < scroll_margin ||
         item_bottom > parent_height - scroll_margin) {
@@ -1198,7 +1323,7 @@ RichTextWindow::ScrollToFocusItem(const FocusItem &item,
         scroll_rc.top = item.y_pos - scroll_margin;
         scroll_rc.bottom = scroll_rc.top + 1;
       } else {
-        scroll_rc.top = item.y_pos + text_line_height + scroll_margin;
+        scroll_rc.top = item.y_pos + item.height + scroll_margin;
         scroll_rc.bottom = scroll_rc.top + 1;
       }
       parent->ScrollTo(scroll_rc);
@@ -1206,6 +1331,41 @@ RichTextWindow::ScrollToFocusItem(const FocusItem &item,
   }
 
   Invalidate();
+}
+
+bool
+RichTextWindow::AdvanceFocusToNextFrom(
+  const std::vector<FocusItem> &items,
+  std::optional<std::size_t> current_pos,
+  int max_jump) noexcept
+{
+  if (!current_pos.has_value())
+    return false;
+
+  if (current_pos.value() + 1 < items.size()) {
+    const auto &cur = items[current_pos.value()];
+    const auto &next = items[current_pos.value() + 1];
+    if (next.y_pos - cur.y_pos > max_jump) {
+      /* Next item is too far away — clear focus and let
+         the scroll widget handle line-by-line scrolling. */
+      focused_checkbox_style.reset();
+      focused_link.reset();
+      focus_exhausted_down = true;
+      Invalidate();
+      return false;
+    }
+    focus_exhausted_up = false;
+    ScrollToFocusItem(next);
+    return true;
+  }
+
+  focused_checkbox_style.reset();
+  focused_link.reset();
+  focus_exhausted_down = true;
+  Invalidate();
+  if (ContainerWindow *parent = GetParent())
+    return parent->InjectKeyPress(KEY_DOWN);
+  return LinkableWindow::OnKeyDown(KEY_DOWN);
 }
 
 bool
@@ -1269,35 +1429,13 @@ RichTextWindow::OnKeyDown(unsigned key_code) noexcept
       if (best != nullptr && best->y_pos <= visible_bottom) {
         focus_exhausted_down = false;
         focus_exhausted_up = false;
-        ScrollToFocusItem(*best, text_line_height);
+        ScrollToFocusItem(*best);
         return true;
       }
       /* No suitable item — let scroll widget handle it */
       return false;
-    } else if (current_pos.value() + 1 < items.size()) {
-      const auto &cur = items[current_pos.value()];
-      const auto &next = items[current_pos.value() + 1];
-      if (next.y_pos - cur.y_pos > max_jump) {
-        /* Next item is too far away — clear focus and let
-           the scroll widget handle line-by-line scrolling. */
-        focused_checkbox_style.reset();
-        focused_link.reset();
-        focus_exhausted_down = true;
-        Invalidate();
-        return false;
-      }
-      focus_exhausted_up = false;
-      ScrollToFocusItem(next, text_line_height);
-      return true;
-    } else {
-      focused_checkbox_style.reset();
-      focused_link.reset();
-      focus_exhausted_down = true;
-      Invalidate();
-      if (ContainerWindow *parent = GetParent())
-        return parent->InjectKeyPress(key_code);
     }
-    break;
+    return AdvanceFocusToNextFrom(items, current_pos, max_jump);
 
   case KEY_UP:
     if (!current_pos.has_value()) {
@@ -1319,7 +1457,7 @@ RichTextWindow::OnKeyDown(unsigned key_code) noexcept
       if (best != nullptr && best->y_pos >= visible_top - text_line_height) {
         focus_exhausted_up = false;
         focus_exhausted_down = false;
-        ScrollToFocusItem(*best, text_line_height);
+        ScrollToFocusItem(*best);
         return true;
       }
       /* No suitable item — let scroll widget handle it */
@@ -1337,7 +1475,7 @@ RichTextWindow::OnKeyDown(unsigned key_code) noexcept
         return false;
       }
       focus_exhausted_down = false;
-      ScrollToFocusItem(prev, text_line_height);
+      ScrollToFocusItem(prev);
       return true;
     } else {
       focused_checkbox_style.reset();
@@ -1352,6 +1490,7 @@ RichTextWindow::OnKeyDown(unsigned key_code) noexcept
   case KEY_RETURN:
     if (focused_checkbox_style.has_value()) {
       ToggleCheckbox(focused_checkbox_style.value());
+      AdvanceFocusToNextFrom(items, current_pos, max_jump);
       return true;
     }
     if (focused_link.has_value()) {

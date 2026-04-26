@@ -1,0 +1,76 @@
+---
+description: Stacked search dialogs (filter + list + optional details) — lifecycle and commit contract
+globs:
+  - "src/Dialogs/**/*.cpp"
+  - "src/Dialogs/**/*.hpp"
+  - "src/Input/InputEvents*.cpp"
+  - "src/Input/InputEvents*.hpp"
+alwaysApply: false
+---
+
+# Search dialog UX (general)
+
+Applies to **modal search UIs**: filter controls + result list, optionally opening a **second modal** (details, preview, editor) on top. Not every list dialog uses this pattern—see **Pick-only** vs **Browse** below.
+
+## Pick-only vs browse (persistent outer dialog)
+
+1. **Pick-only** — User chooses a row and the **outer** dialog closes immediately with a return value (or callback). No nested “return to list after closing child” loop.  
+   *Example:* `ShowWaypointListDialog` for Goto lookup or task relocate.
+
+2. **Browse** — Outer search **stays open** while the user opens and closes a **child** dialog on top. The user can inspect several rows without restarting the search.  
+   *Examples:* `ShowWaypointListPersistentDialog` + waypoint details; `dlgAlternatesListShowModal` + details (same nested-modal pattern).
+
+Do not mix these casually: pick-only callers expect a single modal lifetime; browse mode requires an explicit **commit** signal to close the outer dialog.
+
+## When the outer search should dismiss
+
+The **outer** dialog should close only when:
+
+- The user **cancels** from the outer UI (**Esc**, outer **Close**), **or**
+- The **child** reports a **committed action** that should end the whole flow (navigation change, task change, data saved, etc.).
+
+Closing the **child** with “no commit” (e.g. **Close** / browse done) must return to the **outer** list **without** dismissing the outer dialog.
+
+## Communicating commit: WaypointDetailsNesting (waypoint details)
+
+`dlgWaypointDetailsShowModal` takes an optional const **`WaypointDetailsNesting *`** (default `nullptr` = no parent; same as all-null). See `Dialogs/Waypoint/WaypointDialogs.hpp`.
+
+- **`state_change_committed`** — Dismiss the parent list when a commit completes (GoTo, task, home, edit, pan with default include-pan, …). **Close** on the details dialog must not leave it **`true`**.
+
+- **`include_pan_in_parent_dismissal`** (default `true`) — If **`false`**, pan (header and commands) does not set `state_change_committed`.
+
+- **`map_pan_from_details`** — If non-null, set to **`true`** when the user panned the map to the waypoint before leaving (for callers that need to know pan vs GoTo).
+
+**Set `*state_change_committed` to `true` only on success paths.**
+
+## Visibility: parent must not hide the result
+
+If the **outer** dialog is **fullscreen** and a child action must show a **full map** result, that action should typically set **`*state_change_committed = true`** (default `include_pan_in_parent_dismissal`) so the **outer** closes and the map is visible.
+
+If the outer were non-blocking or transparent, a different rule might apply; XCSoar search UIs are usually opaque modals.
+
+## Adding actions on the child
+
+For each new button or flow that closes the child:
+
+- **Browse / cancel / no lasting change** → do **not** set `*state_change_committed` to **`true`**.
+- **Lasting change** the user should see on the map or task → set **`*state_change_committed = true`** before closing when the pointer is non-null.
+
+## Input events and aliases
+
+Prefer **one** documented event path for a given browse search (e.g. `WaypointDetails` `select`). Keep **legacy event names** only for **`.xci` / profile compatibility** when they duplicate behaviour; document them as aliases in code comments.
+
+## Reference implementation (waypoint search)
+
+- **Pick-only:** `ShowWaypointListDialog` in `Dialogs/Waypoint/WaypointList.cpp`
+- **Browse + details:** `ShowWaypointListPersistentDialog`, `WaypointListPersistentWidget::OnWaypointListEnter`
+- **Browse + details (alternates list):** `dlgAlternatesListShowModal` keeps the list in `ShowModal`.  **Details** is a button callback to `dlgWaypointDetailsShowModalForBrowseParent` (not a separate modal result that ends the list first).  If details reports a state change, the list is dismissed with `SetModalResult(mrOK)`.
+- **Child + nesting:** `dlgWaypointDetailsShowModal` with `WaypointDetailsNesting` in `dlgWaypointDetails` and `WaypointCommandsWidget`
+- **Input:** `InputEvents::eventWaypointDetails` (`select` vs `current`), `eventWaypointDetailsPersistent` (alias)
+- **Shared helper:** `dlgWaypointDetailsShowModalForBrowseParent` in `WaypointDialogs` / `dlgWaypointDetails` — use from persistent search and the alternates list.  `AlternatesListDialog` passes `Waypoints *` to `CreateButtons` for the details path
+
+Reuse the same **ideas** for other search+details stacks; reuse **names** only where it stays readable.
+
+## NEWS
+
+User-visible behaviour changes belong in **`NEWS.txt`** under the current unreleased version.

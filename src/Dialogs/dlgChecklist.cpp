@@ -126,10 +126,19 @@ try {
   return {};
 }
 
+static std::size_t checklist_current_page = 0;
+
+void
+dlgChecklistNotifySiteFileChanged() noexcept
+{
+  /* Profile::GetPath(ChecklistFile) is already updated; reset page so a
+     different file's page count does not keep a stale index. */
+  checklist_current_page = 0;
+}
+
 void
 dlgChecklistShowModal()
 {
-  static std::size_t current_page = 0;
 
   auto path = Profile::GetPath(ProfileKeys::ChecklistFile);
   if (path == nullptr || path.empty())
@@ -152,7 +161,8 @@ dlgChecklistShowModal()
         "- [ ] %s\n"
         "- [ ] %s\n"
         "- [ ] %s\n"
-        "- [ ] %s",
+        "- [ ] %s\n"
+        "- [ ] %s [%s](vhf:122.800#standby)",
         _("Getting Started"),
         _("Download the example checklist or create your own:"),
         _("Download Example"),
@@ -164,15 +174,17 @@ dlgChecklistShowModal()
         N_("**Bold** and # Headings"),
         _("Clickable links"),
         _("Phone: tel: / SMS: sms: / Email: mailto:"),
-        _("Maps: geo:47.5,8.5"));
+        _("Maps: geo:47.5,8.5"),
+        _("Set standby from a link"),
+        _("Information"));
       checklist.emplace_back(ChecklistPage{
           _("No checklist loaded"),
           body.c_str(),
         });
     }
 
-  if (current_page >= checklist.size())
-    current_page = 0;
+  if (checklist_current_page >= checklist.size())
+    checklist_current_page = 0;
 
   const DialogLook &look = UIGlobals::GetDialogLook();
 
@@ -181,18 +193,22 @@ dlgChecklistShowModal()
 
   auto pager = std::make_unique<ArrowPagerWidget>(look.button,
                                                    dialog.MakeModalResultCallback(mrOK));
-  for (const auto &i : checklist)
-    pager->Add(std::make_unique<VScrollWidget>(
-      std::make_unique<RichTextWidget>(look, i.text.c_str()), look, true));
+  ArrowPagerWidget *const pager_ptr = pager.get();
 
-  pager->SetCurrent(current_page);
+  for (const auto &i : checklist) {
+    auto scroll = std::make_unique<VScrollWidget>(
+      std::make_unique<RichTextWidget>(look, i.text.c_str()), look, true);
+    pager->Add(std::move(scroll));
+  }
+
+  pager->SetCurrent(checklist_current_page);
 
   const std::size_t total_pages = checklist.size();
 
   pager->SetPageFlippedCallback(
-    [&checklist, &dialog, &pager=*pager, total_pages](){
+    [&checklist, &dialog, pager_ptr, total_pages]() {
       UpdateCaption(dialog, checklist,
-                    pager.GetCurrentIndex(), total_pages);
+                    pager_ptr->GetCurrentIndex(), total_pages);
     });
 
   UpdateCaption(dialog, checklist,
@@ -201,5 +217,6 @@ dlgChecklistShowModal()
   dialog.FinishPreliminary(std::move(pager));
   dialog.ShowModal();
 
-  current_page = ((ArrowPagerWidget &)dialog.GetWidget()).GetCurrentIndex();
+  checklist_current_page =
+    static_cast<ArrowPagerWidget &>(dialog.GetWidget()).GetCurrentIndex();
 }

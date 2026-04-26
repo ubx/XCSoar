@@ -178,6 +178,8 @@ class WaypointDetailsWidget final
 
   ProtectedTaskManager *const task_manager;
 
+  const WaypointDetailsNesting nesting;
+
   Button goto_button;
   Button magnify_button, shrink_button;
   Button previous_button, next_button;
@@ -207,12 +209,15 @@ class WaypointDetailsWidget final
 public:
   WaypointDetailsWidget(WidgetDialog &_dialog,
                         Waypoints *waypoints, WaypointPtr _waypoint,
-                        ProtectedTaskManager *_task_manager, bool allow_edit) noexcept
+                        ProtectedTaskManager *_task_manager, bool allow_edit,
+                        const WaypointDetailsNesting &_nesting) noexcept
     :dialog(_dialog),
      waypoint(std::move(_waypoint)),
      task_manager(_task_manager),
+     nesting(_nesting),
      commands_widget(new WaypointCommandsWidget(look, &dialog, waypoints, waypoint,
-                                                task_manager, allow_edit)) {}
+                                                task_manager, allow_edit,
+                                                _nesting)) {}
 
   /**
    * Resolve the source file path for this waypoint from its
@@ -493,11 +498,17 @@ WaypointDetailsWidget::Prepare(ContainerWindow &parent,
     goto_button.Create(parent, look.button, _("GoTo"), layout.goto_button,
                        button_style, [this](){ OnGotoClicked(); });
   else {
-	goto_button.Create(parent, look.button, _("Pan To"), layout.goto_button,
-                       button_style, [this](){
-    if (ActivatePan(*waypoint))
-      dialog.SetModalResult(mrOK);
-  });  
+    goto_button.Create(parent, look.button, _("Pan To"), layout.goto_button,
+                       button_style, [this]() {
+                         if (ActivatePan(*waypoint)) {
+                           if (nesting.map_pan_from_details != nullptr)
+                             *nesting.map_pan_from_details = true;
+                           if (nesting.include_pan_in_parent_dismissal &&
+                               nesting.state_change_committed != nullptr)
+                             *nesting.state_change_committed = true;
+                           dialog.SetModalResult(mrOK);
+                         }
+                       });
   }
 
   if (!images.empty()) {
@@ -518,7 +529,11 @@ WaypointDetailsWidget::Prepare(ContainerWindow &parent,
                      [this](){ NextPage(1); });
 
   close_button.Create(parent, look.button, _("Close"), layout.close_button,
-                      button_style, dialog.MakeModalResultCallback(mrOK));
+                      button_style, [this]() {
+                        if (nesting.state_change_committed != nullptr)
+                          *nesting.state_change_committed = false;
+                        dialog.SetModalResult(mrOK);
+                      });
 
   info_widget.Initialise(parent, layout.main);
   info_widget.Prepare();
@@ -723,6 +738,8 @@ WaypointDetailsWidget::OnGotoClicked()
   }
 
   task_manager->DoGoto(waypoint);
+  if (nesting.state_change_committed != nullptr)
+    *nesting.state_change_committed = true;
   dialog.SetModalResult(mrOK);
 
   CommonInterface::main_window->FullRedraw();
@@ -927,20 +944,47 @@ WaypointDetailsWidget::UpdateCaption() noexcept
 
 void
 dlgWaypointDetailsShowModal(Waypoints *waypoints, WaypointPtr _waypoint,
-                            bool allow_navigation, bool allow_edit)
+                            bool allow_navigation, bool allow_edit,
+                            const WaypointDetailsNesting *nesting) noexcept
 {
+  if (_waypoint == nullptr)
+    return;
+
   LastUsedWaypoints::Add(*_waypoint);
+
+  const WaypointDetailsNesting k_default;
+  const WaypointDetailsNesting &N = nesting != nullptr ? *nesting : k_default;
+
+  if (N.state_change_committed != nullptr)
+    *N.state_change_committed = false;
+  if (N.map_pan_from_details != nullptr)
+    *N.map_pan_from_details = false;
 
   const DialogLook &look = UIGlobals::GetDialogLook();
   TWidgetDialog<WaypointDetailsWidget>
     dialog(WidgetDialog::Full{}, UIGlobals::GetMainWindow(),
            look, nullptr);
-  dialog.SetWidget(dialog, waypoints, _waypoint,
-                   allow_navigation ? backend_components->protected_task_manager.get() : nullptr,
-                   allow_edit);
+  dialog.SetWidget(
+    dialog, waypoints, _waypoint,
+    allow_navigation ? backend_components->protected_task_manager.get() : nullptr,
+    allow_edit, N);
 
   dialog.GetWidget().InitCaption();
   dialog.GetWidget().UpdateCaption();
 
   dialog.ShowModal();
+}
+
+bool
+dlgWaypointDetailsShowModalForBrowseParent(
+  Waypoints *waypoints, WaypointPtr &&waypoint, bool allow_navigation,
+  bool allow_edit) noexcept
+{
+  bool state_change = false;
+  const WaypointDetailsNesting nesting{
+    .state_change_committed = &state_change,
+  };
+  dlgWaypointDetailsShowModal(waypoints, std::move(waypoint), allow_navigation,
+                                allow_edit, &nesting);
+  return state_change;
 }

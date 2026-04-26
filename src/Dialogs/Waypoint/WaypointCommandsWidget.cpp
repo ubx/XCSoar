@@ -222,6 +222,16 @@ WaypointCommandsWidget::UpdateButtons()
 }
 
 void
+WaypointCommandsWidget::CommitParentSearchAndCloseForm() noexcept
+{
+  if (form == nullptr)
+    return;
+  if (nesting.state_change_committed != nullptr)
+    *nesting.state_change_committed = true;
+  form->SetModalResult(mrOK);
+}
+
+void
 WaypointCommandsWidget::Prepare(ContainerWindow &parent,
                                 const PixelRect &rc) noexcept
 {
@@ -229,34 +239,39 @@ WaypointCommandsWidget::Prepare(ContainerWindow &parent,
   RowFormWidget::Prepare(parent, rc);
   
   replace_button = AddButton(_("Replace in Task"), [this](){
-    if (ReplaceInTask(*task_manager, waypoint) && form != nullptr)
-      form->SetModalResult(mrOK);
+    if (ReplaceInTask(*task_manager, waypoint))
+      CommitParentSearchAndCloseForm();
   });
 
   insert_button = AddButton(_("Insert in Task"), [this](){
-    if (InsertInTask(*task_manager, waypoint) && form != nullptr)
-      form->SetModalResult(mrOK);
+    if (InsertInTask(*task_manager, waypoint))
+      CommitParentSearchAndCloseForm();
   });
 
   append_button = AddButton(_("Append to Task"), [this](){
-    if (AppendToTask(*task_manager, waypoint) && form != nullptr)
-      form->SetModalResult(mrOK);
+    if (AppendToTask(*task_manager, waypoint))
+      CommitParentSearchAndCloseForm();
   });
     
   remove_button = AddButton(_("Remove from Task"), [this](){
-      if (RemoveFromTask(*task_manager, *waypoint) && form != nullptr)
-        form->SetModalResult(mrOK);
-    });
+    if (RemoveFromTask(*task_manager, *waypoint))
+      CommitParentSearchAndCloseForm();
+  });
   
   home_button = AddButton(_("Set as New Home"), [this](){
     SetHome(waypoints, *waypoint);
-    if (form != nullptr)
-      form->SetModalResult(mrOK);
+    CommitParentSearchAndCloseForm();
   });
 
   pan_button = AddButton(_("Pan to Waypoint"), [this](){
-    if (ActivatePan(*waypoint) && form != nullptr)
-      form->SetModalResult(mrOK);
+    if (!ActivatePan(*waypoint) || form == nullptr)
+      return;
+    if (nesting.map_pan_from_details != nullptr)
+      *nesting.map_pan_from_details = true;
+    if (nesting.include_pan_in_parent_dismissal &&
+        nesting.state_change_committed != nullptr)
+      *nesting.state_change_committed = true;
+    form->SetModalResult(mrOK);
   });
   
 
@@ -277,8 +292,7 @@ WaypointCommandsWidget::Prepare(ContainerWindow &parent,
   wp_copy.origin = WaypointOrigin::USER;
 
   if (dlgWaypointEditShowModal(wp_copy) == WaypointEditResult::MODIFIED) {
-    // TODO: refresh data instead of closing dialog?
-    form->SetModalResult(mrOK);
+    CommitParentSearchAndCloseForm();
 
     {
       ScopeSuspendAllThreads suspend;
