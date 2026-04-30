@@ -91,6 +91,37 @@ type=key
 data=RETURN
 event=Traffic details
 
+# Traffic radar: F2/F3 zoom in/out, UP/DOWN and F1/F4 = next/prev target
+mode=default.Traffic Display1.Traffic Display2.Traffic
+type=key
+data=UP
+event=Traffic next
+
+mode=default.Traffic Display1.Traffic Display2.Traffic
+type=key
+data=DOWN
+event=Traffic previous
+
+mode=default.Traffic Display1.Traffic Display2.Traffic
+type=key
+data=F1
+event=Traffic previous
+
+mode=default.Traffic Display1.Traffic Display2.Traffic
+type=key
+data=F2
+event=Traffic zoom in
+
+mode=default.Traffic Display1.Traffic Display2.Traffic
+type=key
+data=F3
+event=Traffic zoom out
+
+mode=default.Traffic Display1.Traffic Display2.Traffic
+type=key
+data=F4
+event=Traffic next
+
 ###### pan mode
 
 mode=pan
@@ -143,7 +174,7 @@ location=4
 
 mode=pan
 type=key
-data=F1
+data=F2
 event=Zoom in
 location=5
 
@@ -158,6 +189,42 @@ type=key
 data=RETURN
 event=NearestMapItems
 location=7
+
+# Waypoint image: F2 / F3 = zoom in/out (same F-keys as pan and traffic; not on main map)
+mode=wptimg
+type=key
+data=F1
+event=WaypointImage reset
+
+mode=wptimg
+type=key
+data=F2
+event=WaypointImage magnify
+
+mode=wptimg
+type=key
+data=F3
+event=WaypointImage shrink
+
+mode=wptimg
+type=key
+data=LEFT
+event=WaypointImage left
+
+mode=wptimg
+type=key
+data=RIGHT
+event=WaypointImage right
+
+mode=wptimg
+type=key
+data=UP
+event=WaypointImage up
+
+mode=wptimg
+type=key
+data=DOWN
+event=WaypointImage down
 
 # ------------
 # mode=mc (MacCready adjustment)
@@ -228,6 +295,7 @@ type=key
 data=F1
 event=QuickMenu
 
+# Main map: F2/F3 = Checklist/FLARM (F2/F3 + … + F12 = classic row). F2/F3 = zoom in pan, wptimg, traffic only.
 mode=default
 type=key
 data=F2
@@ -334,7 +402,7 @@ event=Zoom in
 mode=default
 type=key
 data=RETURN
-event=FLARMRadar toggle
+event=Pan on
 event=ClearAirspaceWarnings
 event=ClearStatusMessages
 

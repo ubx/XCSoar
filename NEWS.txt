@@ -1,4 +1,15 @@
 Version 7.45 - not yet released
+* ui
+  - Waypoint details embedded image: new input mode ``wptimg`` and
+    ``WaypointImage`` events (magnify, shrink, reset, arrows) so keys
+    can be set in the ``.xci`` file without the map's ``default`` key
+    fallback
+* input
+  - F2 = zoom in, F3 = zoom out in pan, on the FLARM radar, and in waypoint
+    image ``wptimg`` (not on the main non-pan map, where F2/F3 stay Checklist
+    and FLARM as before). Traffic: ``next`` and ``previous`` events; FLARM: UP/DOWN
+    and F1/F4 = next/prev target, F2/F3 = zoom. The radar no longer hard-codes
+    d-pad to zoom; bindings come from the ``.xci`` file
 * map
   - obstacles hidden at wider map scales than other non-landables (5000 vs 10000)
   - draw up to 1024 waypoints at once (was 256) #2327
@@ -125,6 +136,7 @@ Version 7.44 - 2026-03-22
   - checklists: add Markdown support (bold, links, checkboxes)
   - fix home waypoint lost on restart due to async terrain loading #2169
   - fix profile migration ordering of old waypoint/airspace keys
+  - add ability to configure user-defined repositories
 * ui
   - enable goto and waypoint details for location map items (clicking on empty map locations)
   - streamlined, and optimized icons
