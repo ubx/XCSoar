@@ -1,4 +1,13 @@
 Version 7.45 - not yet released
+* devices
+  - FLARM $PGRMZ (when FLARM is detected) feeds igc_pressure_altitude for the
+    ISA logger datum; cleared when strong pressure replaces weak pressure or
+    ignores the sentence
+* ui
+  - infoboxen: new Altitude IGC InfoBox (logger pressure or ISA pressure only)
+* desktop
+  - command-line: -h/--help and -version/--version print to stdout and exit;
+    unknown options print a short usage line on stderr
 * ui
   - Waypoint details embedded image: new input mode ``wptimg`` and
     ``WaypointImage`` events (magnify, shrink, reset, arrows) so keys
@@ -14,6 +23,8 @@ Version 7.45 - not yet released
   - obstacles hidden at wider map scales than other non-landables (5000 vs 10000)
   - draw up to 1024 waypoints at once (was 256) #2327
   - terrain: fix fluctuating hill-shading strength #2262
+  - snail trail: Catmull-Rom smoothing between fixes; vario colouring samples
+    high-rate netto from the merge thread between GPS points #2447
 * ui
   - infoboxen: refresh titles after changing the interface language #2314
   - infoboxen: add "Home" InfoBox (waypoint name, arrival height at home,
@@ -85,6 +96,9 @@ Version 7.45 - not yet released
   - openair: map AY ASRA to aerial sporting/recreational airspace type #1827
 * devices
   - fix native crash on device reconnect (stale delayed reopen timer) #2382
+  - Polar sync device setting is offered only for drivers that register polar
+    support (currently LXNAV); PutPolar is skipped on other drivers even if an old
+    profile had Polar sync enabled #2457
 * iOS
   - disable Core Location distance filter for built-in GPS so fixes are not
     suppressed while stationary #2380
