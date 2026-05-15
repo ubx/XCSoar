@@ -1,5 +1,7 @@
 Version 7.45 - not yet released
 * devices
+  - Android: multi-port USB serial adapters (e.g. dual FTDI) use 0-based port
+    suffixes (#0, #1) in both the port list and device list #2481
   - FLARM $PGRMZ (when FLARM is detected) feeds igc_pressure_altitude for the
     ISA logger datum; cleared when strong pressure replaces weak pressure or
     ignores the sentence
@@ -46,6 +48,10 @@ Version 7.45 - not yet released
     pre-filtered to recently-used waypoints; listed in the Gesture Help
     dialog with its own icon #336
 * map
+  - larger on-map typography: default waypoint text, map-scale readout, and
+    topography labels
+  - map waypoint icons (bitmap and vector landables): new ``Waypoint icon
+    size`` on Configuration → Map display → Waypoints (50–200%, default 100%)
   - obstacles hidden at wider map scales than other non-landables (5000 vs 10000)
   - draw up to 1024 waypoints at once (was 256) #2327
   - terrain: fix fluctuating hill-shading strength #2262
@@ -66,6 +72,9 @@ Version 7.45 - not yet released
     focus colour in dark, like other dialog focus.  Select Airspace: Details
     and Close are on the main dialog action bar (bottom/edge) so the same
     keys can reach them after the list, like other list dialogs
+  - map item list and airspace list: respect list focus/selection text colours
+    (was unreadable focused row on e-ink: paint reset colour to black on a
+    black focused background) #2495
   - alternates: list holds up to 10 options (was 6); if the task only has one
     automatic alternate, Alternate 2 no longer shows the same as Alternate 1.
     Displayed glide is re-solved with the current aircraft state; value colour
@@ -128,6 +137,9 @@ Version 7.45 - not yet released
   - restore FFVV NetCoupe contest optimisation #2330
   - angle bearing/delta normalization uses O(1) wrap (avoids stalls when angles
     are extremely large; suspected Android freeze #1292)
+* weather
+  - METAR/TAF station list: accept lowercase ICAO codes when adding a station;
+    codes are normalized to upper-case for download and profile storage
 * data files
   - windows: open files with O_BINARY so embedded ZIP (e.g. CUPX POINTS.CUP)
     is read correctly
