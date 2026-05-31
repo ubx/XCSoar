@@ -1,7 +1,7 @@
 PKG_CONFIG = pkg-config
 
 ifeq ($(USE_THIRDPARTY_LIBS),y)
-  PKG_CONFIG := PKG_CONFIG_LIBDIR=$(THIRDPARTY_LIBS_ROOT)/lib/pkgconfig $(PKG_CONFIG) --static
+  PKG_CONFIG := PKG_CONFIG_LIBDIR=$(THIRDPARTY_LIBS_ROOT)/lib/pkgconfig $(PKG_CONFIG) --static --define-variable=prefix=$(THIRDPARTY_LIBS_ROOT) --define-variable=libdir=$(THIRDPARTY_LIBS_ROOT)/lib
 endif
 
 ifeq ($(TARGET_IS_DARWIN),y)
@@ -30,14 +30,8 @@ define assign-check-error
 $(1) = $$($(2))$$(if $$(filter ERROR,$$($(2))),$$(error $(3)))
 endef
 
-ifeq ($(TARGET_IS_KOBO),y)
-# Nomake clean on the Kobo because it may break our Musl sysroot
-pkg-config-cppflags-filter = $(1)
-else ifeq ($(TARGET_IS_COLIBR),y)
-# No -isystem on the Kobo because it may break our Musl sysroot
-pkg-config-cppflags-filter = $(1)
-else ifeq ($(TARGET_IS_COLIBRI),y)
-# No -isystem on the Colibr because it may break our Musl sysroot
+ifneq ($(filter y,$(TARGET_IS_KOBO) $(TARGET_IS_COLIBRI)),)
+# Nomake clean on the Kobo/Colibri because it may break our Musl sysroot
 pkg-config-cppflags-filter = $(1)
 else
 pkg-config-cppflags-filter = $(patsubst -I%,-isystem %,$(1))

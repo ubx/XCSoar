@@ -2,8 +2,8 @@
 XCSOAR_SOURCES += \
 	$(SRC)/net/wifi/WifiError.cpp
 
-# Kobo WiFi is provided by the wpa_supplicant backend.
-ifeq ($(TARGET_IS_KOBO),y)
+# Kobo/Colibri WiFi is provided by the wpa_supplicant backend.
+ifneq ($(filter y,$(TARGET_IS_KOBO) $(TARGET_IS_COLIBRI)),)
 XCSOAR_SOURCES += \
 	$(SRC)/Kobo/System.cpp \
 	$(SRC)/Kobo/WPASupplicant.cpp \
@@ -11,12 +11,14 @@ XCSOAR_SOURCES += \
 	$(SRC)/Kobo/PlatformWifiBackend.cpp
 endif
 
-# NetworkManager / ConnMan settings via D-Bus (Linux only; not Kobo, not Android)
+# NetworkManager / ConnMan settings via D-Bus (Linux only; not Kobo, not Android, not Colibri)
 HAVE_LINUX_NET_WIFI := n
 ifeq ($(TARGET_IS_LINUX),y)
 ifeq ($(TARGET_IS_KOBO),n)
+ifeq ($(TARGET_IS_COLIBRI),n)
 ifeq ($(TARGET_IS_ANDROID),n)
 HAVE_LINUX_NET_WIFI := y
+endif
 endif
 endif
 endif
