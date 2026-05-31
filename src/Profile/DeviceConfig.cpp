@@ -234,10 +234,11 @@ Profile::GetDeviceConfig(const ProfileMap &map, unsigned n,
       unsigned(config.polar_sync) >= unsigned(DeviceConfig::PolarSync::COUNT))
     config.polar_sync = DeviceConfig::PolarSync::OFF;
 
-  MakeDeviceSettingName(buffer, "Port", n, "CANPortName");
-  map.Get(buffer, config.can_interface);
+  if (const char *name = make_port_name("CANPortName"); name != nullptr)
+    map.Get(name, config.can_interface);
 
-  MakeDeviceSettingName(buffer, "Port", n, "CANPortBaudRate");
+  if (const char *name = make_port_name("CANPortBaudRate"); name != nullptr)
+    map.Get(name, config.baud_rate);
 }
 
 static const char *
@@ -348,4 +349,10 @@ Profile::SetDeviceConfig(ProfileMap &map,
 
   if (const char *name = make_port_name("PolarSync"); name != nullptr)
     map.SetEnum(name, config.polar_sync);
+
+  if (const char *name = make_port_name("CANPortName"); name != nullptr)
+    map.Set(name, config.can_interface);
+
+  if (const char *name = make_port_name("CANPortBaudRate"); name != nullptr)
+    map.Set(name, config.baud_rate);
 }
