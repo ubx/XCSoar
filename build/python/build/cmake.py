@@ -60,38 +60,37 @@ set(CMAKE_RANLIB {toolchain.ranlib})
             f.write(f"""
 set(CMAKE_FIND_ROOT_PATH "{toolchain.install_prefix};{sysroot}")
 """)
-    else:
-        # For cross-compilation, restrict cmake to only search in
-        # the sysroot to avoid picking up host libraries and headers
-        find_root_path = [toolchain.install_prefix]
-        sysroot = toolchain.install_prefix
-
-        if toolchain.is_android:
-            # Try to find the NDK sysroot from the compiler path
-            cc_path = toolchain.cc.split()[-1]
-            ndk_sysroot = os.path.abspath(os.path.join(os.path.dirname(cc_path), "..", "sysroot"))
-            if os.path.isdir(ndk_sysroot):
-                find_root_path.append(ndk_sysroot)
-                sysroot = ndk_sysroot
-            else:
-                sysroot = None
-
-        f.write(f'set(CMAKE_FIND_ROOT_PATH "{";".join(find_root_path)}")\n')
-        if sysroot:
-            f.write(f'set(CMAKE_SYSROOT "{sysroot}")\n')
-
-    f.write("""
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-""")
     elif toolchain.is_android:
         # Android uses the NDK compiler sysroot for platform headers/libs,
         # but third-party package discovery must still stay inside our
         # target prefix to avoid picking up host libraries such as zlib.
         f.write(f"""
 set(CMAKE_FIND_ROOT_PATH "{toolchain.install_prefix}")
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+""")
+    else:
+        # For cross-compilation, restrict cmake to only search in
+        # the sysroot to avoid picking up host libraries and headers
+        find_root_path = [toolchain.install_prefix]
+        sysroot = toolchain.install_prefix
+
+        # Try to find the NDK sysroot from the compiler path
+        cc_path = toolchain.cc.split()[-1]
+        ndk_sysroot = os.path.abspath(os.path.join(os.path.dirname(cc_path), "..", "sysroot"))
+        if os.path.isdir(ndk_sysroot):
+            find_root_path.append(ndk_sysroot)
+            sysroot = ndk_sysroot
+        else:
+            sysroot = None
+
+        f.write(f'set(CMAKE_FIND_ROOT_PATH "{";".join(find_root_path)}")\n')
+        if sysroot:
+            f.write(f'set(CMAKE_SYSROOT "{sysroot}")\n')
+
+        f.write("""
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
