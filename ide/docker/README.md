@@ -18,6 +18,7 @@ The container itself is readonly. The build results will appear in `./output/`.
 
 To run the container interactivly:
 ```bash
+export DOCKER_API_VERSION=1.44
 docker run \
     --mount type=bind,source="$(pwd)",target=/opt/xcsoar \
     -it ghcr.io/xcsoar/xcsoar/xcsoar-build:latest /bin/bash
@@ -25,6 +26,7 @@ docker run \
 
 To run the ANDROID build:
 ```bash
+export DOCKER_API_VERSION=1.44
 docker run \
     --mount type=bind,source="$(pwd)",target=/opt/xcsoar \
     -it ghcr.io/xcsoar/xcsoar/xcsoar-build:latest xcsoar-compile ANDROID
@@ -32,6 +34,7 @@ docker run \
 
 To build the container:
 ```bash
+export DOCKER_API_VERSION=1.44
 docker build \
     --file ide/docker/Dockerfile \
     -t xcsoar/xcsoar-build:latest ./ide/
@@ -42,6 +45,7 @@ docker build \
 Sometimes your runtime environment diverges too far from the build environment to be able to execute the binary natively.
 In this case you can start XCSoar inside the container and let it be displayed on your X11 Server:
 ```bash
+export DOCKER_API_VERSION=1.44
 docker run \
     --mount type=bind,source="$(pwd)",target=/opt/xcsoar \
     --volume="$HOME/.Xauthority:/root/.Xauthority:rw" \
