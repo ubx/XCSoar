@@ -6,6 +6,9 @@
 #include "Map.hpp"
 #include "PageSettings.hpp"
 #include "InfoBoxes/InfoBoxSettings.hpp"
+#include "util/StringFormat.hpp"
+
+#include <stdio.h>
 
 /**
  * Old enum moved from PageSettings.
@@ -20,8 +23,8 @@ static void
 Load(const ProfileMap &map, PageLayout &_pl, const unsigned page)
 {
   char profileKey[32];
-  unsigned prefixLen = sprintf(profileKey, "Page%u", page);
-  if (prefixLen <= 0)
+  int prefixLen = StringFormat(profileKey, sizeof(profileKey), "Page%u", page);
+  if (prefixLen <= 0 || (size_t)prefixLen >= sizeof(profileKey))
     return;
 
   PageLayout pl = PageLayout::Default();
@@ -60,6 +63,20 @@ Load(const ProfileMap &map, PageLayout &_pl, const unsigned page)
       unsigned(pl.main) >= unsigned(PageLayout::Main::MAX))
     pl.main = PageLayout::Main::MAP;
 
+  strcpy(profileKey + prefixLen, "Overlay");
+  if (!map.GetEnum(profileKey, pl.overlay) ||
+      unsigned(pl.overlay) >= unsigned(PageLayout::Overlay::MAX))
+    pl.overlay = PageLayout::Overlay::NONE;
+
+  strcpy(profileKey + prefixLen, "RaspField");
+  map.Get(profileKey, pl.rasp_field);
+
+  if (pl.overlay == PageLayout::Overlay::NONE &&
+      pl.bottom == PageLayout::Bottom::EDL_CONTROLS)
+    pl.overlay = PageLayout::Overlay::EDL;
+
+  pl.Normalise();
+
   _pl = pl;
 }
 
@@ -78,8 +95,8 @@ void
 Profile::Save(ProfileMap &map, const PageLayout &page, const unsigned i)
 {
   char profileKey[32];
-  unsigned prefixLen = sprintf(profileKey, "Page%u", i);
-  if (prefixLen <= 0)
+  int prefixLen = StringFormat(profileKey, sizeof(profileKey), "Page%u", i);
+  if (prefixLen <= 0 || (size_t)prefixLen >= sizeof(profileKey))
     return;
   strcpy(profileKey + prefixLen, "InfoBoxMode");
   map.Set(profileKey, page.infobox_config.auto_switch);
@@ -99,6 +116,12 @@ Profile::Save(ProfileMap &map, const PageLayout &page, const unsigned i)
 
   strcpy(profileKey + prefixLen, "Main");
   map.Set(profileKey, (unsigned)page.main);
+
+  strcpy(profileKey + prefixLen, "Overlay");
+  map.Set(profileKey, (unsigned)page.overlay);
+
+  strcpy(profileKey + prefixLen, "RaspField");
+  map.Set(profileKey, page.rasp_field);
 }
 
 

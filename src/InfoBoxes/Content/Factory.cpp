@@ -924,14 +924,20 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Start open/close countdown"),
     N_("Start open"),
-    N_("Time left until the start point opens or closes."),
+    N_("Signed countdown until the start gate opens or closes (now). "
+       "Value colour and secondary line reflect gate state at the current "
+       "time: Waiting (blue), Open (green), Closed (red). PEV window overrides "
+       "task gate when set."),
     IBFHelper<InfoBoxContentStartOpen>::Create,
   },
 
   {
     N_("Start open/close countdown at reaching"),
     N_("Start reach"),
-    N_("Time left until the start point opens or closes, minus the calculated time to reach the start point."),
+    N_("Same gate as Start open. Main value is estimated time to reach the "
+       "start line (MacCready leg when available, else distance / ground speed). "
+       "Value colour and secondary line reflect gate state at that ETA: "
+       "Too early (blue), Can start (green), Too late (red)."),
     IBFHelper<InfoBoxContentStartOpenArrival>::Create,
   },
 
@@ -1178,6 +1184,23 @@ static constexpr MetaData meta_data[] = {
     N_("Logger pressure altitude when the device provides it (igc_pressure_altitude), otherwise ISA pressure altitude only (1013.25 hPa; not QNH-corrected). Does not show barometric AMSL or GPS height — use other InfoBoxes for navigation."),
     UpdateInfoBoxAltitudeIGC,
     altitude_infobox_panels,
+  },
+
+  // e_QNH
+  {
+    N_("QNH"),
+    N_("QNH"),
+    N_("Current QNH pressure setting used for barometric altitude calculation. Tap the infobox to open the setup panel and adjust QNH manually."),
+    UpdateInfoBoxAltitudeQNH,
+    altitude_infobox_panels,
+  },
+
+  // e_ActiveWaypoint
+  {
+    N_("Active Waypoint"),
+    N_("Active WP"),
+    N_("Active waypoint: shows the next task waypoint when an ordered task is loaded, otherwise the Goto waypoint. Displays the waypoint name, arrival altitude difference relative to the safety arrival height, and distance. Click to choose a different waypoint (a task waypoint to skip to that leg, or any waypoint to set as Goto when no task is loaded)."),
+    IBFHelper<InfoBoxContentActiveWaypoint>::Create,
   },
 
 };

@@ -146,30 +146,30 @@ event=Pan right
 
 mode=pan
 type=key
-data=APP1
-event=Pan off
-label=Cancel
+data=APP4
+event=NearestMapItems
+label=What's here?
 location=1
 
 mode=pan
 type=key
 data=APP2
 event=Zoom in
-label=Zoom\n+
+label=+
 location=2
 
 mode=pan
 type=key
 data=APP3
 event=Zoom out
-label=Zoom\n-
+label=-
 location=3
 
 mode=pan
 type=key
-data=APP4
-event=NearestMapItems
-label=What's here?
+data=ESCAPE
+event=Pan off
+label=Cancel
 location=4
 
 mode=pan
@@ -588,7 +588,7 @@ location=9
 
 mode=Nav2
 type=key
-data=APP1
+data=ESCAPE
 event=Mode default
 label=Cancel
 location=1
@@ -645,14 +645,14 @@ mode=Display1
 type=key
 data=6
 event=Zoom in
-label=Zoom\n+
+label=+
 location=5
 
 mode=Display1
 type=key
 data=7
 event=Zoom out
-label=Zoom\n-
+label=-
 location=6
 
 mode=Display1
@@ -683,7 +683,7 @@ location=9
 
 mode=Display2
 type=key
-data=APP2
+data=ESCAPE
 event=Mode default
 label=Cancel
 location=2
@@ -830,7 +830,7 @@ location=9
 # -------------
 mode=Config3
 type=key
-data=APP3
+data=ESCAPE
 event=Mode default
 label=Cancel
 location=3
@@ -1050,7 +1050,7 @@ location=9
 # -------------
 mode=Info3
 type=key
-data=APP4
+data=ESCAPE
 event=Mode default
 label=Cancel
 location=4
@@ -1137,6 +1137,13 @@ location=7
 
 mode=Menu
 type=key
+data=ESCAPE
+event=Mode default
+label=Cancel
+location=8
+
+mode=Menu
+type=key
 data=0
 event=Exit system
 event=Mode default
@@ -1155,14 +1162,14 @@ mode=Display1.Traffic
 type=key
 data=6
 event=Traffic zoom in
-label=Zoom\n+
+label=+
 location=5
 
 mode=Display1.Traffic
 type=key
 data=7
 event=Traffic zoom out
-label=Zoom\n-
+label=-
 location=6
 
 mode=Display1.Traffic

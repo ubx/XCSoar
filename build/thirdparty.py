@@ -81,6 +81,7 @@ elif toolchain.is_android:
         openssl,
         cares,
         curl,
+        libpng,
         lua,
         sqlite3,
         proj,

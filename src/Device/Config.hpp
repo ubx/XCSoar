@@ -85,11 +85,15 @@ struct DeviceConfig {
     BLE_SENSOR,
 
     /**
-     * Bluetooth Low Energy HM10 protocol to a paired device.  Unlike
-     * #BLE_SENSOR, this provides a bidirectional data stream and
-     * XCSoar accesses it through the #Port interface.
+     * Bluetooth Low Energy serial bridge to a paired device (HM-10 or
+     * Nordic UART Service).  Unlike #BLE_SENSOR, this provides a
+     * bidirectional data stream and XCSoar accesses it through the
+     * #Port interface.
+     *
+     * @note The profile stores this mode under the legacy port type string
+     * @c ble_hm10 (see Profile/DeviceConfig.cpp).
      */
-    BLE_HM10,
+    BLE_SERIAL,
 
     /**
      * A GliderLink broadcast receiver. Available on Android only
@@ -313,7 +317,7 @@ struct DeviceConfig {
   static constexpr bool UsesBluetoothMac(PortType port_type) noexcept {
     return port_type == PortType::RFCOMM ||
       port_type == PortType::BLE_SENSOR ||
-      port_type == PortType::BLE_HM10;
+      port_type == PortType::BLE_SERIAL;
   }
 
   constexpr bool IsDisabled() const noexcept {
@@ -337,7 +341,7 @@ struct DeviceConfig {
   constexpr bool IsAndroidBluetooth() const noexcept {
     switch (port_type) {
     case PortType::BLE_SENSOR:
-    case PortType::BLE_HM10:
+    case PortType::BLE_SERIAL:
     case PortType::RFCOMM:
     case PortType::RFCOMM_SERVER:
       return true;
@@ -403,7 +407,7 @@ struct DeviceConfig {
       return false;
 
     case PortType::SERIAL:
-    case PortType::BLE_HM10:
+    case PortType::BLE_SERIAL:
     case PortType::RFCOMM:
     case PortType::RFCOMM_SERVER:
     case PortType::AUTO:
