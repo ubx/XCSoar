@@ -2,7 +2,9 @@
 // Copyright The XCSoar Project
 
 #include "WPASupplicantBackend.hpp"
+#ifdef KOBO
 #include "Kobo/Model.hpp"
+#endif
 #include "lib/fmt/ToBuffer.hxx"
 #include "net/wifi/WifiError.hpp"
 #include "system/Error.hxx"
@@ -179,12 +181,14 @@ WPASupplicantBackend::GetBackendStatus()
     ? WifiConnectionState::Connected
     : WifiConnectionState::Disconnected;
 
+#ifdef KOBO
   /* Preserve the old Kobo behavior: if STATUS does not provide an IP address,
      look it up from the Kobo WiFi interface directly. */
   if (status.ip_address.empty() &&
       status.state == WifiConnectionState::Connected)
     (void)TryFormatWifiInterfaceAddress(GetKoboWifiInterface(),
                                         status.ip_address);
+#endif
 
   return status;
 }

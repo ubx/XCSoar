@@ -1,5 +1,6 @@
-ifeq ($(TARGET_IS_LINUX)$(TARGET_IS_KOBO)$(TARGET_IS_ANDROID),ynn)
-
+ifeq ($(TARGET_IS_LINUX),y)
+ifeq ($(USE_POLL_EVENT),y)
+ifneq ($(filter y,$(TARGET_IS_KOBO) $(TARGET_IS_COLIBRI)),y)
 
 $(eval $(call pkg-config-library,LIBDBUS,dbus-1))
 
@@ -19,4 +20,6 @@ $(eval $(call link-library,dbus,DBUS))
 
 DBUS_LDLIBS += $(LIBDBUS_LDLIBS)
 
+endif
+endif
 endif
