@@ -1502,6 +1502,20 @@ TestCondor3UDP()
   ok1(device->ParseNMEA("compass=270", info));
   ok1(info.attitude.heading_available);
   ok1(equals(info.attitude.heading.Degrees(), 270));
+  ok1(info.track_available);
+  ok1(equals(info.track.Degrees(), 270));
+
+  next_step();
+  ok1(device->ParseNMEA("compass=90", info));
+  ok1(info.track_available);
+  ok1(equals(info.track.Degrees(), 90));
+  ++step;
+  info.clock = TimeStamp{FloatDuration{step}};
+  info.alive.Update(info.clock);
+  ok1(device->ParseNMEA("vx=30", info));
+  ok1(device->ParseNMEA("vy=40", info));
+  ok1(equals(info.track.Degrees(), 90));
+  ok1(equals(info.ground_speed, 50));
 
   next_step();
   ok1(device->ParseNMEA("vx=30", info));
@@ -1543,6 +1557,11 @@ TestCondor3UDP()
   ok1(device->ParseNMEA("radiofrequency=123.5", info));
   ok1(info.settings.has_active_frequency);
   ok1(info.settings.active_frequency.GetKiloHertz() == 123500u);
+
+  next_step();
+  ok1(device->ParseNMEA("bank=0.5", info));
+  ok1(info.attitude.bank_angle_available);
+  ok1(equals(info.attitude.bank_angle.Radians(), -0.5));
 
   delete device;
 }
@@ -3016,7 +3035,7 @@ int main()
              + 5 /* MWVRelativeTrue */ + 4 /* StallRatio */
              + 12 /* TempHumidityValidity */ + 2 /* ReadGeoAngleNoDot */
              + 13 /* GLL */ + 20 /* GSA */ + 23 /* MalformedInput */
-             + 47 /* Condor3UDP */);
+             + 59 /* Condor3UDP */);
   TestGeneric();
   TestTasman();
   TestFLARM();
