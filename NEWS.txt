@@ -131,6 +131,11 @@ Version 7.45 - not yet released
     pre-filtered to recently-used waypoints; listed in the Gesture Help
     dialog with its own icon #336
 * map
+  - turn back marker: new opt-in overlay (Safety Factors config panel) showing
+    a green triangle along the current track indicating the furthest point from
+    which the active task waypoint or Goto target can still be reached with the
+    current altitude and conditions; only shown during cruise when the target
+    is reachable; persisted via profile key TurnBackMarkerEnabled #1741
   - larger on-map typography: default waypoint text, map-scale readout, and
     topography labels
   - map waypoint icons (bitmap and vector landables): new ``Waypoint icon
