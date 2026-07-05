@@ -1,6 +1,11 @@
 Test and Debug Utilities
 =========================
 
+.. _test-debug-utilities:
+
+For a shorter overview of debugging workflows (replay, simulator, gdb,
+device tools), see :doc:`debugging`.
+
 The XCSoar test suite includes a collection of standalone utility programs
 for debugging, testing, and interactive exploration of XCSoar components
 without running the full application. Many of these utilities are prefixed
@@ -23,32 +28,45 @@ These utilities are built as part of the XCSoar build system and are available
 in the output directory after compilation. The exact path depends on your build
 target:
 
-- **Unix/Linux**: ``output/UNIX/bin/`` (default, and for flavors like WAYLAND, OPT, FUZZER)
-- **Windows**: ``output/PC/bin/`` (default, and for WIN64 flavor)
+- **Unix/Linux**: ``output/UNIX/bin/`` (default, and for flavors like WAYLAND, FUZZER)
+- **Unix/Linux (optimized)**: ``output/OPT/bin/`` (``TARGET=OPT`` convenience target)
+- **Windows (OpenGL, recommended)**: ``output/WIN64OPENGL/bin/`` or
+  ``output/WIN32OPENGL/bin/``
+- **Windows (legacy GDI, deprecated)**: ``output/PC/bin/`` (32-bit) or
+  ``output/WIN64/bin/`` (64-bit flavor)
 - **macOS**: ``output/OSX64/bin/`` or ``output/MACOS/bin/`` (default)
 
 **Important**: Many build "targets" are actually flavors that override the base
-target. For example, ``TARGET=WAYLAND`` or ``TARGET=OPT`` both build to
-``output/UNIX/bin/`` because they override the TARGET to UNIX internally. The
-debug utilities are built for the base target (UNIX, PC, etc.), not for the
-flavor name.
+target internally. For example, ``TARGET=WAYLAND`` builds as ``UNIX`` with
+output under ``output/UNIX/bin/``, while ``TARGET=OPT`` also builds as ``UNIX``
+but uses a separate output directory (``output/OPT/bin/``).
+OpenGL Windows flavors (``WIN64OPENGL``, ``WIN32OPENGL``) compile as ``PC`` but
+keep their own output directory (``output/WIN64OPENGL/``, etc.). Legacy
+``WIN64`` is a flavor of ``PC`` with the same split: built as ``PC``, output
+under ``output/WIN64/``.
 
 **Note**: In the examples below, ``output/UNIX/bin/`` is used (typical for Linux
-development). Replace ``UNIX`` with your actual base build target if different
-(e.g., ``PC`` for Windows, ``OSX64`` for macOS). To find your output directory,
-check what was created in the ``output/`` folder after building.
+development). Replace ``UNIX`` with your flavor output directory if different
+(e.g. ``WIN64OPENGL`` for Windows OpenGL development, ``OSX64`` for macOS). To
+find your output directory, check what was created in the ``output/`` folder
+after building.
 
 Building Run* Utilities
-------------------------
+-----------------------
 
-All Run* utilities are automatically built when you compile XCSoar. They are
-defined in ``build/test.mk`` and compiled as part of the debug programs target.
+These utilities are **not** built by plain ``make``; use the ``debug`` target
+(see :ref:`development-workflow` in :doc:`build`). They are defined in
+:file:`build/test.mk` and compiled as the ``debug`` make target.
 
 To build all Run* utilities:
 
 .. code-block:: bash
 
-   make DEBUG
+   make -j$(nproc) debug
+
+Or build everything (main binary, utilities, unit tests, harness)::
+
+   make -j$(nproc) everything
 
 To build a specific utility:
 
@@ -734,7 +752,7 @@ device connection issues.
 Monitoring Device Communication with socat
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`socat` is a powerful command-line utility available in Debian/Ubuntu that can
+``socat`` is a powerful command-line utility available in Debian/Ubuntu that can
 monitor bidirectional serial port traffic between XCSoar and devices. This is
 useful for debugging device communication protocols and seeing all NMEA
 sentences in both directions.
@@ -756,8 +774,7 @@ To monitor a serial port and see all traffic in both directions:
 
 The flags:
 - ``-x``: Shows hex dump of all data
-- ``-v``: Verbose output with direction indicators (``>`` for TX, ``<`` for
-  RX)
+- ``-v``: Verbose output with direction indicators (``>`` for TX, ``<`` for RX)
 - ``-``: Outputs to stdout
 
 **Spying on XCSoar Device Communication**:
@@ -785,8 +802,7 @@ If you can temporarily disconnect the device, monitor it directly:
 
 This will:
 - Display all traffic in real-time with hex dumps
-- Show direction indicators (``>`` for data sent to device, ``<`` for data
-  received from device)
+- Show direction indicators (``>`` for data sent to device, ``<`` for data received from device)
 - Save output to ``device_traffic.log`` file
 
 **What it does**:

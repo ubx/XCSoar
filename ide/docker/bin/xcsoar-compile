@@ -4,9 +4,14 @@ CPUS=$(lscpu -p | tail -n1 | cut -f1 -d,)
 (( CPUS++ ))
 cd /opt/xcsoar || exit 1
 
-ARGS=($@)
-TARGET=${ARGS[0]}
-unset "ARGS[0]"
+if [[ $# -lt 1 ]]; then
+  echo "No target specified. Valid targets: ANDROID DOCS KOBO WAYLAND UNIX UNIX-SDL UNIX-DEBIAN WIN64OPENGL WIN32OPENGL PC WIN64 COLIBRI"
+  exit 1
+fi
+
+TARGET=$1
+shift
+ARGS=("$@")
 
 case "${TARGET}" in
       ANDROID)
@@ -23,7 +28,7 @@ case "${TARGET}" in
       "COLIBRI")
         make TARGET="${TARGET}" -j"${CPUS}" GEOTIFF=n USE_LIBINPUT=n WERROR=n ENABLE_ALSA=n "${ARGS[@]}"
       ;;
-      "WAYLAND" | "UNIX" | "PC" | "WIN64")
+      "WAYLAND" | "UNIX" | "WIN64OPENGL" | "WIN32OPENGL" | "PC" | "WIN64")
         make TARGET="${TARGET}" -j"${CPUS}" "${ARGS[@]}"
       ;;
       "UNIX-SDL")
@@ -34,7 +39,7 @@ case "${TARGET}" in
         ls ../
       ;;
       *)
-        echo "No target specified. Valid targets: ANDROID DOCS KOBO WAYLAND UNIX UNIX-SDL PC WIN64 COLIBRI"
+        echo "No target specified. Valid targets: ANDROID DOCS KOBO WAYLAND UNIX UNIX-SDL UNIX-DEBIAN WIN64OPENGL WIN32OPENGL PC WIN64 COLIBRI"
         exit 1
       ;;
 esac

@@ -55,7 +55,7 @@ public:
 
   void Visit(Path path, Path filename) override {
     bool skip = IsInternalFile(filename.c_str());
-    if (skip && datafield.GetFileType() == FileType::CHECKLIST &&
+    if (skip && datafield.HasFileType(FileType::CHECKLIST) &&
         StringIsEqual(filename.c_str(), "xcsoar-checklist.txt"))
       skip = false;
     if (!skip)
@@ -76,9 +76,45 @@ FileDataField::FileDataField(DataFieldListener *listener) noexcept
   :DataField(Type::FILE, true, listener),
    // Set selection to zero
    current_index(0),
-   file_type(FileType::UNKNOWN),
    loaded(false), postponed_sort(SortOrder::NO_ORDER),
-   postponed_value(nullptr) {}
+   postponed_preserve_first(false), postponed_value(nullptr)
+{
+  file_types.append() = FileType::UNKNOWN;
+}
+
+void
+FileDataField::SetFileTypes(std::initializer_list<FileType> _file_types) noexcept
+{
+  file_types.clear();
+
+  for (const auto type : _file_types) {
+    if (file_types.full())
+      break;
+
+    bool duplicate = false;
+    for (const auto existing : file_types)
+      if (existing == type) {
+        duplicate = true;
+        break;
+      }
+
+    if (!duplicate)
+      file_types.append() = type;
+  }
+
+  if (file_types.empty())
+    file_types.append() = FileType::UNKNOWN;
+}
+
+bool
+FileDataField::HasFileType(FileType type) const noexcept
+{
+  for (const auto candidate : file_types)
+    if (candidate == type)
+      return true;
+
+  return false;
+}
 
 void
 FileDataField::ScanDirectoryTop(const char *filter) noexcept
@@ -94,27 +130,60 @@ FileDataField::ScanDirectoryTop(const char *filter) noexcept
 
   FileVisitor fv(*this);
 
-  const auto subdir = GetFileTypeDefaultDir(file_type);
-  if (file_type != FileType::UNKNOWN && subdir != nullptr) {
+  bool has_typed_dir = false;
+  for (const auto type : file_types) {
+    const auto subdir = GetFileTypeDefaultDir(type);
+    if (type != FileType::UNKNOWN && subdir != nullptr) {
+      has_typed_dir = true;
+      break;
+    }
+  }
+
+  if (has_typed_dir) {
     Directory::VisitSpecificFiles(GetPrimaryDataPath(), filter, fv, false);
 
-    const auto typed_path = LocalPath(subdir);
-    if (typed_path != nullptr && Directory::Exists(typed_path))
+    StaticArray<AllocatedPath, 8> visited_paths;
+    const auto was_visited = [&visited_paths](const AllocatedPath &path) {
+      for (const auto &visited_path : visited_paths)
+        if (visited_path == path)
+          return true;
+
+      return false;
+    };
+
+    for (const auto type : file_types) {
+      const auto subdir = GetFileTypeDefaultDir(type);
+      if (type == FileType::UNKNOWN || subdir == nullptr)
+        continue;
+
+      auto typed_path = LocalPath(subdir);
+      if (typed_path == nullptr || !Directory::Exists(typed_path))
+        continue;
+
+      if (was_visited(typed_path))
+        continue;
+
       Directory::VisitSpecificFiles(typed_path, filter, fv, true);
 
-    if (file_type == FileType::WAYPOINTDETAILS) {
+      if (!visited_paths.full())
+        visited_paths.append() = std::move(typed_path);
+    }
+
+    if (HasFileType(FileType::WAYPOINTDETAILS)) {
       /* Compatibility fallback: an earlier subdir migration could move
          ambiguous .txt waypoint details into airspace/. */
       const auto airspace_path =
         LocalPath(GetFileTypeDefaultDir(FileType::AIRSPACE));
-      if (airspace_path != nullptr && Directory::Exists(airspace_path))
+      if (airspace_path != nullptr && !was_visited(airspace_path) &&
+          Directory::Exists(airspace_path))
         Directory::VisitSpecificFiles(airspace_path, filter, fv, true);
     }
   } else {
     VisitDataFiles(filter, fv);
   }
 
-  Sort();
+  if (postponed_sort == SortOrder::NO_ORDER)
+    Sort();
 }
 
 void
@@ -325,31 +394,46 @@ FileDataField::Dec() noexcept
 }
 
 void
-FileDataField::Sort(SortOrder order) noexcept
+FileDataField::Sort(SortOrder order, bool preserve_first) noexcept
 {
   if (order == SortOrder::NO_ORDER)
     return;
 
   if (!loaded) {
     postponed_sort = order;
+    postponed_preserve_first = preserve_first;
     return;
   }
 
-  if (order == SortOrder::ASCENDING) {
-    // Sort the filelist in ascending order
-    std::sort(files.begin(), files.end(), [](const Item &a,
-                                             const Item &b) {
-                return StringCollate(a.filename.c_str(), b.filename.c_str()) < 0;
-              });
-  } else {
-    // Sort the filelist in descending order
-    std::sort(files.begin(), files.end(), [](const Item &a,
+  if (files.size() > 1) {
+    if (preserve_first) {
+      // Keep first entry in place for flight replay demo; sort remainder by the requested order
+      if (order == SortOrder::DESCENDING) {
+        std::sort(std::next(files.begin()), files.end(), [](const Item &a, const Item &b) {
+                  return StringCollate(a.filename.c_str(), b.filename.c_str()) > 0;
+        });
+      } else {
+        // Sort the filelist in ascending order
+        std::sort(std::next(files.begin()), files.end(), [](const Item &a, const Item &b) {
+                  return StringCollate(a.filename.c_str(), b.filename.c_str()) < 0;
+        });
+      }
+    } else if (order == SortOrder::DESCENDING) {
+      std::sort(files.begin(), files.end(), [](const Item &a,
                                              const Item &b) {
                 return StringCollate(a.filename.c_str(), b.filename.c_str()) > 0;
               });
+    } else {
+      // Sort the filelist in ascending order
+      std::sort(files.begin(), files.end(), [](const Item &a,
+                                             const Item &b) {
+                return StringCollate(a.filename.c_str(), b.filename.c_str()) < 0;
+              });
+    }
   }
 
   postponed_sort = SortOrder::NO_ORDER;
+  postponed_preserve_first = false;
 }
 
 ComboList
@@ -443,7 +527,7 @@ FileDataField::EnsureLoaded() noexcept
     ScanDirectoryTop(*i);
 
   if (postponed_sort != SortOrder::NO_ORDER)
-    Sort(postponed_sort);
+    Sort(postponed_sort, postponed_preserve_first);
 
   if (postponed_value != nullptr)
     SetValue(postponed_value);

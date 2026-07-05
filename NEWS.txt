@@ -28,6 +28,7 @@ Version 7.45 - not yet released
     ballast, attitude, radio, and related fields (#2340)
   - Glide polar sync in the device dialog is only shown for drivers that
     implement it (LXNAV)
+  - Increase the number of device slots from 6 to 8
 * ui
   - fix crash when switching pages from FLARM radar or thermal assistant back
     to a map page that has a bottom widget configured (#2583)
@@ -169,6 +170,7 @@ Version 7.45 - not yet released
     Displayed glide is re-solved with the current aircraft state; value colour
     encodes not reachable, final glide, need climb, and MANUAL on/below glide.
     Manual updated en/de/fr/pt_BR #2347
+  - clarify alternates mode help text in Safety Factors config panel (#555)
   - status: show G-load availability in device list and variometer source in
     system status
   - terrain: add new terrain shading orientation "fixed (Top Left)"
@@ -272,6 +274,11 @@ Version 7.45 - not yet released
   - memory canvas: fix painting when list rows or edit fields are partially
     off-screen while scrolling (no black squares; safer clipping of subcanvas
     and list blits) #2293
+* Windows
+  - add installer for the OpenGL Windows version (64-bit and 32-bit); zip
+    download remains available for a portable install
+  - deprecate the legacy single-file Windows executable; use the OpenGL
+    version instead — the legacy build will be removed in a future release
 
 Version 7.44 - 2026-03-22
 * WaypointDetails
@@ -421,6 +428,8 @@ Version 7.44 - 2026-03-22
   - volume buttons now control system volume instead of map zoom
   - fix foreground service not terminating on app exit
 * Windows
+  - Support high DPI displays in Windows (OpenGL only)
+  - Support OpenGL with GPU acceleration in new Windows 64bit version
   - Popupmessages are now shown with full text again
 * macOS
   - add .app bundle, .dmg and .pkg support with bundled ANGLE

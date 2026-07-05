@@ -19,12 +19,14 @@
 #include <concepts>
 #include <cstdint>
 #include <functional>
+#include <initializer_list>
 #include <memory>
 #include <type_traits>
 
 struct DialogLook;
 struct StaticEnumChoice;
 class Angle;
+class FileDataField;
 class RoughTimeDelta;
 class Path;
 class Button;
@@ -438,6 +440,16 @@ public:
 
   WndProperty *AddFile(const char *label, const char *help,
                        std::string_view profile_key, const char *filters,
+                       std::initializer_list<FileType> file_types,
+                       bool nullable = true) noexcept;
+
+  WndProperty *AddFile(const char *label, const char *help,
+                       std::string_view profile_key,
+                       std::initializer_list<FileType> file_types,
+                       bool nullable = true) noexcept;
+
+  WndProperty *AddFile(const char *label, const char *help,
+                       std::string_view profile_key, const char *filters,
                        bool nullable = true) noexcept {
     return AddFile(label, help, profile_key, filters, FileType::UNKNOWN,
                    nullable);
@@ -639,6 +651,12 @@ public:
 
   [[gnu::pure]]
   Path GetValueFile(unsigned i) const noexcept;
+
+  [[gnu::pure]]
+  FileDataField &GetFileDataField(unsigned i) noexcept;
+
+  [[gnu::pure]]
+  const FileDataField &GetFileDataField(unsigned i) const noexcept;
 
   [[gnu::pure]]
   const char *GetValueString(unsigned i) const noexcept {

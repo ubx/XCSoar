@@ -10,21 +10,78 @@
 #include "Profile/Profile.hpp"
 #include "RowFormWidget.hpp"
 
+namespace {
+
+static WndProperty *
+FinishFileProperty(RowFormWidget &form, const char *label, const char *help,
+                   std::string_view profile_key, const char *filters,
+                   FileDataField &df, bool nullable) noexcept
+{
+  WndProperty *edit = form.Add(label, help);
+  edit->SetDataField(&df);
+
+  if (nullable)
+    df.AddNull();
+
+  df.ScanMultiplePatterns(filters);
+
+  if (profile_key.data() != nullptr) {
+    const auto path = Profile::GetPath(profile_key);
+    if (path != nullptr)
+      df.SetValue(path);
+  }
+
+  edit->RefreshDisplay();
+  return edit;
+}
+
+static void
+ScanFileTypePatterns(FileDataField &df,
+                     std::initializer_list<FileType> file_types) noexcept
+{
+  for (const auto file_type : file_types)
+    df.ScanMultiplePatterns(GetFileTypePatterns(file_type));
+}
+
+} // namespace
+
 WndProperty *
 RowFormWidget::AddFile(const char *label, const char *help,
                        std::string_view profile_key, const char *filters,
                        FileType file_type,
                        bool nullable) noexcept
 {
-  WndProperty *edit = Add(label, help);
   auto *df = new FileDataField();
   df->SetFileType(file_type);
+  return FinishFileProperty(*this, label, help, profile_key, filters, *df,
+                            nullable);
+}
+
+WndProperty *
+RowFormWidget::AddFile(const char *label, const char *help,
+                       std::string_view profile_key, const char * /*filters*/,
+                       std::initializer_list<FileType> file_types,
+                       bool nullable) noexcept
+{
+  return AddFile(label, help, profile_key, file_types, nullable);
+}
+
+WndProperty *
+RowFormWidget::AddFile(const char *label, const char *help,
+                       std::string_view profile_key,
+                       std::initializer_list<FileType> file_types,
+                       bool nullable) noexcept
+{
+  auto *df = new FileDataField();
+  df->SetFileTypes(file_types);
+
+  WndProperty *edit = Add(label, help);
   edit->SetDataField(df);
 
   if (nullable)
     df->AddNull();
 
-  df->ScanMultiplePatterns(filters);
+  ScanFileTypePatterns(*df, file_types);
 
   if (profile_key.data() != nullptr) {
     const auto path = Profile::GetPath(profile_key);
@@ -33,7 +90,6 @@ RowFormWidget::AddFile(const char *label, const char *help,
   }
 
   edit->RefreshDisplay();
-
   return edit;
 }
 

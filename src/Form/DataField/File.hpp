@@ -10,6 +10,7 @@
 #include "util/StaticString.hxx"
 
 #include <cstdint>
+#include <initializer_list>
 #include <utility>
 
 /**
@@ -19,6 +20,7 @@
  */
 class FileDataField final : public DataField {
   typedef StaticArray<StaticString<32>, 8> PatternList;
+  typedef StaticArray<FileType, 8> FileTypeList;
 
 public:
   enum class SortOrder : uint8_t {
@@ -62,7 +64,7 @@ private:
   /** FileList item array */
   StaticArray<Item, MAX_FILES> files;
 
-  FileType file_type;
+  FileTypeList file_types;
 
   /**
    * Has the file list already been loaded?  This class tries to
@@ -76,6 +78,12 @@ private:
    * the file list was loaded. It will trigger a sort after loading.
    */
   SortOrder postponed_sort;
+
+  /**
+   * Stores whether the first entry should be skipped during sorting if
+   * Sort() has been called before the file list was loaded.
+   */
+  bool postponed_preserve_first = false;
 
   /**
    * Used to store the value while !loaded.
@@ -94,13 +102,25 @@ public:
    */
   explicit FileDataField(DataFieldListener *listener=nullptr) noexcept;
 
+  [[gnu::pure]]
+  bool HasSingleFileType() const noexcept {
+    return file_types.size() == 1;
+  }
+
   FileType GetFileType() const noexcept {
-    return file_type;
+    return HasSingleFileType()
+      ? file_types.front()
+      : FileType::UNKNOWN;
   }
 
   void SetFileType(FileType _file_type) noexcept {
-    file_type = _file_type;
+    SetFileTypes({_file_type});
   }
+
+  void SetFileTypes(std::initializer_list<FileType> _file_types) noexcept;
+
+  [[gnu::pure]]
+  bool HasFileType(FileType type) const noexcept;
 
   /**
    * Adds a filename/filepath couple to the filelist
@@ -153,7 +173,8 @@ public:
   void ModifyIndex(unsigned new_value) noexcept;
 
   /** Sorts the filelist by filenames */
-  void Sort(SortOrder order = SortOrder::ASCENDING) noexcept;
+  void Sort(SortOrder order = SortOrder::ASCENDING,
+            bool preserve_first = false) noexcept;
   void ScanDirectoryTop(const char *filter) noexcept;
 
   /**

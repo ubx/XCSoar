@@ -10,6 +10,8 @@
 #include "Replay/Replay.hpp"
 #include "Form/DataField/Base.hpp"
 #include "Language/Language.hpp"
+#include "Repository/FileType.hpp"
+#include "Form/DataField/File.hpp"
 
 class ReplayControlWidget final
   : public RowFormWidget
@@ -49,9 +51,10 @@ ReplayControlWidget::Prepare([[maybe_unused]] ContainerWindow &parent,
   AddFile(_("File"),
           _("Name of file to replay. May be an IGC file (.igc) or a raw NMEA log file (.nmea). Leave blank to run the demo."),
           {},
-          "*.nmea\0*.igc\0",
+          {FileType::NMEA, FileType::IGC},
           true);
   LoadValue(FILE, replay.GetFilename());
+  GetFileDataField(FILE).Sort(FileDataField::SortOrder::DESCENDING, true);
 
   AddFloat(_("Rate"),
            _("Time acceleration of replay. Set to 0 for pause, 1 for normal real-time replay."),
