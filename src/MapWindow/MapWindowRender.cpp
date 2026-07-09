@@ -55,6 +55,20 @@ MapWindow::RenderRasp(Canvas &canvas) noexcept
       unsigned(state.map) >= rasp_store->GetItemCount())
     return;
 
+  BrokenTime auto_local_time = BrokenTime::Invalid();
+  if (state.time_auto_advance) {
+    const BrokenDateTime &utc = Basic().date_time_utc;
+    if (utc.IsPlausible()) {
+      const auto quarter = utc.ToLocal().FloorToQuarterHour();
+      auto_local_time = BrokenTime(quarter.hour, quarter.minute);
+    }
+  }
+
+  if (!rasp_store->HasSelectedTimeData(unsigned(state.map),
+                                       state.time_auto_advance,
+                                       state.time, auto_local_time))
+    return;
+
   if (!rasp_renderer) {
 #ifndef ENABLE_OPENGL
     const std::lock_guard lock{mutex};

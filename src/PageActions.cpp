@@ -11,14 +11,17 @@
 #include "Dialogs/Weather/WeatherDialog.hpp"
 #include "InfoBoxes/InfoBoxSettings.hpp"
 #include "Pan.hpp"
+#include "Input/InputEvents.hpp"
 #include "UIGlobals.hpp"
 #include "MapWindow/GlueMapWindow.hpp"
 #include "Components.hpp"
-#include "DataGlobals.hpp"
-#include "Weather/Rasp/RaspStore.hpp"
-#include "ActionInterface.hpp"
+#include "Weather/MapOverlay/ControlsFactory.hpp"
+#include "Weather/MapOverlay/ControlsWidget.hpp"
+#include "Weather/Rasp/FieldControls.hpp"
+#ifdef HAVE_DOWNLOAD_MANAGER
+#include "Weather/Rasp/DownloadGlue.hpp"
+#endif
 #ifdef HAVE_EDL
-#include "Dialogs/Weather/MapOverlayControlsWidget.hpp"
 #include "Weather/EDL/Glue.hpp"
 #include "Weather/EDL/StateController.hpp"
 #endif
@@ -52,6 +55,16 @@ namespace PageActions {
 
   static void ClearPageOverlays() noexcept;
 
+  static void LeaveRaspOverlay() noexcept;
+  static void LeaveEdlOverlay() noexcept;
+  static void LeaveXcthermOverlay() noexcept;
+
+  static void LeaveWeatherOverlayPage(const PageLayout &layout) noexcept;
+
+  static void ApplyRaspOverlay(const PageLayout &layout) noexcept;
+  static void ApplyEdlOverlay() noexcept;
+  static void ApplyXcthermOverlay() noexcept;
+
   static void ApplyPageOverlay(const PageLayout &layout) noexcept;
 };
 
@@ -69,13 +82,130 @@ void
 PageActions::ClearPageOverlays() noexcept
 {
   WeatherUIState &weather = CommonInterface::SetUIState().weather;
-  if (!weather.IsRaspSuspendedForPan())
+  if (!weather.rasp.IsSuspendedForPan())
     weather.map = -1;
 
 #ifdef HAVE_EDL
-  if (!EDL::IsDedicatedPageSuspendedForPan())
+  if (!weather.edl.session.IsSuspendedForPan())
     EDL::ClearOverlay();
 #endif
+}
+
+void
+PageActions::LeaveEdlOverlay() noexcept
+{
+#ifdef HAVE_EDL
+  auto &weather = CommonInterface::SetUIState().weather;
+  if (weather.edl.session.IsSuspendedForPan())
+    return;
+
+  weather.edl.session.LeavePage();
+  EDL::ClearOverlay();
+#endif
+}
+
+void
+PageActions::LeaveRaspOverlay() noexcept
+{
+  WeatherUIState &weather = CommonInterface::SetUIState().weather;
+  if (weather.rasp.IsSuspendedForPan())
+    return;
+
+  ClearPageOverlays();
+  weather.rasp.LeavePage();
+}
+
+void
+PageActions::LeaveXcthermOverlay() noexcept
+{
+  auto &xctherm = CommonInterface::SetUIState().weather.xctherm;
+  if (xctherm.IsSuspendedForPan())
+    return;
+
+  xctherm.LeavePage();
+}
+
+void
+PageActions::LeaveWeatherOverlayPage(const PageLayout &layout) noexcept
+{
+  if (layout.UsesEdlOverlay())
+    LeaveEdlOverlay();
+  else if (layout.overlay == PageLayout::Overlay::RASP)
+    LeaveRaspOverlay();
+  else if (layout.UsesXcthermOverlay())
+    LeaveXcthermOverlay();
+}
+
+void
+PageActions::ApplyRaspOverlay(const PageLayout &layout) noexcept
+{
+  WeatherUIState &weather = CommonInterface::SetUIState().weather;
+  weather.map = Rasp::GetFieldIndex(layout);
+
+  if (!weather.time_auto_advance)
+    weather.rasp.cursor_initialized = true;
+
+  const bool first_enter = weather.rasp.EnterPage();
+
+  if (!weather.rasp.cursor_initialized) {
+    weather.ResetRaspForDedicatedPage();
+  } else if (first_enter) {
+    ActionInterface::ScheduleSendUIState();
+  }
+
+#ifdef HAVE_DOWNLOAD_MANAGER
+  if (!weather.rasp.cursor_initialized || first_enter)
+    RequestConfiguredRaspUpdateIfOutOfDate();
+#endif
+}
+
+void
+PageActions::ApplyEdlOverlay() noexcept
+{
+#ifdef HAVE_EDL
+  auto &edl = CommonInterface::SetUIState().weather.edl;
+  if (!edl.forecast_auto_advance || !edl.level_auto_advance)
+    edl.session.cursor_initialized = true;
+
+  const bool first_enter = edl.session.EnterPage();
+
+  if (!edl.session.cursor_initialized) {
+    EDL::ResetForDedicatedPage();
+    EDL::RequestOverlayRefresh();
+  } else if (first_enter) {
+    EDL::ApplyOverlayFromSession();
+    EDL::RequestOverlayRefresh();
+  }
+#endif
+}
+
+void
+PageActions::ApplyXcthermOverlay() noexcept
+{
+  CommonInterface::SetUIState().weather.xctherm.EnterPage();
+}
+
+void
+PageActions::SuspendWeatherOverlaysForPan() noexcept
+{
+  WeatherUIState &weather = CommonInterface::SetUIState().weather;
+  const PageLayout &layout = GetCurrentLayout();
+
+  if (layout.UsesEdlOverlay())
+    weather.edl.session.SuspendForPan();
+  if (layout.UsesRaspOverlay())
+    weather.rasp.SuspendForPan();
+  if (layout.UsesXcthermOverlay())
+    weather.xctherm.SuspendForPan();
+}
+
+void
+PageActions::ResumeWeatherOverlaysAfterPan() noexcept
+{
+  WeatherUIState &weather = CommonInterface::SetUIState().weather;
+  weather.edl.session.ResumeAfterPan();
+  weather.rasp.ResumeAfterPan();
+  weather.xctherm.ResumeAfterPan();
 }
 
 void
@@ -87,37 +217,24 @@ PageActions::ApplyPageOverlay(const PageLayout &layout) noexcept
   case PageLayout::Overlay::NONE:
     break;
 
-  case PageLayout::Overlay::RASP: {
-    WeatherUIState &weather = CommonInterface::SetUIState().weather;
-    weather.map = -1;
-    const auto rasp = DataGlobals::GetRasp();
-    if (rasp != nullptr && layout.rasp_field >= 0 &&
-        unsigned(layout.rasp_field) < rasp->GetItemCount())
-      weather.map = layout.rasp_field;
-
-    if (weather.EnterRaspDedicatedPage())
-      weather.ResetRaspForDedicatedPage();
+  case PageLayout::Overlay::RASP:
+    ApplyRaspOverlay(layout);
     break;
-  }
 
   case PageLayout::Overlay::EDL:
-#ifdef HAVE_EDL
-    if (layout.UsesEdlOverlay()) {
-      if (EDL::EnterDedicatedPage())
-        EDL::ResetForDedicatedPage();
-      else
-        EDL::EnsureInitialised();
+    ApplyEdlOverlay();
+    break;
 
-      EDL::RequestOverlayRefresh();
-    }
-#endif
+  case PageLayout::Overlay::XCTHERM:
+    ApplyXcthermOverlay();
     break;
 
   case PageLayout::Overlay::MAX:
     gcc_unreachable();
   }
 
-  ActionInterface::SendUIState(true);
+  if (layout.UsesWeatherOverlay())
+    ActionInterface::SendUIState(true);
 }
 
 void
@@ -125,21 +242,7 @@ PageActions::LeavePage()
 {
   PagesState &state = CommonInterface::SetUIState().pages;
 
-  const PageLayout &layout = GetActiveLayout();
-
-  if (layout.UsesEdlOverlay()) {
-#ifdef HAVE_EDL
-    if (!EDL::IsDedicatedPageSuspendedForPan()) {
-      EDL::LeaveDedicatedPage();
-      EDL::ClearOverlay();
-    }
-#endif
-  } else if (layout.overlay == PageLayout::Overlay::RASP) {
-    if (!CommonInterface::GetUIState().weather.IsRaspSuspendedForPan()) {
-      ClearPageOverlays();
-      CommonInterface::SetUIState().weather.rasp_page_entered = false;
-    }
-  }
+  LeaveWeatherOverlayPage(GetActiveLayout());
 
   if (state.special_page.IsDefined())
     return;
@@ -161,19 +264,7 @@ PageActions::Restore()
   if (!special_page.IsDefined())
     return;
 
-  if (special_page.UsesEdlOverlay()) {
-#ifdef HAVE_EDL
-    if (!EDL::IsDedicatedPageSuspendedForPan()) {
-      EDL::LeaveDedicatedPage();
-      EDL::ClearOverlay();
-    }
-#endif
-  } else if (special_page.overlay == PageLayout::Overlay::RASP) {
-    if (!CommonInterface::GetUIState().weather.IsRaspSuspendedForPan()) {
-      ClearPageOverlays();
-      CommonInterface::SetUIState().weather.rasp_page_entered = false;
-    }
-  }
+  LeaveWeatherOverlayPage(special_page);
 
   special_page.SetUndefined();
 
@@ -228,9 +319,30 @@ PageActions::GetCurrentLayout()
     : GetConfiguredLayout();
 }
 
+bool
+PageActions::IsStuckPanFullScreenLayout() noexcept
+{
+  const PagesState &state = CommonInterface::GetUIState().pages;
+
+  return state.special_page.IsDefined() &&
+    state.special_page == PageLayout::FullScreen() &&
+    GetConfiguredLayout() != state.special_page;
+}
+
 void
 PageActions::Update()
 {
+  /* While panning, GetCurrentLayout() is the transient FullScreen page.
+     LoadLayout() calls DisablePan() without Restore(), which would leave
+     the UI stuck on FullScreen without the configured bottom widget. */
+  if (IsPanning())
+    return;
+
+  if (IsStuckPanFullScreenLayout()) {
+    Restore();
+    return;
+  }
+
   LoadLayout(GetCurrentLayout());
 }
 
@@ -331,6 +443,9 @@ LoadMain(PageLayout::Main main)
 static void
 LoadBottom(const PageLayout &layout)
 {
+  /* Weather controls bottom widget is opt-in (Config → System → Pages).
+     Weather overlays share WeatherMapOverlay::ControlsWidget. Same opt-in
+     model as Cross Section. */
   switch (layout.bottom) {
   case PageLayout::Bottom::NOTHING:
     CommonInterface::main_window->SetBottomWidget(nullptr);
@@ -341,14 +456,12 @@ LoadBottom(const PageLayout &layout)
     break;
 
   case PageLayout::Bottom::EDL_CONTROLS:
-#ifdef HAVE_EDL
-    {
-      auto widget = CreateMapOverlayControlsBottomWidget(layout.overlay);
-      CommonInterface::main_window->SetBottomWidget(widget.release());
+    if (auto model = WeatherMapOverlay::CreateControlsModel(layout.overlay)) {
+      CommonInterface::main_window->SetBottomWidget(
+        new WeatherMapOverlay::ControlsWidget(std::move(model)));
+      break;
     }
-#else
     CommonInterface::main_window->SetBottomWidget(nullptr);
-#endif
     break;
 
   case PageLayout::Bottom::CUSTOM:
@@ -396,6 +509,9 @@ PageActions::LoadLayout(const PageLayout &layout)
   LoadMain(active.main);
   ApplyPageOverlay(active);
   LoadBottom(active);
+
+  if (!active.UsesWeatherOverlay() && InputEvents::IsMode("weather"))
+    InputEvents::setMode(InputEvents::MODE_DEFAULT);
 
   ActionInterface::UpdateDisplayMode();
   ActionInterface::SendUIState(false);
