@@ -21,9 +21,15 @@
 #include <TargetConditionals.h>
 #endif
 
+#if defined(KOBO) || defined(COLIBRI)
 #if defined(KOBO)
 #include "Kobo/PlatformWifiBackend.hpp"
 #include "Kobo/System.hpp"
+#else
+#include "Colibri/PlatformWifiBackend.hpp"
+#include "Colibri/System.hpp"
+#include "Colibri/NetworkDialog.hpp"
+#endif
 #include "net/wifi/WifiError.hpp"
 #endif
 
@@ -102,7 +108,7 @@ GetPlatformWifiIpAddress() noexcept
 }
 #endif
 
-#if defined(KOBO) || defined(HAVE_LINUX_NET_WIFI)
+#if defined(KOBO) || defined(COLIBRI) || defined(HAVE_LINUX_NET_WIFI)
 static const char *
 GetWifiServiceUnavailableText() noexcept
 {
@@ -121,7 +127,7 @@ GetManagedBySystemSettingsText() noexcept
 static const char *
 GetStatusHelp() noexcept
 {
-#if defined(KOBO) || defined(HAVE_LINUX_NET_WIFI)
+#if defined(KOBO) || defined(COLIBRI) || defined(HAVE_LINUX_NET_WIFI)
   return _("This page shows WiFi status. Use WiFi list to scan and connect.");
 #elif defined(ANDROID) || defined(_WIN32)
   return _("WiFi is managed by the system settings. Use WiFi list to open them.");
@@ -135,7 +141,7 @@ GetStatusHelp() noexcept
 static const char *
 GetBackendHelp() noexcept
 {
-#if defined(KOBO) || defined(HAVE_LINUX_NET_WIFI) || defined(ANDROID) || defined(_WIN32) || (defined(__APPLE__) && TARGET_OS_IPHONE)
+#if defined(KOBO) || defined(COLIBRI) || defined(HAVE_LINUX_NET_WIFI) || defined(ANDROID) || defined(_WIN32) || (defined(__APPLE__) && TARGET_OS_IPHONE)
   return _("WiFi service used by the device.");
 #else
   return _("Platform/backend information is not available in this build.");
@@ -145,7 +151,7 @@ GetBackendHelp() noexcept
 static const char *
 GetInitialBackendName() noexcept
 {
-#if defined(KOBO)
+#if defined(KOBO) || defined(COLIBRI)
   return "wpa_supplicant";
 #elif defined(HAVE_LINUX_NET_WIFI)
   return LinuxBackendName(LinuxWifiBackendKind::None);
@@ -164,17 +170,28 @@ static void
 PreparePlatformRows(RowFormWidget &widget, unsigned &n, NetworkConfigRows &rows,
                     DataFieldListener &listener) noexcept
 {
-#if defined(KOBO)
+#if defined(KOBO) || defined(COLIBRI)
   rows.radio = n++;
   rows.have_radio = true;
   widget.AddBoolean(_("WiFi Enabled"),
+#if defined(KOBO)
                     _("Turns the Kobo WiFi interface on or off."),
-                    IsKoboWifiOn(), &listener);
+                    IsKoboWifiOn(),
+#else
+                    _("Turns the Colibri WiFi interface on or off."),
+                    IsColibriWifiOn(),
+#endif
+                    &listener);
   rows.persist_wifi = n++;
   rows.have_persist_wifi = true;
   widget.AddBoolean(_("Auto WiFi"),
                     _("Enable WiFi automatically at startup."),
-                    IsKoboWifiAutoOn(), &listener);
+#if defined(KOBO)
+                    IsKoboWifiAutoOn(),
+#else
+                    IsColibriWifiAutoOn(),
+#endif
+                    &listener);
 #elif defined(HAVE_LINUX_NET_WIFI)
   try {
     const auto backend_kind = QueryLinuxWifiBackendKind();
@@ -198,7 +215,7 @@ PreparePlatformRows(RowFormWidget &widget, unsigned &n, NetworkConfigRows &rows,
 static void
 OpenPlatformWifiList(std::function<void()> refresh) noexcept
 {
-#if defined(KOBO)
+#if defined(KOBO) || defined(COLIBRI)
   try {
     auto backend = CreatePlatformWifiBackend();
     if (backend == nullptr) {
@@ -256,13 +273,21 @@ static void
 BuildPlatformState(NetworkConfigState &state,
                    const NetworkConfigRows &rows) noexcept
 {
-#if defined(KOBO)
+#if defined(KOBO) || defined(COLIBRI)
   state.connectivity = GetNetState();
   state.backend = "wpa_supplicant";
   state.have_radio_enabled = true;
+#if defined(KOBO)
   state.radio_enabled = IsKoboWifiOn();
+#else
+  state.radio_enabled = IsColibriWifiOn();
+#endif
   state.have_persist_wifi_enabled = true;
+#if defined(KOBO)
   state.persist_wifi_enabled = IsKoboWifiAutoOn();
+#else
+  state.persist_wifi_enabled = IsColibriWifiAutoOn();
+#endif
 
   if (!state.radio_enabled) {
     state.status = _("Disabled");
@@ -339,9 +364,13 @@ HandlePlatformModified(RowFormWidget &widget, const NetworkConfigRows &rows,
                        DataField &df,
                        std::function<void()> refresh) noexcept
 {
-#if defined(KOBO)
+#if defined(KOBO) || defined(COLIBRI)
   if (rows.have_persist_wifi && widget.IsDataField(rows.persist_wifi, df)) {
+#if defined(KOBO)
     if (!SetKoboWifiAutoOn(widget.GetValueBoolean(rows.persist_wifi))) {
+#else
+    if (!SetColibriWifiAutoOn(widget.GetValueBoolean(rows.persist_wifi))) {
+#endif
       ShowMessageBox(_("Failed to store the WiFi startup setting."),
                      _("Network"), MB_OK);
       refresh();
@@ -355,7 +384,11 @@ HandlePlatformModified(RowFormWidget &widget, const NetworkConfigRows &rows,
 
   try {
     const bool enabled = widget.GetValueBoolean(rows.radio);
+#if defined(KOBO)
     const bool success = enabled ? KoboWifiOn() : KoboWifiOff();
+#else
+    const bool success = enabled ? ColibriWifiOn() : ColibriWifiOff();
+#endif
     if (!success)
       throw std::runtime_error{enabled
         ? _("Failed to enable WiFi.")
@@ -438,6 +471,12 @@ NetworkConfigWidget::Prepare(ContainerWindow &parent,
   AddButton(_("WiFi List"), [this]() {
     OpenPlatformWifiList([this]() { OnRefresh(); });
   });
+
+#ifdef COLIBRI
+  AddButton(_("Network"), []() {
+    ShowNetworkDialog();
+  });
+#endif
 
   OnRefresh();
 }

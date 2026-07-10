@@ -17,9 +17,10 @@
 #ifdef ENABLE_OPENGL
 #include "ui/opengl/Features.hpp"
 #ifdef SOFTWARE_ROTATE_DISPLAY
-#include "UIGlobals.hpp"
 #include "ui/window/SingleWindow.hpp"
 #include "ui/canvas/opengl/Globals.hpp"
+
+extern UI::SingleWindow *global_main_window;
 #endif
 #endif
 
@@ -147,8 +148,12 @@ Display::Rotate(DisplayOrientation orientation)
   if (!RotateSupported())
     return false;
 
-  UIGlobals::GetMainWindow().SetDisplayOrientation(orientation);
-  return true;
+  if (global_main_window != nullptr) {
+    global_main_window->SetDisplayOrientation(orientation);
+    return true;
+  }
+
+  return false;
 #else
   return false;
 #endif

@@ -221,6 +221,7 @@ endif
 ifeq ($(TARGET_IS_LINUX),y)
 include $(topdir)/build/cloud.mk
 include $(topdir)/build/kobo.mk
+include $(topdir)/build/colibri.mk
 ifeq ($(USE_POLL_EVENT)$(TARGET_IS_KOBO),yn)
 include $(topdir)/build/ov.mk
 endif
@@ -264,6 +265,10 @@ endif
 
 ifeq ($(TARGET_IS_KOBO),y)
 OUTPUTS += $(KOBO_MENU_BIN) $(KOBO_POWER_OFF_BIN)
+endif
+
+ifeq ($(TARGET_IS_COLIBRI),y)
+OUTPUTS += $(COLIBRI_MENU_BIN)
 endif
 
 ifeq ($(HAVE_WIN32),y)

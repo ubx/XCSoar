@@ -742,7 +742,6 @@ ifeq ($(HAVE_PCM_PLAYER),y)
 XCSOAR_SOURCES += $(SRC)/Audio/VarioGlue.cpp
 endif
 
-include $(topdir)/build/net-wifi.mk
 
 XCSOAR_DEPENDS = \
 	FMT \
@@ -770,6 +769,8 @@ XCSOAR_DEPENDS = \
 	JSON \
 	LIBNET TIME OS THREAD \
 	UTIL GEO MATH
+
+include $(topdir)/build/net-wifi.mk
 
 ifeq ($(HAVE_HTTP),y)
 XCSOAR_DEPENDS += \

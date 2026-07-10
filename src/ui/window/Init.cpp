@@ -44,8 +44,8 @@ ScreenGlobalInit::ScreenGlobalInit()
   Display::Rotate(DisplayOrientation::DEFAULT);
   UI::event_queue->SetDisplayOrientation(DisplayOrientation::DEFAULT);
 #elif defined(COLIBRI)
-  //Display::Rotate(DisplayOrientation::PORTRAIT);
-  //UI::event_queue->SetDisplayOrientation(DisplayOrientation::PORTRAIT);
+  Display::Rotate(DisplayOrientation::PORTRAIT);
+  UI::event_queue->SetDisplayOrientation(DisplayOrientation::PORTRAIT);
 #endif
 
 #ifdef USE_WINUSER

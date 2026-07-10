@@ -74,7 +74,7 @@ TopWindow::Create([[maybe_unused]] const char *text, PixelSize size,
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
   size = screen->SetDisplayOrientation(style.GetInitialOrientation());
-#if defined(USE_POLL_EVENT)  && !defined(COLIBRI)
+#if defined(USE_POLL_EVENT)
   if (event_queue != nullptr) {
     event_queue->SetDisplayOrientation(style.GetInitialOrientation());
     PixelSize native_size = size;

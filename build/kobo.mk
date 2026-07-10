@@ -1,4 +1,3 @@
-$(eval $(call pkg-config-library,LIBCRYPTO,libcrypto))
 
 KOBO_MENU_SOURCES = \
 	$(SRC)/Version.cpp \

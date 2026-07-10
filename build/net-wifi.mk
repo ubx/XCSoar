@@ -4,11 +4,25 @@ XCSOAR_SOURCES += \
 
 # Kobo/Colibri WiFi is provided by the wpa_supplicant backend.
 ifneq ($(filter y,$(TARGET_IS_KOBO) $(TARGET_IS_COLIBRI)),)
+$(eval $(call pkg-config-library,LIBCRYPTO,libcrypto))
+
+XCSOAR_DEPENDS += LIBCRYPTO
+
+ifeq ($(TARGET_IS_KOBO),y)
 XCSOAR_SOURCES += \
-	$(SRC)/Kobo/System.cpp \
 	$(SRC)/Kobo/WPASupplicant.cpp \
 	$(SRC)/Kobo/WPASupplicantBackend.cpp \
-	$(SRC)/Kobo/PlatformWifiBackend.cpp
+	$(SRC)/Kobo/System.cpp \
+	$(SRC)/Kobo/PlatformWifiBackend.cpp \
+	$(SRC)/Kobo/NetworkDialog.cpp
+else
+XCSOAR_SOURCES += \
+	$(SRC)/Colibri/WPASupplicant.cpp \
+	$(SRC)/Colibri/WPASupplicantBackend.cpp \
+	$(SRC)/Colibri/System.cpp \
+	$(SRC)/Colibri/PlatformWifiBackend.cpp \
+	$(SRC)/Colibri/NetworkDialog.cpp
+endif
 endif
 
 # NetworkManager / ConnMan settings via D-Bus (Linux only; not Kobo, not Android, not Colibri)

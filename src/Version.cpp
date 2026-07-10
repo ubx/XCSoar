@@ -14,6 +14,8 @@
   #define TARGET "Android"
 #elif defined(KOBO)
   #define TARGET "Kobo"
+#elif defined(COLIBRI)
+  #define TARGET "Colibri"
 #elif defined(__linux__)
   #define TARGET "Linux"
 #elif defined(__APPLE__)
