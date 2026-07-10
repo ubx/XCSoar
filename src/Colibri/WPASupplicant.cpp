@@ -44,6 +44,9 @@ WPASupplicant::Close() noexcept
 void
 WPASupplicant::SendCommand(std::string_view cmd)
 {
+  if (!fd.IsDefined())
+    throw std::runtime_error("Not connected to wpa_supplicant");
+
   /* discard any previous responses that may be left in the socket's
      receive queue, maybe because the last command failed */
   ReadDiscard();
