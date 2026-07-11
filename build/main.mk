@@ -345,6 +345,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Input/InputParser.cpp \
 	$(SRC)/Input/TaskEventObserver.cpp \
 	$(SRC)/PageSettings.cpp \
+	$(SRC)/PageOverlayTitle.cpp \
 	$(SRC)/PageState.cpp \
 	$(SRC)/PageActions.cpp \
 	$(SRC)/StatusMessage.cpp \
@@ -405,6 +406,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Weather/MapOverlay/InputEvents.cpp \
 	$(SRC)/Weather/MapOverlay/ControlsFactory.cpp \
 	$(SRC)/Weather/MapOverlay/ControlsWidget.cpp \
+	$(SRC)/Weather/MapOverlay/TimePicker.cpp \
 	$(SRC)/Weather/MapOverlay/RaspControlsModel.cpp \
 	$(SRC)/Weather/MapOverlay/XcthermControlsModel.cpp \
 	$(SRC)/Weather/BackgroundDownloadProgress.cpp \

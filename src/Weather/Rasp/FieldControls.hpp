@@ -163,18 +163,19 @@ bool
 HasSelectedField() noexcept;
 
 /**
- * Compact label for the active RASP field (map-scale PAN string).
- */
-StaticString<64>
-GetPanOverlayLabel(const PageLayout &configured) noexcept;
-
-/**
  * Cursor-bar time label, e.g. @c "14:30 (+0:15)" or @c "AUTO: …".
  *
  * When @p auto_advance is true, the display follows GPS local time ("Now").
  */
 void
 FormatTimeCursorLabel(StaticString<64> &text, bool auto_advance) noexcept;
+
+/**
+ * Minute-of-day for the effective cursor-bar time (manual or AUTO).
+ */
+[[gnu::pure]]
+unsigned
+GetCursorBarMinuteOfDay() noexcept;
 
 /**
  * Return true when the active RASP field has raster data for the

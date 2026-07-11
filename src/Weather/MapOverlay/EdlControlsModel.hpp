@@ -10,6 +10,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 
 namespace WeatherMapOverlay {
 
@@ -56,8 +57,13 @@ public:
   void SetSecondaryAutoAdvance(bool auto_advance) noexcept override;
   void ApplySecondaryAutoAdvance() noexcept override;
 
+  [[nodiscard]]
+  SecondaryLabelAction GetSecondaryLabelAction() const noexcept override;
+
   void ResumePrimaryAuto() noexcept override;
   void ResumeSecondaryAuto() noexcept override;
+
+  void OpenSecondaryPicker() noexcept override;
 
   void RefreshOverlay() noexcept override;
   void OnGPSUpdate(const MoreData &basic) noexcept override;
@@ -67,11 +73,15 @@ public:
 private:
   void RebuildForecastTimes() noexcept;
   void SelectForecast(unsigned index) noexcept;
+  void SelectForecastTime(const BrokenDateTime &time) noexcept;
   void SelectLevel(unsigned isobar) noexcept;
   void UnregisterEdlDownloadListener() noexcept;
 
   [[nodiscard]] [[gnu::pure]]
   unsigned FindForecastIndex() const noexcept;
+
+  [[nodiscard]]
+  std::optional<unsigned> FindTrackedForecastIndex() const noexcept;
 
   [[nodiscard]]
   bool HasOverlayData() const noexcept;
