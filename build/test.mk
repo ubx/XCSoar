@@ -93,7 +93,7 @@ TEST_NAMES = \
 	TestLogger TestGRecord TestClimbAvCalc TestFilteredVarioComputer \
 	TestWaypointReader TestThermalBase \
 	TestFlarmNet TestFlarmMessaging \
-	TestColorRamp TestGeoPoint TestDiffFilter \
+	TestColorRamp TestXCThermBandQuery TestGeoPoint TestDiffFilter \
 	TestFileUtil TestRepository TestFileType TestPath TestPolars TestCSVLine TestGlidePolar \
 	test_replay_task TestProjection TestFlatPoint TestFlatLine TestFlatGeoPoint \
 	TestMacCready TestOrderedTask TestAATPoint TestTaskSave \
@@ -220,6 +220,16 @@ TEST_WEATHER_UI_STATE_SOURCES = \
 	$(TEST_SRC_DIR)/TestWeatherUIState.cpp
 TEST_WEATHER_UI_STATE_DEPENDS = TIME UTIL
 $(eval $(call link-program,TestWeatherUIState,TEST_WEATHER_UI_STATE))
+
+TEST_NAMES += TestWeatherOverlayPagePlacement
+
+TEST_WEATHER_OVERLAY_PAGE_PLACEMENT_SOURCES = \
+	$(SRC)/PageSettings.cpp \
+	$(TEST_SRC_DIR)/FakeLanguage.cpp \
+	$(TEST_SRC_DIR)/tap.c \
+	$(TEST_SRC_DIR)/TestWeatherOverlayPagePlacement.cpp
+TEST_WEATHER_OVERLAY_PAGE_PLACEMENT_DEPENDS = TIME UTIL
+$(eval $(call link-program,TestWeatherOverlayPagePlacement,TEST_WEATHER_OVERLAY_PAGE_PLACEMENT))
 
 ifeq ($(HAVE_HTTP),y)
 TEST_NAMES += TestEDL
@@ -856,6 +866,13 @@ TEST_COLOR_RAMP_SOURCES = \
 	$(TEST_SRC_DIR)/TestColorRamp.cpp
 TEST_COLOR_RAMP_CPPFLAGS = $(SCREEN_CPPFLAGS)
 $(eval $(call link-program,TestColorRamp,TEST_COLOR_RAMP))
+
+TEST_XCTHERM_BAND_QUERY_SOURCES = \
+	$(TEST_SRC_DIR)/tap.c \
+	$(SRC)/Weather/xctherm/XCThermGeoQuery.cpp \
+	$(TEST_SRC_DIR)/TestXCThermBandQuery.cpp
+TEST_XCTHERM_BAND_QUERY_DEPENDS = GEO MATH
+$(eval $(call link-program,TestXCThermBandQuery,TEST_XCTHERM_BAND_QUERY))
 
 TEST_SUN_EPHEMERIS_SOURCES = \
 	$(SRC)/Math/SunEphemeris.cpp \
