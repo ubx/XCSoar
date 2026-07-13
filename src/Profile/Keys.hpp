@@ -132,6 +132,7 @@ constexpr std::string_view TeamcodeRefWaypoint = "TeamcodeRefWaypoint";
 constexpr std::string_view AppInfoBoxBorder = "AppInfoBoxBorder";
 constexpr std::string_view ShowMenuButton = "ShowMenuButton";
 constexpr std::string_view ShowZoomButton = "ShowZoomButton";
+constexpr std::string_view ShowQuickMenuButton = "ShowQuickMenuButton";
 constexpr std::string_view CursorSize = "CursorSize";
 constexpr std::string_view CursorColorsInverted = "CursorColorsInverted";
 constexpr std::string_view NoPositionTargetDistanceRing = "NoPositionTargetDistanceRing";
@@ -319,6 +320,13 @@ constexpr std::string_view WaveAssistant = "WaveAssistant";
 constexpr std::string_view MasterAudioVolume = "MasterAudioVolume";
 
 constexpr std::string_view RaspFile = "RaspFile";
+constexpr std::string_view XCThermAutoSwitch = "XCThermAutoSwitch";
+constexpr std::string_view XCThermEmail = "XCThermEmail";
+constexpr std::string_view XCThermPassword = "XCThermPassword";
+constexpr std::string_view XCThermModel = "XCThermModel";
+constexpr std::string_view XCThermParameter = "XCThermParameter";
+constexpr std::string_view XCThermWaveHeight = "XCThermWaveHeight";
+constexpr std::string_view XCThermVerticalWindAGL = "XCThermVerticalWindAGL";
 
 constexpr std::string_view StratuxHorizontalRange = "StratuxHorizontalRange";
 constexpr std::string_view StratuxVerticalRange = "StratuxVerticalRange";

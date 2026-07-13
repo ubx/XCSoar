@@ -67,12 +67,12 @@ unsigned
 MinuteOfDayFromTime(BrokenTime time) noexcept;
 
 /**
- * Step through local quarter hours (0:00–23:45), even when no raster exists.
+ * Step through forecast times available for @p field_index.
  *
- * @return false when @p delta is zero
+ * @return false when stepping is not possible
  */
 bool
-StepTime(bool time_auto_advance, int delta,
+StepTime(bool time_auto_advance, int field_index, int delta,
          unsigned &minute_of_day) noexcept;
 
 /**
@@ -86,6 +86,12 @@ SyncCursorFromPageLayout() noexcept;
  */
 void
 SetCursorTime(unsigned minute_of_day) noexcept;
+
+/**
+ * Select the "Now" cursor mode while staying in manual mode.
+ */
+void
+SetCursorNow() noexcept;
 
 [[nodiscard]] [[gnu::pure]]
 bool
@@ -104,7 +110,8 @@ void
 ResumeAutoAdvance() noexcept;
 
 /**
- * Step the cursor-bar time by @p delta quarters and apply the selection.
+ * Step the cursor-bar time by @p delta available forecast slots and
+ * apply the selection.
  *
  * @return false when stepping is not possible
  */
@@ -133,6 +140,14 @@ bool
 SelectField(unsigned field_index) noexcept;
 
 /**
+ * Clear the selected RASP field while keeping the RASP overlay active.
+ *
+ * @return false when the current page is not a RASP overlay page
+ */
+bool
+ClearSelectedField() noexcept;
+
+/**
  * Step the active RASP field by @p delta (wraps at list ends).
  *
  * @return false when stepping is not possible
@@ -148,18 +163,19 @@ bool
 HasSelectedField() noexcept;
 
 /**
- * Compact label for the active RASP field (map-scale PAN string).
- */
-StaticString<64>
-GetPanOverlayLabel(const PageLayout &configured) noexcept;
-
-/**
  * Cursor-bar time label, e.g. @c "14:30 (+0:15)" or @c "AUTO: …".
  *
  * When @p auto_advance is true, the display follows GPS local time ("Now").
  */
 void
 FormatTimeCursorLabel(StaticString<64> &text, bool auto_advance) noexcept;
+
+/**
+ * Minute-of-day for the effective cursor-bar time (manual or AUTO).
+ */
+[[gnu::pure]]
+unsigned
+GetCursorBarMinuteOfDay() noexcept;
 
 /**
  * Return true when the active RASP field has raster data for the

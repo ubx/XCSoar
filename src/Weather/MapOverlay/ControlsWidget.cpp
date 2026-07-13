@@ -3,6 +3,7 @@
 
 #include "ControlsWidget.hpp"
 
+#include "ActionInterface.hpp"
 #include "CursorBarLabels.hpp"
 #include "InputEventMisc.hpp"
 #include "Interface.hpp"
@@ -73,6 +74,7 @@ ControlsWidget::RefreshOverlay() noexcept
 {
   UpdateLabels();
   model->RefreshOverlay();
+  ActionInterface::SendUIState(true);
 }
 
 void
@@ -84,6 +86,7 @@ ControlsWidget::ApplyUpdate(ControlsUpdate update) noexcept
 
   case ControlsUpdate::LABELS:
     UpdateLabels();
+    ActionInterface::SendUIState(false);
     break;
 
   case ControlsUpdate::OVERLAY:
@@ -113,24 +116,29 @@ ControlsWidget::OnStepSecondary(int delta) noexcept
 void
 ControlsWidget::OnPrimaryLabelClick() noexcept
 {
-  if (model->GetPrimaryAutoAdvance())
-    return;
+  switch (model->GetPrimaryLabelAction()) {
+  case PrimaryLabelAction::OPEN_PICKER:
+    model->OpenPrimaryPicker();
+    UpdateLabels();
+    break;
 
-  model->ResumePrimaryAuto();
+  case PrimaryLabelAction::RESUME_AUTO:
+    if (!model->GetPrimaryAutoAdvance())
+      model->ResumePrimaryAuto();
+    break;
+
+  case PrimaryLabelAction::NONE:
+    break;
+  }
 }
 
 void
 ControlsWidget::OnSecondaryLabelClick() noexcept
 {
-  if (model->SupportsSecondaryAutoAdvance()) {
-    if (!model->GetSecondaryAutoAdvance())
-      model->ResumeSecondaryAuto();
-    return;
-  }
-
   switch (model->GetSecondaryLabelAction()) {
   case SecondaryLabelAction::OPEN_PICKER:
     model->OpenSecondaryPicker();
+    RefreshOverlay();
     break;
 
   case SecondaryLabelAction::NONE:
@@ -145,6 +153,10 @@ ControlsWidget::HandleWeatherOverlayInput(const char *misc) noexcept
     return;
 
   switch (ParseOverlayInputAction(misc)) {
+  case OverlayInputAction::TIME_PICKER:
+    OnPrimaryLabelClick();
+    break;
+
   case OverlayInputAction::TIME_PLUS:
     OnStepPrimary(+1);
     break;
@@ -161,17 +173,22 @@ ControlsWidget::HandleWeatherOverlayInput(const char *misc) noexcept
     OnStepSecondary(-1);
     break;
 
-  case OverlayInputAction::TIME_AUTO_TOGGLE:
-    model->SetPrimaryAutoAdvance(!model->GetPrimaryAutoAdvance());
-    if (model->GetPrimaryAutoAdvance())
-      model->ApplyPrimaryAutoAdvance();
+  case OverlayInputAction::FIELD_PICKER:
+    model->OpenSecondaryPicker();
     RefreshOverlay();
     break;
 
+  case OverlayInputAction::TIME_AUTO_TOGGLE:
+    if (model->GetPrimaryAutoAdvance()) {
+      model->SetPrimaryAutoAdvance(false);
+      UpdateLabels();
+    } else {
+      model->EnablePrimaryAutoFromInput();
+    }
+    break;
+
   case OverlayInputAction::TIME_AUTO_ON:
-    model->SetPrimaryAutoAdvance(true);
-    model->ApplyPrimaryAutoAdvance();
-    RefreshOverlay();
+    model->EnablePrimaryAutoFromInput();
     break;
 
   case OverlayInputAction::TIME_AUTO_OFF:
@@ -184,8 +201,15 @@ ControlsWidget::HandleWeatherOverlayInput(const char *misc) noexcept
     break;
 
   case OverlayInputAction::ALTITUDE_AUTO_TOGGLE:
-    if (!model->SupportsSecondaryAutoAdvance())
+    if (!model->SupportsSecondaryAutoAdvance()) {
+      if (model->GetPrimaryAutoAdvance()) {
+        model->SetPrimaryAutoAdvance(false);
+        UpdateLabels();
+      } else {
+        model->EnablePrimaryAutoFromInput();
+      }
       break;
+    }
     model->SetSecondaryAutoAdvance(!model->GetSecondaryAutoAdvance());
     if (model->GetSecondaryAutoAdvance())
       model->ApplySecondaryAutoAdvance();

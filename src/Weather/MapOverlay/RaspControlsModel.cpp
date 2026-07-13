@@ -9,8 +9,12 @@
 #include "Form/DataField/Enum.hpp"
 #include "Interface.hpp"
 #include "Language/Language.hpp"
+#include "PageActions.hpp"
+#include "PrimaryTimePicker.hpp"
 #include "Weather/Rasp/FieldControls.hpp"
 #include "Weather/Rasp/RaspStore.hpp"
+#include "UIState.hpp"
+#include "util/StaticString.hxx"
 
 #ifdef HAVE_DOWNLOAD_MANAGER
 #include "Weather/Rasp/DownloadGlue.hpp"
@@ -77,6 +81,24 @@ void
 RaspControlsModel::ApplyPrimaryAutoAdvance() noexcept
 {
   Rasp::ApplyAutoAdvanceTime();
+  last_quarter = unsigned(-1);
+}
+
+void
+RaspControlsModel::EnablePrimaryAutoFromInput() noexcept
+{
+  EnablePrimaryAutoAndRefresh();
+
+#ifdef HAVE_DOWNLOAD_MANAGER
+  if (!Rasp::HasSelectedTimeData(true))
+    RequestConfiguredRaspUpdateIfOutOfDate();
+#endif
+}
+
+PrimaryLabelAction
+RaspControlsModel::GetPrimaryLabelAction() const noexcept
+{
+  return PrimaryLabelAction::OPEN_PICKER;
 }
 
 [[nodiscard]]
@@ -87,19 +109,49 @@ RaspControlsModel::GetSecondaryLabelAction() const noexcept
 }
 
 void
+RaspControlsModel::OpenPrimaryPicker() noexcept
+{
+  const auto rasp = DataGlobals::GetRasp();
+  const int field_index = Rasp::GetEffectiveFieldIndex();
+  if (rasp == nullptr || field_index < 0 ||
+      unsigned(field_index) >= rasp->GetItemCount())
+    return;
+
+  OpenPrimaryTimePicker(*this, _("RASP Time"),
+    [&](DataFieldEnum &field) noexcept {
+      field.ClearChoices();
+
+      for (unsigned i = 0; i < RaspStore::MAX_WEATHER_TIMES; ++i) {
+        const BrokenTime t = RaspStore::IndexToTime(i);
+        StaticString<24> label;
+        label.Format("%02u:%02u %s",
+                     unsigned(t.hour), unsigned(t.minute),
+                     rasp->IsTimeAvailable(unsigned(field_index), i)
+                     ? "[x]" : "[ ]");
+        field.addEnumText(label.c_str(), t.GetMinuteOfDay());
+      }
+    },
+    []() noexcept {
+      return Rasp::GetCursorBarMinuteOfDay();
+    },
+    [](ControlsModel &model) noexcept {
+      model.EnablePrimaryAutoFromInput();
+    },
+    [](ControlsModel &) noexcept {
+      Rasp::SetCursorNow();
+    },
+    [](ControlsModel &, unsigned minute_of_day) noexcept {
+      Rasp::SetCursorTime(minute_of_day);
+    });
+}
+
+void
 RaspControlsModel::ResumePrimaryAuto() noexcept
 {
   if (GetPrimaryAutoAdvance())
     return;
 
-  Rasp::ResumeAutoAdvance();
-  last_quarter = unsigned(-1);
-  Notify(ControlsUpdate::OVERLAY);
-
-#ifdef HAVE_DOWNLOAD_MANAGER
-  if (!Rasp::HasSelectedTimeData(true))
-    RequestConfiguredRaspUpdateIfOutOfDate();
-#endif
+  EnablePrimaryAutoFromInput();
 }
 
 void
@@ -110,7 +162,9 @@ RaspControlsModel::OpenSecondaryPicker() noexcept
     return;
 
   DataFieldEnum field;
-  Rasp::FillFieldChoices(field, rasp.get());
+  Rasp::FieldChoicesOptions options;
+  options.include_none = true;
+  Rasp::FillFieldChoices(field, rasp.get(), options);
 
   const int current = Rasp::GetEffectiveFieldIndex();
   field.SetValue(current >= 0 ? current : 0);
@@ -119,8 +173,10 @@ RaspControlsModel::OpenSecondaryPicker() noexcept
     return;
 
   const int selected = field.GetValue();
-  if (selected < 0)
+  if (selected < 0) {
+    Rasp::ClearSelectedField();
     return;
+  }
 
   Rasp::SelectField(unsigned(selected));
   Notify(ControlsUpdate::OVERLAY);
@@ -129,7 +185,6 @@ RaspControlsModel::OpenSecondaryPicker() noexcept
 void
 RaspControlsModel::RefreshOverlay() noexcept
 {
-  ActionInterface::SendUIState(true);
 }
 
 void

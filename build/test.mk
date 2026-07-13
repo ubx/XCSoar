@@ -93,7 +93,7 @@ TEST_NAMES = \
 	TestLogger TestGRecord TestClimbAvCalc TestFilteredVarioComputer \
 	TestWaypointReader TestThermalBase \
 	TestFlarmNet TestFlarmMessaging \
-	TestColorRamp TestGeoPoint TestDiffFilter \
+	TestColorRamp TestXCThermBandQuery TestGeoPoint TestDiffFilter \
 	TestFileUtil TestRepository TestFileType TestPath TestPolars TestCSVLine TestGlidePolar \
 	test_replay_task TestProjection TestFlatPoint TestFlatLine TestFlatGeoPoint \
 	TestMacCready TestOrderedTask TestAATPoint TestTaskSave \
@@ -220,6 +220,17 @@ TEST_WEATHER_UI_STATE_SOURCES = \
 	$(TEST_SRC_DIR)/TestWeatherUIState.cpp
 TEST_WEATHER_UI_STATE_DEPENDS = TIME UTIL
 $(eval $(call link-program,TestWeatherUIState,TEST_WEATHER_UI_STATE))
+
+TEST_NAMES += TestWeatherOverlayPagePlacement
+
+TEST_WEATHER_OVERLAY_PAGE_PLACEMENT_SOURCES = \
+	$(SRC)/PageSettings.cpp \
+	$(TEST_SRC_DIR)/PageOverlayTitleStub.cpp \
+	$(TEST_SRC_DIR)/FakeLanguage.cpp \
+	$(TEST_SRC_DIR)/tap.c \
+	$(TEST_SRC_DIR)/TestWeatherOverlayPagePlacement.cpp
+TEST_WEATHER_OVERLAY_PAGE_PLACEMENT_DEPENDS = TIME UTIL
+$(eval $(call link-program,TestWeatherOverlayPagePlacement,TEST_WEATHER_OVERLAY_PAGE_PLACEMENT))
 
 ifeq ($(HAVE_HTTP),y)
 TEST_NAMES += TestEDL
@@ -377,6 +388,7 @@ TEST_TASKFILE_SEEYOU_PARSING_SOURCES = \
 	$(SRC)/IGC/IGCParser.cpp \
 	$(SRC)/Waypoint/Factory.cpp \
 	$(SRC)/RadioFrequency.cpp \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/FakeTerrain.cpp \
 	$(TEST_SRC_DIR)/tap.c \
 	$(TEST_SRC_DIR)/TestTaskFileSeeYouParsing.cpp
@@ -422,6 +434,7 @@ TEST_TEAM_CODE_DEPENDS = GEO MATH UTIL
 $(eval $(call link-program,TestTeamCode,TEST_TEAM_CODE))
 
 TEST_TROUTE_SOURCES = \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/Printing.cpp \
 	$(TEST_SRC_DIR)/tap.c \
 	$(TEST_SRC_DIR)/test_troute.cpp
@@ -429,6 +442,7 @@ TEST_TROUTE_DEPENDS = TERRAIN OPERATION IO ZZIP OS ROUTE GLIDE GEO MATH UTIL
 $(eval $(call link-program,test_troute,TEST_TROUTE))
 
 TEST_REACH_SOURCES = \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/Printing.cpp \
 	$(TEST_SRC_DIR)/tap.c \
 	$(TEST_SRC_DIR)/test_reach.cpp
@@ -442,6 +456,7 @@ TEST_ROUTE_SOURCES = \
 	$(SRC)/Formatter/AirspaceFormatter.cpp \
 	$(SRC)/TransponderCode.cpp \
 	$(SRC)/Atmosphere/Pressure.cpp \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/Printing.cpp \
 	$(TEST_SRC_DIR)/AirspacePrinting.cpp \
 	$(TEST_SRC_DIR)/harness_airspace.cpp \
@@ -856,6 +871,13 @@ TEST_COLOR_RAMP_SOURCES = \
 	$(TEST_SRC_DIR)/TestColorRamp.cpp
 TEST_COLOR_RAMP_CPPFLAGS = $(SCREEN_CPPFLAGS)
 $(eval $(call link-program,TestColorRamp,TEST_COLOR_RAMP))
+
+TEST_XCTHERM_BAND_QUERY_SOURCES = \
+	$(TEST_SRC_DIR)/tap.c \
+	$(SRC)/Weather/xctherm/XCThermGeoQuery.cpp \
+	$(TEST_SRC_DIR)/TestXCThermBandQuery.cpp
+TEST_XCTHERM_BAND_QUERY_DEPENDS = GEO MATH
+$(eval $(call link-program,TestXCThermBandQuery,TEST_XCTHERM_BAND_QUERY))
 
 TEST_SUN_EPHEMERIS_SOURCES = \
 	$(SRC)/Math/SunEphemeris.cpp \
@@ -1407,6 +1429,7 @@ LOAD_TOPOGRAPHY_CPPFLAGS = $(SCREEN_CPPFLAGS)
 $(eval $(call link-program,LoadTopography,LOAD_TOPOGRAPHY))
 
 LOAD_TERRAIN_SOURCES = \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/LoadTerrain.cpp
 LOAD_TERRAIN_CPPFLAGS = $(SCREEN_CPPFLAGS)
@@ -1414,6 +1437,7 @@ LOAD_TERRAIN_DEPENDS = TERRAIN OPERATION GEO MATH OS IO ZZIP UTIL
 $(eval $(call link-program,LoadTerrain,LOAD_TERRAIN))
 
 RUN_HEIGHT_MATRIX_SOURCES = \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(SRC)/Projection/Projection.cpp \
 	$(SRC)/Projection/WindowProjection.cpp \
 	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
@@ -2012,6 +2036,7 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/Audio/VarioSettings.cpp \
 	$(SRC)/DisplaySettings.cpp \
 	$(SRC)/PageSettings.cpp \
+	$(TEST_SRC_DIR)/PageOverlayTitleStub.cpp \
 	$(SRC)/InfoBoxes/InfoBoxSettings.cpp \
 	$(SRC)/Dialogs/DialogSettings.cpp \
 	$(SRC)/Gauge/VarioSettings.cpp \
@@ -2445,6 +2470,7 @@ RUN_ANALYSIS_SOURCES = \
 	$(SRC)/UISettings.cpp \
 	$(SRC)/DisplaySettings.cpp \
 	$(SRC)/PageSettings.cpp \
+	$(TEST_SRC_DIR)/PageOverlayTitleStub.cpp \
 	$(SRC)/InfoBoxes/InfoBoxSettings.cpp \
 	$(SRC)/Gauge/VarioSettings.cpp \
 	$(SRC)/Gauge/TrafficSettings.cpp \
@@ -2516,6 +2542,7 @@ RUN_AIRSPACE_WARNING_DIALOG_SOURCES = \
 	$(SRC)/UISettings.cpp \
 	$(SRC)/DisplaySettings.cpp \
 	$(SRC)/PageSettings.cpp \
+	$(TEST_SRC_DIR)/PageOverlayTitleStub.cpp \
 	$(SRC)/InfoBoxes/InfoBoxSettings.cpp \
 	$(SRC)/Gauge/VarioSettings.cpp \
 	$(SRC)/Gauge/TrafficSettings.cpp \
@@ -2781,7 +2808,7 @@ $(eval $(call link-program,TestDMStScoring,TEST_DMST_SCORING))
 TEST_VERSION_NUMBER_SOURCES = \
 	$(TEST_SRC_DIR)/tap.c \
 	$(TEST_SRC_DIR)/TestVersionNumber.cpp
-TEST_VERSION_NUMBER_DEPENDS = MATH UTILS
+TEST_VERSION_NUMBER_DEPENDS = MATH UTIL
 $(eval $(call link-program,TestVersionNumber,TEST_VERSION_NUMBER))
 
 TEST_HTTPS_VERIFY_SOURCES = \

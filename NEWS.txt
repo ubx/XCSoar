@@ -13,6 +13,12 @@ Version 7.45 - not yet released
     batch size); device FLARM traffic still typically stays within 25
 * ui
   - Outline selected targets on the FLARM traffic radar
+  - Weather cursor bar: narrower stepper buttons on touchscreens and clip
+    long centre labels instead of hiding them when they do not fit
+  - Fix crash when opening the map item list on waypoints with long
+    non-ASCII comments (UTF-8 truncation)
+  - add optional map overlay QuickMenu button (Config → Look → Layout),
+    enabled by default when a touch screen is detected #2610
 * glide computer
   - Speed-to-fly and task calculations are now altitude-corrected: the glide
     polar is scaled by the air density ratio (sqrt(rho0/rho)) each GPS cycle,
@@ -29,6 +35,9 @@ Version 7.45 - not yet released
     time #2260
   - The saved device port type string for that mode remains ble_hm10 so
     existing profiles load without migration
+  - add support for SoftRF Concorde, Prime Mk4, and Retro Mk2 as supported USB devices
+  - Fix crash when the native thread restarts after surface teardown
+    (JNI helper classes were not cleared between runNative calls)
 * devices
   - Android: multi-port USB serial adapters (e.g. dual FTDI) use 0-based port
     suffixes (#0, #1) in both the port list and device list #2481
@@ -146,6 +155,9 @@ Version 7.45 - not yet released
     pre-filtered to recently-used waypoints; listed in the Gesture Help
     dialog with its own icon #336
 * map
+  - dynamically adjust contour line density to zoom factor #2233
+  - provide different contour density profile settings for mountains, 
+    low lands, etc. to have sensible contours in a given landscape type
   - turn back marker: new opt-in overlay (Safety Factors config panel) showing
     a green triangle along the current track indicating the furthest point from
     which the active task waypoint or Goto target can still be reached with the

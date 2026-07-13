@@ -21,7 +21,7 @@
 #endif
 
 /**
- * Map overlay buttons (menu, zoom) are hidden on special pages.
+ * Map overlay buttons (menu, QuickMenu, zoom) are hidden on special pages.
  */
 class ShowMapOverlayButtonRenderer : public ButtonRenderer {
   std::unique_ptr<ButtonRenderer> inner;
@@ -62,6 +62,21 @@ bool
 ShowMenuButton::OnClicked() noexcept
 {
   InputEvents::ShowMenu();
+  return true;
+}
+
+void
+ShowQuickMenuButton::Create(ContainerWindow &parent, const ButtonLook &look,
+                            const PixelRect &rc,
+                            WindowStyle style) noexcept
+{
+  Button::Create(parent, rc, style, MakeMapOverlaySymbolButton(look, "q"));
+}
+
+bool
+ShowQuickMenuButton::OnClicked() noexcept
+{
+  InputEvents::eventQuickMenu(nullptr);
   return true;
 }
 

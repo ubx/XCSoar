@@ -124,6 +124,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Settings/Panels/MapDisplayConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/NetworkConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/PagesConfigPanel.cpp \
+	$(SRC)/Dialogs/Settings/Panels/RaspConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/RouteConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/SafetyFactorsConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/SiteConfigPanel.cpp \
@@ -136,6 +137,8 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Settings/Panels/TimeConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/WaypointDisplayConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/WeatherConfigPanel.cpp \
+	$(if $(filter y,$(HAVE_HTTP)),$(SRC)/Dialogs/Settings/Panels/PCMetConfigPanel.cpp) \
+	$(if $(filter y,$(HAVE_HTTP)),$(SRC)/Dialogs/Settings/Panels/XCThermConfigPanel.cpp) \
 	$(SRC)/Dialogs/Settings/Panels/WeGlideConfigPanel.cpp \
 	\
 	$(SRC)/Dialogs/Task/Widgets/ObservationZoneEditWidget.cpp \
@@ -167,6 +170,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/DateEntry.cpp \
 	$(SRC)/Dialogs/GeoPointEntry.cpp \
 	$(SRC)/Dialogs/Weather/WeatherDialog.cpp \
+	$(SRC)/Dialogs/Weather/OverlayPageActions.cpp \
 	$(SRC)/Dialogs/Weather/RASPDialog.cpp \
 	$(SRC)/Dialogs/dlgCredits.cpp \
 	$(SRC)/Dialogs/dlgQuickGuide.cpp \
@@ -181,6 +185,8 @@ endif
 
 ifeq ($(HAVE_HTTP),y)
 DIALOG_SOURCES += \
+	$(SRC)/Dialogs/Weather/XCThermDialog.cpp \
+	$(SRC)/Dialogs/Weather/WeatherCredentialGateWidget.cpp \
 	$(SRC)/Dialogs/Weather/PCMetDialog.cpp \
 	$(SRC)/Dialogs/Weather/NOAAList.cpp \
 	$(SRC)/Dialogs/Weather/NOAADetails.cpp
@@ -339,6 +345,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Input/InputParser.cpp \
 	$(SRC)/Input/TaskEventObserver.cpp \
 	$(SRC)/PageSettings.cpp \
+	$(SRC)/PageOverlayTitle.cpp \
 	$(SRC)/PageState.cpp \
 	$(SRC)/PageActions.cpp \
 	$(SRC)/StatusMessage.cpp \
@@ -399,6 +406,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Weather/MapOverlay/InputEvents.cpp \
 	$(SRC)/Weather/MapOverlay/ControlsFactory.cpp \
 	$(SRC)/Weather/MapOverlay/ControlsWidget.cpp \
+	$(SRC)/Weather/MapOverlay/TimePicker.cpp \
 	$(SRC)/Weather/MapOverlay/RaspControlsModel.cpp \
 	$(SRC)/Weather/MapOverlay/XcthermControlsModel.cpp \
 	$(SRC)/Weather/BackgroundDownloadProgress.cpp \
@@ -702,6 +710,17 @@ XCSOAR_SOURCES += \
 	$(SRC)/Weather/NOAADownloader.cpp \
 	$(SRC)/Weather/NOAAStore.cpp \
 	$(SRC)/Weather/NOAAUpdater.cpp \
+	$(SRC)/Weather/xctherm/XCThermAPI.cpp \
+	$(SRC)/Weather/xctherm/XCThermDownload.cpp \
+	$(SRC)/Weather/xctherm/XCThermDownloadGlue.cpp \
+	$(SRC)/Weather/xctherm/XCThermGeoJSON.cpp \
+	$(SRC)/Weather/xctherm/XCThermGeoQuery.cpp \
+	$(SRC)/Weather/xctherm/XCThermGeoJSONOverlay.cpp \
+	$(SRC)/Weather/xctherm/XCThermMapOverlay.cpp \
+	$(SRC)/Weather/xctherm/XCThermCatalog.cpp \
+	$(SRC)/Weather/xctherm/XCThermForecastTime.cpp \
+	$(SRC)/Weather/xctherm/XCThermControlsModel.cpp \
+	$(SRC)/Weather/xctherm/XCThermAutoSwitch.cpp \
 
 XCSOAR_SOURCES += \
 	$(SRC)/Dialogs/Settings/Panels/TrackingConfigPanel.cpp \

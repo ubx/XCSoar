@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <utility>
 
 struct MoreData;
 
@@ -17,6 +18,12 @@ namespace WeatherMapOverlay {
  */
 enum class SecondaryLabelAction : uint8_t {
   NONE,
+  OPEN_PICKER,
+};
+
+enum class PrimaryLabelAction : uint8_t {
+  NONE,
+  RESUME_AUTO,
   OPEN_PICKER,
 };
 
@@ -90,6 +97,13 @@ public:
   virtual void ApplySecondaryAutoAdvance() noexcept {}
 
   [[nodiscard]]
+  virtual PrimaryLabelAction GetPrimaryLabelAction() const noexcept {
+    return PrimaryLabelAction::RESUME_AUTO;
+  }
+
+  virtual void OpenPrimaryPicker() noexcept {}
+
+  [[nodiscard]]
   virtual SecondaryLabelAction GetSecondaryLabelAction() const noexcept {
     return SecondaryLabelAction::NONE;
   }
@@ -105,7 +119,31 @@ public:
     (void)basic;
   }
 
+  /** Shared entry point for menu/input and picker auto-on actions. */
+  virtual void EnablePrimaryAutoFromInput() noexcept {
+    EnablePrimaryAutoAndRefresh();
+  }
+
 protected:
+  void NotifyOverlay() noexcept {
+    Notify(ControlsUpdate::OVERLAY);
+  }
+
+  void EnablePrimaryAutoAndRefresh() noexcept {
+    SetPrimaryAutoAdvance(true);
+    ApplyPrimaryAutoAdvance();
+    NotifyOverlay();
+  }
+
+  template<typename F>
+  void
+  ApplyManualPrimarySelection(F &&select_manual)
+  {
+    SetPrimaryAutoAdvance(false);
+    std::forward<F>(select_manual)();
+    NotifyOverlay();
+  }
+
   void Notify(ControlsUpdate update) noexcept {
     if (notify)
       notify(update);

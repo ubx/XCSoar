@@ -302,13 +302,8 @@ protected:
 };
 
 std::unique_ptr<Widget>
-CreatePCMetWidget()
+CreatePCMetMainWidget()
 {
-  const auto &settings = CommonInterface::GetComputerSettings().weather.pcmet;
-  if (!settings.www_credentials.IsDefined())
-    return std::make_unique<LargeTextWidget>(UIGlobals::GetDialogLook(),
-                                             "No account was configured.");
-
   auto area_widget = std::make_unique<ImageAreaListWidget>();
   auto type_widget = std::make_unique<ImageTypeListWidget>(*area_widget);
 
