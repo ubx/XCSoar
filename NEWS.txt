@@ -38,6 +38,9 @@ Version 7.45 - not yet released
   - add support for SoftRF Concorde, Prime Mk4, and Retro Mk2 as supported USB devices
   - Fix crash when the native thread restarts after surface teardown
     (JNI helper classes were not cleared between runNative calls)
+* Kobo
+  - always start in light mode; dark mode is not supported on e-paper
+    displays #2568
 * devices
   - Android: multi-port USB serial adapters (e.g. dual FTDI) use 0-based port
     suffixes (#0, #1) in both the port list and device list #2481
@@ -231,6 +234,10 @@ Version 7.45 - not yet released
   - Quick Guide, help & configuration checklists: list checkboxes use dialog
     look and min touch row height; keyboard focus frame on the checkbox; override
     touch autodetection with -touchscreen or -notouchscreen (non-Android) #2325
+  - Quick Guide: "Don't show this guide again" on every informational page;
+    skip Welcome on startup when the guide is hidden; Config → Look →
+    Language, Input controls startup visibility, release notes on next
+    startup, and safety disclaimer acceptance #2648
   - waypoint search: stays open until Esc or a successful GoTo / task / home / pan
     action (pan ends the search so the map is not hidden under the list); same for
     WaypointDetails select and WaypointDetailsPersistent (was: only after closing
@@ -278,6 +285,9 @@ Version 7.45 - not yet released
   - add NOTAM settings and filters (IFR, effective time, max radius, hidden Q-codes)
   - add NOTAM details integration in airspace dialogs
 * data files
+  - .cup tasks: More correctly parse SeeYou .cup task files with observation zones 
+    with uncommon angles, i.e. angles other than 90 degree quadrants or cylinder. 
+    Previously these were incorrectly parsed into FAI Quadrants #2697
   - windows: open files with O_BINARY so embedded ZIP (e.g. CUPX POINTS.CUP)
     is read correctly
   - openair: map AY ASRA to aerial sporting/recreational airspace type #1827
