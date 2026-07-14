@@ -67,7 +67,7 @@ MetadataValid(std::string_view json)
 int
 main()
 {
-  plan_tests(62);
+  plan_tests(64);
 
   const auto now = system_clock::now();
 
@@ -89,7 +89,7 @@ main()
       R"({"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[8.522111,47.973519]}]})")));
 
     ok1(notams.size() == 1);
-    ok1(notams.size() == 1 && notams[0].end_time == NOTAMTime::PermanentEndTime());
+    ok1(notams.size() == 1 && notams[0].end_time_permanent);
   }
 
   {
@@ -268,6 +268,11 @@ main()
     notam.feature_type = "QMRLC";
     notam.geometry.radius_meters = 1000;
 
+    const auto reasons = NOTAMFilter::Evaluate(notam, settings, now);
+    ok1(NOTAMFilter::HasFilterReason(reasons,
+                                     NOTAMFilter::FilterReason::IFR));
+    ok1(NOTAMFilter::HasFilterReason(reasons,
+                                     NOTAMFilter::FilterReason::QCODE));
     ok1(!NOTAMFilter::ShouldDisplay(notam, settings, now, false));
 
     notam.feature_type = "QWERT";
@@ -295,7 +300,7 @@ main()
   {
     NOTAM notam{};
     notam.start_time = now - hours(1);
-    notam.end_time = NOTAMTime::PermanentEndTime() + seconds(1);
+    notam.end_time_permanent = true;
 
     ok1(notam.IsActive(now));
   }
