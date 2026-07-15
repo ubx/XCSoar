@@ -12,6 +12,11 @@ Version 7.45 - not yet released
   - Raise combined FLARM/online traffic list limit to 64 targets (cloud
     batch size); device FLARM traffic still typically stays within 25
 * ui
+  - Show all tasks by default in Task Browser instead of requiring to click
+    the "More" button first.
+  - Rename to turnpoint observation zone type "Symmetric Quadrant" to
+    "Symmetric Sector", as these zones do not have to be 90 degrees but
+    support any angle.
   - Outline selected targets on the FLARM traffic radar
   - Weather cursor bar: narrower stepper buttons on touchscreens and clip
     long centre labels instead of hiding them when they do not fit
@@ -38,6 +43,9 @@ Version 7.45 - not yet released
   - add support for SoftRF Concorde, Prime Mk4, and Retro Mk2 as supported USB devices
   - Fix crash when the native thread restarts after surface teardown
     (JNI helper classes were not cleared between runNative calls)
+* Kobo
+  - always start in light mode; dark mode is not supported on e-paper
+    displays #2568
 * devices
   - Android: multi-port USB serial adapters (e.g. dual FTDI) use 0-based port
     suffixes (#0, #1) in both the port list and device list #2481
@@ -156,7 +164,7 @@ Version 7.45 - not yet released
     dialog with its own icon #336
 * map
   - dynamically adjust contour line density to zoom factor #2233
-  - provide different contour density profile settings for mountains, 
+  - provide different contour density profile settings for mountains,
     low lands, etc. to have sensible contours in a given landscape type
   - turn back marker: new opt-in overlay (Safety Factors config panel) showing
     a green triangle along the current track indicating the furthest point from
@@ -231,6 +239,10 @@ Version 7.45 - not yet released
   - Quick Guide, help & configuration checklists: list checkboxes use dialog
     look and min touch row height; keyboard focus frame on the checkbox; override
     touch autodetection with -touchscreen or -notouchscreen (non-Android) #2325
+  - Quick Guide: "Don't show this guide again" on every informational page;
+    skip Welcome on startup when the guide is hidden; Config → Look →
+    Language, Input controls startup visibility, release notes on next
+    startup, and safety disclaimer acceptance #2648
   - waypoint search: stays open until Esc or a successful GoTo / task / home / pan
     action (pan ends the search so the map is not hidden under the list); same for
     WaypointDetails select and WaypointDetailsPersistent (was: only after closing
@@ -278,6 +290,9 @@ Version 7.45 - not yet released
   - add NOTAM settings and filters (IFR, effective time, max radius, hidden Q-codes)
   - add NOTAM details integration in airspace dialogs
 * data files
+  - .cup tasks: More correctly parse SeeYou .cup task files with observation zones
+    with uncommon angles, i.e. angles other than 90 degree quadrants or cylinder.
+    Previously these were incorrectly parsed into FAI Quadrants #2697
   - windows: open files with O_BINARY so embedded ZIP (e.g. CUPX POINTS.CUP)
     is read correctly
   - openair: map AY ASRA to aerial sporting/recreational airspace type #1827
@@ -290,6 +305,8 @@ Version 7.45 - not yet released
     yet exist; migration is marked complete only after at least one file was
     moved #2289
   - IGC and NMEA logs are stored under ``logs/`` #2289
+  - fix crash when queuing many background file downloads while others
+    complete (download manager queue race) #2624
 * devices
   - fix native crash on device reconnect (stale delayed reopen timer) #2382
   - Polar sync device setting is offered only for drivers that register polar
