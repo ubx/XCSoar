@@ -92,7 +92,7 @@ void
 WPASupplicantBackend::EnsureConnected()
 {
   try {
-    wpa_.EnsureConnected(FmtBuffer<64>("/usr/sbin/wpa_supplicant"));
+    wpa_.EnsureConnected(FmtBuffer<64>("/var/run/wpa_supplicant/{}", "wlan0"));
   } catch (const std::system_error &e) {
     if (IsErrno(e, ENOENT) || IsErrno(e, ENODEV) || IsErrno(e, EIO))
       std::throw_with_nested(WifiError::Exception{WifiError::Code::NoInterface});
