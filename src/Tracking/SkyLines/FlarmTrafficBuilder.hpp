@@ -9,6 +9,8 @@
 #include "Geo/GeoPoint.hpp"
 #include "NMEA/Info.hpp"
 
+#include <span>
+
 namespace SkyLinesTracking {
 
 /**
@@ -23,6 +25,15 @@ public:
   [[gnu::const]]
   static FlarmTraffic::SourceType
   SourceForOnline(uint32_t pilot_id, TrafficSource source) noexcept;
+
+  /**
+   * True when online traffic #traffic_id matches any own-ship FLARM
+   * id (device radio id and/or configured list — drop self from OGN /
+   * cloud feeds).
+   */
+  [[gnu::pure]]
+  static bool IsOwnShipId(std::span<const FlarmId> own_ids,
+                          FlarmId traffic_id) noexcept;
 
   /**
    * Populate relative_north/east/altitude from own-ship GPS.

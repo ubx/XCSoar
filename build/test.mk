@@ -91,6 +91,7 @@ TEST_NAMES = \
 	TestAllocatedGrid \
 	TestRadixTree TestGeoBounds TestGeoClip \
 	TestLogger TestGRecord TestClimbAvCalc TestFilteredVarioComputer \
+	TestVarioSynthesiser TestAudioVario \
 	TestWaypointReader TestThermalBase \
 	TestFlarmNet TestFlarmMessaging \
 	TestColorRamp TestXCThermBandQuery TestGeoPoint TestDiffFilter \
@@ -896,6 +897,27 @@ TEST_VALIDITY_SOURCES = \
 	$(TEST_SRC_DIR)/tap.c \
 	$(TEST_SRC_DIR)/TestValidity.cpp
 $(eval $(call link-program,TestValidity,TEST_VALIDITY))
+
+TEST_VARIO_SYNTHESISER_SOURCES = \
+	$(SRC)/Audio/ToneSynthesiser.cpp \
+	$(SRC)/Audio/VarioSynthesiser.cpp \
+	$(TEST_SRC_DIR)/tap.c \
+	$(TEST_SRC_DIR)/TestVarioSynthesiser.cpp
+TEST_VARIO_SYNTHESISER_DEPENDS = MATH THREAD
+$(eval $(call link-program,TestVarioSynthesiser,TEST_VARIO_SYNTHESISER))
+
+TEST_AUDIO_VARIO_SOURCES = \
+	$(SRC)/Audio/ToneSynthesiser.cpp \
+	$(SRC)/Audio/VarioAudioValue.cpp \
+	$(SRC)/Audio/VarioSynthesiser.cpp \
+	$(SRC)/Atmosphere/AirDensity.cpp \
+	$(SRC)/Computer/STF.cpp \
+	$(SRC)/Engine/GlideSolvers/GlidePolar.cpp \
+	$(SRC)/NMEA/Aircraft.cpp \
+	$(TEST_SRC_DIR)/tap.c \
+	$(TEST_SRC_DIR)/TestAudioVario.cpp
+TEST_AUDIO_VARIO_DEPENDS = GEO MATH THREAD UTIL
+$(eval $(call link-program,TestAudioVario,TEST_AUDIO_VARIO))
 
 TEST_ALLOCATED_GRID_SOURCES = \
 	$(TEST_SRC_DIR)/tap.c \

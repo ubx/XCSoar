@@ -11,6 +11,7 @@
 #include "SLES/Init.hpp"
 #endif
 
+#include <atomic>
 #include <cassert>
 
 static constexpr unsigned sample_rate = 44100;
@@ -21,6 +22,12 @@ static bool have_sles;
 
 static PCMPlayer *player;
 static VarioSynthesiser *synthesiser;
+static std::atomic<VarioSoundSwitchingMode> switching_mode{
+  VarioSoundSwitchingMode::MANUAL
+};
+static std::atomic<VarioSoundManualMode> manual_mode{
+  VarioSoundManualMode::VARIO
+};
 
 bool
 AudioVarioGlue::HaveAudioVario()
@@ -68,6 +75,9 @@ AudioVarioGlue::Configure(const VarioSoundSettings &settings)
   assert(player != nullptr);
   assert(synthesiser != nullptr);
 
+  manual_mode = settings.manual_mode;
+  switching_mode = settings.switching_mode;
+
   if (settings.enabled) {
     synthesiser->SetVolume(settings.volume);
     synthesiser->SetDeadBand(settings.dead_band_enabled);
@@ -81,7 +91,7 @@ AudioVarioGlue::Configure(const VarioSoundSettings &settings)
 }
 
 void
-AudioVarioGlue::SetValue(double vario)
+AudioVarioGlue::SetValue(const VarioAudioInput &input)
 {
 #ifdef ANDROID
   if (!have_sles)
@@ -91,19 +101,10 @@ AudioVarioGlue::SetValue(double vario)
   assert(player != nullptr);
   assert(synthesiser != nullptr);
 
-  synthesiser->SetVario(vario);
-}
-
-void
-AudioVarioGlue::NoValue()
-{
-#ifdef ANDROID
-  if (!have_sles)
-    return;
-#endif
-
-  assert(player != nullptr);
-  assert(synthesiser != nullptr);
-
-  synthesiser->SetSilence();
+  const auto value = ComputeAudioValue(input, switching_mode.load(),
+                                       manual_mode.load());
+  if (value)
+    synthesiser->SetVario(*value);
+  else
+    synthesiser->SetSilence();
 }

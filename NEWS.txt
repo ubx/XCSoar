@@ -11,7 +11,15 @@ Version 7.45 - not yet released
   - Configurable XCSoar Cloud server hostname and UDP port in cloud settings
   - Raise combined FLARM/online traffic list limit to 64 targets (cloud
     batch size); device FLARM traffic still typically stays within 25
+  - Drop OGN/cloud online traffic that matches the connected FLARM radio
+    id so own-ship no longer appears on the traffic display #2693
+  - Add expert cloud setting "Own FLARM IDs" (comma-separated hex list)
+    to filter self and additional own aircraft from OGN when the device
+    radio id is unavailable (e.g. LX passthrough) #2693
 * ui
+  - FLARM radar: show callsigns on all registered targets again, use the
+    full callsign on target labels, and omit duplicate side vario/altitude
+    on the selected target (info panel already shows them) #2718
   - Show all tasks by default in Task Browser instead of requiring to click
     the "More" button first.
   - Rename to turnpoint observation zone type "Symmetric Quadrant" to
@@ -24,6 +32,10 @@ Version 7.45 - not yet released
     non-ASCII comments (UTF-8 truncation)
   - add optional map overlay QuickMenu button (Config → Look → Layout),
     enabled by default when a touch screen is detected #2610
+  - input events: add ``VarioVolume`` to mute/unmute and adjust the
+    internal audio vario volume
+  - audio vario: add manual/automatic Vario/STF sound switching and
+    ``VarioAudioMode`` input events
 * glide computer
   - Speed-to-fly and task calculations are now altitude-corrected: the glide
     polar is scaled by the air density ratio (sqrt(rho0/rho)) each GPS cycle,
