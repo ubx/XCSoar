@@ -61,7 +61,7 @@ ColibriRunFtpd()
 void
 ColibriRunXCSoar(const char *mode)
 {
-  (void)mode;
+  Run("/opt/XCSoar/bin/xcsoar", "-datapath=/media/mmcblk0p2/xcsoar-data/", mode);
 }
 
 bool
@@ -73,11 +73,11 @@ IsColibriCustomKernel()
 bool
 ColibriPowerOff()
 {
-  return false;
+  return Run("/sbin/poweroff");
 }
 
 bool
 ColibriReboot()
 {
-  return false;
+  return Run("/sbin/reboot");
 }

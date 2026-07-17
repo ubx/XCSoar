@@ -59,7 +59,7 @@ void
 ToolsWidget::Prepare([[maybe_unused]] ContainerWindow &parent, [[maybe_unused]] const PixelRect &rc) noexcept
 {
   ScriptFileVisitor sfv(list);
-  Directory::VisitFiles(Path("/opt/xcsoar/scripts"), sfv);
+  Directory::VisitFiles(Path("/opt/XCSoar/scripts"), sfv);
 
   unsigned len = list.size();
   if (len > 0)
