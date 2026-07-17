@@ -124,4 +124,15 @@ SimulatorPromptWindow::OnPaint(Canvas &canvas) noexcept
   ContainerWindow::OnPaint(canvas);
 }
 
+void
+SimulatorPromptWindow::OnSetFocus() noexcept
+{
+  ContainerWindow::OnSetFocus();
+
+  if (initial_result == Result::SIMULATOR)
+    sim_button.SetFocus();
+  else
+    fly_button.SetFocus();
+}
+
 #endif /* SIMULATOR_AVAILABLE */

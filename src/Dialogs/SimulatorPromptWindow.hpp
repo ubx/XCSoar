@@ -46,11 +46,19 @@ public:
     :look(_look), callback(std::move(_callback)),
      have_quit_button(_quit) {}
 
+  void SetInitialResult(Result _result) noexcept {
+    initial_result = _result;
+  }
+
 protected:
   /* virtual methods from class Window */
   void OnCreate() override;
   void OnResize(PixelSize new_size) noexcept override;
   void OnPaint(Canvas &canvas) noexcept override;
+  void OnSetFocus() noexcept override;
+
+private:
+  Result initial_result = Result::FLY;
 };
 
 #endif /* SIMULATOR_AVAILABLE */

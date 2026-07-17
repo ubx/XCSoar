@@ -56,11 +56,13 @@ UIGlobals::GetDialogLook()
 
 class ColibriMenuWidget final : public WindowWidget {
   WndForm &dialog;
+  SimulatorPromptWindow::Result initial_result;
 
 public:
   ColibriMenuWidget([[maybe_unused]] const DialogLook &_look,
-                 WndForm &_dialog)
-    :dialog(_dialog) {}
+                 WndForm &_dialog,
+                 SimulatorPromptWindow::Result _initial_result)
+    :dialog(_dialog), initial_result(_initial_result) {}
 
   void CreateButtons(WidgetDialog &buttons);
 
@@ -91,6 +93,7 @@ ColibriMenuWidget::Prepare(ContainerWindow &parent,
                                                    [this](SimulatorPromptWindow::Result result){
                                                      dialog.SetModalResult(int(result));
                                                    }, false);
+  w->SetInitialResult(initial_result);
   w->Create(parent, rc, style);
   SetWindow(std::move(w));
 }
@@ -102,19 +105,20 @@ ColibriMenuWidget::KeyPress([[maybe_unused]] unsigned key_code) noexcept
 }
 
 static int
-Main(UI::SingleWindow &main_window, const DialogLook &dialog_look)
+Main(UI::SingleWindow &main_window, const DialogLook &dialog_look,
+     SimulatorPromptWindow::Result initial_result)
 {
   TWidgetDialog<ColibriMenuWidget>
     dialog(WidgetDialog::Full{}, main_window,
            dialog_look, nullptr);
-  dialog.SetWidget(dialog_look, dialog);
+  dialog.SetWidget(dialog_look, dialog, initial_result);
   dialog.GetWidget().CreateButtons(dialog);
 
   return dialog.ShowModal();
 }
 
 static int
-Main()
+Main(SimulatorPromptWindow::Result initial_result)
 {
   dialog_settings.SetDefaults();
 
@@ -146,7 +150,7 @@ Main()
   global_dialog_look = &dialog_look;
   global_main_window = &main_window;
 
-  int action = Main(main_window, dialog_look);
+  int action = Main(main_window, dialog_look, initial_result);
 
   main_window.Destroy();
 
@@ -159,16 +163,20 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {
   ApplyColibriWifiAutoOn();
 
+  SimulatorPromptWindow::Result last_result = SimulatorPromptWindow::Result::FLY;
+
   while (true) {
-    int action = Main();
+    int action = Main(last_result);
 
     switch (action) {
     case int(SimulatorPromptWindow::Result::FLY):
+      last_result = SimulatorPromptWindow::Result::FLY;
       ColibriRunXCSoar("-fly");
       /* return to menu after XCSoar quits */
       break;
 
     case int(SimulatorPromptWindow::Result::SIMULATOR):
+      last_result = SimulatorPromptWindow::Result::SIMULATOR;
       ColibriRunXCSoar("-simulator");
       /* return to menu after XCSoar quits */
       break;
