@@ -188,9 +188,17 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc) noexcept
   // reset label over-write preventer
   label_block.reset();
 
+#ifndef ENABLE_OPENGL
+  {
+    const std::lock_guard lock{frame_projection_mutex};
+    render_projection = published_projection;
+  }
+#else
   render_projection = visible_projection;
+#endif
 
-  if (!render_projection.IsValid()) {
+  if (!render_projection.IsValid() ||
+      !render_projection.GetScreenBounds().IsValid()) {
     canvas.ClearWhite();
     return;
   }
