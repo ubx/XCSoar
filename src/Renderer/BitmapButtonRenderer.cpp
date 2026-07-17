@@ -22,7 +22,7 @@ BitmapButtonRenderer::DrawButton(Canvas &canvas, [[maybe_unused]] const PixelRec
 #ifdef ENABLE_OPENGL
   if (use_alpha) {
     const ScopeAlphaBlend alpha_blend;
-    if (state == ButtonState::PRESSED)
+    if (state == ButtonState::PRESSED || state == ButtonState::FOCUSED)
       canvas.StretchNot(bitmap);
     else
       canvas.Stretch(bitmap);
@@ -30,7 +30,7 @@ BitmapButtonRenderer::DrawButton(Canvas &canvas, [[maybe_unused]] const PixelRec
   }
 #endif
 
-  if (state == ButtonState::PRESSED)
+  if (state == ButtonState::PRESSED || state == ButtonState::FOCUSED)
     canvas.StretchNot(bitmap);
   else
     canvas.Stretch(bitmap);
