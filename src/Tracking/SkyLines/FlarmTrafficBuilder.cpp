@@ -32,6 +32,20 @@ SkyLinesTracking::FlarmTrafficBuilder::SourceForOnline(
 }
 
 bool
+SkyLinesTracking::FlarmTrafficBuilder::IsOwnShipId(
+  std::span<const FlarmId> own_ids, FlarmId traffic_id) noexcept
+{
+  if (!traffic_id.IsDefined())
+    return false;
+
+  for (const FlarmId id : own_ids)
+    if (id.IsDefined() && id == traffic_id)
+      return true;
+
+  return false;
+}
+
+bool
 SkyLinesTracking::FlarmTrafficBuilder::FillRelative(FlarmTraffic &traffic,
                                                     const NMEAInfo &basic) noexcept
 {
